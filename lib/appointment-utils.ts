@@ -119,7 +119,7 @@ export function checkPermission(
   resource: string,
   action: 'create' | 'read' | 'update' | 'delete'
 ): boolean {
-  const permissions = {
+  const permissions: Record<string, Record<string, string[]>> = {
     ADMIN: {
       appointments: ['create', 'read', 'update', 'delete'],
       clients: ['create', 'read', 'update', 'delete'],

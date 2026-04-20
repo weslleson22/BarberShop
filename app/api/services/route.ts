@@ -49,6 +49,10 @@ export async function POST(request: NextRequest) {
 
     const decoded = verifyToken(token)
     
+    if (!decoded || !decoded.barbershopId) {
+      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
+    }
+    
     if (decoded.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Apenas administradores podem criar serviços' }, { status: 403 })
     }

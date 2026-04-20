@@ -14,6 +14,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
 
+    if (!decoded.barbershopId) {
+      return NextResponse.json({ error: 'Barbearia não identificada' }, { status: 400 })
+    }
+
     const where: any = {
       barbershopId: decoded.barbershopId,
     }
@@ -59,8 +63,11 @@ export async function POST(request: NextRequest) {
     }
 
     const decoded = verifyToken(token)
-    const data = await request.json()
-    const { name, email, phone, notes } = data
+    if (!decoded || !decoded.barbershopId) {
+      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
+    }
+
+    const { name, email, phone, notes } = await request.json()
 
     if (!name || !phone) {
       return NextResponse.json(

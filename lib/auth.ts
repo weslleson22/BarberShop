@@ -87,13 +87,33 @@ export async function createUser(data: {
     throw new Error('Usuário já existe')
   }
 
+  // Para roles que não são CLIENT, barbershopId é obrigatório
+  if (data.role !== 'CLIENT' && !data.barbershopId) {
+    throw new Error('barbershopId é obrigatório para esta role')
+  }
+
   const hashedPassword = await hashPassword(data.password)
 
+  // Preparar dados para criação, removendo barbershopId se for undefined
+  const createData: any = {
+    name: data.name,
+    email: data.email,
+    password: hashedPassword,
+    role: data.role,
+  }
+
+  // Adicionar barbershopId apenas se existir
+  if (data.barbershopId) {
+    createData.barbershopId = data.barbershopId
+  }
+
+  // Adicionar phone se existir
+  if (data.phone) {
+    createData.phone = data.phone
+  }
+
   const user = await prisma.user.create({
-    data: {
-      ...data,
-      password: hashedPassword,
-    },
+    data: createData,
     include: {
       barbershop: {
         select: {
