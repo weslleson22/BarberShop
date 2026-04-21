@@ -2,10 +2,7 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install && npx prisma generate",
-  "framework": {
-    "name": "nextjs",
-    "version": "14.x"
-  },
+  "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
