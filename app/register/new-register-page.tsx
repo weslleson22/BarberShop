@@ -52,17 +52,13 @@ export default function NewRegisterPage() {
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true)
     try {
-      const success = await registerUser({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        role: 'ADMIN',
-        phone: data.phone,
-        barbershopName: data.barbershopName,
-        barbershopEmail: data.barbershopEmail,
-        barbershopPhone: data.barbershopPhone,
-        barbershopAddress: data.barbershopAddress,
-      })
+      const success = await registerUser(
+        data.name,
+        data.email,
+        data.password,
+        data.phone,
+        'ADMIN'
+      )
 
       if (success) {
         router.push('/dashboard')

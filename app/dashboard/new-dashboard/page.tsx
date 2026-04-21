@@ -25,7 +25,7 @@ interface Appointment {
 }
 
 export default function NewDashboardPage() {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
     todayAppointments: 0,
     todayRevenue: 0,
@@ -59,10 +59,19 @@ export default function NewDashboardPage() {
         fetch('/api/users')
       ])
 
-      const appointmentsData = appointmentsRes.status === 'fulfilled' ? appointmentsRes.value : []
-      const clientsData = clientsRes.status === 'fulfilled' ? clientsRes.value : []
-      const servicesData = servicesRes.status === 'fulfilled' ? servicesRes.value : []
-      const usersData = usersRes.status === 'fulfilled' ? usersRes.value : []
+      // Extract JSON data from responses
+      const appointmentsData = appointmentsRes.status === 'fulfilled' && appointmentsRes.value.ok 
+        ? await appointmentsRes.value.json() 
+        : []
+      const clientsData = clientsRes.status === 'fulfilled' && clientsRes.value.ok 
+        ? await clientsRes.value.json() 
+        : []
+      const servicesData = servicesRes.status === 'fulfilled' && servicesRes.value.ok 
+        ? await servicesRes.value.json() 
+        : []
+      const usersData = usersRes.status === 'fulfilled' && usersRes.value.ok 
+        ? await usersRes.value.json() 
+        : []
 
       // Calculate stats based on user role
       const today = new Date().toISOString().split('T')[0]
@@ -76,7 +85,7 @@ export default function NewDashboardPage() {
 
       setStats({
         todayAppointments,
-        todayRevenue,
+        todayRevenue: totalRevenue,
         totalClients: clientsData.length,
         totalServices: servicesData.length,
         totalUsers: usersData.length

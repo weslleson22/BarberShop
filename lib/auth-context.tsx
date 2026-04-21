@@ -17,6 +17,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
+  register: (name: string, email: string, password: string, phone?: string, role?: string) => Promise<boolean>
   logout: () => void
   loading: boolean
 }
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      setLoading(true)
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -66,6 +68,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Login error:', error)
       return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const register = async (name: string, email: string, password: string, phone?: string, role?: string): Promise<boolean> => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, phone, role: role || 'CLIENT' }),
+      })
+
+      if (response.ok) {
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Register error:', error)
+      return false
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -83,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )

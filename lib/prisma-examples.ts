@@ -25,7 +25,6 @@ export async function exampleQueries() {
         password: 'hashed_password_here',
         role: 'ADMIN',
         barbershopId: newBarbershop.id,
-        phone: '(11) 88888-8888',
       },
     })
 
@@ -39,7 +38,6 @@ export async function exampleQueries() {
         password: 'hashed_password_here',
         role: 'BARBER',
         barbershopId: newBarbershop.id,
-        phone: '(11) 77777-7777',
       },
     })
 
@@ -50,7 +48,6 @@ export async function exampleQueries() {
         password: 'hashed_password_here',
         role: 'BARBER',
         barbershopId: newBarbershop.id,
-        phone: '(11) 66666-6666',
       },
     })
 

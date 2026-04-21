@@ -31,14 +31,13 @@ async function main() {
   const adminPassword = await hashPassword('admin123')
   const barberPassword = await hashPassword('barber123')
 
-  const admin = await prisma.user.create({
+  const adminUser = await prisma.user.create({
     data: {
       name: 'João Administrador',
       email: 'admin@barberiacentral.com',
       password: adminPassword,
       role: 'ADMIN',
       barbershopId: barbershop.id,
-      phone: '(11) 88888-8888',
     },
   })
 
@@ -49,7 +48,6 @@ async function main() {
       password: barberPassword,
       role: 'BARBER',
       barbershopId: barbershop.id,
-      phone: '(11) 77777-7777',
     },
   })
 
@@ -60,7 +58,6 @@ async function main() {
       password: barberPassword,
       role: 'BARBER',
       barbershopId: barbershop.id,
-      phone: '(11) 66666-6666',
     },
   })
 
@@ -186,7 +183,7 @@ async function main() {
         status: 'CONFIRMED',
         totalAmount: 35.00,
         notes: 'Cliente preferencial',
-        createdBy: admin.id,
+        createdBy: adminUser.id,
       },
     }),
     prisma.appointment.create({
@@ -200,7 +197,7 @@ async function main() {
         status: 'PENDING',
         totalAmount: 50.00,
         notes: 'Primeira vez',
-        createdBy: admin.id,
+        createdBy: adminUser.id,
       },
     }),
     prisma.appointment.create({
@@ -214,7 +211,7 @@ async function main() {
         status: 'COMPLETED',
         totalAmount: 25.00,
         notes: 'Cliente fiel',
-        createdBy: admin.id,
+        createdBy: adminUser.id,
       },
     }),
     // Amanhã
@@ -229,7 +226,7 @@ async function main() {
         status: 'CONFIRMED',
         totalAmount: 40.00,
         notes: 'Alérgica a produtos químicos',
-        createdBy: admin.id,
+        createdBy: adminUser.id,
       },
     }),
     prisma.appointment.create({
@@ -243,7 +240,7 @@ async function main() {
         status: 'PENDING',
         totalAmount: 30.00,
         notes: 'Sempre paga com cartão',
-        createdBy: admin.id,
+        createdBy: adminUser.id,
       },
     }),
     // Depois de amanhã
@@ -258,7 +255,7 @@ async function main() {
         status: 'CONFIRMED',
         totalAmount: 50.00,
         notes: 'Agendamento recorrente',
-        createdBy: admin.id,
+        createdBy: adminUser.id,
       },
     }),
   ])

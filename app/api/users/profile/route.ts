@@ -35,14 +35,12 @@ export async function PUT(request: NextRequest) {
       },
       data: {
         name,
-        phone,
         avatar
       },
       select: {
         id: true,
         name: true,
         email: true,
-        phone: true,
         role: true,
         avatar: true,
         barbershopId: true,

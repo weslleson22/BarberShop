@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
         name: true,
         email: true,
         role: true,
-        phone: true,
         barbershopId: true,
         isActive: true,
         createdAt: true,
@@ -62,9 +61,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { name, email, phone, role, password, isActive } = data
+    const { name, email, password, role, isActive } = data
 
-    console.log('Dados recebidos para criar usuário:', { name, email, phone, role, isActive })
+    console.log('Dados recebidos para criar usuário:', { name, email, role, isActive })
 
     if (!name || !email || !role || !password) {
       return NextResponse.json(
@@ -110,7 +109,6 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
-        phone: phone || null,
         role,
         password: hashedPassword,
         isActive: isActive !== undefined ? isActive : true,
@@ -121,7 +119,6 @@ export async function POST(request: NextRequest) {
         name: true,
         email: true,
         role: true,
-        phone: true,
         isActive: true,
         createdAt: true,
         barbershopId: true,
@@ -143,9 +140,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const data = await request.json()
-    const { id, name, email, phone, role, password, isActive } = data
+    const { id, name, email, role, password, isActive } = data
 
-    console.log('PUT /api/users - Dados recebidos:', { id, name, email, phone, role, isActive })
+    console.log('PUT /api/users - Dados recebidos:', { id, name, email, role, isActive })
 
     if (!id) {
       return NextResponse.json(
@@ -187,7 +184,6 @@ export async function PUT(request: NextRequest) {
     const updateData: any = {
       name: name || existingUser.name,
       email: email || existingUser.email,
-      phone: phone !== undefined ? phone : existingUser.phone,
       role: role || existingUser.role,
       isActive: isActive !== undefined ? isActive : existingUser.isActive,
     }
@@ -206,7 +202,6 @@ export async function PUT(request: NextRequest) {
         name: true,
         email: true,
         role: true,
-        phone: true,
         isActive: true,
         createdAt: true,
         barbershopId: true,

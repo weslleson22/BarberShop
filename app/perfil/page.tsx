@@ -25,9 +25,7 @@ export default function PerfilPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    avatar: user?.avatar || ''
+    email: user?.email || ''
   })
 
   const handleSaveProfile = async () => {
@@ -97,13 +95,9 @@ export default function PerfilPage() {
             <div className="flex items-center space-x-6">
               <div className="flex flex-col items-center space-y-2">
                 <Avatar className="h-24 w-24">
-                  {formData.avatar ? (
-                    <AvatarImage src={formData.avatar} alt={formData.name} />
-                  ) : (
-                    <AvatarFallback className="text-2xl">
-                      {formData.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  )}
+                  <AvatarFallback className="text-2xl">
+                    {formData.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
                 </Avatar>
                 {isEditing && (
                   <div className="mt-4">
@@ -123,50 +117,34 @@ export default function PerfilPage() {
                 {isEditing ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Nome</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
                       <Input
                         value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="Seu nome"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium mb-2">Email</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                       <Input
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="Seu email"
                         disabled // Email não pode ser alterado
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Telefone</label>
-                      <Input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="Seu telefone"
                       />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{formData.name}</span>
+                    <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
+                      <User className="w-10 h-10 text-gray-400" />
                     </div>
                     
                     <div className="flex items-center space-x-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       <span>{formData.email}</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{formData.phone || 'Não informado'}</span>
                     </div>
                   </div>
                 )}
@@ -207,9 +185,7 @@ export default function PerfilPage() {
                     onClick={() => {
                       setFormData({
                         name: user?.name || '',
-                        email: user?.email || '',
-                        phone: user?.phone || '',
-                        avatar: user?.avatar || ''
+                        email: user?.email || ''
                       })
                       setIsEditing(false)
                     }}

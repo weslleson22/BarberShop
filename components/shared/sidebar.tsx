@@ -29,7 +29,7 @@ import {
 
 interface SidebarItem {
   title: string
-  icon: React.ReactNode
+  icon: React.ComponentType<{ className?: string }>
   href: string
   roles?: ('ADMIN' | 'BARBER' | 'CLIENT')[]
 }
@@ -37,43 +37,43 @@ interface SidebarItem {
 const sidebarItems: SidebarItem[] = [
   {
     title: 'Dashboard',
-    icon: <LayoutDashboard className="h-4 w-4" />,
+    icon: LayoutDashboard,
     href: '/dashboard',
     roles: ['ADMIN', 'BARBER', 'CLIENT']
   },
   {
-    title: 'Agendamentos',
-    icon: <Calendar className="h-4 w-4" />,
+    title: 'Agenda',
+    icon: Calendar,
     href: '/agenda',
-    roles: ['ADMIN', 'BARBER']
+    roles: ['ADMIN', 'BARBER', 'CLIENT']
   },
   {
     title: 'Clientes',
-    icon: <Users className="h-4 w-4" />,
+    icon: Users,
     href: '/clientes',
     roles: ['ADMIN', 'BARBER']
   },
   {
     title: 'Serviços',
-    icon: <Scissors className="h-4 w-4" />,
+    icon: Scissors,
     href: '/servicos',
     roles: ['ADMIN', 'BARBER']
   },
   {
     title: 'Usuários',
-    icon: <User className="h-4 w-4" />,
+    icon: User,
     href: '/usuarios',
     roles: ['ADMIN']
   },
   {
     title: 'Financeiro',
-    icon: <DollarSign className="h-4 w-4" />,
+    icon: DollarSign,
     href: '/financeiro',
     roles: ['ADMIN']
   },
   {
     title: 'Configurações',
-    icon: <Settings className="h-4 w-4" />,
+    icon: Settings,
     href: '/configuracoes',
     roles: ['ADMIN', 'BARBER', 'CLIENT']
   }
@@ -134,7 +134,6 @@ export function Sidebar({ className }: SidebarProps) {
           <div className="p-6 border-b">
             <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user?.avatar} alt={user?.name} />
                 <AvatarFallback>
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>

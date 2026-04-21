@@ -79,7 +79,6 @@ export const createTestUser = async (barbershopId: string, role: 'ADMIN' | 'BARB
     data: {
       name: 'Usuário Teste',
       email: `teste-${Date.now()}@email.com`,
-      phone: '(11) 99999-9999',
       role,
       password: '$2a$12$hashedpassword',
       isActive: true,
