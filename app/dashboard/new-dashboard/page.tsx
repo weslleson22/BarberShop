@@ -25,7 +25,7 @@ interface Appointment {
 }
 
 export default function NewDashboardPage() {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
     todayAppointments: 0,
     todayRevenue: 0,
@@ -52,26 +52,32 @@ export default function NewDashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
+      const parseJson = async (res: Response): Promise<any[]> => {
+        if (!res.ok) return []
+        const data = await res.json().catch(() => [])
+        return Array.isArray(data) ? data : []
+      }
+
       const [appointmentsRes, clientsRes, servicesRes, usersRes] = await Promise.allSettled([
-        fetch('/api/appointments/public'),
-        fetch('/api/clients/all'),
-        fetch('/api/services/public'),
-        fetch('/api/users')
+        fetch('/api/appointments/public').then(parseJson),
+        fetch('/api/clients/all').then(parseJson),
+        fetch('/api/services/public').then(parseJson),
+        fetch('/api/users').then(parseJson)
       ])
 
-      const appointmentsData = appointmentsRes.status === 'fulfilled' ? appointmentsRes.value : []
-      const clientsData = clientsRes.status === 'fulfilled' ? clientsRes.value : []
-      const servicesData = servicesRes.status === 'fulfilled' ? servicesRes.value : []
-      const usersData = usersRes.status === 'fulfilled' ? usersRes.value : []
+      const appointmentsData: any[] = appointmentsRes.status === 'fulfilled' ? appointmentsRes.value : []
+      const clientsData: any[] = clientsRes.status === 'fulfilled' ? clientsRes.value : []
+      const servicesData: any[] = servicesRes.status === 'fulfilled' ? servicesRes.value : []
+      const usersData: any[] = usersRes.status === 'fulfilled' ? usersRes.value : []
 
       // Calculate stats based on user role
       const today = new Date().toISOString().split('T')[0]
-      const todayAppointments = appointmentsData.filter((apt: any) => 
-        apt.startTime.startsWith(today)
+      const todayAppointments = appointmentsData.filter((apt: any) =>
+        apt.startTime?.startsWith(today)
       ).length
 
-      const totalRevenue = appointmentsData
-        .filter((apt: any) => apt.status === 'COMPLETED')
+      const todayRevenue = appointmentsData
+        .filter((apt: any) => apt.status === 'COMPLETED' && apt.startTime?.startsWith(today))
         .reduce((sum: number, apt: any) => sum + (apt.totalAmount || 0), 0)
 
       setStats({
