@@ -1,6 +1,7 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth-context'
+import { DatabaseProvider } from '@/components/database-validation/DatabaseValidator'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -52,9 +53,11 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <DatabaseProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </DatabaseProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `
