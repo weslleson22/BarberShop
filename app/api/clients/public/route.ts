@@ -1,23 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Buscar cliente por telefone (público)
+// GET - Buscar clientes (público)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const phone = searchParams.get('phone')
 
-    if (!phone) {
-      return NextResponse.json(
-        { error: 'Telefone é obrigatório' },
-        { status: 400 }
-      )
+    // Buscar a primeira barbearia disponível
+    let barbershopId = 'cmo6dajse0000tlnihesqqda8' // fallback
+    
+    try {
+      const barbershop = await prisma.barbershop.findFirst({
+        select: { id: true }
+      })
+      if (barbershop) {
+        barbershopId = barbershop.id
+        console.log('Usando barbearia encontrada:', barbershopId)
+      }
+    } catch (error) {
+      console.log('Usando barbearia fallback:', barbershopId)
     }
 
+    // Se phone for fornecido, buscar por telefone
+    if (phone) {
+      const clients = await prisma.client.findMany({
+        where: {
+          phone: phone,
+          barbershopId
+        }
+      })
+      return NextResponse.json(clients)
+    }
+
+    // Se não, listar todos os clientes
     const clients = await prisma.client.findMany({
       where: {
-        phone: phone,
-        barbershopId: 'cmo6dajse0000tlnihesqqda8' // ID real da barbearia
+        barbershopId
+      },
+      orderBy: {
+        name: 'asc'
       }
     })
 
@@ -46,12 +68,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Buscar a primeira barbearia disponível
+    let barbershopId = 'cmo6dajse0000tlnihesqqda8' // fallback
+    
+    try {
+      const barbershop = await prisma.barbershop.findFirst({
+        select: { id: true }
+      })
+      if (barbershop) {
+        barbershopId = barbershop.id
+        console.log('Usando barbearia encontrada:', barbershopId)
+      }
+    } catch (error) {
+      console.log('Usando barbearia fallback:', barbershopId)
+    }
+
     // Verificar se cliente já existe
     console.log('Verificando cliente existente com telefone:', phone)
     const existingClient = await prisma.client.findFirst({
       where: {
         phone: phone,
-        barbershopId: 'cmo6dajse0000tlnihesqqda8' // ID real da barbearia
+        barbershopId
       }
     })
 
@@ -69,7 +106,7 @@ export async function POST(request: NextRequest) {
         name,
         phone,
         email: email || null,
-        barbershopId: 'cmo6dajse0000tlnihesqqda8' // ID real da barbearia
+        barbershopId
       }
     })
 

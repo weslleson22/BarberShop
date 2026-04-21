@@ -52,16 +52,39 @@ export async function POST(request: NextRequest) {
 
     console.log('Dados recebidos:', { clientId, barberId, serviceId, startTime, notes })
 
-    // Usando o ID real da barbearia
-    const barbershopId = 'cmo6dajse0000tlnihesqqda8'
+    // Buscar a primeira barbearia disponível
+    let barbershopId = 'cmo6dajse0000tlnihesqqda8' // fallback
+    
+    try {
+      const barbershop = await prisma.barbershop.findFirst({
+        select: { id: true }
+      })
+      if (barbershop) {
+        barbershopId = barbershop.id
+        console.log('Usando barbearia encontrada:', barbershopId)
+      }
+    } catch (error) {
+      console.log('Usando barbearia fallback:', barbershopId)
+    }
 
-    // Para garantir funcionamento, vamos usar valores padrão
-    const defaultDuration = 30 // 30 minutos
-    const defaultPrice = 35 // R$ 35
+    // Buscar dados do serviço para obter duração e preço reais
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+      select: { duration: true, price: true }
+    })
+
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Serviço não encontrado' },
+        { status: 404 }
+      )
+    }
+
+    console.log('Serviço encontrado:', { duration: service.duration, price: service.price })
     
     // Converter startTime para Date
     const startTimeDate = new Date(startTime)
-    const endTime = new Date(startTimeDate.getTime() + defaultDuration * 60 * 1000)
+    const endTime = new Date(startTimeDate.getTime() + service.duration * 60 * 1000)
 
     // Criar o agendamento
     const appointment = await prisma.appointment.create({
@@ -74,7 +97,7 @@ export async function POST(request: NextRequest) {
         status: 'PENDING',
         notes: notes || '',
         barbershopId,
-        totalAmount: defaultPrice,
+        totalAmount: service.price,
       },
       include: {
         client: true,

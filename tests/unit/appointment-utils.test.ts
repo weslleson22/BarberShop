@@ -1,12 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import {
-  hasAppointmentConflict,
-  calculateAvailableSlots,
-  validateAppointmentTime,
-  checkPermission,
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { 
+  hasAppointmentConflict, 
+  calculateAvailableSlots, 
+  validateAppointmentTime, 
+  checkPermission, 
   filterByBarbershop,
-  validateMultiTenantIsolation
-} from '@/lib/appointment-utils'
+  validateMultiTenantIsolation,
+  Appointment,
+  TimeSlot
+} from '../../lib/appointment-utils'
 
 describe('Appointment Utils - Unit Tests', () => {
   const baseDate = new Date('2026-04-20T10:00:00')
@@ -14,15 +16,17 @@ describe('Appointment Utils - Unit Tests', () => {
   
   describe('hasAppointmentConflict', () => {
     it('deve permitir horário livre quando não há agendamentos existentes', () => {
-      const existingAppointments = []
+      const existingAppointments: Appointment[] = []
       const newStartTime = new Date('2026-04-20T10:00:00')
       const newEndTime = new Date('2026-04-20T10:30:00')
       
-      expect(hasAppointmentConflict(newStartTime, newEndTime, existingAppointments)).toBe(false)
+      const hasConflict = hasAppointmentConflict(newStartTime, newEndTime, existingAppointments)
+      
+      expect(hasConflict).toBe(false)
     })
     
     it('deve bloquear conflito direto (mesmo horário)', () => {
-      const existingAppointments = [
+      const existingAppointments: Appointment[] = [
         {
           id: '1',
           startTime: new Date('2026-04-20T10:00:00'),
@@ -130,34 +134,47 @@ describe('Appointment Utils - Unit Tests', () => {
     })
     
     it('deve marcar slots como indisponíveis quando há conflito', () => {
-      const existingAppointments = [
+      // Criar data base consistente no timezone local
+      const baseDate = new Date(2026, 3, 20, 0, 0, 0, 0) // 20/04/2026 00:00 local
+      
+      const existingAppointments: Appointment[] = [
         {
           id: '1',
-          startTime: new Date('2026-04-20T10:00:00'),
-          endTime: new Date('2026-04-20T10:30:00'),
+          startTime: new Date(2026, 3, 20, 10, 0, 0, 0), // 20/04/2026 10:00 local
+          endTime: new Date(2026, 3, 20, 10, 30, 0, 0),   // 20/04/2026 10:30 local
           service: { duration: 30, price: 35, name: 'Corte' },
           client: { name: 'João' },
           barber: { name: 'Carlos' }
         }
       ]
       
-      const date = new Date('2026-04-20')
-      const slots = calculateAvailableSlots(date, 30, existingAppointments)
+      const slots = calculateAvailableSlots(baseDate, 30, existingAppointments)
       
       // Procurar slot que começa exatamente às 10:00
       const conflictingSlot = slots.find(slot => 
         slot.startTime.getHours() === 10 && slot.startTime.getMinutes() === 0
       )
       
-      // Se não encontrar o slot exato, verificar se há algum slot indisponível
-      const hasUnavailableSlot = slots.some(slot => !slot.isAvailable)
+      // Verificar que encontrou o slot conflitante
+      expect(conflictingSlot).toBeDefined()
       
+      // Verificar que o slot conflitante está indisponível
+      expect(conflictingSlot!.isAvailable).toBe(false)
+      
+      // Verificar que há pelo menos um slot indisponível
+      const hasUnavailableSlot = slots.some(slot => !slot.isAvailable)
       expect(hasUnavailableSlot).toBe(true)
       
-      // Se encontrou o slot exato, verificar que está indisponível
-      if (conflictingSlot) {
-        expect(conflictingSlot.isAvailable).toBe(false)
-      }
+      // Verificar que slots antes e depois do conflito estão disponíveis
+      const beforeSlot = slots.find(slot => 
+        slot.startTime.getHours() === 9 && slot.startTime.getMinutes() === 30
+      )
+      const afterSlot = slots.find(slot => 
+        slot.startTime.getHours() === 10 && slot.startTime.getMinutes() === 30
+      )
+      
+      expect(beforeSlot?.isAvailable).toBe(true)
+      expect(afterSlot?.isAvailable).toBe(true)
     })
     
     it('deve respeitar horário de funcionamento', () => {
@@ -232,12 +249,12 @@ describe('Appointment Utils - Unit Tests', () => {
     })
     
     it('deve rejeitar serviço que ultrapassa horário de funcionamento', () => {
-      // Criar data futura com serviço que termina após o horário de funcionamento
+      // Criar data futura com serviço que termina após o horário de funcionamento (18:00)
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
       tomorrow.setHours(16, 30, 0, 0) // 16:30
       
-      const result = validateAppointmentTime(tomorrow, 90) // 90 minutos = termina às 18:00
+      const result = validateAppointmentTime(tomorrow, 90, { start: 8, end: 18 }) // 90 minutos = termina às 18:00
       
       expect(result.isValid).toBe(false)
       expect(result.error).toBe('Serviço ultrapassa o horário de funcionamento')

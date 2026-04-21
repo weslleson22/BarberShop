@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Phone, Mail, Plus, Search, Edit, Trash2 } from 'lucide-react'
+import { User, Phone, Mail, Plus, Search, Edit, Trash2, ArrowLeft, Home } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 interface Client {
   id: string
@@ -15,6 +18,8 @@ interface Client {
 }
 
 export default function ClientesPage() {
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -25,6 +30,38 @@ export default function ClientesPage() {
     phone: '',
     email: '',
   })
+
+  // Aguardar carregamento inicial do contexto
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Carregando...</p>
+      </div>
+    )
+  }
+
+  // Aguardar autenticação
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Verificando autenticação...</p>
+      </div>
+    )
+  }
+
+  // Verificar se usuário tem permissão
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'BARBER')) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Acesso Negado</h1>
+          <p className="text-gray-600">Você não tem permissão para acessar esta página.</p>
+        </div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     fetchClients()
@@ -151,7 +188,27 @@ export default function ClientesPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
+      {/* Botões de navegação */}
+      <div className="absolute top-4 left-4 flex space-x-2">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Voltar"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Voltar</span>
+        </button>
+        <Link
+          href="/"
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Página Inicial"
+        >
+          <Home className="w-4 h-4" />
+          <span>Home</span>
+        </Link>
+      </div>
+      
+      <div className="mb-8 pt-16">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Clientes</h1>

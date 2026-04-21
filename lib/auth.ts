@@ -42,12 +42,12 @@ export async function authenticateUser(email: string, password: string) {
   })
 
   if (!user || !user.isActive) {
-    throw new Error('Credenciais inválidas')
+    return null
   }
 
   const isValidPassword = await verifyPassword(password, user.password)
   if (!isValidPassword) {
-    throw new Error('Credenciais inválidas')
+    return null
   }
 
   const token = generateToken({

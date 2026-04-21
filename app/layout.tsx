@@ -1,14 +1,13 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth-context'
-import Navigation from '@/components/Navigation'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  metadataBase: new URL('http://localhost:3002'),
-  title: 'Barbershop Scheduler',
-  description: 'Sistema de agendamento e gestão para barbearias',
+  metadataBase: new URL('http://localhost:3000'),
+  title: 'BarberShop - Sistema Completo para Barbearias',
+  description: 'Sistema de agendamento online, gestão de clientes, controle financeiro e muito mais',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -20,14 +19,14 @@ export const metadata = {
   },
   openGraph: {
     type: 'website',
-    siteName: 'Barbershop Scheduler',
-    title: 'Barbershop Scheduler',
-    description: 'Sistema de agendamento e gestão para barbearias',
+    siteName: 'BarberShop',
+    title: 'BarberShop - Sistema Completo para Barbearias',
+    description: 'Sistema de agendamento online, gestão de clientes, controle financeiro e muito mais',
   },
   twitter: {
     card: 'summary',
-    title: 'Barbershop Scheduler',
-    description: 'Sistema de agendamento e gestão para barbearias',
+    title: 'BarberShop - Sistema Completo para Barbearias',
+    description: 'Sistema de agendamento online, gestão de clientes, controle financeiro e muito mais',
   },
 }
 

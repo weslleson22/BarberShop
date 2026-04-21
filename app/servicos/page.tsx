@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Scissors, Clock, DollarSign, Plus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useRouter } from 'next/navigation'
 
 interface Service {
   id: string
@@ -17,6 +19,8 @@ interface Service {
 }
 
 export default function ServicosPage() {
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -33,6 +37,11 @@ export default function ServicosPage() {
   useEffect(() => {
     fetchServices()
   }, [])
+
+  // Página pública de serviços - todos podem visualizar
+
+  // Controlar visibilidade do botão de adicionar/editar serviços
+  const canManageServices = user?.role === 'ADMIN'
 
   const fetchServices = async () => {
     try {
@@ -192,17 +201,19 @@ export default function ServicosPage() {
             <h1 className="text-3xl font-bold text-gray-900">Serviços</h1>
             <p className="text-gray-600 mt-2">Gerencie todos os serviços oferecidos pela barbearia</p>
           </div>
-          <button
-            onClick={() => {
-              setShowAddForm(true)
-              setEditingService(null)
-              setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Novo Serviço
-          </button>
+          {canManageServices && (
+            <button
+              onClick={() => {
+                setShowAddForm(true)
+                setEditingService(null)
+                setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Novo Serviço
+            </button>
+          )}
         </div>
       </div>
 
@@ -318,8 +329,8 @@ export default function ServicosPage() {
         </div>
       )}
 
-      {/* Lista de Serviços */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Lista de Serviços em Cards */}
+      <div className="bg-white rounded-lg shadow-md p-6">
         {filteredServices.length === 0 ? (
           <div className="text-center py-12">
             <Scissors className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -329,101 +340,98 @@ export default function ServicosPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Serviço
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Duração
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Preço
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Agendamentos
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredServices.map((service) => (
-                  <tr key={service.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Scissors className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{service.name}</div>
-                          {service.description && (
-                            <div className="text-sm text-gray-500">{service.description}</div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                        {service.duration} min
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <DollarSign className="w-4 h-4 text-gray-400 mr-2" />
-                        {formatCurrency(service.price)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-96 overflow-y-auto">
+            {filteredServices.map((service) => (
+              <div 
+                key={service.id} 
+                className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer hover:border-blue-300"
+                onClick={() => router.push('/agendar?service=' + service.id)}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                      <Scissors className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{service.name}</h3>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         service.isActive 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
                         {service.isActive ? 'Ativo' : 'Inativo'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {service._count?.appointments || 0} agendamentos
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(service)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Editar"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(service.id, service.isActive)}
-                          className={service.isActive ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'}
-                          title={service.isActive ? 'Desativar' : 'Ativar'}
-                        >
-                          {service.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(service.id)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </div>
+                
+                {service.description && (
+                  <p className="text-gray-600 text-sm mb-3">{service.description}</p>
+                )}
+                
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center text-sm text-gray-700">
+                    <Clock className="w-4 h-4 text-gray-400 mr-1" />
+                    {service.duration} min
+                  </div>
+                  <div className="flex items-center text-sm font-semibold text-gray-900">
+                    <DollarSign className="w-4 h-4 text-gray-400 mr-1" />
+                    {formatCurrency(service.price)}
+                  </div>
+                </div>
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    router.push('/agendar?service=' + service.id)
+                  }}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  Agendar Agora
+                </button>
+                
+                {/* Ações de gerenciamento apenas para administradores */}
+                {canManageServices && (
+                  <div className="flex space-x-2 mt-3 pt-3 border-t border-gray-200">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEdit(service)
+                      }}
+                      className="flex-1 text-blue-600 hover:text-blue-900 text-sm"
+                      title="Editar"
+                    >
+                      <Edit className="w-4 h-4 inline mr-1" />
+                      Editar
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleActive(service.id, service.isActive)
+                      }}
+                      className={`flex-1 text-sm ${
+                        service.isActive ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'
+                      }`}
+                      title={service.isActive ? 'Desativar' : 'Ativar'}
+                    >
+                      {service.isActive ? <EyeOff className="w-4 h-4 inline mr-1" /> : <Eye className="w-4 h-4 inline mr-1" />}
+                      {service.isActive ? 'Desativar' : 'Ativar'}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(service.id)
+                      }}
+                      className="flex-1 text-red-600 hover:text-red-900 text-sm"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-4 h-4 inline mr-1" />
+                      Excluir
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>

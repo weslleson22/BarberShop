@@ -1,0 +1,160 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\wesll\\Documents\\Dev\\Projeto_app\\frontend\\playwright.config.ts",
+    "rootDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Users\\wesll\\Documents\\Dev\\Projeto_app\\frontend\\tests\\e2e\\global-setup.ts",
+    "globalTeardown": "C:\\Users\\wesll\\Documents\\Dev\\Projeto_app\\frontend\\tests\\e2e\\global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "iPad",
+        "name": "iPad",
+        "testDir": "C:/Users/wesll/Documents/Dev/Projeto_app/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results.xml"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 6,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "Error: Aplicação apresenta erros críticos",
+      "stack": "Error: Aplicação apresenta erros críticos\n    at globalSetup (C:\\Users\\wesll\\Documents\\Dev\\Projeto_app\\frontend\\tests\\e2e\\global-setup.ts:34:13)",
+      "location": {
+        "file": "C:\\Users\\wesll\\Documents\\Dev\\Projeto_app\\frontend\\tests\\e2e\\global-setup.ts",
+        "column": 13,
+        "line": 34
+      },
+      "snippet": "\u001b[90m   at \u001b[39mglobal-setup.ts:34\n\n\u001b[0m \u001b[90m 32 |\u001b[39m     \n \u001b[90m 33 |\u001b[39m     \u001b[36mif\u001b[39m (hasErrors) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 34 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Aplicação apresenta erros críticos'\u001b[39m)\n \u001b[90m    |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 35 |\u001b[39m     }\n \u001b[90m 36 |\u001b[39m     \n \u001b[90m 37 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m'Aplicação está disponível e funcionando'\u001b[39m)\u001b[0m"
+    }
+  ],
+  "stats": {
+    "startTime": "2026-04-21T04:15:02.148Z",
+    "duration": 21108.543999999998,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

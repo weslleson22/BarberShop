@@ -51,15 +51,17 @@ export function calculateAvailableSlots(
   workingHours = { start: 8, end: 18 }
 ): TimeSlot[] {
   const slots: TimeSlot[] = []
-  const currentDate = new Date(date)
-  currentDate.setHours(0, 0, 0, 0)
+  
+  // Criar data base no timezone local para consistência
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const day = date.getDate()
   
   // Gerar slots de 30 minutos durante o horário de trabalho
   for (let hour = workingHours.start; hour < workingHours.end; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
-      const startTime = new Date(currentDate)
-      startTime.setHours(hour, minute, 0, 0)
-      
+      // Criar horários no timezone local
+      const startTime = new Date(year, month, day, hour, minute, 0, 0)
       const endTime = new Date(startTime.getTime() + serviceDuration * 60000)
       
       // Verificar se o slot está dentro do horário de trabalho
@@ -105,6 +107,11 @@ export function validateAppointmentTime(
   
   if (endTime.getHours() > workingHours.end || 
       (endTime.getHours() === workingHours.end && endTime.getMinutes() > 0)) {
+    return { isValid: false, error: 'Serviço ultrapassa o horário de funcionamento' }
+  }
+  
+  // Serviço que termina exatamente no horário de fechamento também não é permitido
+  if (endTime.getHours() === workingHours.end && endTime.getMinutes() === 0) {
     return { isValid: false, error: 'Serviço ultrapassa o horário de funcionamento' }
   }
   

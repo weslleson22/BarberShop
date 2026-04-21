@@ -14,25 +14,54 @@ import {
   Shield
 } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
 
 export default function Navigation() {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const isActive = (path: string) => pathname === path
 
-  const navigationItems = [
-    { href: '/dashboard/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/agenda', label: 'Agenda', icon: Calendar },
-    { href: '/clientes', label: 'Clientes', icon: Users },
-    { href: '/servicos', label: 'Serviços', icon: Scissors },
-    { href: '/usuarios', label: 'Usuários', icon: Shield },
-  ]
+  // Itens de navegação baseados no nível de acesso
+  const getNavigationItems = () => {
+    if (!user) return []
+
+    let items = []
+
+    // Dashboard - todos os usuários logados
+    items.push({ href: '/dashboard/dashboard', label: 'Dashboard', icon: Home })
+
+    // CLIENT - apenas dashboard e agendar
+    if (user.role === 'CLIENT') {
+      items.push({ href: '/agendar', label: 'Agendar', icon: Calendar })
+      return items
+    }
+
+    // BARBER - dashboard, agenda, clientes, serviços
+    if (user.role === 'BARBER') {
+      items.push({ href: '/agenda', label: 'Agenda', icon: Calendar })
+      items.push({ href: '/clientes', label: 'Clientes', icon: Users })
+      items.push({ href: '/servicos', label: 'Serviços', icon: Scissors })
+      return items
+    }
+
+    // ADMIN - acesso total
+    if (user.role === 'ADMIN') {
+      items.push({ href: '/agenda', label: 'Agenda', icon: Calendar })
+      items.push({ href: '/clientes', label: 'Clientes', icon: Users })
+      items.push({ href: '/servicos', label: 'Serviços', icon: Scissors })
+      items.push({ href: '/usuarios', label: 'Usuários', icon: Shield })
+      return items
+    }
+
+    return items
+  }
+
+  const navigationItems = getNavigationItems()
 
   const handleLogout = () => {
-    localStorage.removeItem('auth-token')
-    localStorage.removeItem('user-data')
-    window.location.href = '/login'
+    logout()
   }
 
   // Não mostrar navegação em páginas de login, registro e página inicial

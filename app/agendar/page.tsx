@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Clock, User, Calendar } from 'lucide-react'
+import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home } from 'lucide-react'
 import { BackButton } from '@/components/Navigation'
+import Link from 'next/link'
 
 interface Service {
   id: string
@@ -83,8 +84,8 @@ export default function AgendarPage() {
     try {
       console.log('=== BUSCANDO BARBEIROS DO PRISMA PARA AGENDAMENTO ===')
       
-      // Apenas barbeiros reais do Prisma via API
-      const response = await fetch('/api/users?role=BARBER')
+      // Apenas barbeiros reais do Prisma via API PÚBLICA (sem autenticação)
+      const response = await fetch('/api/users/public?role=BARBER')
       if (response.ok) {
         const data = await response.json()
         console.log('Barbeiros recebidos do Prisma:', data)
@@ -305,7 +306,27 @@ export default function AgendarPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      {/* Botões de navegação */}
+      <div className="absolute top-4 left-4 flex space-x-2">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Voltar"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Voltar</span>
+        </button>
+        <Link
+          href="/"
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Página Inicial"
+        >
+          <Home className="w-4 h-4" />
+          <span>Home</span>
+        </Link>
+      </div>
+      
+      <div className="max-w-4xl mx-auto px-4 pt-16">
         <BackButton href="/" label="Voltar para página inicial" />
         {/* Progress Bar */}
         <div className="mb-8">

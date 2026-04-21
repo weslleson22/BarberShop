@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, DollarSign, Users, Clock } from 'lucide-react'
+import { Calendar, DollarSign, Users, Clock, LogOut } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useRouter } from 'next/navigation'
 
 interface DashboardStats {
   todayAppointments: number
@@ -20,6 +22,8 @@ interface Appointment {
 }
 
 export default function DashboardPage() {
+  const { user, loading: authLoading, logout } = useAuth()
+  const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     todayAppointments: 0,
     todayRevenue: 0,
@@ -48,6 +52,22 @@ export default function DashboardPage() {
     console.log('=== CARREGANDO DASHBOARD COM DADOS DO PRISMA ===')
     fetchDashboardData()
   }, [])
+
+  // Aguardar carregamento inicial do contexto
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Controlar visibilidade das ações do dashboard
+  const canManageUsers = user?.role === 'ADMIN'
+  const canManageServices = user?.role === 'ADMIN' || user?.role === 'BARBER'
 
   const fetchDashboardData = async () => {
     try {
@@ -210,73 +230,116 @@ export default function DashboardPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">
-          Bem-vindo(a), Admin Demo! Aqui está o resumo de hoje.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-2">
+              Bem-vindo(a), {user?.name}! 
+              {user?.role === 'ADMIN' && ' Aqui está o resumo completo da sua barbearia.'}
+              {user?.role === 'BARBER' && ' Aqui está sua agenda e informações do dia.'}
+              {user?.role === 'CLIENT' && ' Aqui está seu perfil e agendamentos.'}
+            </p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Perfil</p>
+              <p className="font-semibold text-gray-900">{user?.name}</p>
+              <p className="text-sm text-blue-600">{user?.role}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 font-bold text-lg">
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            </div>
+            <button
+              onClick={logout}
+              className="ml-4 p-2 bg-red-100 rounded-full hover:bg-red-200 transition-colors"
+              title="Sair"
+            >
+              <LogOut className="w-5 h-5 text-red-600" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Personalizados por perfil */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Card de Agendamentos - visível para todos */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-full">
               <Calendar className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Agendamentos Hoje</p>
+              <p className="text-sm font-medium text-gray-600">
+                {user?.role === 'CLIENT' ? 'Seus Agendamentos' : 'Agendamentos Hoje'}
+              </p>
               <p className="text-2xl font-semibold text-gray-900">{stats.todayAppointments}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-full">
-              <DollarSign className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Faturamento Hoje</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.todayRevenue)}</p>
+        {/* Card de Faturamento - apenas ADMIN */}
+        {canManageUsers && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-full">
+                <DollarSign className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Faturamento Hoje</p>
+                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.todayRevenue)}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total de Clientes</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.totalClients}</p>
+        {/* Card de Clientes - ADMIN e BARBER */}
+        {(canManageUsers || canManageServices) && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-full">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">
+                  {user?.role === 'CLIENT' ? 'Seu Perfil' : 'Total de Clientes'}
+                </p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.totalClients}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-full">
-              <Clock className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total de Serviços</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.totalServices}</p>
+        {/* Card de Serviços - ADMIN e BARBER */}
+        {canManageServices && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-purple-100 rounded-full">
+                <Clock className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total de Serviços</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.totalServices}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-orange-100 rounded-full">
-              <Users className="h-6 w-6 text-orange-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total de Usuários</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</p>
+        {/* Card de Usuários - apenas ADMIN */}
+        {canManageUsers && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-orange-100 rounded-full">
+                <Users className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total de Usuários</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Next Appointment Card */}
@@ -349,18 +412,22 @@ export default function DashboardPage() {
         >
           Novo Agendamento
         </button>
-        <button
-          onClick={() => window.location.href = '/clientes'}
-          className="bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          Gerenciar Clientes
-        </button>
-        <button
-          onClick={() => window.location.href = '/servicos'}
-          className="bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          Gerenciar Serviços
-        </button>
+        {canManageServices && (
+          <button
+            onClick={() => window.location.href = '/servicos'}
+            className="bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Gerenciar Serviços
+          </button>
+        )}
+        {canManageUsers && (
+          <button
+            onClick={() => window.location.href = '/usuarios'}
+            className="bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Gerenciar Usuários
+          </button>
+        )}
       </div>
     </div>
   )

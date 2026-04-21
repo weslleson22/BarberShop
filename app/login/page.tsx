@@ -3,13 +3,38 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ArrowLeft, Home } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const router = useRouter()
+  
+  // Obter redirecionamento baseado em role ou parâmetro URL
+  const getRedirectUrl = (userRole: string) => {
+    // Priorizar parâmetro redirect da URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const redirect = urlParams.get('redirect')
+    
+    if (redirect) {
+      console.log('Usando redirect da URL:', redirect)
+      return redirect
+    }
+    
+    // Se não tiver redirect, usar rota baseada no role
+    const roleRedirect = {
+      'ADMIN': '/dashboard',
+      'BARBER': '/dashboard', 
+      'CLIENT': '/dashboard'
+    }[userRole] || '/dashboard'
+    
+    console.log('Usando redirect por role:', userRole, '->', roleRedirect)
+    return roleRedirect
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,21 +42,36 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if (response.ok) {
-        router.push('/dashboard')
+      console.log('=== PÁGINA DE LOGIN - ENVIANDO ===')
+      console.log('Email:', email)
+      console.log('Password:', password ? '***' : 'vazio')
+      
+      const success = await login(email, password)
+      
+      console.log('Resultado do login:', success)
+      
+      if (success) {
+        console.log('Login bem-sucedido, aguardando dados do usuário...')
+        
+        // Aguardar um pouco para o usuário ser atualizado no contexto
+        setTimeout(() => {
+          const urlParams = new URLSearchParams(window.location.search)
+          const redirect = urlParams.get('redirect')
+          
+          if (redirect) {
+            console.log('Usando redirect da URL:', redirect)
+            router.push(redirect)
+          } else {
+            console.log('Redirecionando para dashboard padrão')
+            router.push('/dashboard')
+          }
+        }, 100)
       } else {
-        const data = await response.json()
-        setError(data.error || 'Erro ao fazer login')
+        console.log('Login falhou, mostrando erro')
+        setError('Email ou senha incorretos')
       }
     } catch (error) {
+      console.error('Erro no handleSubmit:', error)
       setError('Erro de conexão')
     } finally {
       setLoading(false)
@@ -40,6 +80,26 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Botões de navegação */}
+      <div className="absolute top-4 left-4 flex space-x-2">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Voltar"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Voltar</span>
+        </button>
+        <Link
+          href="/"
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Página Inicial"
+        >
+          <Home className="w-4 h-4" />
+          <span>Home</span>
+        </Link>
+      </div>
+      
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

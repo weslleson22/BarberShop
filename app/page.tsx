@@ -23,7 +23,7 @@ export default function HomePage() {
       if (response.ok) {
         const data = await response.json()
         console.log('Serviços recebidos do Prisma para home:', data.length)
-        setServices(data.slice(0, 3)) // Show only first 3 services
+        setServices(data) // Show all services
       } else {
         console.error('Erro ao buscar serviços do Prisma:', response.status)
         setServices([]) // Sem dados mockados
@@ -38,62 +38,12 @@ export default function HomePage() {
     if (user) {
       router.push('/dashboard')
     } else {
-      router.push('/agendar')
+      router.push('/login')
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">BarberShop</h1>
-            </div>
-            <div className="flex space-x-4">
-              <button
-                onClick={() => router.push('/')}
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Home
-              </button>
-              {user ? (
-                <>
-                  <button
-                    onClick={() => router.push('/dashboard')}
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={() => router.push('/agendar')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
-                  >
-                    Agendar
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => router.push('/login')}
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => router.push('/register')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
-                  >
-                    Cadastrar Barbearia
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -110,15 +60,18 @@ export default function HomePage() {
               onClick={handleGetStarted}
               className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
             >
-              {user ? 'Ir para Dashboard' : 'Agendar Agora'}
+              {user ? 'Ir para Dashboard' : 'Fazer Login'}
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
-            <button
-              onClick={() => router.push('/register')}
-              className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-50 transition-colors"
-            >
-              Cadastrar Barbearia
-            </button>
+            {/* Cadastro de barbearia apenas para ADMIN logado */}
+            {user?.role === 'ADMIN' && (
+              <button
+                onClick={() => router.push('/register')}
+                className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-50 transition-colors"
+              >
+                Cadastrar Barbearia
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -170,39 +123,81 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Services Preview */}
+      {/* Services Preview - Horizontal Carousel */}
       {services.length > 0 && (
         <section className="py-20 px-4 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
               Nossos Serviços
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {services.map((service: any, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-md p-6">
-                  <h3 className="text-xl font-semibold mb-2">{service.name}</h3>
-                  {service.description && (
-                    <p className="text-gray-600 mb-4">{service.description}</p>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-blue-600">
-                      R$ {service.price}
-                    </span>
-                    <div className="flex items-center text-gray-500">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {service.duration}min
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center mt-8">
+            
+            {/* Carousel Container */}
+            <div className="relative">
+              {/* Navigation Arrows */}
               <button
-                onClick={() => router.push('/agendar')}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                onClick={() => {
+                  const container = document.getElementById('services-carousel')
+                  if (container) {
+                    container.scrollBy({ left: -320, behavior: 'smooth' })
+                  }
+                }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-100 transition-colors"
+                style={{ left: '-20px' }}
               >
-                Ver Todos os Serviços
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
+              
+              <button
+                onClick={() => {
+                  const container = document.getElementById('services-carousel')
+                  if (container) {
+                    container.scrollBy({ left: 320, behavior: 'smooth' })
+                  }
+                }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-100 transition-colors"
+                style={{ right: '-20px' }}
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* Services Carousel */}
+              <div 
+                id="services-carousel"
+                className="flex overflow-x-auto space-x-6 pb-4 scrollbar-hide"
+                style={{ scrollSnapType: 'x mandatory' }}
+              >
+                {services.map((service: any, index) => (
+                  <div 
+                    key={index} 
+                    className="flex-none w-80 bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+                    style={{ scrollSnapAlign: 'start' }}
+                  >
+                    <h3 className="text-xl font-semibold mb-2">{service.name}</h3>
+                    {service.description && (
+                      <p className="text-gray-600 mb-4">{service.description}</p>
+                    )}
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-2xl font-bold text-blue-600">
+                        R$ {service.price}
+                      </span>
+                      <div className="flex items-center text-gray-500">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {service.duration}min
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => router.push('/agendar?service=' + service.id)}
+                      className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                    >
+                      Agendar Agora
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -310,7 +305,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Barbershop Scheduler. Todos os direitos reservados.</p>
+            <p>&copy; 2026 Barbershop Scheduler. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

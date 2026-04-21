@@ -7,8 +7,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const active = searchParams.get('active')
 
-    // Usando o ID real da barbearia para buscar serviços
-    const barbershopId = 'cmo6dajse0000tlnihesqqda8'
+    // Buscar a primeira barbearia disponível (ou criar lógica multi-tenant)
+    let barbershopId = 'cmo6dajse0000tlnihesqqda8' // fallback
+    
+    try {
+      const barbershop = await prisma.barbershop.findFirst({
+        select: { id: true }
+      })
+      if (barbershop) {
+        barbershopId = barbershop.id
+        console.log('Usando barbearia encontrada:', barbershopId)
+      }
+    } catch (error) {
+      console.log('Usando barbearia fallback:', barbershopId)
+    }
     
     const where: any = {
       barbershopId,

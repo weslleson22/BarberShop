@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useRouter } from 'next/navigation'
 
 interface User {
   id: string
@@ -15,6 +17,8 @@ interface User {
 }
 
 export default function UsuariosPage() {
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -39,6 +43,40 @@ export default function UsuariosPage() {
       fetchUsers()
     }
   }, [mounted])
+
+  // Verificar autenticação e permissão
+  useEffect(() => {
+    console.log('=== USUÁRIOS - VERIFICANDO AUTENTICAÇÃO ===')
+    console.log('authLoading:', authLoading)
+    console.log('user:', user)
+    console.log('user.role:', user?.role)
+    
+    if (!authLoading) {
+      if (!user) {
+        console.log('USUÁRIOS: Usuário não autenticado, redirecionando para login')
+        router.push('/login')
+        return
+      }
+      
+      // Apenas ADMIN pode acessar página de usuários
+      if (user.role !== 'ADMIN') {
+        console.log('USUÁRIOS: Usuário sem permissão - Role:', user.role, '- Redirecionando para dashboard')
+        router.push('/dashboard')
+        return
+      }
+      
+      console.log('USUÁRIOS: Usuário com permissão - Role:', user.role, '- Continuando na página')
+    }
+  }, [user, authLoading, router])
+
+  // Aguardar autenticação
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   const fetchUsers = async () => {
     try {

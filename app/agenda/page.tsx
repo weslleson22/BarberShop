@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, User, Phone, DollarSign } from 'lucide-react'
+import { Calendar, Clock, User, Phone, DollarSign, ArrowLeft, Home } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 interface Appointment {
   id: string
@@ -30,13 +33,11 @@ interface Appointment {
 }
 
 export default function AgendaPage() {
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
-
-  useEffect(() => {
-    fetchAppointments()
-  }, [selectedDate])
 
   const fetchAppointments = async () => {
     try {
@@ -98,6 +99,20 @@ export default function AgendaPage() {
     }
   }
 
+  useEffect(() => {
+    fetchAppointments()
+  }, [selectedDate])
+
+  // Aguardar carregamento inicial do contexto
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Carregando...</p>
+      </div>
+    )
+  }
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -148,7 +163,27 @@ export default function AgendaPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
+      {/* Botões de navegação */}
+      <div className="absolute top-4 left-4 flex space-x-2">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Voltar"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Voltar</span>
+        </button>
+        <Link
+          href="/"
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Página Inicial"
+        >
+          <Home className="w-4 h-4" />
+          <span>Home</span>
+        </Link>
+      </div>
+      
+      <div className="mb-8 pt-16">
         <h1 className="text-3xl font-bold text-gray-900">Agenda</h1>
         <p className="text-gray-600 mt-2">Visualize e gerencie todos os agendamentos</p>
       </div>

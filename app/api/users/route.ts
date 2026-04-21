@@ -1,14 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import jwt from 'jsonwebtoken'
 
 // GET - Listar usuários
 export async function GET(request: NextRequest) {
   try {
     console.log('=== API DE USUÁRIOS - INICIANDO BUSCA ===')
     
+    const { searchParams } = new URL(request.url)
+    const role = searchParams.get('role')
+    
+    const where: any = {}
+    
+    // Filtrar por role se especificado
+    if (role) {
+      where.role = role
+      console.log('Filtrando usuários por role:', role)
+    }
+    
     // Exatamente como no script de verificação que funcionou
     const users = await prisma.user.findMany({
+      where,
       select: {
         id: true,
         name: true,
@@ -77,6 +90,21 @@ export async function POST(request: NextRequest) {
     // Criptografar senha usando bcrypt
     const hashedPassword = await hashPassword(password)
 
+    // Buscar uma barbearia válida - CRÍTICO para produção
+    const barbershop = await prisma.barbershop.findFirst({
+      select: { id: true }
+    })
+    
+    if (!barbershop) {
+      return NextResponse.json(
+        { error: 'Nenhuma barbearia encontrada. Configure uma barbearia primeiro.' },
+        { status: 400 }
+      )
+    }
+    
+    const barbershopId = barbershop.id
+    console.log('Usando barbearia:', barbershopId)
+
     // Criar novo usuário
     const user = await prisma.user.create({
       data: {
@@ -86,7 +114,7 @@ export async function POST(request: NextRequest) {
         role,
         password: hashedPassword,
         isActive: isActive !== undefined ? isActive : true,
-        barbershopId: 'cmo6dajse0000tlnihesqqda8'
+        barbershopId
       },
       select: {
         id: true,
@@ -117,7 +145,7 @@ export async function PUT(request: NextRequest) {
     const data = await request.json()
     const { id, name, email, phone, role, password, isActive } = data
 
-    console.log('Dados recebidos para atualizar usuário:', { id, name, email, phone, role, isActive })
+    console.log('PUT /api/users - Dados recebidos:', { id, name, email, phone, role, isActive })
 
     if (!id) {
       return NextResponse.json(
@@ -126,14 +154,10 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Verificar se usuário existe (sem filtro de barbershopId)
+    // Verificar se usuário existe
     const existingUser = await prisma.user.findUnique({
-      where: {
-        id: id
-      }
+      where: { id: id }
     })
-
-    console.log('Usuário encontrado para atualização:', existingUser)
 
     if (!existingUser) {
       return NextResponse.json(
@@ -142,13 +166,30 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // Verificar se email já existe para outro usuário
+    if (email && email !== existingUser.email) {
+      const emailExists = await prisma.user.findFirst({
+        where: {
+          email: email,
+          id: { not: id }
+        }
+      })
+      
+      if (emailExists) {
+        return NextResponse.json(
+          { error: 'Email já está em uso por outro usuário' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Preparar dados de atualização
     const updateData: any = {
-      name,
-      email,
-      phone: phone || null,
-      role,
-      isActive,
+      name: name || existingUser.name,
+      email: email || existingUser.email,
+      phone: phone !== undefined ? phone : existingUser.phone,
+      role: role || existingUser.role,
+      isActive: isActive !== undefined ? isActive : existingUser.isActive,
     }
 
     // Adicionar senha apenas se fornecida
@@ -198,14 +239,10 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Excluindo usuário com ID:', id)
 
-    // Verificar se usuário existe (sem filtro de barbershopId)
+    // Verificar se usuário existe
     const existingUser = await prisma.user.findUnique({
-      where: {
-        id: id
-      }
+      where: { id: id }
     })
-
-    console.log('Usuário encontrado para exclusão:', existingUser)
 
     if (!existingUser) {
       return NextResponse.json(
@@ -214,13 +251,40 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // Verificar se usuário tem agendamentos como barbeiro ou cliente
+    const barberAppointments = await prisma.appointment.count({
+      where: { barberId: id }
+    })
+    
+    const clientAppointments = await prisma.appointment.count({
+      where: { clientId: id }
+    })
+
+    const totalAppointments = barberAppointments + clientAppointments
+    if (totalAppointments > 0) {
+      return NextResponse.json(
+        { 
+          error: 'Não é possível excluir usuário com agendamentos existentes',
+          details: `Usuário possui ${totalAppointments} agendamento(s) associado(s)`
+        },
+        { status: 400 }
+      )
+    }
+
     // Excluir usuário
     await prisma.user.delete({
       where: { id: id }
     })
 
-    console.log('Usuário excluído com sucesso')
-    return NextResponse.json({ message: 'Usuário excluído com sucesso' })
+    console.log('Usuário excluído com sucesso:', existingUser.name)
+    return NextResponse.json({ 
+      message: 'Usuário excluído com sucesso',
+      deletedUser: {
+        id: existingUser.id,
+        name: existingUser.name,
+        email: existingUser.email
+      }
+    })
   } catch (error) {
     console.error('Delete user error:', error)
     return NextResponse.json(

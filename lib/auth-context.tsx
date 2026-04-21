@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 interface User {
   id: string
@@ -8,68 +8,58 @@ interface User {
   email: string
   role: 'ADMIN' | 'BARBER' | 'CLIENT'
   barbershopId?: string
+  barbershop?: {
+    id: string
+    name: string
+  }
 }
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
-  register: (data: RegisterData) => Promise<boolean>
-  isLoading: boolean
-}
-
-interface RegisterData {
-  name: string
-  email: string
-  password: string
-  role: 'ADMIN' | 'BARBER' | 'CLIENT'
-  barbershopId?: string
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simulação rápida para garantir que o dashboard funcione
-    const token = localStorage.getItem('auth-token')
-    if (token) {
-      // TODO: Validate token with backend
-      const userData = localStorage.getItem('user-data')
-      if (userData) {
-        setUser(JSON.parse(userData))
+    // Check if user is logged in on mount
+    const token = localStorage.getItem('token')
+    const userData = localStorage.getItem('user')
+
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData)
+        setUser(parsedUser)
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
       }
-    } else {
-      // Se não houver token, definir um usuário mockado para demonstração
-      setUser({
-        id: '1',
-        name: 'Admin Demo',
-        email: 'admin@barberiacentral.com',
-        role: 'ADMIN',
-        barbershopId: '1'
-      })
     }
-    
-    // Garantir que isLoading seja false rapidamente
-    setTimeout(() => setIsLoading(false), 100)
+    setLoading(false)
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // TODO: Implement actual login API call
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       })
 
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
-        localStorage.setItem('auth-token', data.token)
-        localStorage.setItem('user-data', JSON.stringify(data.user))
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
         return true
       }
       return false
@@ -81,34 +71,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem('auth-token')
-    localStorage.removeItem('user-data')
-  }
-
-  const register = async (data: RegisterData): Promise<boolean> => {
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        setUser(result.user)
-        localStorage.setItem('auth-token', result.token)
-        localStorage.setItem('user-data', JSON.stringify(result.user))
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('Register error:', error)
-      return false
-    }
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    
+    // Limpar cookies de autenticação
+    document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    
+    // Forçar reload da página para limpar qualquer estado residual
+    window.location.href = '/'
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )

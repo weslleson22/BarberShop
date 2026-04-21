@@ -86,3 +86,80 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// PUT - Atualizar serviço
+export async function PUT(request: NextRequest) {
+  try {
+    const token = request.cookies.get('auth-token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const decoded = verifyToken(token)
+    
+    if (!decoded || !decoded.barbershopId) {
+      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
+    }
+    
+    if (decoded.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Apenas administradores podem atualizar serviços' }, { status: 403 })
+    }
+
+    const data = await request.json()
+    const { id, name, description, price, duration, isActive } = data
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID do serviço é obrigatório' },
+        { status: 400 }
+      )
+    }
+
+    if (!name || !price || !duration) {
+      return NextResponse.json(
+        { error: 'Nome, preço e duração são obrigatórios' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar se serviço existe
+    const existingService = await prisma.service.findUnique({
+      where: { id: id }
+    })
+
+    if (!existingService) {
+      return NextResponse.json(
+        { error: 'Serviço não encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Verificar se serviço pertence à barbearia do usuário
+    if (existingService.barbershopId !== decoded.barbershopId) {
+      return NextResponse.json(
+        { error: 'Você não pode atualizar este serviço' },
+        { status: 403 }
+      )
+    }
+
+    // Atualizar serviço
+    const service = await prisma.service.update({
+      where: { id: id },
+      data: {
+        name,
+        description,
+        price: parseFloat(price),
+        duration: parseInt(duration),
+        isActive: isActive !== undefined ? isActive : existingService.isActive,
+      },
+    })
+
+    return NextResponse.json(service)
+  } catch (error) {
+    console.error('Update service error:', error)
+    return NextResponse.json(
+      { error: 'Erro ao atualizar serviço' },
+      { status: 500 }
+    )
+  }
+}

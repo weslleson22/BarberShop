@@ -22,6 +22,11 @@ export async function GET(request: NextRequest) {
       barbershopId: decoded.barbershopId,
     }
 
+    // CLIENT só pode ver seus próprios agendamentos
+    if (decoded.role === 'CLIENT') {
+      where.clientId = decoded.id
+    }
+
     if (date) {
       const startDate = new Date(date)
       startDate.setHours(0, 0, 0, 0)
