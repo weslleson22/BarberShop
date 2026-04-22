@@ -7,11 +7,8 @@ interface User {
   name: string
   email: string
   role: 'ADMIN' | 'BARBER' | 'CLIENT'
-  barbershopId?: string
-  barbershop?: {
-    id: string
-    name: string
-  }
+  barbershopId: string
+  isActive: boolean
 }
 
 interface AuthContextType {
@@ -29,26 +26,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is logged in on mount
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
-
+    // Check for existing session on mount
+    const token = localStorage.getItem('auth_token')
+    const userData = localStorage.getItem('user_data')
+    
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData)
         setUser(parsedUser)
       } catch (error) {
         console.error('Error parsing user data:', error)
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('user_data')
       }
     }
+    
     setLoading(false)
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true)
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -57,14 +56,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setUser(data.user)
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        return true
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Login failed')
       }
-      return false
+
+      const data = await response.json()
+      
+      // Store token and user data
+      localStorage.setItem('auth_token', data.token)
+      localStorage.setItem('user_data', JSON.stringify(data.user))
+      setUser(data.user)
+      
+      return true
     } catch (error) {
       console.error('Login error:', error)
       return false
@@ -76,18 +80,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (name: string, email: string, password: string, phone?: string, role?: string): Promise<boolean> => {
     try {
       setLoading(true)
-      const response = await fetch('/api/users', {
+      
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, phone, role: role || 'CLIENT' }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, phone, role }),
       })
 
-      if (response.ok) {
-        return true
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Registration failed')
       }
-      return false
+
+      const data = await response.json()
+      
+      // Store token and user data
+      localStorage.setItem('auth_token', data.token)
+      localStorage.setItem('user_data', JSON.stringify(data.user))
+      setUser(data.user)
+      
+      return true
     } catch (error) {
-      console.error('Register error:', error)
+      console.error('Registration error:', error)
       return false
     } finally {
       setLoading(false)
@@ -96,14 +112,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    setLoading(false)
     
-    // Limpar cookies de autenticação
+    // Clear localStorage
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_data')
+    
+    // Clear auth cookies
     document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     
-    // Forçar reload da página para limpar qualquer estado residual
+    // Force reload to clear any residual state
     window.location.href = '/'
   }
 

@@ -327,7 +327,7 @@ export default function AgendarPage() {
       </div>
       
       <div className="max-w-4xl mx-auto px-4 pt-16">
-        <BackButton href="/" label="Voltar para página inicial" />
+        <BackButton href="/">Voltar para página inicial</BackButton>
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
