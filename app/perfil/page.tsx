@@ -41,7 +41,7 @@ export default function PerfilPage() {
         const updatedUser = await response.json()
         // Update user in context and localStorage
         localStorage.setItem('user-data', JSON.stringify(updatedUser))
-        window.location.reload()
+        router.push('/perfil')
       } else {
         console.error('Erro ao atualizar perfil')
       }

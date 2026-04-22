@@ -122,8 +122,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     
-    // Force reload to clear any residual state
-    window.location.href = '/'
+    // Force redirect to clear any residual state
+    if (typeof window !== 'undefined') {
+      window.location.href = '/'
+    }
   }
 
   return (
