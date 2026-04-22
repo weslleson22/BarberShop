@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home } from 'lucide-react'
-import { BackButton } from '@/components/Navigation'
+import { BackButton } from '@/components/shared/Navigation'
 import Link from 'next/link'
 
 interface Service {

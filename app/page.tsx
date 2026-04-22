@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Calendar, Users, Clock, DollarSign, ArrowRight, CheckCircle } from 'lucide-react'
+import EnvironmentDebug from '@/components/debug/EnvironmentDebug'
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -246,6 +247,18 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Environment Debug Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            Environment Variables Debug
+          </h2>
+          <div className="max-w-4xl mx-auto">
+            <EnvironmentDebug />
           </div>
         </div>
       </section>
