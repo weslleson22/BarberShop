@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, User, Phone, DollarSign, ArrowLeft, Home } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { useRouter } from 'next/navigation'
+import AgendaSidebar from '@/components/agenda/AgendaSidebar'
+import AgendaHeader from '@/components/agenda/AgendaHeader'
+import CalendarView from '@/components/agenda/CalendarView'
+import AppointmentList from '@/components/agenda/AppointmentList'
+import AppointmentModal from '@/components/agenda/AppointmentModal'
 
 interface Appointment {
   id: string
@@ -37,62 +40,42 @@ export default function AgendaPage() {
   const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
 
   const fetchAppointments = async () => {
     try {
       console.log('=== BUSCANDO AGENDAMENTOS DO PRISMA PARA AGENDA ===')
-      console.log('Data selecionada (formato ISO):', selectedDate)
+      console.log('Data selecionada:', selectedDate)
       
       // Apenas agendamentos reais do Prisma via API pública
       const response = await fetch('/api/appointments/public')
       if (response.ok) {
         const data = await response.json()
         console.log('Agendamentos recebidos do Prisma:', data.length)
-        console.log('Total de agendamentos do Prisma:', data.length)
-        
-        // Debug detalhado de cada agendamento
-        data.forEach((apt: any, index: number) => {
-          const aptDate = new Date(apt.startTime)
-          const aptDateString = aptDate.toISOString().split('T')[0]
-          console.log(`Agendamento ${index + 1}:`)
-          console.log(`  ID: ${apt.id}`)
-          console.log(`  Cliente: ${apt.client?.name}`)
-          console.log(`  Data do agendamento: ${aptDateString}`)
-          console.log(`  Data selecionada: ${selectedDate}`)
-          console.log(`  Coincide: ${aptDateString === selectedDate}`)
-          console.log(`  Horário completo: ${apt.startTime}`)
-          console.log('---')
-        })
+        console.log('Dados completos:', data)
         
         // Filtrar agendamentos pela data selecionada
+        const selectedDateString = selectedDate.toISOString().split('T')[0]
+        console.log('Data selecionada (string):', selectedDateString)
+        
         const filteredAppointments = data.filter((apt: any) => {
           const aptDate = new Date(apt.startTime).toISOString().split('T')[0]
-          const matches = aptDate === selectedDate
-          if (!matches && data.length <= 5) {
-            console.log(`Agendamento ${apt.id} NÃO coincide - Data: ${aptDate} vs Selecionada: ${selectedDate}`)
-          }
+          const matches = aptDate === selectedDateString
+          console.log(`Agendamento ${apt.id}: ${apt.client?.name} - Status: ${apt.status} - Data: ${aptDate} vs Selecionada: ${selectedDateString} - Match: ${matches}`)
           return matches
         })
         
-        console.log('=== RESULTADO DO FILTRO ===')
         console.log('Agendamentos filtrados para a data:', filteredAppointments.length)
-        console.log('Agendamentos que serão mostrados:', filteredAppointments.map((apt: any) => ({
-          id: apt.id,
-          client: apt.client?.name,
-          time: apt.startTime,
-          date: new Date(apt.startTime).toISOString().split('T')[0]
-        })))
-        
+        console.log('Agendamentos filtrados:', filteredAppointments)
         setAppointments(filteredAppointments)
       } else {
         console.error('Erro ao buscar agendamentos do Prisma:', response.status, response.statusText)
-        // Se falhar, mostrar array vazio - sem dados mockados
         setAppointments([])
       }
     } catch (error) {
       console.error('Error ao buscar agendamentos do Prisma:', error)
-      // Em caso de erro, mostrar array vazio - sem dados mockados
       setAppointments([])
     } finally {
       setLoading(false)
@@ -153,6 +136,40 @@ export default function AgendaPage() {
     }
   }
 
+  const handleDateSelect = (date: Date) => {
+    console.log('handleDateSelect chamado com:', date)
+    setSelectedDate(date)
+  }
+
+  const handleNewAppointment = () => {
+    console.log('handleNewAppointment chamado')
+    setEditingAppointment(null)
+    setIsModalOpen(true)
+  }
+
+  const handleEditAppointment = (appointment: Appointment) => {
+    setEditingAppointment(appointment)
+    setIsModalOpen(true)
+  }
+
+  const handleSaveAppointment = (appointment: Appointment) => {
+    fetchAppointments() // Refresh appointments after save
+    setIsModalOpen(false)
+    setEditingAppointment(null)
+  }
+
+  const handleDeleteAppointment = (appointment: Appointment) => {
+    if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
+      // TODO: Implement delete API call
+      console.log('Delete appointment:', appointment)
+    }
+  }
+
+  const handleStatusChange = (appointment: Appointment, newStatus: string) => {
+    // TODO: Implement status change API call
+    console.log('Change status:', appointment, newStatus)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -162,150 +179,69 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Botões de navegação */}
-      <div className="absolute top-4 left-4 flex space-x-2">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-          title="Voltar"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Voltar</span>
-        </button>
-        <Link
-          href="/"
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-          title="Página Inicial"
-        >
-          <Home className="w-4 h-4" />
-          <span>Home</span>
-        </Link>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">
+      <AgendaSidebar />
       
-      <div className="mb-8 pt-16">
-        <h1 className="text-3xl font-bold text-gray-900">Agenda</h1>
-        <p className="text-gray-600 mt-2">Visualize e gerencie todos os agendamentos</p>
-      </div>
-
-      {/* Filtro de Data */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center">
-            <Calendar className="w-5 h-5 text-gray-500 mr-2" />
-            <label htmlFor="date" className="text-sm font-medium text-gray-700 mr-2">
-              Data:
-            </label>
-            <input
-              type="date"
-              id="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Lista de Agendamentos */}
-      <div className="space-y-4">
-        {appointments.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">Nenhum agendamento encontrado</p>
-            <p className="text-gray-400 text-sm mt-2">Tente selecionar outra data</p>
-          </div>
-        ) : (
-          appointments.map((appointment) => (
-            <div key={appointment.id} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-4">
-                    <Clock className="w-5 h-5 text-gray-500 mr-2" />
-                    <span className="text-lg font-semibold text-gray-900">
-                      {formatTime(appointment.startTime)}
-                    </span>
-                    <span className="mx-2 text-gray-500">-</span>
-                    <span className="text-lg text-gray-600">
-                      {formatTime(appointment.endTime)}
-                    </span>
-                    <span className={`ml-4 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                      {getStatusText(appointment.status)}
+      <div className="lg:pl-80">
+        <AgendaHeader onNewAppointment={handleNewAppointment} onDateFilter={handleDateSelect} />
+        
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Calendar View - 2 columns */}
+            <div className="lg:col-span-2">
+              <CalendarView onDateSelect={handleDateSelect} selectedDate={selectedDate} />
+            </div>
+            
+            {/* Quick Stats - 1 column */}
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-white mb-4">Resumo do Dia</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60">Total</span>
+                    <span className="text-2xl font-bold text-white">{appointments.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60">Pendentes</span>
+                    <span className="text-xl font-bold text-yellow-400">
+                      {appointments.filter(a => a.status === 'PENDING').length}
                     </span>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center">
-                      <User className="w-4 h-4 text-gray-500 mr-2" />
-                      <div>
-                        <p className="text-sm text-gray-600">Cliente</p>
-                        <p className="font-medium text-gray-900">{appointment.client.name}</p>
-                        <p className="text-sm text-gray-500">{appointment.client.phone}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <User className="w-4 h-4 text-gray-500 mr-2" />
-                      <div>
-                        <p className="text-sm text-gray-600">Barbeiro</p>
-                        <p className="font-medium text-gray-900">{appointment.barber.name}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <DollarSign className="w-4 h-4 text-gray-500 mr-2" />
-                      <div>
-                        <p className="text-sm text-gray-600">Serviço</p>
-                        <p className="font-medium text-gray-900">{appointment.service.name}</p>
-                        <p className="text-sm text-gray-500">{formatCurrency(appointment.totalAmount)}</p>
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60">Concluídos</span>
+                    <span className="text-xl font-bold text-green-400">
+                      {appointments.filter(a => a.status === 'COMPLETED').length}
+                    </span>
                   </div>
-
-                  {appointment.notes && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Observações:</span> {appointment.notes}
-                      </p>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60">Faturamento</span>
+                    <span className="text-xl font-bold text-yellow-400">
+                      {formatCurrency(appointments.reduce((sum, a) => sum + a.totalAmount, 0))}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          ))
-        )}
+          </div>
+
+          {/* Appointments List */}
+          <AppointmentList 
+            appointments={appointments}
+            loading={loading}
+            onEdit={handleEditAppointment}
+            onDelete={handleDeleteAppointment}
+            onStatusChange={handleStatusChange}
+          />
+        </div>
       </div>
 
-      {/* Resumo do Dia */}
-      {appointments.length > 0 && (
-        <div className="mt-8 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">Resumo do Dia</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-blue-600">Total de Agendamentos</p>
-              <p className="text-2xl font-bold text-blue-900">{appointments.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-blue-600">Pendentes</p>
-              <p className="text-2xl font-bold text-blue-900">
-                {appointments.filter(a => a.status === 'PENDING').length}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-blue-600">Concluídos</p>
-              <p className="text-2xl font-bold text-blue-900">
-                {appointments.filter(a => a.status === 'COMPLETED').length}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-blue-600">Faturamento</p>
-              <p className="text-2xl font-bold text-blue-900">
-                {formatCurrency(appointments.reduce((sum, a) => sum + a.totalAmount, 0))}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Appointment Modal */}
+      <AppointmentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveAppointment}
+        appointment={editingAppointment}
+      />
     </div>
   )
 }

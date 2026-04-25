@@ -101,13 +101,15 @@ export async function criarAgendamento(data: CreateAppointmentData): Promise<any
       throw new Error('Serviço não encontrado')
     }
 
-    const endTime = new Date(data.startTime.getTime() + service.duration * 60000)
+    // Converter startTime para Date se for string
+    const startTime = typeof data.startTime === 'string' ? new Date(data.startTime) : data.startTime
+    const endTime = new Date(startTime.getTime() + service.duration * 60000)
 
     // Verificar disponibilidade antes de criar
     const availability = await verificarDisponibilidade(
       data.barberId,
       data.barbershopId,
-      data.startTime,
+      startTime,
       service.duration
     )
 
@@ -122,7 +124,7 @@ export async function criarAgendamento(data: CreateAppointmentData): Promise<any
         clientId: data.clientId,
         barberId: data.barberId,
         serviceId: data.serviceId,
-        startTime: data.startTime,
+        startTime: startTime,
         endTime,
         status: 'PENDING',
         totalAmount: service.price,
