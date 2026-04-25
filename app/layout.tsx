@@ -6,7 +6,7 @@ import { DatabaseProvider } from '@/components/database-validation/DatabaseValid
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  metadataBase: new URL('http://localhost:3000'),
+  metadataBase: new URL('https://barber-shop-nine-ebon.vercel.app'),
   title: 'BarberShop - Sistema Completo para Barbearias',
   description: 'Sistema de agendamento online, gestão de clientes, controle financeiro e muito mais',
   manifest: '/manifest.json',
