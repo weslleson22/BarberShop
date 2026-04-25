@@ -4,8 +4,9 @@ import { prisma } from '@/lib/prisma'
 // GET - Obter agendamento específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params
   try {
     const appointment = await prisma.appointment.findUnique({
       where: {
@@ -44,8 +45,9 @@ export async function GET(
 // PUT - Atualizar agendamento
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params
   try {
     const body = await request.json()
     const {
@@ -163,8 +165,9 @@ export async function PUT(
 // DELETE - Excluir/Cancelar agendamento
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params
   try {
     // Verificar se o agendamento existe
     const existingAppointment = await prisma.appointment.findUnique({
@@ -216,8 +219,9 @@ export async function DELETE(
 // PATCH - Atualizar status do agendamento
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params
   try {
     const body = await request.json()
     const { status } = body
