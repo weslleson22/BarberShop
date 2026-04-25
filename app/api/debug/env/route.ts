@@ -38,8 +38,7 @@ export async function GET(request: NextRequest) {
       latency: 0,
       error: null as string | null,
       databaseInfo: null as {
-        current_database: string;
-        current_user: string;
+        database_name: string;
       } | null
     }
 
@@ -49,14 +48,13 @@ export async function GET(request: NextRequest) {
         
         // Teste de conexão básico
         const connectionStart = Date.now()
-        await prisma.$queryRaw`SELECT 1`
+        await prisma.$queryRaw`SELECT 1 as test`
         const connectionEnd = Date.now()
         
-        // Obter informações do banco
+        // Obter informações do banco - simplified for Prisma Accelerate
         const dbInfo = await prisma.$queryRaw<{ 
-          current_database: string; 
-          current_user: string; 
-        }[]>`SELECT current_database(), current_user()`
+          database_name: string; 
+        }[]>`SELECT current_database() as database_name`
         
         databaseConnection = {
           status: 'connected',
@@ -67,8 +65,8 @@ export async function GET(request: NextRequest) {
         
         console.log('Banco conectado com sucesso:', {
           latency: databaseConnection.latency,
-          database: databaseConnection.databaseInfo?.current_database,
-          user: databaseConnection.databaseInfo?.current_user
+          database: databaseConnection.databaseInfo?.database_name,
+          user: 'connected'
         })
         
       } catch (dbError) {

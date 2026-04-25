@@ -3,19 +3,18 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    // Test database connection
-    await prisma.$queryRaw`SELECT 1`
+    // Test database connection with a simple query
+    await prisma.$queryRaw`SELECT 1 as test`
     
-    // Get database info
+    // Get basic database info - simplified query
     const result = await prisma.$queryRaw<{ 
-      current_database: string; 
-      current_user: string; 
-    }[]>`SELECT current_database(), current_user()`
+      database_name: string; 
+    }[]>`SELECT current_database() as database_name`
     
     return NextResponse.json({
       status: 'connected',
-      database: result[0]?.current_database || 'unknown',
-      user: result[0]?.current_user || 'unknown',
+      database: result[0]?.database_name || 'unknown',
+      user: 'connected', // Simplified for Prisma Accelerate compatibility
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development'
     })
