@@ -9,6 +9,11 @@ interface User {
   role: 'ADMIN' | 'BARBER' | 'CLIENT'
   barbershopId: string
   isActive: boolean
+  avatar?: string
+  phone?: string
+  address?: string
+  birthDate?: string
+  bio?: string
 }
 
 interface AuthContextType {
@@ -16,6 +21,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   register: (name: string, email: string, password: string, phone?: string, role?: string) => Promise<boolean>
   logout: () => void
+  updateUser: (userData: Partial<User>) => void
   loading: boolean
 }
 
@@ -29,15 +35,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for existing session on mount
     const token = localStorage.getItem('auth_token')
     const userData = localStorage.getItem('user_data')
+    const userAvatar = localStorage.getItem('userAvatar')
     
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData)
+        // Se houver avatar salvo separadamente, adiciona ao usuário
+        if (userAvatar && !parsedUser.avatar) {
+          parsedUser.avatar = userAvatar
+        }
         setUser(parsedUser)
       } catch (error) {
         console.error('Error parsing user data:', error)
         localStorage.removeItem('auth_token')
         localStorage.removeItem('user_data')
+        localStorage.removeItem('userAvatar')
       }
     }
     
@@ -117,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Clear localStorage
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_data')
+    localStorage.removeItem('userAvatar')
     
     // Clear auth cookies
     document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
@@ -128,8 +141,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateUser = (userData: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev
+      const updatedUser = { ...prev, ...userData }
+      // Atualizar localStorage também
+      localStorage.setItem('user_data', JSON.stringify(updatedUser))
+      return updatedUser
+    })
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   )

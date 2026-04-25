@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home } from 'lucide-react'
-import { BackButton } from '@/components/shared/Navigation'
 import Link from 'next/link'
+import AppSidebar from '@/components/dashboard/AppSidebar'
 
 interface Service {
   id: string
@@ -305,48 +305,35 @@ export default function AgendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      {/* Botões de navegação */}
-      <div className="absolute top-4 left-4 flex space-x-2">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-          title="Voltar"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Voltar</span>
-        </button>
-        <Link
-          href="/"
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-          title="Página Inicial"
-        >
-          <Home className="w-4 h-4" />
-          <span>Home</span>
-        </Link>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+      {/* Sidebar Fixado atrás do conteúdo */}
+      <div className="fixed inset-y-0 left-0 z-30 w-80">
+        <AppSidebar />
       </div>
       
-      <div className="max-w-4xl mx-auto px-4 pt-16">
-        <BackButton href="/">Voltar para página inicial</BackButton>
+      {/* Conteúdo principal à frente do sidebar */}
+      <div className="lg:pl-80 relative z-40">
+        <div className="p-6">
+          <div className="max-w-4xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
-            <div className={`flex items-center ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
+            <div className={`flex items-center ${step >= 1 ? 'text-yellow-400' : 'text-white/40'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black' : 'bg-white/10'}`}>
                 1
               </div>
               <span className="ml-2">Serviço</span>
             </div>
-            <ArrowRight className="w-4 h-4 text-gray-400" />
-            <div className={`flex items-center ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
+            <ArrowRight className="w-4 h-4 text-white/40" />
+            <div className={`flex items-center ${step >= 2 ? 'text-yellow-400' : 'text-white/40'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black' : 'bg-white/10'}`}>
                 2
               </div>
               <span className="ml-2">Barbeiro</span>
             </div>
-            <ArrowRight className="w-4 h-4 text-gray-400" />
-            <div className={`flex items-center ${step >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
+            <ArrowRight className="w-4 h-4 text-white/40" />
+            <div className={`flex items-center ${step >= 3 ? 'text-yellow-400' : 'text-white/40'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black' : 'bg-white/10'}`}>
                 3
               </div>
               <span className="ml-2">Horário</span>
@@ -357,23 +344,23 @@ export default function AgendarPage() {
         {/* Step 1: Select Service */}
         {step === 1 && (
           <div>
-            <h2 className="text-2xl font-bold text-center mb-8">Escolha o Serviço</h2>
+            <h2 className="text-2xl font-bold text-center mb-8 text-white">Escolha o Serviço</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {services.map((service) => (
                 <div
                   key={service.id}
                   onClick={() => handleServiceSelect(service)}
-                  className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-500"
+                  className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6 cursor-pointer hover:bg-white/10 transition-all border-2 border-transparent hover:border-yellow-400/50"
                 >
-                  <h3 className="text-lg font-semibold mb-2">{service.name}</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-white">{service.name}</h3>
                   {service.description && (
-                    <p className="text-gray-600 mb-4">{service.description}</p>
+                    <p className="text-white/60 mb-4">{service.description}</p>
                   )}
                   <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-blue-600">
+                    <span className="text-xl font-bold text-yellow-400">
                       {formatCurrency(service.price)}
                     </span>
-                    <div className="flex items-center text-gray-500">
+                    <div className="flex items-center text-white/60">
                       <Clock className="w-4 h-4 mr-1" />
                       {service.duration}min
                     </div>
@@ -387,21 +374,21 @@ export default function AgendarPage() {
         {/* Step 2: Select Barber */}
         {step === 2 && (
           <div>
-            <h2 className="text-2xl font-bold text-center mb-8">Escolha o Barbeiro</h2>
+            <h2 className="text-2xl font-bold text-center mb-8 text-white">Escolha o Barbeiro</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {barbers.map((barber) => (
                 <div
                   key={barber.id}
                   onClick={() => handleBarberSelect(barber)}
-                  className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-500"
+                  className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6 cursor-pointer hover:bg-white/10 transition-all border-2 border-transparent hover:border-yellow-400/50"
                 >
                   <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                      <User className="w-6 h-6 text-black" />
                     </div>
                     <div className="ml-4">
-                      <h3 className="text-lg font-semibold">{barber.name}</h3>
-                      <p className="text-gray-600">{barber.email}</p>
+                      <h3 className="text-lg font-semibold text-white">{barber.name}</h3>
+                      <p className="text-white/60">{barber.email}</p>
                     </div>
                   </div>
                 </div>
@@ -413,26 +400,26 @@ export default function AgendarPage() {
         {/* Step 3: Select Date and Time */}
         {step === 3 && (
           <div>
-            <h2 className="text-2xl font-bold text-center mb-8">Escolha o Horário</h2>
+            <h2 className="text-2xl font-bold text-center mb-8 text-white">Escolha o Horário</h2>
             
             {/* Selected Service and Barber Summary */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Serviço</p>
-                  <p className="font-medium">{selectedService?.name}</p>
-                  <p className="text-blue-600">{selectedService && formatCurrency(selectedService.price)}</p>
+                  <p className="text-sm text-white/60">Serviço</p>
+                  <p className="font-medium text-white">{selectedService?.name}</p>
+                  <p className="text-yellow-400">{selectedService && formatCurrency(selectedService.price)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Barbeiro</p>
-                  <p className="font-medium">{selectedBarber?.name}</p>
+                  <p className="text-sm text-white/60">Barbeiro</p>
+                  <p className="font-medium text-white">{selectedBarber?.name}</p>
                 </div>
               </div>
             </div>
 
             {/* Date Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/80 mb-2">
                 Data
               </label>
               <input
@@ -440,7 +427,7 @@ export default function AgendarPage() {
                 value={selectedDate}
                 onChange={(e) => handleDateSelect(e.target.value)}
                 min={getMinDate()}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
               />
             </div>
 
@@ -540,6 +527,8 @@ export default function AgendarPage() {
             ← Voltar
           </button>
         )}
+          </div>
+        </div>
       </div>
     </div>
   )

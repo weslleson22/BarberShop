@@ -73,15 +73,15 @@ export default function CalendarView({ onDateSelect, selectedDate: externalSelec
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <h3 className="text-xl font-semibold text-white">
+    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <h3 className="text-lg font-semibold text-white">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h3>
-          <div className="flex items-center space-x-2 text-white/60">
-            <CalendarIcon className="w-4 h-4" />
-            <span className="text-sm">Calendário</span>
+          <div className="flex items-center space-x-1 text-white/60">
+            <CalendarIcon className="w-3 h-3" />
+            <span className="text-xs">Calendário</span>
           </div>
         </div>
         
@@ -102,16 +102,16 @@ export default function CalendarView({ onDateSelect, selectedDate: externalSelec
       </div>
 
       {/* Week days header */}
-      <div className="grid grid-cols-7 gap-2 mb-4">
+      <div className="grid grid-cols-7 gap-1 mb-2">
         {weekDays.map((day) => (
-          <div key={day} className="text-center text-white/60 text-sm font-medium py-2">
+          <div key={day} className="text-center text-white/60 text-xs font-medium py-1">
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar days */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1">
         {generateCalendarDays().map((day, index) => (
           <div
             key={index}
@@ -137,11 +137,11 @@ export default function CalendarView({ onDateSelect, selectedDate: externalSelec
       </div>
 
       {/* Selected date info */}
-      <div className="mt-6 pt-4 border-t border-white/6">
+      <div className="mt-4 pt-3 border-t border-white/6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-white/60 text-sm">Data selecionada</p>
-            <p className="text-white font-medium">
+            <p className="text-white/60 text-xs">Data selecionada</p>
+            <p className="text-white font-medium text-sm">
               {selectedDate.toLocaleDateString('pt-BR', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -150,10 +150,7 @@ export default function CalendarView({ onDateSelect, selectedDate: externalSelec
               })}
             </p>
           </div>
-          <button 
-            onClick={() => onDateSelect?.(selectedDate)}
-            className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all"
-          >
+          <button className="px-3 py-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all text-sm">
             Ver Agendamentos
           </button>
         </div>

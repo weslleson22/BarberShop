@@ -103,9 +103,9 @@ export default function AppointmentList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 relative z-10">
       {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-semibold text-white">Agendamentos</h2>
           <div className="flex items-center space-x-2 text-white/60">

@@ -114,38 +114,38 @@ export default function AppointmentCard({
   const StatusIcon = statusInfo.icon
 
   return (
-    <div className={`bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6 hover:border-white/10 transition-all duration-300 ${
+    <div className={`bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4 hover:border-white/10 transition-all duration-300 relative z-10 ${
       appointment.status === 'CANCELLED' ? 'opacity-60' : ''
     }`}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
             appointment.status === 'CANCELLED' 
               ? 'bg-gradient-to-br from-red-400/20 to-red-600/20 border border-red-400/30'
               : 'bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30'
           }`}>
-            <Clock className={`w-6 h-6 ${
+            <Clock className={`w-5 h-5 ${
               appointment.status === 'CANCELLED' ? 'text-red-400' : 'text-yellow-400'
             }`} />
           </div>
           <div>
-            <div className="flex items-center space-x-3 mb-1">
-              <span className={`text-xl font-bold ${
+            <div className="flex items-center space-x-2 mb-1">
+              <span className={`text-lg font-bold ${
                 appointment.status === 'CANCELLED' ? 'text-white/60' : 'text-white'
               }`}>
                 {formatTime(appointment.startTime)}
               </span>
               <span className="text-white/60">-</span>
-              <span className={`text-lg ${
+              <span className={`text-sm ${
                 appointment.status === 'CANCELLED' ? 'text-white/40' : 'text-white/80'
               }`}>
                 {formatTime(appointment.endTime)}
               </span>
             </div>
-            <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg border ${statusInfo.color}`}>
-              <StatusIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">{statusInfo.text}</span>
+            <div className={`flex items-center space-x-2 px-2 py-1 rounded-lg border ${statusInfo.color}`}>
+              <StatusIcon className="w-3 h-3" />
+              <span className="text-xs font-medium">{statusInfo.text}</span>
             </div>
           </div>
         </div>

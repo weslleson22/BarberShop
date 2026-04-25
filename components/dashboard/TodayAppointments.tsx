@@ -1,101 +1,127 @@
 'use client'
 
-import { Clock, Users, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Clock, Users, CheckCircle, AlertCircle, XCircle, Calendar } from 'lucide-react'
 
 interface Appointment {
   id: string
-  time: string
-  client: string
-  service: string
-  status: 'confirmed' | 'pending' | 'cancelled'
-  duration: string
+  startTime: string
+  client: {
+    name: string
+    phone: string
+  }
+  service: {
+    name: string
+    price: number
+  }
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED'
+  barber: {
+    name: string
+  }
 }
 
 export default function TodayAppointments() {
-  const appointments: Appointment[] = [
-    {
-      id: '1',
-      time: '09:00',
-      client: 'Carlos Silva',
-      service: 'Corte + Barba',
-      status: 'confirmed',
-      duration: '1h 30min'
-    },
-    {
-      id: '2',
-      time: '10:30',
-      client: 'Maria Santos',
-      service: 'Progressiva',
-      status: 'confirmed',
-      duration: '2h'
-    },
-    {
-      id: '3',
-      time: '14:00',
-      client: 'João Oliveira',
-      service: 'Barba',
-      status: 'pending',
-      duration: '30min'
-    },
-    {
-      id: '4',
-      time: '15:30',
-      client: 'Ana Costa',
-      service: 'Corte Masculino',
-      status: 'confirmed',
-      duration: '45min'
-    },
-    {
-      id: '5',
-      time: '16:30',
-      client: 'Pedro Santos',
-      service: 'Corte + Pigmentação',
-      status: 'cancelled',
-      duration: '2h'
-    },
-    {
-      id: '6',
-      time: '17:00',
-      client: 'Lucas Ferreira',
-      service: 'Sobrancelha',
-      status: 'pending',
-      duration: '20min'
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchTodayAppointments()
+  }, [])
+
+  const fetchTodayAppointments = async () => {
+    try {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date()
+      const todayStr = today.toISOString().split('T')[0]
+      
+      console.log('=== BUSCANDO AGENDAMENTOS DE HOJE ===')
+      console.log('Data de hoje:', todayStr)
+      
+      const response = await fetch('/api/appointments/public')
+      const allAppointments = await response.json()
+      
+      console.log('Total de agendamentos recebidos:', allAppointments.length)
+      
+      // Filter appointments for today
+      const todayAppointments = allAppointments.filter((apt: any) => {
+        const aptDate = new Date(apt.startTime).toISOString().split('T')[0]
+        const isToday = aptDate === todayStr
+        
+        if (isToday) {
+          console.log('Agendamento de hoje encontrado:', {
+            client: apt.client,
+            service: apt.service,
+            time: apt.startTime,
+            status: apt.status
+          })
+        }
+        
+        return isToday
+      })
+      
+      console.log('Agendamentos de hoje filtrados:', todayAppointments.length)
+      setAppointments(todayAppointments)
+      
+    } catch (error) {
+      console.error('Erro ao buscar agendamentos de hoje:', error)
+      setAppointments([])
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    })
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case 'COMPLETED':
         return <CheckCircle className="w-4 h-4 text-green-400" />
-      case 'pending':
-        return <AlertCircle className="w-4 h-4 text-yellow-400" />
-      case 'cancelled':
+      case 'CANCELLED':
         return <XCircle className="w-4 h-4 text-red-400" />
+      case 'PENDING':
       default:
-        return null
+        return <AlertCircle className="w-4 h-4 text-yellow-400" />
     }
   }
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'confirmed':
-        return 'Confirmado'
-      case 'pending':
-        return 'Pendente'
-      case 'cancelled':
+      case 'COMPLETED':
+        return 'Concluído'
+      case 'CANCELLED':
         return 'Cancelado'
+      case 'PENDING':
       default:
-        return status
+        return 'Pendente'
     }
   }
 
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400"></div>
+        </div>
+      </div>
+    )
+  }
+
+  const todayAppointments = appointments
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case 'COMPLETED':
         return 'text-green-400 bg-green-400/10 border-green-400/30'
-      case 'pending':
+      case 'PENDING':
         return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30'
-      case 'cancelled':
+      case 'CANCELLED':
         return 'text-red-400 bg-red-400/10 border-red-400/30'
       default:
         return 'text-white/60 bg-white/10 border-white/20'
@@ -124,14 +150,14 @@ export default function TodayAppointments() {
             <div className="flex items-center space-x-4">
               {/* Time */}
               <div className="text-center">
-                <p className="text-white font-semibold">{appointment.time}</p>
-                <p className="text-white/40 text-xs">{appointment.duration}</p>
+                <p className="text-white font-semibold">{formatTime(appointment.startTime)}</p>
+                <p className="text-white/40 text-xs">30min</p>
               </div>
 
               {/* Client Info */}
               <div className="flex-1">
-                <p className="text-white font-medium">{appointment.client}</p>
-                <p className="text-white/60 text-sm">{appointment.service}</p>
+                <p className="text-white font-medium">{appointment.client.name}</p>
+                <p className="text-white/60 text-sm">{appointment.service.name}</p>
               </div>
             </div>
 

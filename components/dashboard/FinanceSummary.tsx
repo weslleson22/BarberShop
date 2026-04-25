@@ -1,6 +1,7 @@
 'use client'
 
-import { DollarSign, TrendingUp, TrendingDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { DollarSign, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Calendar } from 'lucide-react'
 
 interface FinanceItem {
   title: string
@@ -12,40 +13,121 @@ interface FinanceItem {
 }
 
 export default function FinanceSummary() {
-  const financeData: FinanceItem[] = [
-    {
-      title: 'Receitas',
-      value: 'R$ 12.450',
-      change: 15.3,
-      changeType: 'increase',
-      icon: DollarSign,
-      color: 'from-green-500 to-green-600'
-    },
-    {
-      title: 'Despesas',
-      value: 'R$ 3.280',
-      change: -5.2,
-      changeType: 'decrease',
-      icon: TrendingDown,
-      color: 'from-red-500 to-red-600'
-    },
-    {
-      title: 'Lucro Líquido',
-      value: 'R$ 9.170',
-      change: 23.8,
-      changeType: 'increase',
-      icon: TrendingUp,
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
-      title: 'Margem %',
-      value: '73.7%',
-      change: 8.1,
-      changeType: 'increase',
-      icon: ArrowUp,
-      color: 'from-purple-500 to-purple-600'
+  const [financeData, setFinanceData] = useState<FinanceItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchFinanceData()
+  }, [])
+
+  const fetchFinanceData = async () => {
+    try {
+      console.log('=== BUSCANDO DADOS FINANCEIROS ===')
+      
+      // Get current month
+      const now = new Date()
+      const currentMonth = now.getMonth()
+      const currentYear = now.getFullYear()
+      
+      console.log('Mês atual:', currentMonth + 1, 'Ano:', currentYear)
+      
+      // Fetch all appointments
+      const response = await fetch('/api/appointments/public')
+      const allAppointments = await response.json()
+      
+      console.log('Total de agendamentos:', allAppointments.length)
+      
+      // Filter appointments for current month
+      const currentMonthAppointments = allAppointments.filter((apt: any) => {
+        const aptDate = new Date(apt.startTime)
+        return aptDate.getMonth() === currentMonth && aptDate.getFullYear() === currentYear
+      })
+      
+      console.log('Agendamentos do mês:', currentMonthAppointments.length)
+      
+      // Calculate revenue from completed appointments
+      const completedAppointments = currentMonthAppointments.filter((apt: any) => apt.status === 'COMPLETED')
+      const totalRevenue = completedAppointments.reduce((sum: number, apt: any) => {
+        return sum + (apt.totalAmount || 0)
+      }, 0)
+      
+      console.log('Receita total:', totalRevenue)
+      
+      // Calculate previous month for comparison
+      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1
+      const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear
+      
+      const prevMonthAppointments = allAppointments.filter((apt: any) => {
+        const aptDate = new Date(apt.startTime)
+        return aptDate.getMonth() === prevMonth && aptDate.getFullYear() === prevYear
+      })
+      
+      const prevCompletedAppointments = prevMonthAppointments.filter((apt: any) => apt.status === 'COMPLETED')
+      const prevRevenue = prevCompletedAppointments.reduce((sum: number, apt: any) => {
+        return sum + (apt.totalAmount || 0)
+      }, 0)
+      
+      console.log('Receita mês anterior:', prevRevenue)
+      
+      // Calculate percentage change
+      const revenueChange = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0
+      
+      // Format currency
+      const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        }).format(value)
+      }
+      
+      const data: FinanceItem[] = [
+        {
+          title: 'Receitas',
+          value: formatCurrency(totalRevenue),
+          change: Math.round(revenueChange * 10) / 10,
+          changeType: revenueChange >= 0 ? 'increase' : 'decrease',
+          icon: DollarSign,
+          color: 'from-green-500 to-green-600'
+        },
+        {
+          title: 'Atendimentos',
+          value: completedAppointments.length.toString(),
+          change: prevCompletedAppointments.length > 0 ? 
+            Math.round(((completedAppointments.length - prevCompletedAppointments.length) / prevCompletedAppointments.length) * 100) : 0,
+          changeType: completedAppointments.length >= prevCompletedAppointments.length ? 'increase' : 'decrease',
+          icon: Calendar,
+          color: 'from-blue-500 to-blue-600'
+        },
+        {
+          title: 'Ticket Médio',
+          value: formatCurrency(completedAppointments.length > 0 ? totalRevenue / completedAppointments.length : 0),
+          change: 0, // Would need more complex calculation for previous month
+          changeType: 'increase',
+          icon: TrendingUp,
+          color: 'from-purple-500 to-purple-600'
+        }
+      ]
+      
+      console.log('Dados financeiros processados:', data)
+      setFinanceData(data)
+      
+    } catch (error) {
+      console.error('Erro ao buscar dados financeiros:', error)
+      setFinanceData([])
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { Sidebar } from '@/components/shared/sidebar'
-import { Header } from '@/components/shared/header'
 
 export default function NewDashboardLayout({
   children,
@@ -17,15 +16,12 @@ export default function NewDashboardLayout({
 
   // Show sidebar on all dashboard pages
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main content */}
       <div className="lg:ml-64">
-        {/* Show header on dashboard pages */}
-        <Header />
-
         {/* Page content */}
         <main className="flex-1">
           {children}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
+import AppSidebar from '@/components/dashboard/AppSidebar'
 
 interface User {
   id: string
@@ -281,19 +282,27 @@ export default function UsuariosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400"></div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+      {/* Sidebar Fixado atrás do conteúdo */}
+      <div className="fixed inset-y-0 left-0 z-30 w-80">
+        <AppSidebar />
+      </div>
+      
+      {/* Conteúdo principal à frente do sidebar */}
+      <div className="lg:pl-80 relative z-40">
+        <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Usuários</h1>
-            <p className="text-gray-600 mt-2">Gerencie os usuários com acesso à plataforma</p>
+            <h1 className="text-3xl font-bold text-white">Usuários</h1>
+            <p className="text-white/60 mt-2">Gerencie os usuários com acesso à plataforma</p>
           </div>
           <button
             onClick={() => {
@@ -301,7 +310,7 @@ export default function UsuariosPage() {
               setEditingUser(null)
               setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true })
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium"
           >
             <Plus className="w-5 h-5 mr-2" />
             Novo Usuário
@@ -312,111 +321,105 @@ export default function UsuariosPage() {
       {/* Busca */}
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-5 h-5" />
           <input
             type="text"
             placeholder="Buscar por nome, email ou telefone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
           />
         </div>
       </div>
 
       {/* Formulário de Adicionar/Editar */}
       {showAddForm && (
-        <div className="mb-6 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4">
+        <div className="mb-6 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4">
+          <h3 className="text-lg font-semibold mb-4 text-white">
             {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Nome *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                   placeholder="Nome completo"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Email *
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                   placeholder="email@exemplo.com"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Telefone
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                   placeholder="(00) 00000-0000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Função *
                 </label>
                 <select
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'ADMIN' | 'BARBER' | 'CLIENT' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                   required
                 >
-                  <option value="ADMIN">Administrador</option>
-                  <option value="BARBER">Barbeiro</option>
-                  <option value="CLIENT">Cliente</option>
+                  <option value="" className="bg-gray-900">Selecione...</option>
+                  <option value="ADMIN" className="bg-gray-900">Administrador</option>
+                  <option value="BARBER" className="bg-gray-900">Barbeiro</option>
+                  <option value="CLIENT" className="bg-gray-900">Cliente</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Senha {editingUser && '(deixe em branco para manter atual)'}
+                <label className="block text-sm font-medium text-white/80 mb-1">
+                  Senha
                 </label>
                 <input
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder={!editingUser ? 'Senha' : 'Nova senha (opcional)'}
-                  required={!editingUser}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                  placeholder={editingUser ? "Deixe em branco para manter atual" : "Digite uma senha"}
                 />
               </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="h-4 w-4 text-yellow-400 focus:ring-yellow-400/50 border-white/6 rounded bg-white/5"
+                />
+                <label htmlFor="isActive" className="ml-2 block text-sm text-white/80">
+                  Usuário ativo
+                </label>
+              </div>
             </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
-                Usuário ativo (pode acessar a plataforma)
-              </label>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {editingUser ? 'Atualizar' : 'Salvar'}
-              </button>
+            <div className="flex justify-end space-x-3 mt-6">
               <button
                 type="button"
                 onClick={() => {
@@ -424,9 +427,15 @@ export default function UsuariosPage() {
                   setEditingUser(null)
                   setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true })
                 }}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all"
               >
                 Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all"
+              >
+                {editingUser ? 'Atualizar' : 'Cadastrar'}
               </button>
             </div>
           </form>
@@ -434,57 +443,59 @@ export default function UsuariosPage() {
       )}
 
       {/* Lista de Usuários */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl overflow-hidden">
         {filteredUsers.length === 0 ? (
           <div className="text-center py-12">
-            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">Nenhum usuário encontrado</p>
-            <p className="text-gray-400 text-sm mt-2">
+            <User className="w-12 h-12 text-white/40 mx-auto mb-4" />
+            <p className="text-white/60 text-lg">Nenhum usuário encontrado</p>
+            <p className="text-white/40 text-sm mt-2">
               {searchTerm ? 'Tente uma busca diferente' : 'Adicione seu primeiro usuário'}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-white/5 border-b border-white/6">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                     Usuário
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                     Função
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                     Telefone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                     Data de Cadastro
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-white/6">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-white/5">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-blue-600" />
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center">
+                          <span className="text-yellow-400 font-bold text-sm">
+                            {user.name.charAt(0).toUpperCase()}
+                          </span>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
+                          <div className="text-sm font-medium text-white">{user.name}</div>
+                          <div className="text-sm text-white/60">{user.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <Shield className="w-4 h-4 text-gray-400 mr-2" />
+                        <Shield className="w-4 h-4 text-white/40 mr-2" />
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
                           {getRoleText(user.role)}
                         </span>
@@ -492,22 +503,22 @@ export default function UsuariosPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {user.phone ? (
-                        <span className="text-sm text-gray-900">{user.phone}</span>
+                        <span className="text-sm text-white">{user.phone}</span>
                       ) : (
-                        <span className="text-sm text-gray-400">Não informado</span>
+                        <span className="text-sm text-white/40">Não informado</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         user.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-400/20 text-green-400 border border-green-400/30' 
+                          : 'bg-red-400/20 text-red-400 border border-red-400/30'
                       }`}>
                         {user.isActive ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-white/60">
                         {new Date(user.createdAt).toLocaleDateString('pt-BR')}
                       </span>
                     </td>
@@ -515,21 +526,21 @@ export default function UsuariosPage() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEdit(user)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-yellow-400 hover:text-yellow-300"
                           title="Editar"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleToggleActive(user.id, user.isActive)}
-                          className={user.isActive ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'}
+                          className={user.isActive ? 'text-yellow-400 hover:text-yellow-300' : 'text-green-400 hover:text-green-300'}
                           title={user.isActive ? 'Desativar' : 'Ativar'}
                         >
                           {user.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-400 hover:text-red-300"
                           title="Excluir"
                           disabled={user.role === 'ADMIN' && filteredUsers.filter(u => u.role === 'ADMIN').length === 1}
                         >
@@ -547,34 +558,36 @@ export default function UsuariosPage() {
 
       {/* Resumo */}
       {users.length > 0 && (
-        <div className="mt-8 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">Resumo de Usuários</h3>
+        <div className="mt-8 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Resumo de Usuários</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-blue-600">Total de Usuários</p>
-              <p className="text-2xl font-bold text-blue-900">{users.length}</p>
+              <p className="text-sm text-white/60">Total de Usuários</p>
+              <p className="text-2xl font-bold text-white">{users.length}</p>
             </div>
             <div>
-              <p className="text-sm text-blue-600">Administradores</p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-sm text-white/60">Administradores</p>
+              <p className="text-2xl font-bold text-purple-400">
                 {users.filter(u => u.role === 'ADMIN').length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-blue-600">Barbeiros</p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-sm text-white/60">Barbeiros</p>
+              <p className="text-2xl font-bold text-blue-400">
                 {users.filter(u => u.role === 'BARBER').length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-blue-600">Clientes</p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-sm text-white/60">Clientes</p>
+              <p className="text-2xl font-bold text-green-400">
                 {users.filter(u => u.role === 'CLIENT').length}
               </p>
             </div>
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

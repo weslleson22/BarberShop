@@ -109,7 +109,7 @@ export default function AgendaSidebar() {
       id: 'settings',
       label: 'Configurações',
       icon: Settings,
-      path: '/dashboard',
+      path: '/configuracoes',
       roles: ['ADMIN', 'BARBER', 'CLIENT']
     }
   ]
@@ -145,19 +145,27 @@ export default function AgendaSidebar() {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-40 w-80 bg-gradient-to-b from-gray-900 to-black border-r border-white/6
+        fixed inset-y-0 left-0 z-20 w-80 bg-gradient-to-br from-gray-950 via-blue-950 to-black border-r border-white/6
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
-          {/* Logo */}
+          {/* User Profile */}
           <div className="p-6 border-b border-white/6">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                </svg>
-              </div>
+              {(user as any)?.avatar ? (
+                <img 
+                  src={(user as any).avatar} 
+                  alt="Avatar" 
+                  className="w-10 h-10 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                  </svg>
+                </div>
+              )}
               <div>
                 <h1 className="text-xl font-bold text-white">BARBEARIA</h1>
                 <p className="text-yellow-400 text-sm font-medium">BUSINESS</p>
@@ -166,8 +174,8 @@ export default function AgendaSidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
-            {filteredMenuItems.map((item) => {
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide">
+            {filteredMenuItems.map((item, index) => {
               const Icon = item.icon
               return (
                 <button
@@ -205,27 +213,7 @@ export default function AgendaSidebar() {
             </div>
           </div>
 
-          {/* User Profile */}
-          <div className="p-4 border-t border-white/6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-medium">{user?.name || 'Usuário'}</p>
-                <p className="text-white/60 text-sm">{user?.role || 'CLIENT'}</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+                  </div>
       </div>
 
       {/* Mobile Overlay */}

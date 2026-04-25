@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Scissors, Clock, DollarSign, Plus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
+import AppSidebar from '@/components/dashboard/AppSidebar'
 
 interface Service {
   id: string
@@ -194,78 +195,86 @@ export default function ServicosPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Serviços</h1>
-            <p className="text-gray-600 mt-2">Gerencie todos os serviços oferecidos pela barbearia</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+      {/* Sidebar Fixado atrás do conteúdo */}
+      <div className="fixed inset-y-0 left-0 z-30 w-80">
+        <AppSidebar />
+      </div>
+      
+      {/* Conteúdo principal à frente do sidebar */}
+      <div className="lg:pl-80 relative z-40">
+        <div className="p-6">
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-white">Serviços</h1>
+                <p className="text-white/60 mt-2">Gerencie todos os serviços oferecidos pela barbearia</p>
+              </div>
+              {canManageServices && (
+                <button
+                  onClick={() => {
+                    setShowAddForm(true)
+                    setEditingService(null)
+                    setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
+                  }}
+                  className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Novo Serviço
+                </button>
+              )}
+            </div>
           </div>
-          {canManageServices && (
-            <button
-              onClick={() => {
-                setShowAddForm(true)
-                setEditingService(null)
-                setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
-              }}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Novo Serviço
-            </button>
-          )}
-        </div>
-      </div>
 
-      {/* Busca */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Buscar por nome ou descrição..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
+          {/* Busca */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou descrição..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+              />
+            </div>
+          </div>
 
-      {/* Formulário de Adicionar/Editar */}
-      {showAddForm && (
-        <div className="mb-6 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4">
-            {editingService ? 'Editar Serviço' : 'Novo Serviço'}
-          </h3>
+          {/* Formulário de Adicionar/Editar */}
+          {showAddForm && (
+            <div className="mb-6 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
+              <h3 className="text-xl font-semibold text-white mb-4">
+                {editingService ? 'Editar Serviço' : 'Novo Serviço'}
+              </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Nome *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                   placeholder="Nome do serviço"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Descrição
                 </label>
                 <input
                   type="text"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                   placeholder="Descrição do serviço"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Preço (R$) *
                 </label>
                 <input
@@ -274,13 +283,13 @@ export default function ServicosPage() {
                   min="0"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                   placeholder="0.00"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Duração (minutos) *
                 </label>
                 <input
@@ -288,7 +297,7 @@ export default function ServicosPage() {
                   min="1"
                   value={formData.duration}
                   onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                   placeholder="30"
                   required
                 />
@@ -306,10 +315,10 @@ export default function ServicosPage() {
                 Serviço ativo (disponível para agendamento)
               </label>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex items-center space-x-4">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all font-medium"
               >
                 {editingService ? 'Atualizar' : 'Salvar'}
               </button>
@@ -320,7 +329,7 @@ export default function ServicosPage() {
                   setEditingService(null)
                   setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
                 }}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/20 transition-all font-medium"
               >
                 Cancelar
               </button>
@@ -330,12 +339,12 @@ export default function ServicosPage() {
       )}
 
       {/* Lista de Serviços em Cards */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
         {filteredServices.length === 0 ? (
           <div className="text-center py-12">
-            <Scissors className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">Nenhum serviço encontrado</p>
-            <p className="text-gray-400 text-sm mt-2">
+            <Scissors className="w-12 h-12 text-white/40 mx-auto mb-4" />
+            <p className="text-white text-lg">Nenhum serviço encontrado</p>
+            <p className="text-white/60 text-sm mt-2">
               {searchTerm ? 'Tente uma busca diferente' : 'Adicione seu primeiro serviço'}
             </p>
           </div>
@@ -344,39 +353,37 @@ export default function ServicosPage() {
             {filteredServices.map((service) => (
               <div 
                 key={service.id} 
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer hover:border-blue-300"
+                className="bg-white/5 border border-white/6 rounded-xl p-4 hover:bg-white/10 transition-all cursor-pointer"
                 onClick={() => router.push('/agendar?service=' + service.id)}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                      <Scissors className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{service.name}</h3>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        service.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {service.isActive ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </div>
+                <div className="flex items-start space-x-3 mb-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Scissors className="w-6 h-6 text-black" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-white truncate mb-1">{service.name}</h3>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      service.isActive 
+                        ? 'bg-green-400/20 text-green-400 border border-green-400/30' 
+                        : 'bg-red-400/20 text-red-400 border border-red-400/30'
+                    }`}>
+                      {service.isActive ? 'Ativo' : 'Inativo'}
+                    </span>
                   </div>
                 </div>
                 
                 {service.description && (
-                  <p className="text-gray-600 text-sm mb-3">{service.description}</p>
+                  <p className="text-white/60 text-sm mb-3 line-clamp-2">{service.description}</p>
                 )}
                 
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center text-sm text-gray-700">
-                    <Clock className="w-4 h-4 text-gray-400 mr-1" />
-                    {service.duration} min
+                  <div className="flex items-center text-sm text-white/60">
+                    <Clock className="w-4 h-4 text-white/40 mr-2 flex-shrink-0" />
+                    <span>{service.duration} min</span>
                   </div>
-                  <div className="flex items-center text-sm font-semibold text-gray-900">
-                    <DollarSign className="w-4 h-4 text-gray-400 mr-1" />
-                    {formatCurrency(service.price)}
+                  <div className="flex items-center text-sm font-semibold text-white">
+                    <DollarSign className="w-4 h-4 text-white/40 mr-2 flex-shrink-0" />
+                    <span>{formatCurrency(service.price)}</span>
                   </div>
                 </div>
                 
@@ -385,48 +392,48 @@ export default function ServicosPage() {
                     e.stopPropagation()
                     router.push('/agendar?service=' + service.id)
                   }}
-                  className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-4 py-2 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all font-medium text-center"
                 >
                   Agendar Agora
                 </button>
                 
                 {/* Ações de gerenciamento apenas para administradores */}
                 {canManageServices && (
-                  <div className="flex space-x-2 mt-3 pt-3 border-t border-gray-200">
+                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-white/10">
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         handleEdit(service)
                       }}
-                      className="flex-1 text-blue-600 hover:text-blue-900 text-sm"
+                      className="flex items-center justify-center text-blue-400 hover:text-blue-300 hover:bg-white/5 text-sm py-2 px-3 rounded-lg transition-all"
                       title="Editar"
                     >
-                      <Edit className="w-4 h-4 inline mr-1" />
-                      Editar
+                      <Edit className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span>Editar</span>
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         handleToggleActive(service.id, service.isActive)
                       }}
-                      className={`flex-1 text-sm ${
-                        service.isActive ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'
+                      className={`flex items-center justify-center hover:bg-white/5 text-sm py-2 px-3 rounded-lg transition-all ${
+                        service.isActive ? 'text-yellow-400 hover:text-yellow-300' : 'text-green-400 hover:text-green-300'
                       }`}
                       title={service.isActive ? 'Desativar' : 'Ativar'}
                     >
-                      {service.isActive ? <EyeOff className="w-4 h-4 inline mr-1" /> : <Eye className="w-4 h-4 inline mr-1" />}
-                      {service.isActive ? 'Desativar' : 'Ativar'}
+                      {service.isActive ? <EyeOff className="w-4 h-4 mr-1 flex-shrink-0" /> : <Eye className="w-4 h-4 mr-1 flex-shrink-0" />}
+                      <span>{service.isActive ? 'Desativar' : 'Ativar'}</span>
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         handleDelete(service.id)
                       }}
-                      className="flex-1 text-red-600 hover:text-red-900 text-sm"
+                      className="flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-white/5 text-sm py-2 px-3 rounded-lg transition-all"
                       title="Excluir"
                     >
-                      <Trash2 className="w-4 h-4 inline mr-1" />
-                      Excluir
+                      <Trash2 className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span>Excluir</span>
                     </button>
                   </div>
                 )}
@@ -438,34 +445,36 @@ export default function ServicosPage() {
 
       {/* Resumo */}
       {services.length > 0 && (
-        <div className="mt-8 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">Resumo de Serviços</h3>
+        <div className="mt-8 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Resumo de Serviços</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-blue-600">Total de Serviços</p>
-              <p className="text-2xl font-bold text-blue-900">{services.length}</p>
+              <p className="text-sm text-white/60">Total de Serviços</p>
+              <p className="text-2xl font-bold text-white">{services.length}</p>
             </div>
             <div>
-              <p className="text-sm text-blue-600">Serviços Ativos</p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-sm text-white/60">Serviços Ativos</p>
+              <p className="text-2xl font-bold text-white">
                 {services.filter(s => s.isActive).length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-blue-600">Preço Médio</p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-sm text-white/60">Preço Médio</p>
+              <p className="text-2xl font-bold text-white">
                 {formatCurrency(services.reduce((sum, s) => sum + s.price, 0) / services.length)}
               </p>
             </div>
             <div>
-              <p className="text-sm text-blue-600">Total de Agendamentos</p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-sm text-white/60">Total de Agendamentos</p>
+              <p className="text-2xl font-bold text-white">
                 {services.reduce((sum, s) => sum + (s._count?.appointments || 0), 0)}
               </p>
             </div>
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

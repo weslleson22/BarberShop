@@ -172,31 +172,36 @@ export default function AgendaPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">
-      <AgendaSidebar />
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+      {/* Sidebar Fixado atrás do conteúdo */}
+      <div className="fixed inset-y-0 left-0 z-20 w-80">
+        <AgendaSidebar />
+      </div>
       
-      <div className="lg:pl-80">
-        <AgendaHeader onNewAppointment={handleNewAppointment} onDateFilter={handleDateSelect} />
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Conteúdo principal à frente do sidebar */}
+      <div className="lg:pl-80 relative z-10">
+        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+          <AgendaHeader onNewAppointment={handleNewAppointment} onDateFilter={handleDateSelect} />
+          
+          <div className="p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
             {/* Calendar View - 2 columns */}
             <div className="lg:col-span-2">
               <CalendarView onDateSelect={handleDateSelect} selectedDate={selectedDate} />
             </div>
             
             {/* Quick Stats - 1 column */}
-            <div className="space-y-4">
-              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-                <h3 className="text-xl font-semibold text-white mb-4">Resumo do Dia</h3>
-                <div className="space-y-4">
+            <div className="space-y-3">
+              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4">
+                <h3 className="text-lg font-semibold text-white mb-3">Resumo do Dia</h3>
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-white/60">Total</span>
                     <span className="text-2xl font-bold text-white">{appointments.length}</span>
@@ -242,6 +247,7 @@ export default function AgendaPage() {
         onSave={handleSaveAppointment}
         appointment={editingAppointment}
       />
+      </div>
     </div>
   )
 }

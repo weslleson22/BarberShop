@@ -3,9 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import AppSidebar from '@/components/dashboard/AppSidebar'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -123,221 +121,208 @@ export default function NewAgendarPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Agendar Horário</CardTitle>
-            <p className="text-gray-600">
-              {user ? 'Agende um horário para um cliente' : 'Agende seu horário facilmente'}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Client Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold border-b pb-2">Informações do Cliente</h3>
-                
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+      {/* Sidebar Fixado atrás do conteúdo */}
+      <div className="fixed inset-y-0 left-0 z-30 w-80">
+        <AppSidebar />
+      </div>
+      
+      {/* Conteúdo principal à frente do sidebar */}
+      <div className="lg:pl-80 relative z-40">
+        <div className="p-6">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-white">Agendar Horário</h2>
+                <p className="text-white/60">
+                  {user ? 'Agende um horário para um cliente' : 'Agende seu horário facilmente'}
+                </p>
+              </div>
+              
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Client Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Informações do Cliente</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="clientName" className="text-sm font-medium text-white/80">
+                        Nome Completo *
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                        <input
+                          id="clientName"
+                          type="text"
+                          placeholder="Nome completo"
+                          className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                          {...register('clientName')}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      {errors.clientName && (
+                        <p className="text-sm text-red-400">{errors.clientName.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="clientPhone" className="text-sm font-medium text-white/80">
+                        Telefone *
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                        <input
+                          id="clientPhone"
+                          type="tel"
+                          placeholder="(11) 99999-9999"
+                          className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                          {...register('clientPhone')}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      {errors.clientPhone && (
+                        <p className="text-sm text-red-400">{errors.clientPhone.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="clientEmail" className="text-sm font-medium text-white/80">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                      <input
+                        id="clientEmail"
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                        {...register('clientEmail')}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    {errors.clientEmail && (
+                      <p className="text-sm text-red-400">{errors.clientEmail.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Service Selection */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Serviço</h3>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="serviceId" className="text-sm font-medium text-white/80">
+                      Selecione o Serviço *
+                    </label>
+                    <div className="relative">
+                      <Scissors className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                      <select
+                        id="serviceId"
+                        className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/6 rounded-xl text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                        {...register('serviceId')}
+                        disabled={isSubmitting}
+                      >
+                        <option value="" className="bg-gray-800">Selecione um serviço</option>
+                        {services.map((service: any) => (
+                          <option key={service.id} value={service.id} className="bg-gray-800">
+                            {service.name} - R$ {service.price.toFixed(2)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.serviceId && (
+                      <p className="text-sm text-red-400">{errors.serviceId.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Date and Time */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label htmlFor="clientName" className="text-sm font-medium">
-                      Nome Completo *
+                    <label htmlFor="date" className="text-sm font-medium text-white/80">
+                      Data *
                     </label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="clientName"
-                        placeholder="Nome completo"
-                        className="pl-10"
-                        {...register('clientName')}
+                      <Calendar className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                      <input
+                        id="date"
+                        type="date"
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                        {...register('date')}
                         disabled={isSubmitting}
                       />
                     </div>
-                    {errors.clientName && (
-                      <p className="text-sm text-red-600">{errors.clientName.message}</p>
+                    {errors.date && (
+                      <p className="text-sm text-red-400">{errors.date.message}</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="clientPhone" className="text-sm font-medium">
-                      Telefone *
+                    <label htmlFor="time" className="text-sm font-medium text-white/80">
+                      Horário *
                     </label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="clientPhone"
-                        type="tel"
-                        placeholder="(11) 99999-9999"
-                        className="pl-10"
-                        {...register('clientPhone')}
-                        disabled={isSubmitting}
-                      />
+                      <Clock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                      <select
+                        id="time"
+                        className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/6 rounded-xl text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                        {...register('time')}
+                        disabled={isSubmitting || availableTimes.length === 0}
+                      >
+                        <option value="" className="bg-gray-800">Selecione um horário</option>
+                        {availableTimes.map((time: string) => (
+                          <option key={time} value={time} className="bg-gray-800">
+                            {time}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    {errors.clientPhone && (
-                      <p className="text-sm text-red-600">{errors.clientPhone.message}</p>
+                    {errors.time && (
+                      <p className="text-sm text-red-400">{errors.time.message}</p>
                     )}
                   </div>
                 </div>
 
+                {/* Notes */}
                 <div className="space-y-2">
-                  <label htmlFor="clientEmail" className="text-sm font-medium">
-                    Email
+                  <label htmlFor="notes" className="text-sm font-medium text-white/80">
+                    Observações
                   </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="clientEmail"
-                      type="email"
-                      placeholder="email@exemplo.com"
-                      className="pl-10"
-                      {...register('clientEmail')}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  {errors.clientEmail && (
-                    <p className="text-sm text-red-600">{errors.clientEmail.message}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Service Selection */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold border-b pb-2">Serviço</h3>
-                
-                <div className="space-y-2">
-                  <label htmlFor="serviceId" className="text-sm font-medium">
-                    Selecione o Serviço *
-                  </label>
-                  <div className="relative">
-                    <Scissors className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <select
-                      id="serviceId"
-                      className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      {...register('serviceId')}
-                      disabled={isSubmitting}
-                    >
-                      <option value="">Selecione um serviço</option>
-                      {services.map((service: any) => (
-                        <option key={service.id} value={service.id}>
-                          {service.name} - R$ {service.price.toFixed(2)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {errors.serviceId && (
-                    <p className="text-sm text-red-600">{errors.serviceId.message}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Date and Time */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="date" className="text-sm font-medium">
-                    Data *
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="date"
-                      type="date"
-                      min={new Date().toISOString().split('T')[0]}
-                      className="pl-10"
-                      {...register('date')}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  {errors.date && (
-                    <p className="text-sm text-red-600">{errors.date.message}</p>
-                  )}
+                  <textarea
+                    id="notes"
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                    placeholder="Alguma observação sobre o agendamento?"
+                    {...register('notes')}
+                    disabled={isSubmitting}
+                  />
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="time" className="text-sm font-medium">
-                    Horário *
-                  </label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <select
-                      id="time"
-                      className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      {...register('time')}
-                      disabled={isSubmitting || availableTimes.length === 0}
-                    >
-                      <option value="">Selecione um horário</option>
-                      {availableTimes.map((time: string) => (
-                        <option key={time} value={time}>
-                          {time}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {errors.time && (
-                    <p className="text-sm text-red-600">{errors.time.message}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <label htmlFor="notes" className="text-sm font-medium">
-                  Observações
-                </label>
-                <textarea
-                  id="notes"
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Alguma observação sobre o agendamento?"
-                  {...register('notes')}
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all font-medium disabled:opacity-50"
                   disabled={isSubmitting}
-                />
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white border-r-transparent border-t-transparent mr-2"></div>
-                    Agendando...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Confirmar Agendamento
-                  </>
-                )}
-              </Button>
-            </form>
-
-            {/* Links */}
-            <div className="mt-6 text-center">
-              {user ? (
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push('/dashboard')}
-                  className="flex items-center"
                 >
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                  Voltar para Dashboard
-                </Button>
-              ) : (
-                <p className="text-sm text-gray-600">
-                  Já tem uma conta?{' '}
-                  <button
-                    onClick={() => router.push('/login')}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Faça login
-                  </button>
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black border-r-transparent border-t-transparent mr-2"></div>
+                      Agendando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Confirmar Agendamento
+                    </>
+                  )}
+                </button>
+              </form>
+
+                          </div>
+          </div>
+        </div>
       </div>
     </div>
   )

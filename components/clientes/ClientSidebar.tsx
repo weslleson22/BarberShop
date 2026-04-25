@@ -129,28 +129,6 @@ export default function ClientSidebar() {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-3 bg-gradient-to-br from-gray-800/90 to-black/90 border border-white/10 rounded-xl backdrop-blur-sm hover:bg-white/10 transition-all"
-        >
-          {isMobileMenuOpen ? (
-            <X className="w-6 h-6 text-white" />
-          ) : (
-            <Menu className="w-6 h-6 text-white" />
-          )}
-        </button>
-      </div>
-
-      {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
       {/* Sidebar */}
       <div className={`
         fixed lg:static inset-y-0 left-0 z-40 w-80 bg-gradient-to-b from-gray-900 to-black border-r border-white/6

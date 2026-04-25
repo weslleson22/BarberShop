@@ -17,7 +17,8 @@ import {
   X,
   LogOut,
   Crown,
-  ChevronRight
+  ChevronRight,
+  Home
 } from 'lucide-react'
 
 interface MenuItem {
@@ -35,6 +36,13 @@ export default function AppSidebar() {
   const pathname = usePathname()
 
   const menuItems: MenuItem[] = [
+    {
+      id: 'home',
+      label: 'Página Inicial',
+      icon: Home,
+      path: '/',
+      roles: ['ADMIN', 'BARBER', 'CLIENT']
+    },
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -109,7 +117,7 @@ export default function AppSidebar() {
       id: 'settings',
       label: 'Configurações',
       icon: Settings,
-      path: '/dashboard',
+      path: '/configuracoes',
       roles: ['ADMIN', 'BARBER', 'CLIENT']
     }
   ]
@@ -145,7 +153,7 @@ export default function AppSidebar() {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-40 w-80 bg-gradient-to-b from-gray-900 to-black border-r border-white/6
+        fixed inset-y-0 left-0 z-20 w-80 bg-gradient-to-br from-gray-950 via-blue-950 to-black border-r border-white/6
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
@@ -166,7 +174,7 @@ export default function AppSidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon
               return (
@@ -206,26 +214,29 @@ export default function AppSidebar() {
           </div>
 
           {/* User Profile */}
-          <div className="p-4 border-t border-white/6">
+          <div className="p-6 border-b border-white/6">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </span>
+              {(user as any)?.avatar ? (
+                <img 
+                  src={(user as any).avatar} 
+                  alt="Avatar" 
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                  <span className="text-black font-bold text-xs">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+              )}
+              <div>
+                <h1 className="text-xl font-bold text-white">BARBEARIA</h1>
+                <p className="text-yellow-400 text-sm font-medium">BUSINESS</p>
               </div>
-              <div className="flex-1">
-                <p className="text-white font-medium">{user?.name || 'Usuário'}</p>
-                <p className="text-white/60 text-sm">{user?.role || 'CLIENT'}</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
             </div>
           </div>
-        </div>
+
+                  </div>
       </div>
 
       {/* Mobile Overlay */}

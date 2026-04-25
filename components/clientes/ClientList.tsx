@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Users, Filter, ChevronDown, Search } from 'lucide-react'
-import ClientCard from './ClientCard'
+import { Users, Filter, ChevronDown, Search, Edit, Trash2, MessageSquare, Phone, Mail, Calendar, User } from 'lucide-react'
 
 interface Client {
   id: string
@@ -177,27 +176,103 @@ export default function ClientList({
         </div>
       </div>
 
-      {/* Clients Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAndSortedClients.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <Users className="w-16 h-16 text-white/20 mx-auto mb-4" />
-            <p className="text-white/60 text-lg">Nenhum cliente encontrado</p>
-            <p className="text-white/40 text-sm mt-2">
-              {searchQuery ? 'Tente alterar a busca ou filtros' : 'Adicione seu primeiro cliente'}
-            </p>
-          </div>
-        ) : (
-          filteredAndSortedClients.map((client) => (
-            <ClientCard
-              key={client.id}
-              client={client}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onMessage={onMessage}
-            />
-          ))
-        )}
+      {/* Clients Table */}
+      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="px-4 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Cliente</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Contato</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Agendamentos</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Cadastro</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-white/60 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {filteredAndSortedClients.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-12 text-center">
+                    <Users className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                    <p className="text-white/60 text-lg">Nenhum cliente encontrado</p>
+                    <p className="text-white/40 text-sm mt-2">
+                      {searchQuery ? 'Tente alterar a busca ou filtros' : 'Adicione seu primeiro cliente'}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredAndSortedClients.map((client) => (
+                  <tr key={client.id} className="hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-black font-bold text-lg">
+                            {client.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-lg">{client.name}</p>
+                          <p className="text-white/60 text-sm">ID: {client.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2 text-white/80 text-sm">
+                          <Phone className="w-4 h-4" />
+                          <span>{client.phone}</span>
+                        </div>
+                        {client.email && (
+                          <div className="flex items-center space-x-2 text-white/60 text-sm">
+                            <Mail className="w-4 h-4" />
+                            <span>{client.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-5 h-5 text-white/60" />
+                        <span className="text-white font-semibold text-base">{client._count?.appointments || 0}</span>
+                        <span className="text-white/60 text-sm">visitas</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-white/80 text-sm">
+                        {new Date(client.createdAt).toLocaleDateString('pt-BR')}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => onEdit?.(client)}
+                          className="p-3 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                          title="Editar cliente"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => onMessage?.(client)}
+                          className="p-3 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                          title="Enviar mensagem"
+                        >
+                          <MessageSquare className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => onDelete?.(client.id)}
+                          className="p-3 text-white/60 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                          title="Excluir cliente"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )
