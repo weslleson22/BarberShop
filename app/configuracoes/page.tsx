@@ -147,7 +147,7 @@ export default function ConfiguracoesPage() {
       <div className="md:pl-[280px] lg:pl-[320px] lg:pl-sidebar-collapsed relative z-10 flex flex-col h-screen transition-all duration-300">
         <div className="flex-1 main-content-scroll">
           <div className="p-6">
-          <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto">
             {/* Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-white mb-2">Configurações</h1>
@@ -330,6 +330,7 @@ export default function ConfiguracoesPage() {
                   </form>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>
