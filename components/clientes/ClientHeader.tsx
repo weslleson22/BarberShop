@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/lib/auth-context'
-import { useRouter } from 'next/navigation'
-import { Search, Bell, Calendar, User, Filter, ChevronDown, Plus, Download, Users, LogOut } from 'lucide-react'
+import { Search, ChevronDown, Plus, Download } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 interface ClientHeaderProps {
@@ -13,16 +11,9 @@ interface ClientHeaderProps {
 }
 
 export default function ClientHeader({ onNewClient, onSearch, clients }: ClientHeaderProps) {
-  const { user, logout } = useAuth()
-  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFilter, setDateFilter] = useState('Hoje')
   const [statusFilter, setStatusFilter] = useState('Todos')
-
-  const handleLogout = () => {
-    logout()
-    router.push('/login')
-  }
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
@@ -98,111 +89,83 @@ export default function ClientHeader({ onNewClient, onSearch, clients }: ClientH
 
   return (
     <div className="bg-gradient-to-b from-gray-900/50 to-transparent border-b border-white/6">
-      <div className="px-6 py-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          {/* Welcome Message */}
-          <div className="flex-1 flex items-center space-x-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white mb-2">
-                Clientes
-              </h1>
-              <p className="text-white/60">
-                Gerencie todos os clientes da barbearia
-              </p>
-            </div>
+      <div className="w-full px-4 md:px-6 py-6">
+        {/* Page Header - Título e Descrição */}
+        <div className="flex flex-col w-full mb-6">
+          <div className="flex flex-col w-full max-w-2xl">
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              Clientes
+            </h1>
+            <p className="text-white/60 text-sm md:text-base">
+              Gerencie todos os clientes da barbearia
+            </p>
+          </div>
+        </div>
+
+        {/* Toolbar - Busca, Filtros e Ações */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Search Bar */}
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+            <input
+              type="text"
+              placeholder="Buscar clientes..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+            />
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 lg:gap-4 w-full lg:w-auto">
-            {/* Search Bar */}
-            <div className="relative w-full lg:w-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-              <input
-                type="text"
-                placeholder="Buscar clientes..."
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full lg:w-64 pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
-              />
+          {/* Filters and Actions */}
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            {/* Status Filter */}
+            <div className="relative flex-shrink-0">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[100px]"
+              >
+                <option value="Todos" className="bg-gray-900">Status</option>
+                <option value="Ativos" className="bg-gray-900">Ativos</option>
+                <option value="Inativos" className="bg-gray-900">Inativos</option>
+                <option value="Novos" className="bg-gray-900">Novos</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
             </div>
 
-            {/* Filters Row */}
-            <div className="flex flex-wrap gap-2 lg:gap-3 w-full lg:w-auto">
-              {/* Status Filter */}
-              <div className="relative flex-shrink-0">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs lg:text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[100px]"
-                >
-                  <option value="Todos" className="bg-gray-900">Status</option>
-                  <option value="Ativos" className="bg-gray-900">Ativos</option>
-                  <option value="Inativos" className="bg-gray-900">Inativos</option>
-                  <option value="Novos" className="bg-gray-900">Novos</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 lg:w-4 lg:h-4 text-white/40 pointer-events-none" />
-              </div>
-
-              {/* Date Filter */}
-              <div className="relative flex-shrink-0">
-                <select
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs lg:text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[80px]"
-                >
-                  <option value="Hoje" className="bg-gray-900">Hoje</option>
-                  <option value="Semana" className="bg-gray-900">Semana</option>
-                  <option value="Mês" className="bg-gray-900">Mês</option>
-                  <option value="Ano" className="bg-gray-900">Ano</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 lg:w-4 lg:h-4 text-white/40 pointer-events-none" />
-              </div>
-
-              {/* Action Buttons */}
-              <button 
-                onClick={exportToExcel}
-                className="p-2 lg:p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all flex-shrink-0"
-                title="Exportar para Excel"
+            {/* Date Filter */}
+            <div className="relative flex-shrink-0">
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[80px]"
               >
-                <Download className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
-              </button>
-
-              <button className="p-2 lg:p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all flex-shrink-0">
-                <Bell className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
-              </button>
-
-              <button 
-                onClick={onNewClient}
-                className="px-3 py-2 lg:px-4 lg:py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-1 lg:space-x-2 flex-shrink-0 text-xs lg:text-sm"
-              >
-                <Plus className="w-4 h-4 lg:w-5 lg:h-5" />
-                <span className="hidden lg:inline">Novo Cliente</span>
-                <span className="lg:hidden">Novo</span>
-              </button>
-
-              {/* User Avatar - Hidden on mobile */}
-              <div className="hidden lg:flex items-center space-x-3 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-xl flex-shrink-0">
-                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                  <span className="text-black font-bold text-sm">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-white font-medium text-sm">{user?.name || 'Usuário'}</p>
-                  <p className="text-yellow-400 text-xs font-medium">
-                    {user?.role === 'ADMIN' ? 'Admin' : 
-                     user?.role === 'BARBER' ? 'Barbeiro' : 'Cliente'}
-                  </p>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                  title="Sair da conta"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
+                <option value="Hoje" className="bg-gray-900">Hoje</option>
+                <option value="Semana" className="bg-gray-900">Semana</option>
+                <option value="Mês" className="bg-gray-900">Mês</option>
+                <option value="Ano" className="bg-gray-900">Ano</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
             </div>
+
+            {/* Export Button */}
+            <button 
+              onClick={exportToExcel}
+              className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all flex-shrink-0"
+              title="Exportar para Excel"
+            >
+              <Download className="w-5 h-5 text-white" />
+            </button>
+
+            {/* New Client Button */}
+            <button 
+              onClick={onNewClient}
+              className="px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-2 flex-shrink-0"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="hidden sm:inline">Novo Cliente</span>
+              <span className="sm:hidden">Novo</span>
+            </button>
           </div>
         </div>
       </div>

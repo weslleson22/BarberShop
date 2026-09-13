@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import AppSidebar from '@/components/dashboard/AppSidebar'
+import DropdownHeader from '@/components/shared/DropdownHeader'
 import AgendaHeader from '@/components/agenda/AgendaHeader'
 import CalendarView from '@/components/agenda/CalendarView'
 import AppointmentList from '@/components/agenda/AppointmentList'
@@ -179,20 +179,20 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-      {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
-        <AppSidebar />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+      {/* Header Fixo no Topo */}
+      <DropdownHeader />
       
-      {/* Conteúdo principal à frente do sidebar */}
-      <div className="md:pl-[280px] lg:pl-[320px] lg:pl-sidebar-collapsed relative z-10 flex flex-col h-screen transition-all duration-300">
+      {/* Conteúdo Principal */}
+      <div className="w-full px-4 md:px-6">
+        {/* Header fixo no topo */}
         <div className="flex-shrink-0">
           <AgendaHeader onNewAppointment={handleNewAppointment} onDateFilter={handleDateSelect} />
         </div>
         
-        <div className="flex-1 main-content-scroll">
-          <div className="container-responsive py-4">
+        {/* Conteúdo com scroll */}
+        <div className="flex-1 min-w-0">
+          <div className="container-responsive py-4 px-4 md:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
             {/* Calendar View - 2 columns */}
             <div className="lg:col-span-2">
@@ -201,29 +201,73 @@ export default function AgendaPage() {
             
             {/* Quick Stats - 1 column */}
             <div className="space-y-2 md:space-y-3">
-              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-3 md:p-4">
-                <h3 className="text-base md:text-lg font-semibold text-white mb-2 md:mb-3">Resumo do Dia</h3>
-                <div className="space-y-2 md:space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-xs md:text-sm">Total</span>
+              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-4 md:p-5">
+                <h3 className="text-base md:text-lg font-semibold text-white mb-4">Resumo do Dia</h3>
+                <div className="space-y-3">
+                  {/* Total */}
+                  <div className="flex items-center justify-between py-2 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-blue-400 text-sm font-bold">T</span>
+                      </div>
+                      <span className="text-white/80 text-sm">Total</span>
+                    </div>
                     <span className="text-xl md:text-2xl font-bold text-white">{appointments.length}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-xs md:text-sm">Pendentes</span>
+
+                  {/* Pendentes */}
+                  <div className="flex items-center justify-between py-2 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-yellow-400 text-sm font-bold">P</span>
+                      </div>
+                      <span className="text-white/80 text-sm">Pendentes</span>
+                    </div>
                     <span className="text-lg md:text-xl font-bold text-yellow-400">
                       {appointments.filter(a => a.status === 'PENDING').length}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-xs md:text-sm">Concluídos</span>
+
+                  {/* Concluídos */}
+                  <div className="flex items-center justify-between py-2 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-green-400 text-sm font-bold">C</span>
+                      </div>
+                      <span className="text-white/80 text-sm">Concluídos</span>
+                    </div>
                     <span className="text-lg md:text-xl font-bold text-green-400">
                       {appointments.filter(a => a.status === 'COMPLETED').length}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-xs md:text-sm">Faturamento</span>
+
+                  {/* Cancelados */}
+                  <div className="flex items-center justify-between py-2 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-red-400 text-sm font-bold">X</span>
+                      </div>
+                      <span className="text-white/80 text-sm">Cancelados</span>
+                    </div>
+                    <span className="text-lg md:text-xl font-bold text-red-400">
+                      {appointments.filter(a => a.status === 'CANCELLED').length}
+                    </span>
+                  </div>
+
+                  {/* Faturamento */}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-yellow-400 text-sm font-bold">R$</span>
+                      </div>
+                      <span className="text-white/80 text-sm">Faturamento</span>
+                    </div>
                     <span className="text-lg md:text-xl font-bold text-yellow-400">
-                      {formatCurrency(appointments.reduce((sum, a) => sum + a.totalAmount, 0))}
+                      {formatCurrency(appointments.reduce((sum, a) => {
+                        // Usar o preço do serviço se totalAmount não estiver disponível
+                        const amount = a.totalAmount || a.service?.price || 0
+                        return sum + (typeof amount === 'number' ? amount : parseFloat(String(amount)) || 0)
+                      }, 0))}
                     </span>
                   </div>
                 </div>

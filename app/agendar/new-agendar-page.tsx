@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import AppSidebar from '@/components/dashboard/AppSidebar'
+import DropdownHeader from '@/components/shared/DropdownHeader'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -121,14 +121,12 @@ export default function NewAgendarPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-      {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-50 sidebar-responsive">
-        <AppSidebar />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+      {/* Header Fixo no Topo */}
+      <DropdownHeader />
       
-      {/* Conteúdo principal à frente do sidebar */}
-      <div className="lg:pl-80 relative z-40">
+      {/* Conteúdo principal */}
+      <div className="w-full px-4 md:px-6">
         <div className="p-6">
           <div className="max-w-2xl mx-auto">
             <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
@@ -319,8 +317,7 @@ export default function NewAgendarPage() {
                   )}
                 </button>
               </form>
-
-                          </div>
+            </div>
           </div>
         </div>
       </div>

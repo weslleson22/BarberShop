@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import AppSidebar from '@/components/dashboard/AppSidebar'
+import DropdownHeader from '@/components/shared/DropdownHeader'
 import { 
   User, 
   Camera, 
@@ -72,16 +72,13 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-      {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-50 sidebar-responsive">
-        <AppSidebar />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+      {/* Header Fixo no Topo */}
+      <DropdownHeader />
       
-      {/* Conteúdo principal à frente do sidebar */}
-      <div className="md:pl-[280px] lg:pl-[320px] relative z-30 flex flex-col h-screen">
-        <div className="flex-1 main-content-scroll">
-          <div className="p-6">
+      {/* Conteúdo principal */}
+      <div className="w-full px-4 md:px-6">
+        <div className="p-6">
           <div className="max-w-4xl mx-auto">
             
             <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">

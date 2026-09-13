@@ -2,7 +2,6 @@ import './globals.css'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth-context'
 import { DatabaseProvider } from '@/components/database-validation/DatabaseValidator'
-import { SidebarProvider } from '@/lib/sidebar-context'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -34,6 +33,11 @@ export const metadata = {
 
 export const viewport = {
   themeColor: '#0ea5e9',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -44,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="theme-color" content="#0ea5e9" />
@@ -56,9 +61,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <DatabaseProvider>
           <AuthProvider>
-            <SidebarProvider>
-              {children}
-            </SidebarProvider>
+            {children}
           </AuthProvider>
         </DatabaseProvider>
         <script

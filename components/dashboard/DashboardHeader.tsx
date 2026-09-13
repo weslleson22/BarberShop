@@ -18,9 +18,22 @@ export default function DashboardHeader() {
 
   return (
     <div className="bg-gradient-to-b from-gray-900/50 to-transparent border-b border-white/6">
-      <div className="container-responsive py-4 md:py-6">
-        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 md:gap-6">
-          {/* Welcome Message */}
+      <div className="flex items-center gap-3 w-full px-4 pt-4 pb-4 md:pt-6 md:pb-6 lg:pl-16 lg:pr-6">
+        {/* Mobile Header with Menu Button */}
+        <div className="lg:hidden flex items-center gap-3 w-full">
+          <div className="w-12 flex-shrink-0"></div> {/* Spacer for mobile menu button */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold text-white mb-1 truncate">
+              Olá, {user?.name || 'Usuário'}! 👋
+            </h1>
+            <p className="text-white/60 text-sm">
+              Aqui está o resumo do seu negócio hoje.
+            </p>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden lg:flex items-center justify-between gap-6 w-full">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 md:mb-2 truncate">
               Olá, {user?.name || 'Usuário'}! 👋
@@ -31,9 +44,9 @@ export default function DashboardHeader() {
           </div>
 
           {/* Right Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
-            {/* Search Bar - Full width on mobile, smaller on tablet */}
-            <div className="relative flex-1 sm:flex-none order-1 sm:order-none">
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            {/* Search Bar */}
+            <div className="relative min-w-[120px] md:min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
               <input
                 type="text"
@@ -45,7 +58,7 @@ export default function DashboardHeader() {
             </div>
 
             {/* Date Filter */}
-            <div className="relative order-2 sm:order-none">
+            <div className="relative flex-shrink-0">
               <select
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
@@ -60,18 +73,18 @@ export default function DashboardHeader() {
             </div>
 
             {/* Notifications */}
-            <button className="relative p-2 md:p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 transition-all order-3 sm:order-none" aria-label="Notificações">
+            <button className="relative p-2 md:p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 transition-all flex-shrink-0" aria-label="Notificações">
               <Bell className="w-4 h-4 md:w-5 md:h-5 text-white" />
               <span className="absolute top-1.5 md:top-2 right-1.5 md:right-2 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
 
             {/* Calendar */}
-            <button className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 transition-all order-4 sm:order-none hidden sm:block" aria-label="Calendário">
+            <button className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 transition-all hidden sm:flex flex-shrink-0" aria-label="Calendário">
               <Calendar className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </button>
 
             {/* User Avatar */}
-            <div className="flex items-center space-x-2 md:space-x-3 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg md:rounded-xl order-5 sm:order-none">
+            <div className="flex items-center space-x-2 md:space-x-3 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg md:rounded-xl flex-shrink-0">
               <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-black font-bold text-xs md:text-sm">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
@@ -90,6 +103,59 @@ export default function DashboardHeader() {
                 <LogOut className="w-3 h-3 md:w-4 md:h-4" />
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Mobile Controls Row */}
+        <div className="lg:hidden flex items-center gap-2 w-full mt-3 overflow-x-auto pb-2">
+          {/* Search Bar */}
+          <div className="relative flex-1 min-w-[120px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm"
+            />
+          </div>
+
+          {/* Date Filter */}
+          <div className="relative flex-shrink-0">
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="appearance-none bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer pr-8"
+            >
+              <option value="Hoje" className="bg-gray-900">Hoje</option>
+              <option value="Semana" className="bg-gray-900">Esta Semana</option>
+              <option value="Mês" className="bg-gray-900">Este Mês</option>
+              <option value="Ano" className="bg-gray-900">Este Ano</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40 pointer-events-none" />
+          </div>
+
+          {/* Notifications */}
+          <button className="relative p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all flex-shrink-0" aria-label="Notificações">
+            <Bell className="w-4 h-4 text-white" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+
+          {/* User Avatar - Mobile */}
+          <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg flex-shrink-0">
+            <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-black font-bold text-xs">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </span>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all flex-shrink-0"
+              title="Sair da conta"
+              aria-label="Sair da conta"
+            >
+              <LogOut className="w-3 h-3" />
+            </button>
           </div>
         </div>
       </div>

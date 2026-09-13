@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import AppSidebar from '@/components/dashboard/AppSidebar'
+import DropdownHeader from '@/components/shared/DropdownHeader'
 import ClientHeader from '@/components/clientes/ClientHeader'
 import ClientList from '@/components/clientes/ClientList'
 import ClientModal from '@/components/clientes/ClientModal'
@@ -192,20 +192,20 @@ export default function ClientesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-      {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
-        <AppSidebar />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+      {/* Header Fixo no Topo */}
+      <DropdownHeader />
       
-      {/* Conteúdo principal à frente do sidebar */}
-      <div className="md:pl-[280px] lg:pl-[320px] lg:pl-sidebar-collapsed relative z-10 flex flex-col h-screen transition-all duration-300">
+      {/* Conteúdo Principal */}
+      <div className="w-full px-4 md:px-6">
+        {/* Header fixo no topo */}
         <div className="flex-shrink-0">
           <ClientHeader onNewClient={handleNewClient} onSearch={setSearchQuery} clients={clients} />
         </div>
         
-        <div className="flex-1 main-content-scroll">
-          <div className="p-6">
+        {/* Conteúdo com scroll */}
+        <div className="flex-1 min-w-0">
+          <div className="p-4 md:p-6">
             <ClientList 
               clients={clients}
               loading={loading}

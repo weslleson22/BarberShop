@@ -138,10 +138,10 @@ export default function CalendarView({ onDateSelect, selectedDate: externalSelec
 
       {/* Selected date info */}
       <div className="mt-4 pt-3 border-t border-white/6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-white/60 text-xs">Data selecionada</p>
-            <p className="text-white font-medium text-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-white/60 text-xs mb-1">Data selecionada</p>
+            <p className="text-white font-medium text-sm break-words">
               {selectedDate.toLocaleDateString('pt-BR', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -150,7 +150,7 @@ export default function CalendarView({ onDateSelect, selectedDate: externalSelec
               })}
             </p>
           </div>
-          <button className="px-3 py-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all text-sm">
+          <button className="px-3 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all text-sm whitespace-nowrap flex-shrink-0">
             Ver Agendamentos
           </button>
         </div>

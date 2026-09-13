@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { useSidebar } from '@/lib/sidebar-context'
 import { useRouter } from 'next/navigation'
 import { Calendar, Users, Clock, DollarSign, TrendingUp, UserCheck, Scissors, PieChart } from 'lucide-react'
-import AppSidebar from '@/components/dashboard/AppSidebar'
+import DropdownHeader from '@/components/shared/DropdownHeader'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import StatsCards from '@/components/dashboard/StatsCards'
 import RevenueChart from '@/components/dashboard/RevenueChart'
@@ -32,7 +31,6 @@ interface Appointment {
 
 export default function DashboardPage() {
   const { user, loading: authLoading, logout } = useAuth()
-  const { isSidebarCollapsed } = useSidebar()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     todayAppointments: 0,
@@ -238,54 +236,42 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-      {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
-        <AppSidebar />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+      {/* Header Fixo no Topo */}
+      <DropdownHeader />
       
-      {/* Conteúdo principal à frente do sidebar */}
-      <div className={`md:pl-[280px] lg:pl-[320px] relative z-10 flex flex-col h-screen transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : ''}`}>
-        {/* Header fixo no topo */}
-        <div className="flex-shrink-0">
-          <DashboardHeader />
+      {/* Conteúdo Principal */}
+      <div className="w-full px-4 md:px-6">
+        {/* KPI Cards */}
+        <div className="mb-6 md:mb-8">
+          <StatsCards />
         </div>
-        
-        {/* Conteúdo com scroll */}
-        <div className="flex-1 main-content-scroll">
-          <div className="container-responsive py-6">
-          {/* KPI Cards */}
-          <div className="mb-6 md:mb-8">
-            <StatsCards />
-          </div>
 
-          {/* Cards alinhados um abaixo do outro */}
-          <div className="space-y-4 md:space-y-6">
-            {/* Faturamento */}
-            <div>
-              <RevenueChart />
-            </div>
-            
-            {/* Agendamentos de Hoje */}
-            <div>
-              <TodayAppointments />
-            </div>
-            
-            {/* Serviços Mais Procurados */}
-            <div>
-              <PopularServices />
-            </div>
-            
-            {/* Últimos Clientes */}
-            <div>
-              <RecentClients />
-            </div>
-            
-            {/* Resumo Financeiro */}
-            <div>
-              <FinanceSummary />
-            </div>
+        {/* Cards alinhados um abaixo do outro */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          {/* Faturamento */}
+          <div className="lg:col-span-2">
+            <RevenueChart />
           </div>
+          
+          {/* Agendamentos de Hoje */}
+          <div>
+            <TodayAppointments />
+          </div>
+          
+          {/* Serviços Mais Procurados */}
+          <div>
+            <PopularServices />
+          </div>
+          
+          {/* Últimos Clientes */}
+          <div>
+            <RecentClients />
+          </div>
+          
+          {/* Resumo Financeiro */}
+          <div className="lg:col-span-2">
+            <FinanceSummary />
           </div>
         </div>
       </div>

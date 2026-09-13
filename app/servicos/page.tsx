@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Scissors, Clock, DollarSign, Plus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { useSidebar } from '@/lib/sidebar-context'
 import { useRouter } from 'next/navigation'
-import AppSidebar from '@/components/dashboard/AppSidebar'
+import DropdownHeader from '@/components/shared/DropdownHeader'
 
 interface Service {
   id: string
@@ -22,7 +21,6 @@ interface Service {
 
 export default function ServicosPage() {
   const { user, loading: authLoading } = useAuth()
-  const { isSidebarCollapsed } = useSidebar()
   const router = useRouter()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
@@ -203,16 +201,15 @@ export default function ServicosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-      {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
-        <AppSidebar />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+      {/* Header Fixo no Topo */}
+      <DropdownHeader />
       
-      {/* Conteúdo principal à frente do sidebar */}
-      <div className={`md:pl-[280px] lg:pl-[320px] relative z-10 flex flex-col h-screen transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : ''}`}>
-        <div className="flex-1 main-content-scroll">
-          <div className="container-responsive py-6">
+      {/* Conteúdo Principal */}
+      <div className="w-full px-4 md:px-6">
+        {/* Conteúdo com scroll */}
+        <div className="flex-1 min-w-0">
+          <div className="container-responsive py-6 px-4 md:px-6">
           <div className="mb-6 md:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>

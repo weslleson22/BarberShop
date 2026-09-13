@@ -179,7 +179,7 @@ export default function StatsCards() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 min-w-0">
       {statCards.map((stat, index) => {
         const Icon = stat.icon
         const isPositive = stat.changeType === 'increase'
@@ -187,7 +187,7 @@ export default function StatsCards() {
         return (
           <div
             key={index}
-            className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-white/10 transition-all duration-300"
+            className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-white/10 transition-all duration-300 min-w-0"
           >
             <div className="flex items-start justify-between mb-3 md:mb-4">
               <div className={`w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br ${stat.gradient} rounded-lg md:rounded-xl flex items-center justify-center`}>

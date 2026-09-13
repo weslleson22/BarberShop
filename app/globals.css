@@ -5,14 +5,33 @@
 @layer base {
   * {
     @apply border-gray-200;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
-  html, body {
+  
+  html {
     @apply bg-gray-950 text-white;
+    width: 100%;
     height: 100%;
+    min-height: 100vh;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
   }
+  
   body {
-    @apply overflow-x-hidden;
+    @apply bg-gray-950 text-white;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #__next {
+    width: 100%;
+    min-height: 100vh;
   }
   
   /* Main content scroll area */
