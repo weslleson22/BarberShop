@@ -143,10 +143,18 @@ export default function DropdownHeader() {
 
             {/* User Avatar */}
             <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg">
-              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-black font-bold text-sm">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </span>
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {user?.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt="Avatar" 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-black font-bold text-sm">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                )}
               </div>
               <div className="hidden sm:block min-w-0">
                 <p className="text-white font-medium text-sm truncate">{user?.name || 'Usuário'}</p>

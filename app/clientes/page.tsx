@@ -67,75 +67,11 @@ export default function ClientesPage() {
         setClients(data)
       } else {
         console.error('Erro ao buscar clientes do banco:', response.statusText)
-        // Se falhar, usar dados mockados como fallback
-        const mockClients = [
-          { 
-            id: '1', 
-            name: 'João Silva', 
-            phone: '(11) 99999-8888', 
-            email: 'joao@email.com', 
-            createdAt: new Date('2024-01-15').toISOString(),
-            _count: { appointments: 5 }
-          },
-          { 
-            id: '2', 
-            name: 'Maria Santos', 
-            phone: '(11) 97777-6666', 
-            email: 'maria@email.com', 
-            createdAt: new Date('2024-02-20').toISOString(),
-            _count: { appointments: 12 }
-          },
-          { 
-            id: '3', 
-            name: 'Carlos Oliveira', 
-            phone: '(11) 95555-4444', 
-            email: 'carlos@email.com', 
-            createdAt: new Date('2024-03-10').toISOString(),
-            _count: { appointments: 2 }
-          },
-          { 
-            id: '4', 
-            name: 'Ana Costa', 
-            phone: '(11) 93333-2222', 
-            email: 'ana@email.com', 
-            createdAt: new Date('2024-01-25').toISOString(),
-            _count: { appointments: 8 }
-          },
-          { 
-            id: '5', 
-            name: 'Pedro Martins', 
-            phone: '(11) 91111-0000', 
-            email: 'pedro@email.com', 
-            createdAt: new Date('2024-04-05').toISOString(),
-            _count: { appointments: 1 }
-          },
-          { 
-            id: '6', 
-            name: 'Lucia Ferreira', 
-            phone: '(11) 98888-7777', 
-            email: 'lucia@email.com', 
-            createdAt: new Date('2024-02-15').toISOString(),
-            _count: { appointments: 15 }
-          }
-        ]
-        console.log('Usando clientes mockados como fallback:', mockClients)
-        setClients(mockClients)
+        setClients([]) // Array vazio em caso de erro
       }
     } catch (error) {
       console.error('Error fetching clients from database:', error)
-      // Em caso de erro, usar dados mockados
-      const mockClients = [
-        { 
-          id: '1', 
-          name: 'João Silva', 
-          phone: '(11) 99999-8888', 
-          email: 'joao@email.com', 
-          createdAt: new Date('2024-01-15').toISOString(),
-          _count: { appointments: 5 }
-        }
-      ]
-      console.log('Erro usando clientes mockados:', mockClients)
-      setClients(mockClients)
+      setClients([]) // Array vazio em caso de erro
     } finally {
       setLoading(false)
     }

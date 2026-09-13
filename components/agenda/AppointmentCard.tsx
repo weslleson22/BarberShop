@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock, User, Phone, DollarSign, CheckCircle, AlertCircle, XCircle, MoreVertical, Edit, X } from 'lucide-react'
+import { Clock, CheckCircle, AlertCircle, XCircle, MoreVertical, Edit, X } from 'lucide-react'
 
 interface Appointment {
   id: string
@@ -46,32 +46,6 @@ export default function AppointmentCard({
       style: 'currency',
       currency: 'BRL',
     }).format(value)
-  }
-
-  const handleCancel = async (appointment: Appointment) => {
-    if (!confirm('Tem certeza que deseja cancelar este agendamento?')) {
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/appointments/${appointment.id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        console.log('Agendamento cancelado:', result)
-        onStatusChange?.(appointment, 'CANCELLED')
-        alert('Agendamento cancelado com sucesso!')
-      } else {
-        const error = await response.json()
-        console.error('Erro ao cancelar:', error)
-        alert(error.error || 'Erro ao cancelar agendamento')
-      }
-    } catch (error) {
-      console.error('Error cancelling appointment:', error)
-      alert('Erro ao cancelar agendamento')
-    }
   }
 
   const formatTime = (dateString: string) => {
@@ -271,7 +245,7 @@ export default function AppointmentCard({
         )}
         {appointment.status !== 'CANCELLED' && (
           <button 
-            onClick={() => handleCancel(appointment)}
+            onClick={() => onDelete?.(appointment)}
             className="flex-1 py-2 md:py-2.5 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-all text-red-400 hover:text-red-300 flex items-center justify-center space-x-2 text-sm md:text-base"
           >
             <X className="w-3.5 h-3.5 md:w-4 md:h-4" />

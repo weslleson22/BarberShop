@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield } from 'lucide-react'
+import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
@@ -15,6 +15,7 @@ interface User {
   isActive: boolean
   createdAt: string
   barbershopId: string
+  avatar?: string
 }
 
 export default function UsuariosPage() {
@@ -33,7 +34,10 @@ export default function UsuariosPage() {
     role: 'BARBER' as 'ADMIN' | 'BARBER' | 'CLIENT',
     password: '',
     isActive: true,
+    avatar: '',
   })
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState('')
 
   useEffect(() => {
     setMounted(true)
@@ -134,7 +138,10 @@ export default function UsuariosPage() {
       const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          avatar: avatarPreview || formData.avatar
+        }),
       })
       
       console.log(`Status da resposta: ${response.status} ${response.statusText}`)
@@ -148,7 +155,9 @@ export default function UsuariosPage() {
         await fetchUsers()
         
         // Resetar formulário
-        setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true })
+        setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true, avatar: '' })
+        setAvatarPreview('')
+        setAvatarFile(null)
         setShowAddForm(false)
         setEditingUser(null)
         
@@ -176,8 +185,23 @@ export default function UsuariosPage() {
       role: user.role,
       password: '',
       isActive: user.isActive,
+      avatar: user.avatar || '',
     })
+    setAvatarPreview(user.avatar || '')
     setShowAddForm(true)
+  }
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setAvatarFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string)
+        setFormData({ ...formData, avatar: reader.result as string })
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleToggleActive = async (userId: string, currentStatus: boolean) => {
@@ -308,7 +332,9 @@ export default function UsuariosPage() {
             onClick={() => {
               setShowAddForm(true)
               setEditingUser(null)
-              setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true })
+              setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true, avatar: '' })
+              setAvatarPreview('')
+              setAvatarFile(null)
             }}
             className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium text-sm md:text-base"
           >
@@ -339,6 +365,41 @@ export default function UsuariosPage() {
             {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+            {/* Avatar Upload */}
+            <div>
+              <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
+                Foto de Perfil
+              </label>
+              <div className="flex items-center space-x-4">
+                <div className="relative w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center overflow-hidden">
+                  {avatarPreview ? (
+                    <img 
+                      src={avatarPreview} 
+                      alt="Avatar preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-yellow-400 font-bold text-xl md:text-2xl">
+                      {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
+                    </span>
+                  )}
+                  <label className="absolute bottom-0 right-0 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full p-1.5 cursor-pointer hover:from-yellow-500 hover:to-yellow-700 transition-all">
+                    <Camera className="w-3 h-3 md:w-4 md:h-4 text-black" />
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                    />
+                  </label>
+                </div>
+                <div>
+                  <p className="text-white/60 text-xs md:text-sm mb-1">Clique na câmera para alterar</p>
+                  <p className="text-white/40 text-xs">PNG, JPG até 5MB</p>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
@@ -425,7 +486,9 @@ export default function UsuariosPage() {
                 onClick={() => {
                   setShowAddForm(false)
                   setEditingUser(null)
-                  setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true })
+                  setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true, avatar: '' })
+                  setAvatarPreview('')
+                  setAvatarFile(null)
                 }}
                 className="px-4 py-2 md:px-4 md:py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all text-sm md:text-base"
               >
@@ -482,10 +545,18 @@ export default function UsuariosPage() {
                   <tr key={user.id} className="hover:bg-white/5">
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-yellow-400 font-bold text-xs md:text-sm">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {user.avatar ? (
+                            <img 
+                              src={user.avatar} 
+                              alt={user.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-yellow-400 font-bold text-xs md:text-sm">
+                              {user.name.charAt(0).toUpperCase()}
+                            </span>
+                          )}
                         </div>
                         <div className="ml-2 md:ml-4 min-w-0">
                           <div className="text-xs md:text-sm font-medium text-white truncate">{user.name}</div>

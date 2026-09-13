@@ -15,6 +15,7 @@ interface FinanceItem {
 export default function FinanceSummary() {
   const [financeData, setFinanceData] = useState<FinanceItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [profitMargin, setProfitMargin] = useState(0)
 
   useEffect(() => {
     fetchFinanceData()
@@ -48,7 +49,8 @@ export default function FinanceSummary() {
       // Calculate revenue from completed appointments
       const completedAppointments = currentMonthAppointments.filter((apt: any) => apt.status === 'COMPLETED')
       const totalRevenue = completedAppointments.reduce((sum: number, apt: any) => {
-        return sum + (apt.totalAmount || 0)
+        const amount = apt.totalAmount ? Number(apt.totalAmount) : (apt.service?.price ? Number(apt.service.price) : 0)
+        return sum + amount
       }, 0)
       
       console.log('Receita total:', totalRevenue)
@@ -64,13 +66,20 @@ export default function FinanceSummary() {
       
       const prevCompletedAppointments = prevMonthAppointments.filter((apt: any) => apt.status === 'COMPLETED')
       const prevRevenue = prevCompletedAppointments.reduce((sum: number, apt: any) => {
-        return sum + (apt.totalAmount || 0)
+        const amount = apt.totalAmount ? Number(apt.totalAmount) : (apt.service?.price ? Number(apt.service.price) : 0)
+        return sum + amount
       }, 0)
       
       console.log('Receita mês anterior:', prevRevenue)
       
       // Calculate percentage change
       const revenueChange = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0
+      
+      // Calculate profit margin (completed appointments / total appointments for the month)
+      const totalMonthAppointments = currentMonthAppointments.length
+      const profitMargin = totalMonthAppointments > 0 
+        ? (completedAppointments.length / totalMonthAppointments) * 100 
+        : 0
       
       // Format currency
       const formatCurrency = (value: number) => {
@@ -110,6 +119,7 @@ export default function FinanceSummary() {
       
       console.log('Dados financeiros processados:', data)
       setFinanceData(data)
+      setProfitMargin(profitMargin)
       
     } catch (error) {
       console.error('Erro ao buscar dados financeiros:', error)
@@ -174,11 +184,11 @@ export default function FinanceSummary() {
       {/* Profit Margin Visual */}
       <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
         <div className="flex items-center justify-between mb-1.5 md:mb-2">
-          <span className="text-white/60 text-xs md:text-sm">Margem de Lucro</span>
-          <span className="text-white font-semibold text-sm md:text-base">73.7%</span>
+          <span className="text-white/60 text-xs md:text-sm">Taxa de Conclusão</span>
+          <span className="text-white font-semibold text-sm md:text-base">{profitMargin.toFixed(1)}%</span>
         </div>
         <div className="w-full bg-white/10 rounded-full h-2 md:h-3">
-          <div className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full" style={{ width: '73.7%' }} />
+          <div className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full" style={{ width: `${profitMargin}%` }} />
         </div>
       </div>
     </div>

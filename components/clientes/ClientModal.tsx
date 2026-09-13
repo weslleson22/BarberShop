@@ -3,6 +3,40 @@
 import { useState, useEffect } from 'react'
 import { X, User, Phone, Mail, Save, Plus } from 'lucide-react'
 
+const NAME_MIN = 3
+const NAME_MAX = 80
+const EMAIL_MAX = 80
+const EMAIL_PATTERN = /^[a-z0-9._%+\-]+@[a-z0-9.-]+\.[a-z]{2,}$/
+
+function maskName(value: string) {
+  return value
+    .replace(/[^A-Za-zÀ-ÿ'\-\s]/g, '')
+    .slice(0, NAME_MAX)
+    .split(' ')
+    .map((word) =>
+      word.length > 0
+        ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        : ''
+    )
+    .join(' ')
+}
+
+function maskEmail(value: string) {
+  let formatted = value
+    .toLowerCase()
+    .replace(/\s/g, '')
+    .replace(/[^a-z0-9@._+\-]/g, '')
+
+  const atIndex = formatted.indexOf('@')
+  if (atIndex !== -1) {
+    const local = formatted.slice(0, atIndex).replace(/@/g, '')
+    const domain = formatted.slice(atIndex + 1).replace(/@/g, '')
+    formatted = `${local}@${domain}`
+  }
+
+  return formatted.slice(0, EMAIL_MAX)
+}
+
 interface ClientModalProps {
   isOpen: boolean
   onClose: () => void
@@ -40,21 +74,11 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
     const { name, value } = e.target
     let formattedValue = value
 
-    // Apply masks based on field name
     if (name === 'name') {
-      // Name mask - proper case (first letter uppercase, rest lowercase)
-      formattedValue = value
-        .split(' ')
-        .map(word => 
-          word.length > 0 
-            ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-            : ''
-        )
-        .join(' ')
+      formattedValue = maskName(value)
     } else if (name === 'phone') {
-      // Phone mask - (00) 00000-0000
       const cleaned = value.replace(/\D/g, '')
-      
+
       if (cleaned.length <= 2) {
         formattedValue = cleaned
       } else if (cleaned.length <= 7) {
@@ -63,11 +87,10 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
         formattedValue = `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`
       }
     } else if (name === 'email') {
-      // Email mask - lowercase and basic format validation
-      formattedValue = value.toLowerCase()
+      formattedValue = maskEmail(value)
     }
 
-    setFormData(prev => ({ ...prev, [name]: formattedValue }))
+    setFormData((prev) => ({ ...prev, [name]: formattedValue }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,14 +98,28 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
     setLoading(true)
 
     try {
-      if (!formData.name || !formData.phone) {
+      const trimmedName = formData.name.trim()
+
+      if (!trimmedName || !formData.phone) {
         alert('Nome e telefone são obrigatórios')
         setLoading(false)
         return
       }
 
+      if (trimmedName.length < NAME_MIN) {
+        alert(`O nome deve ter pelo menos ${NAME_MIN} caracteres`)
+        setLoading(false)
+        return
+      }
+
+      if (formData.email && !EMAIL_PATTERN.test(formData.email)) {
+        alert('Informe um e-mail válido no formato nome@dominio.com')
+        setLoading(false)
+        return
+      }
+
       const clientData = {
-        name: formData.name,
+        name: trimmedName,
         phone: formData.phone,
         email: formData.email
       }
@@ -174,10 +211,18 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
                 className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
                 placeholder="Ex: João Silva"
                 required
-                maxLength={100}
+                minLength={NAME_MIN}
+                maxLength={NAME_MAX}
               />
             </div>
-            <p className="text-white/40 text-xs mt-1">Primeira letra maiúscula automaticamente</p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-white/40 text-xs">
+                {NAME_MIN} a {NAME_MAX} caracteres (recomendado para nome completo)
+              </p>
+              <p className="text-white/40 text-xs">
+                {formData.name.length}/{NAME_MAX}
+              </p>
+            </div>
           </div>
 
           {/* Phone */}
@@ -214,11 +259,15 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
-                placeholder="email@exemplo.com"
-                maxLength={100}
+                placeholder="nome@dominio.com"
+                maxLength={EMAIL_MAX}
+                inputMode="email"
+                autoComplete="email"
               />
             </div>
-            <p className="text-white/40 text-xs mt-1">Convertido para minúsculas automaticamente</p>
+            <p className="text-white/40 text-xs mt-1">
+              Máscara: minúsculas, um @ e formato nome@dominio.com
+            </p>
           </div>
 
           {/* Actions */}

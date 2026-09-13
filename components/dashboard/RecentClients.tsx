@@ -35,9 +35,17 @@ export default function RecentClients() {
       
       console.log('Total de clientes recebidos:', allClients.length)
       
-      // Sort by creation date (most recent first) and take top 5
+      // Sort by last appointment date if available, otherwise by creation date
       const recentClients = allClients
-        .sort((a: Client, b: Client) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .sort((a: Client, b: Client) => {
+          const dateA = a.lastAppointment 
+            ? new Date(a.lastAppointment.startTime).getTime() 
+            : new Date(a.createdAt).getTime()
+          const dateB = b.lastAppointment 
+            ? new Date(b.lastAppointment.startTime).getTime() 
+            : new Date(b.createdAt).getTime()
+          return dateB - dateA
+        })
         .slice(0, 5)
       
       console.log('Clientes recentes:', recentClients)
@@ -69,6 +77,13 @@ export default function RecentClients() {
         month: '2-digit' 
       })
     }
+  }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value)
   }
 
   const getInitials = (name: string) => {
@@ -114,7 +129,7 @@ export default function RecentClients() {
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
           <h3 className="text-lg md:text-xl font-semibold text-white">Últimos Clientes</h3>
-          <p className="text-white/60 text-xs md:text-sm">Atendimentos recentes</p>
+          <p className="text-white/60 text-xs md:text-sm">Atividade recente</p>
         </div>
         <div className="flex items-center space-x-2 text-white/60">
           <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -143,16 +158,30 @@ export default function RecentClients() {
                 <div className="flex items-center space-x-2 md:space-x-4 text-white/60 text-xs md:text-sm">
                   <div className="flex items-center space-x-1">
                     <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    <span className="truncate">{formatDate(client.createdAt)}</span>
+                    <span className="truncate">
+                      {client.lastAppointment 
+                        ? formatDate(client.lastAppointment.startTime) 
+                        : formatDate(client.createdAt)
+                      }
+                    </span>
                   </div>
-                  <span className="hidden sm:inline truncate">{client.phone}</span>
+                  {client.lastAppointment && (
+                    <span className="hidden sm:inline truncate">{client.lastAppointment.service}</span>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Value */}
             <div className="text-right flex-shrink-0 ml-2">
-              <p className="text-white font-semibold text-xs md:text-sm">{client._count?.appointments || 0} agend.</p>
+              {client.lastAppointment ? (
+                <div className="flex flex-col items-end">
+                  <p className="text-yellow-400 font-semibold text-xs md:text-sm">{formatCurrency(client.lastAppointment.totalAmount)}</p>
+                  <p className="text-white/60 text-xs">{client._count?.appointments || 0} agend.</p>
+                </div>
+              ) : (
+                <p className="text-white font-semibold text-xs md:text-sm">{client._count?.appointments || 0} agend.</p>
+              )}
             </div>
           </div>
         ))}

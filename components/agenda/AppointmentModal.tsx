@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { X, Calendar, Clock, User, DollarSign, Save, Plus } from 'lucide-react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { X, Calendar, Clock, User, DollarSign, Save, Plus, Search } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 interface Client {
@@ -47,9 +47,32 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
   const [loading, setLoading] = useState(false)
   const [availableSlots, setAvailableSlots] = useState<string[]>([])
   const [selectedDate, setSelectedDate] = useState('')
+  const [clientQuery, setClientQuery] = useState('')
+  const [showClientResults, setShowClientResults] = useState(false)
+  const clientSearchRef = useRef<HTMLDivElement>(null)
 
   // Check if user is CLIENT
   const isClient = user?.role === 'CLIENT'
+  const selectedClientRecord = clients.find((c) => c.id === formData.clientId)
+
+  const filteredClients = useMemo(() => {
+    const query = clientQuery.trim().toLowerCase()
+    const source = !query
+      ? clients
+      : clients.filter((client) => {
+          const name = client.name?.toLowerCase() || ''
+          const phone = client.phone?.replace(/\D/g, '') || ''
+          const email = client.email?.toLowerCase() || ''
+          const digits = query.replace(/\D/g, '')
+          return (
+            name.includes(query) ||
+            email.includes(query) ||
+            (digits.length >= 2 && phone.includes(digits))
+          )
+        })
+
+    return source.slice(0, 8)
+  }, [clients, clientQuery])
 
   useEffect(() => {
     if (isOpen) {
@@ -69,6 +92,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           endTime: appointment.endTime || '',
           notes: appointment.notes || ''
         })
+        setClientQuery(appointment.client?.name || '')
       } else {
         setFormData({
           clientId: isClient ? user?.id || '' : '',
@@ -78,9 +102,22 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           endTime: '',
           notes: ''
         })
+        setClientQuery('')
       }
+      setShowClientResults(false)
     }
   }, [isOpen, appointment, isClient, user?.id])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clientSearchRef.current && !clientSearchRef.current.contains(event.target as Node)) {
+        setShowClientResults(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const fetchClients = async () => {
     try {
@@ -296,26 +333,75 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-          {/* Client Selection - Only show for ADMIN/BARBER */}
+          {/* Client search - ADMIN/BARBER (not logged as CLIENT) */}
           {!isClient && (
-            <div>
+            <div ref={clientSearchRef} className="relative">
               <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Cliente *
               </label>
-              <select
-                name="clientId"
-                value={formData.clientId}
-                onChange={handleInputChange}
-                className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
-                required
-              >
-                <option value="" className="bg-gray-900">Selecione um cliente</option>
-                {clients.map(client => (
-                  <option key={client.id} value={client.id} className="bg-gray-900">
-                    {client.name} - {client.phone}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
+                <input
+                  type="search"
+                  value={clientQuery}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setClientQuery(value)
+                    setShowClientResults(true)
+
+                    const exactMatch = clients.find(
+                      (client) => client.name.toLowerCase() === value.trim().toLowerCase()
+                    )
+                    setFormData((prev) => ({
+                      ...prev,
+                      clientId: exactMatch?.id || ''
+                    }))
+                  }}
+                  onFocus={() => setShowClientResults(true)}
+                  className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                  placeholder="Buscar cliente por nome..."
+                  autoComplete="off"
+                />
+              </div>
+
+              {showClientResults && (
+                <div className="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg md:rounded-xl border border-white/10 bg-gray-900 shadow-xl">
+                  {filteredClients.length > 0 ? (
+                    filteredClients.map((client) => (
+                      <button
+                        key={client.id}
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({ ...prev, clientId: client.id }))
+                          setClientQuery(client.name)
+                          setShowClientResults(false)
+                        }}
+                        className={`w-full text-left px-3 py-2.5 hover:bg-white/10 transition-all ${
+                          formData.clientId === client.id ? 'bg-yellow-400/10' : ''
+                        }`}
+                      >
+                        <p className="text-white text-sm font-medium truncate">{client.name}</p>
+                        <p className="text-white/50 text-xs truncate">
+                          {client.phone}
+                          {client.email ? ` · ${client.email}` : ''}
+                        </p>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-3 py-3 text-white/50 text-sm">
+                      {clients.length === 0
+                        ? 'Nenhum cliente cadastrado'
+                        : 'Nenhum cliente encontrado'}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {selectedClientRecord && (
+                <p className="text-white/50 text-xs mt-1.5">
+                  Selecionado: {selectedClientRecord.name} — {selectedClientRecord.phone}
+                </p>
+              )}
             </div>
           )}
 

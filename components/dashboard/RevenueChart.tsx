@@ -1,19 +1,49 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import NoSSR from './NoSSR'
 
-const data = [
-  { name: 'Seg', value: 4000 },
-  { name: 'Ter', value: 3000 },
-  { name: 'Qua', value: 5000 },
-  { name: 'Qui', value: 2780 },
-  { name: 'Sex', value: 6890 },
-  { name: 'Sáb', value: 7390 },
-  { name: 'Dom', value: 5490 }
-]
+interface RevenueData {
+  name: string
+  value: number
+  date: string
+}
 
 export default function RevenueChart() {
+  const [data, setData] = useState<RevenueData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [totalRevenue, setTotalRevenue] = useState(0)
+
+  useEffect(() => {
+    const fetchRevenueData = async () => {
+      try {
+        const response = await fetch('/api/dashboard/revenue')
+        if (response.ok) {
+          const revenueData = await response.json()
+          setData(revenueData)
+          
+          // Calculate total revenue
+          const total = revenueData.reduce((sum: number, item: RevenueData) => sum + item.value, 0)
+          setTotalRevenue(total)
+        }
+      } catch (error) {
+        console.error('Error fetching revenue data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRevenueData()
+  }, [])
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value)
+  }
+
   return (
     <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
       <div className="flex items-center justify-between mb-4 md:mb-6">
@@ -23,53 +53,59 @@ export default function RevenueChart() {
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full"></div>
-          <span className="text-white/60 text-xs md:text-sm">R$ 34.550</span>
+          <span className="text-white/60 text-xs md:text-sm">{formatCurrency(totalRevenue)}</span>
         </div>
       </div>
       
       <div className="h-48 md:h-64">
-        <NoSSR fallback={<div className="flex items-center justify-center h-full text-white/60 text-sm">Carregando gráfico...</div>}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
-              <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#D4AF37" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis 
-                dataKey="name" 
-                stroke="rgba(255,255,255,0.3)"
-                fontSize={10}
-                tick={{ fontSize: 10 }}
-              />
-              <YAxis 
-                stroke="rgba(255,255,255,0.3)"
-                fontSize={10}
-                tick={{ fontSize: 10 }}
-                tickFormatter={(value) => `R$ ${(value/1000)}k`}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'rgba(13, 19, 36, 0.9)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  fontSize: '12px'
-                }}
-                formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Receita']}
-              />
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="#D4AF37"
-                strokeWidth={2}
-                fill="url(#colorRevenue)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </NoSSR>
+        {loading ? (
+          <div className="flex items-center justify-center h-full text-white/60 text-sm">Carregando dados...</div>
+        ) : data.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-white/60 text-sm">Sem dados de faturamento</div>
+        ) : (
+          <NoSSR fallback={<div className="flex items-center justify-center h-full text-white/60 text-sm">Carregando gráfico...</div>}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#D4AF37" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="rgba(255,255,255,0.3)"
+                  fontSize={10}
+                  tick={{ fontSize: 10 }}
+                />
+                <YAxis 
+                  stroke="rgba(255,255,255,0.3)"
+                  fontSize={10}
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(value) => `R$ ${(value/1000)}k`}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'rgba(13, 19, 36, 0.9)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '12px'
+                  }}
+                  formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Receita']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#D4AF37"
+                  strokeWidth={2}
+                  fill="url(#colorRevenue)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </NoSSR>
+        )}
       </div>
     </div>
   )

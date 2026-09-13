@@ -10,7 +10,16 @@ export default function ConfiguracoesPage() {
   const { user, updateUser } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(true)
   const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    birthDate: '',
+    bio: ''
+  })
+  const [originalData, setOriginalData] = useState({
     name: '',
     email: '',
     phone: '',
@@ -20,34 +29,44 @@ export default function ConfiguracoesPage() {
   })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState('')
+  const [originalAvatar, setOriginalAvatar] = useState('')
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || 'Wesleson Souza',
-        email: user.email || 'wes@gmail.com',
-        phone: (user as any).phone || '(11) 99999-8888',
-        address: (user as any).address || '',
-        birthDate: (user as any).birthDate || '',
-        bio: (user as any).bio || ''
-      })
-      // Carregar avatar salvo no localStorage
-      const savedAvatar = localStorage.getItem('userAvatar')
-      if (savedAvatar) {
-        setAvatarPreview(savedAvatar)
+    // Carregar dados do usuário do banco de dados
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/users/profile')
+        if (response.ok) {
+          const userData = await response.json()
+          const phoneFormatted = userData.phone || ''
+          setFormData({
+            name: userData.name || '',
+            email: userData.email || '',
+            phone: phoneFormatted,
+            address: userData.address || '',
+            birthDate: userData.birthDate || '',
+            bio: userData.bio || ''
+          })
+          setOriginalData({
+            name: userData.name || '',
+            email: userData.email || '',
+            phone: phoneFormatted,
+            address: userData.address || '',
+            birthDate: userData.birthDate || '',
+            bio: userData.bio || ''
+          })
+          setAvatarPreview(userData.avatar || '')
+          setOriginalAvatar(userData.avatar || '')
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error)
+      } finally {
+        setIsFetching(false)
       }
-    } else {
-      // Se não houver usuário, preencher com dados de exemplo
-      setFormData({
-        name: 'Wesleson Souza',
-        email: 'wes@gmail.com',
-        phone: '(11) 99999-8888',
-        address: '',
-        birthDate: '',
-        bio: ''
-      })
     }
-  }, [user])
+
+    fetchUserData()
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -93,20 +112,31 @@ export default function ConfiguracoesPage() {
     setIsLoading(true)
 
     try {
-      // Chamar API real para atualizar usuário
-      const response = await fetch('/api/user/update', {
+      // Construir objeto apenas com campos alterados
+      const changedData: any = {}
+      
+      if (formData.name !== originalData.name) changedData.name = formData.name
+      if (formData.email !== originalData.email) changedData.email = formData.email
+      if (formData.phone !== originalData.phone) changedData.phone = formData.phone
+      if (formData.address !== originalData.address) changedData.address = formData.address
+      if (formData.birthDate !== originalData.birthDate) changedData.birthDate = formData.birthDate
+      if (formData.bio !== originalData.bio) changedData.bio = formData.bio
+      if (avatarPreview !== originalAvatar) changedData.avatar = avatarPreview
+
+      // Se não houver alterações, não fazer nada
+      if (Object.keys(changedData).length === 0) {
+        alert('Nenhuma alteração detectada.')
+        setIsLoading(false)
+        return
+      }
+
+      // Chamar API real para atualizar usuário apenas com campos alterados
+      const response = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          birthDate: formData.birthDate,
-          bio: formData.bio
-        })
+        body: JSON.stringify(changedData)
       })
 
       if (response.ok) {
@@ -115,15 +145,18 @@ export default function ConfiguracoesPage() {
         // Atualizar contexto do usuário com a função updateUser
         updateUser(updatedUser)
         
-        // Salvar avatar separadamente se houver
-        if (typeof window !== 'undefined' && avatarPreview) {
-          localStorage.setItem('userAvatar', avatarPreview)
-        }
+        // Atualizar dados originais com os novos valores
+        setOriginalData({
+          name: updatedUser.name || '',
+          email: updatedUser.email || '',
+          phone: updatedUser.phone || '',
+          address: updatedUser.address || '',
+          birthDate: updatedUser.birthDate || '',
+          bio: updatedUser.bio || ''
+        })
+        setOriginalAvatar(updatedUser.avatar || '')
         
         alert('Perfil atualizado com sucesso!')
-        
-        // Recarregar a página para mostrar as atualizações
-        window.location.reload()
       } else {
         const errorData = await response.json()
         throw new Error(errorData.message || 'Erro ao atualizar perfil')
@@ -153,6 +186,12 @@ export default function ConfiguracoesPage() {
               <p className="text-white/60">Gerencie seu perfil e preferências</p>
             </div>
 
+            {isFetching ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-white/60">Carregando dados...</div>
+              </div>
+            ) : (
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Avatar Section */}
               <div className="lg:col-span-1">
@@ -170,7 +209,7 @@ export default function ConfiguracoesPage() {
                           />
                         ) : (
                           <span className="text-black font-bold text-2xl">
-                            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                            {formData.name?.charAt(0)?.toUpperCase() || 'U'}
                           </span>
                         )}
                       </div>
@@ -330,6 +369,7 @@ export default function ConfiguracoesPage() {
                 </div>
               </div>
             </div>
+            )}
             </div>
           </div>
         </div>

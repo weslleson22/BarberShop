@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 
 export default function PerfilPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -40,6 +40,8 @@ export default function PerfilPage() {
         const updatedUser = await response.json()
         // Update user in context and localStorage
         localStorage.setItem('user-data', JSON.stringify(updatedUser))
+        // Atualizar o contexto do usuário
+        updateUser(updatedUser)
         router.push('/perfil')
       } else {
         console.error('Erro ao atualizar perfil')

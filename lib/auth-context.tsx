@@ -14,6 +14,8 @@ interface User {
   address?: string
   birthDate?: string
   bio?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface AuthContextType {
@@ -35,21 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for existing session on mount
     const token = localStorage.getItem('auth_token')
     const userData = localStorage.getItem('user_data')
-    const userAvatar = localStorage.getItem('userAvatar')
     
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData)
-        // Se houver avatar salvo separadamente, adiciona ao usuário
-        if (userAvatar && !parsedUser.avatar) {
-          parsedUser.avatar = userAvatar
-        }
         setUser(parsedUser)
       } catch (error) {
         console.error('Error parsing user data:', error)
         localStorage.removeItem('auth_token')
         localStorage.removeItem('user_data')
-        localStorage.removeItem('userAvatar')
       }
     }
     
@@ -129,7 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Clear localStorage
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_data')
-    localStorage.removeItem('userAvatar')
     
     // Clear auth cookies
     document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'

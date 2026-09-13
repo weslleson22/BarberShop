@@ -158,16 +158,54 @@ export default function AgendaPage() {
     setEditingAppointment(null)
   }
 
-  const handleDeleteAppointment = (appointment: Appointment) => {
+  const handleDeleteAppointment = async (appointment: Appointment) => {
     if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
-      // TODO: Implement delete API call
-      console.log('Delete appointment:', appointment)
+      try {
+        const response = await fetch(`/api/appointments/${appointment.id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          console.log('Agendamento cancelado:', result)
+          await fetchAppointments() // Refresh appointments after cancel
+          alert('Agendamento cancelado com sucesso!')
+        } else {
+          const error = await response.json()
+          console.error('Erro ao cancelar:', error)
+          alert(error.error || 'Erro ao cancelar agendamento')
+        }
+      } catch (error) {
+        console.error('Error cancelling appointment:', error)
+        alert('Erro ao cancelar agendamento')
+      }
     }
   }
 
-  const handleStatusChange = (appointment: Appointment, newStatus: string) => {
-    // TODO: Implement status change API call
-    console.log('Change status:', appointment, newStatus)
+  const handleStatusChange = async (appointment: Appointment, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/appointments/${appointment.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Status atualizado:', result)
+        await fetchAppointments() // Refresh appointments after status change
+        alert(`Agendamento marcado como ${newStatus === 'COMPLETED' ? 'concluído' : 'cancelado'} com sucesso!`)
+      } else {
+        const error = await response.json()
+        console.error('Erro ao atualizar status:', error)
+        alert(error.error || 'Erro ao atualizar status do agendamento')
+      }
+    } catch (error) {
+      console.error('Error changing appointment status:', error)
+      alert('Erro ao atualizar status do agendamento')
+    }
   }
 
   if (loading) {

@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
         barbershopId: true,
         isActive: true,
         createdAt: true,
+        avatar: true,
+        phone: true,
       },
       orderBy: {
         name: 'asc',
@@ -61,9 +63,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { name, email, password, role, isActive } = data
+    const { name, email, password, role, isActive, avatar, phone } = data
 
-    console.log('Dados recebidos para criar usuário:', { name, email, role, isActive })
+    console.log('Dados recebidos para criar usuário:', { name, email, role, isActive, avatar })
 
     if (!name || !email || !role || !password) {
       return NextResponse.json(
@@ -112,7 +114,9 @@ export async function POST(request: NextRequest) {
         role,
         password: hashedPassword,
         isActive: isActive !== undefined ? isActive : true,
-        barbershopId
+        barbershopId,
+        avatar,
+        phone,
       },
       select: {
         id: true,
@@ -122,6 +126,8 @@ export async function POST(request: NextRequest) {
         isActive: true,
         createdAt: true,
         barbershopId: true,
+        avatar: true,
+        phone: true,
       }
     })
 
@@ -140,9 +146,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const data = await request.json()
-    const { id, name, email, role, password, isActive } = data
+    const { id, name, email, role, password, isActive, avatar, phone } = data
 
-    console.log('PUT /api/users - Dados recebidos:', { id, name, email, role, isActive })
+    console.log('PUT /api/users - Dados recebidos:', { id, name, email, role, isActive, avatar })
 
     if (!id) {
       return NextResponse.json(
@@ -188,6 +194,10 @@ export async function PUT(request: NextRequest) {
       isActive: isActive !== undefined ? isActive : existingUser.isActive,
     }
 
+    // Adicionar campos opcionais se fornecidos
+    if (avatar !== undefined) updateData.avatar = avatar
+    if (phone !== undefined) updateData.phone = phone
+
     // Adicionar senha apenas se fornecida
     if (password) {
       updateData.password = await hashPassword(password)
@@ -205,6 +215,8 @@ export async function PUT(request: NextRequest) {
         isActive: true,
         createdAt: true,
         barbershopId: true,
+        avatar: true,
+        phone: true,
       }
     })
 

@@ -33,29 +33,56 @@ export async function GET(request: NextRequest) {
       console.log('Barbearia criada:', barbershopId)
     }
     
-    // Verificar se há clientes
-    const clientCount = await prisma.client.count({
-      where: { barbershopId }
-    })
-    
-    if (clientCount === 0) {
-      console.log('Nenhum cliente encontrado. Criando clientes de exemplo...')
-      await createSampleClients(barbershopId)
-    }
+    // Removida a criação automática de clientes de exemplo
+    // Agora respeita as operações de delete do usuário
     
     const clients = await prisma.client.findMany({
       where: {
         barbershopId: barbershopId
+      },
+      include: {
+        _count: {
+          select: {
+            appointments: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc'
       }
     })
 
-    console.log('Clientes encontrados no Prisma:', clients.length)
-    console.log('IDs dos clientes:', clients.map(c => ({ id: c.id, name: c.name, phone: c.phone })))
+    // Enrich client data with last appointment info (more efficient)
+    const enrichedClients = await Promise.all(
+      clients.map(async (client) => {
+        const lastAppointment = await prisma.appointment.findFirst({
+          where: {
+            clientId: client.id
+          },
+          orderBy: {
+            startTime: 'desc'
+          },
+          take: 1,
+          include: {
+            service: true
+          }
+        })
 
-    return NextResponse.json(clients)
+        return {
+          ...client,
+          lastAppointment: lastAppointment ? {
+            service: lastAppointment.service.name,
+            startTime: lastAppointment.startTime,
+            totalAmount: Number(lastAppointment.totalAmount || lastAppointment.service.price)
+          } : undefined
+        }
+      })
+    )
+
+    console.log('Clientes encontrados no Prisma:', enrichedClients.length)
+    console.log('IDs dos clientes:', enrichedClients.map(c => ({ id: c.id, name: c.name, phone: c.phone })))
+
+    return NextResponse.json(enrichedClients)
   } catch (error) {
     console.error('Get all clients error:', error)
     return NextResponse.json(
