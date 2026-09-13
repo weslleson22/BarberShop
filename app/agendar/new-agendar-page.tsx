@@ -123,7 +123,7 @@ export default function NewAgendarPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-30 w-80">
+      <div className="fixed inset-y-0 left-0 z-50 sidebar-responsive">
         <AppSidebar />
       </div>
       

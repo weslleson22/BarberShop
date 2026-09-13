@@ -307,13 +307,14 @@ export default function AgendarPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-30 w-80">
+      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
         <AppSidebar />
       </div>
       
       {/* Conteúdo principal à frente do sidebar */}
-      <div className="lg:pl-80 relative z-40">
-        <div className="p-6">
+      <div className="md:pl-[280px] lg:pl-[320px] lg:pl-sidebar-collapsed relative z-10 flex flex-col h-screen transition-all duration-300">
+        <div className="flex-1 main-content-scroll">
+          <div className="p-6">
           <div className="max-w-4xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -527,6 +528,7 @@ export default function AgendarPage() {
             ← Voltar
           </button>
         )}
+        </div>
           </div>
         </div>
       </div>

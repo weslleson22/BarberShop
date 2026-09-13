@@ -2,6 +2,7 @@ import './globals.css'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth-context'
 import { DatabaseProvider } from '@/components/database-validation/DatabaseValidator'
+import { SidebarProvider } from '@/lib/sidebar-context'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -55,7 +56,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <DatabaseProvider>
           <AuthProvider>
-            {children}
+            <SidebarProvider>
+              {children}
+            </SidebarProvider>
           </AuthProvider>
         </DatabaseProvider>
         <script

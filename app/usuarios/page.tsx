@@ -291,13 +291,14 @@ export default function UsuariosPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-30 sidebar-responsive">
+      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
         <AppSidebar />
       </div>
       
       {/* Conteúdo principal à frente do sidebar */}
-      <div className="md:pl-[280px] lg:pl-[320px] relative z-40 transition-all duration-300">
-        <div className="container-responsive py-6">
+      <div className="md:pl-[280px] lg:pl-[320px] lg:pl-sidebar-collapsed relative z-10 flex flex-col h-screen transition-all duration-300">
+        <div className="flex-1 main-content-scroll">
+          <div className="container-responsive py-6">
       <div className="mb-6 md:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

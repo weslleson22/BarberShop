@@ -6,8 +6,68 @@
   * {
     @apply border-gray-200;
   }
-  body {
+  html, body {
     @apply bg-gray-950 text-white;
+    height: 100%;
+    overflow-x: hidden;
+  }
+  body {
+    @apply overflow-x-hidden;
+  }
+  
+  /* Main content scroll area */
+  .main-content-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* Responsive sidebar width */
+  .sidebar-responsive {
+    width: 280px;
+  }
+  
+  @media (min-width: 1280px) {
+    .sidebar-responsive {
+      width: 320px;
+    }
+  }
+  
+  .sidebar-collapsed {
+    width: 64px;
+  }
+  
+  /* Content padding for collapsed sidebar */
+  .pl-sidebar-collapsed {
+    padding-left: 64px;
+  }
+  
+  .main-content-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .main-content-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .main-content-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+  
+  .main-content-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
   }
 }
 
@@ -170,15 +230,7 @@
   
   /* Sidebar responsiva */
   .sidebar-responsive {
-    width: 100%;
-    transform: translateX(-100%);
-  }
-  
-  @media (min-width: 768px) {
-    .sidebar-responsive {
-      width: 280px;
-      transform: translateX(0);
-    }
+    width: 280px;
   }
   
   @media (min-width: 1280px) {
@@ -236,5 +288,10 @@
     .card-responsive {
       padding: 2rem;
     }
+  }
+  
+  /* Scroll horizontal fix */
+  .no-scrollbar-x {
+    overflow-x: hidden;
   }
 }

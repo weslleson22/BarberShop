@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import ClientSidebar from '@/components/clientes/ClientSidebar'
+import AppSidebar from '@/components/dashboard/AppSidebar'
 import ClientHeader from '@/components/clientes/ClientHeader'
 import ClientList from '@/components/clientes/ClientList'
 import ClientModal from '@/components/clientes/ClientModal'
@@ -28,22 +28,18 @@ export default function ClientesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
 
+  useEffect(() => {
+    if (user && (user.role === 'ADMIN' || user.role === 'BARBER')) {
+      fetchClients()
+    }
+  }, [user])
+
   // Aguardar carregamento inicial do contexto
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <p className="text-gray-600">Carregando...</p>
-      </div>
-    )
-  }
-
-  // Aguardar autenticação
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Verificando autenticação...</p>
       </div>
     )
   }
@@ -59,10 +55,6 @@ export default function ClientesPage() {
       </div>
     )
   }
-
-  useEffect(() => {
-    fetchClients()
-  }, [])
 
   const fetchClients = async () => {
     try {
@@ -200,17 +192,19 @@ export default function ClientesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-20 w-80">
-        <ClientSidebar />
+      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
+        <AppSidebar />
       </div>
       
       {/* Conteúdo principal à frente do sidebar */}
-      <div className="lg:pl-80 relative z-10">
-        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">
+      <div className="md:pl-[280px] lg:pl-[320px] lg:pl-sidebar-collapsed relative z-10 flex flex-col h-screen transition-all duration-300">
+        <div className="flex-shrink-0">
           <ClientHeader onNewClient={handleNewClient} onSearch={setSearchQuery} clients={clients} />
-          
+        </div>
+        
+        <div className="flex-1 main-content-scroll">
           <div className="p-6">
             <ClientList 
               clients={clients}

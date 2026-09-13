@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { useSidebar } from '@/lib/sidebar-context'
 import { useRouter } from 'next/navigation'
 import { Calendar, Users, Clock, DollarSign, TrendingUp, UserCheck, Scissors, PieChart } from 'lucide-react'
 import AppSidebar from '@/components/dashboard/AppSidebar'
@@ -31,6 +32,7 @@ interface Appointment {
 
 export default function DashboardPage() {
   const { user, loading: authLoading, logout } = useAuth()
+  const { isSidebarCollapsed } = useSidebar()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     todayAppointments: 0,
@@ -54,23 +56,6 @@ export default function DashboardPage() {
       hour: '2-digit',
       minute: '2-digit',
     })
-  }
-
-  useEffect(() => {
-    console.log('=== CARREGANDO DASHBOARD COM DADOS DO PRISMA ===')
-    fetchDashboardData()
-  }, [])
-
-  // Aguardar carregamento inicial do contexto
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    )
   }
 
   // Controlar visibilidade das ações do dashboard
@@ -223,6 +208,23 @@ export default function DashboardPage() {
     }
   }
 
+  useEffect(() => {
+    console.log('=== CARREGANDO DASHBOARD COM DADOS DO PRISMA ===')
+    fetchDashboardData()
+  }, [])
+
+  // Aguardar carregamento inicial do contexto
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
@@ -236,47 +238,54 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">
-      <AppSidebar />
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+      {/* Sidebar Fixado atrás do conteúdo */}
+      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
+        <AppSidebar />
+      </div>
       
-      <div className="md:pl-[280px] lg:pl-[320px] transition-all duration-300">
-        <DashboardHeader />
+      {/* Conteúdo principal à frente do sidebar */}
+      <div className={`md:pl-[280px] lg:pl-[320px] relative z-10 flex flex-col h-screen transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : ''}`}>
+        {/* Header fixo no topo */}
+        <div className="flex-shrink-0">
+          <DashboardHeader />
+        </div>
         
-        <div className="container-responsive py-6">
+        {/* Conteúdo com scroll */}
+        <div className="flex-1 main-content-scroll">
+          <div className="container-responsive py-6">
           {/* KPI Cards */}
           <div className="mb-6 md:mb-8">
             <StatsCards />
           </div>
 
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            {/* Revenue Chart - 2 columns on desktop */}
-            <div className="col-span-1 md:col-span-2 lg:col-span-2">
+          {/* Cards alinhados um abaixo do outro */}
+          <div className="space-y-4 md:space-y-6">
+            {/* Faturamento */}
+            <div>
               <RevenueChart />
             </div>
             
-            {/* Today Appointments - 1 column */}
-            <div className="col-span-1">
+            {/* Agendamentos de Hoje */}
+            <div>
               <TodayAppointments />
             </div>
-          </div>
-
-          {/* Second Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            {/* Popular Services */}
-            <div className="col-span-1">
+            
+            {/* Serviços Mais Procurados */}
+            <div>
               <PopularServices />
             </div>
             
-            {/* Recent Clients */}
-            <div className="col-span-1">
+            {/* Últimos Clientes */}
+            <div>
               <RecentClients />
             </div>
             
-            {/* Finance Summary */}
-            <div className="col-span-1">
+            {/* Resumo Financeiro */}
+            <div>
               <FinanceSummary />
             </div>
+          </div>
           </div>
         </div>
       </div>

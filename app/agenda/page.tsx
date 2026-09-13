@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import AgendaSidebar from '@/components/agenda/AgendaSidebar'
+import AppSidebar from '@/components/dashboard/AppSidebar'
 import AgendaHeader from '@/components/agenda/AgendaHeader'
 import CalendarView from '@/components/agenda/CalendarView'
 import AppointmentList from '@/components/agenda/AppointmentList'
@@ -181,15 +181,17 @@ export default function AgendaPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-20 sidebar-responsive">
-        <AgendaSidebar />
+      <div className="fixed inset-y-0 left-0 sidebar-responsive z-50">
+        <AppSidebar />
       </div>
       
       {/* Conteúdo principal à frente do sidebar */}
-      <div className="md:pl-[280px] lg:pl-[320px] relative z-10 transition-all duration-300">
-        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+      <div className="md:pl-[280px] lg:pl-[320px] lg:pl-sidebar-collapsed relative z-10 flex flex-col h-screen transition-all duration-300">
+        <div className="flex-shrink-0">
           <AgendaHeader onNewAppointment={handleNewAppointment} onDateFilter={handleDateSelect} />
-          
+        </div>
+        
+        <div className="flex-1 main-content-scroll">
           <div className="container-responsive py-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
             {/* Calendar View - 2 columns */}
@@ -237,6 +239,7 @@ export default function AgendaPage() {
             onDelete={handleDeleteAppointment}
             onStatusChange={handleStatusChange}
           />
+          </div>
         </div>
       </div>
 
@@ -247,7 +250,6 @@ export default function AgendaPage() {
         onSave={handleSaveAppointment}
         appointment={editingAppointment}
       />
-      </div>
     </div>
   )
 }

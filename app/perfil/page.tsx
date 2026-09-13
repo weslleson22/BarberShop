@@ -74,13 +74,14 @@ export default function PerfilPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-30 w-80">
+      <div className="fixed inset-y-0 left-0 z-50 sidebar-responsive">
         <AppSidebar />
       </div>
       
       {/* Conteúdo principal à frente do sidebar */}
-      <div className="lg:pl-80 relative z-40">
-        <div className="p-6">
+      <div className="md:pl-[280px] lg:pl-[320px] relative z-30 flex flex-col h-screen">
+        <div className="flex-1 main-content-scroll">
+          <div className="p-6">
           <div className="max-w-4xl mx-auto">
             
             <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
