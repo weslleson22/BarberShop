@@ -19,4 +19,222 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  
+  /* Utilitários de responsividade customizados */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Text overflow seguro */
+  .text-overflow-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .text-overflow-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .text-overflow-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Grid responsivo adaptativo */
+  .grid-responsive {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+  }
+  
+  @media (min-width: 425px) {
+    .grid-responsive {
+      gap: 1.25rem;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .grid-responsive {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .grid-responsive {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .grid-responsive {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1440px) {
+    .grid-responsive {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+  }
+  
+  @media (min-width: 1920px) {
+    .grid-responsive {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+    }
+  }
+  
+  /* Container responsivo com padding */
+  .container-responsive {
+    width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  @media (min-width: 768px) {
+    .container-responsive {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .container-responsive {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+  
+  /* Modal responsivo */
+  .modal-responsive {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1rem;
+  }
+  
+  @media (min-width: 425px) {
+    .modal-responsive {
+      padding: 1.25rem;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .modal-responsive {
+      max-width: 90%;
+      padding: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .modal-responsive {
+      max-width: 800px;
+      padding: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .modal-responsive {
+      max-width: 800px;
+      padding: 2rem;
+    }
+  }
+  
+  @media (min-width: 1440px) {
+    .modal-responsive {
+      max-width: 900px;
+      padding: 2rem;
+    }
+  }
+  
+  @media (min-width: 1920px) {
+    .modal-responsive {
+      max-width: 1000px;
+      padding: 2.5rem;
+    }
+  }
+  
+  /* Sidebar responsiva */
+  .sidebar-responsive {
+    width: 100%;
+    transform: translateX(-100%);
+  }
+  
+  @media (min-width: 768px) {
+    .sidebar-responsive {
+      width: 280px;
+      transform: translateX(0);
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .sidebar-responsive {
+      width: 320px;
+    }
+  }
+  
+  /* Tabela responsiva */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table-responsive table {
+    min-width: 600px;
+  }
+  
+  @media (min-width: 768px) {
+    .table-responsive table {
+      min-width: auto;
+    }
+  }
+  
+  /* Card responsivo */
+  .card-responsive {
+    padding: 1rem;
+  }
+  
+  @media (min-width: 425px) {
+    .card-responsive {
+      padding: 1.25rem;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .card-responsive {
+      padding: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .card-responsive {
+      padding: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1440px) {
+    .card-responsive {
+      padding: 1.75rem;
+    }
+  }
+  
+  @media (min-width: 1920px) {
+    .card-responsive {
+      padding: 2rem;
+    }
+  }
 }

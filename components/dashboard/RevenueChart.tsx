@@ -15,20 +15,20 @@ const data = [
 
 export default function RevenueChart() {
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
-          <h3 className="text-xl font-semibold text-white">Faturamento</h3>
-          <p className="text-white/60 text-sm">Receita dos últimos 7 dias</p>
+          <h3 className="text-lg md:text-xl font-semibold text-white">Faturamento</h3>
+          <p className="text-white/60 text-xs md:text-sm">Receita dos últimos 7 dias</p>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-          <span className="text-white/60 text-sm">R$ 34.550</span>
+          <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full"></div>
+          <span className="text-white/60 text-xs md:text-sm">R$ 34.550</span>
         </div>
       </div>
       
-      <div className="h-64">
-        <NoSSR fallback={<div className="flex items-center justify-center h-full text-white/60">Carregando gráfico...</div>}>
+      <div className="h-48 md:h-64">
+        <NoSSR fallback={<div className="flex items-center justify-center h-full text-white/60 text-sm">Carregando gráfico...</div>}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data}>
               <defs>
@@ -41,11 +41,13 @@ export default function RevenueChart() {
               <XAxis 
                 dataKey="name" 
                 stroke="rgba(255,255,255,0.3)"
-                fontSize={12}
+                fontSize={10}
+                tick={{ fontSize: 10 }}
               />
               <YAxis 
                 stroke="rgba(255,255,255,0.3)"
-                fontSize={12}
+                fontSize={10}
+                tick={{ fontSize: 10 }}
                 tickFormatter={(value) => `R$ ${(value/1000)}k`}
               />
               <Tooltip 
@@ -53,7 +55,8 @@ export default function RevenueChart() {
                   backgroundColor: 'rgba(13, 19, 36, 0.9)',
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '8px',
-                  color: '#fff'
+                  color: '#fff',
+                  fontSize: '12px'
                 }}
                 formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Receita']}
               />

@@ -291,18 +291,18 @@ export default function UsuariosPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-30 w-80">
+      <div className="fixed inset-y-0 left-0 z-30 sidebar-responsive">
         <AppSidebar />
       </div>
       
       {/* Conteúdo principal à frente do sidebar */}
-      <div className="lg:pl-80 relative z-40">
-        <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+      <div className="md:pl-[280px] lg:pl-[320px] relative z-40 transition-all duration-300">
+        <div className="container-responsive py-6">
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Usuários</h1>
-            <p className="text-white/60 mt-2">Gerencie os usuários com acesso à plataforma</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">Usuários</h1>
+            <p className="text-white/60 mt-1 md:mt-2 text-sm md:text-base">Gerencie os usuários com acesso à plataforma</p>
           </div>
           <button
             onClick={() => {
@@ -310,82 +310,82 @@ export default function UsuariosPage() {
               setEditingUser(null)
               setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true })
             }}
-            className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium"
+            className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium text-sm md:text-base"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
             Novo Usuário
           </button>
         </div>
       </div>
 
       {/* Busca */}
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4 md:w-5 md:h-5" />
           <input
             type="text"
             placeholder="Buscar por nome, email ou telefone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+            className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/6 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
           />
         </div>
       </div>
 
       {/* Formulário de Adicionar/Editar */}
       {showAddForm && (
-        <div className="mb-6 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4">
-          <h3 className="text-lg font-semibold mb-4 text-white">
+        <div className="mb-4 md:mb-6 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-4 md:p-6">
+          <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-white">
             {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
           </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
                   Nome *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
                   placeholder="Nome completo"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
                   Email *
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
                   placeholder="email@exemplo.com"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
                   Telefone
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
                   placeholder="(00) 00000-0000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
                   Função *
                 </label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
                   required
                 >
                   <option value="" className="bg-gray-900">Selecione...</option>
@@ -395,14 +395,14 @@ export default function UsuariosPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
                   Senha
                 </label>
                 <input
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
+                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
                   placeholder={editingUser ? "Deixe em branco para manter atual" : "Digite uma senha"}
                 />
               </div>
@@ -414,12 +414,12 @@ export default function UsuariosPage() {
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                   className="h-4 w-4 text-yellow-400 focus:ring-yellow-400/50 border-white/6 rounded bg-white/5"
                 />
-                <label htmlFor="isActive" className="ml-2 block text-sm text-white/80">
+                <label htmlFor="isActive" className="ml-2 block text-xs md:text-sm text-white/80">
                   Usuário ativo
                 </label>
               </div>
             </div>
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4 md:mt-6">
               <button
                 type="button"
                 onClick={() => {
@@ -427,13 +427,13 @@ export default function UsuariosPage() {
                   setEditingUser(null)
                   setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true })
                 }}
-                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all"
+                className="px-4 py-2 md:px-4 md:py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all text-sm md:text-base"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all"
+                className="px-4 py-2 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all text-sm md:text-base"
               >
                 {editingUser ? 'Atualizar' : 'Cadastrar'}
               </button>
@@ -443,36 +443,36 @@ export default function UsuariosPage() {
       )}
 
       {/* Lista de Usuários */}
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl overflow-hidden">
+      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl overflow-hidden">
         {filteredUsers.length === 0 ? (
-          <div className="text-center py-12">
-            <User className="w-12 h-12 text-white/40 mx-auto mb-4" />
-            <p className="text-white/60 text-lg">Nenhum usuário encontrado</p>
-            <p className="text-white/40 text-sm mt-2">
+          <div className="text-center py-8 md:py-12">
+            <User className="w-10 h-10 md:w-12 md:h-12 text-white/40 mx-auto mb-3 md:mb-4" />
+            <p className="text-white/60 text-base md:text-lg">Nenhum usuário encontrado</p>
+            <p className="text-white/40 text-xs md:text-sm mt-1 md:mt-2">
               {searchTerm ? 'Tente uma busca diferente' : 'Adicione seu primeiro usuário'}
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="table-responsive">
             <table className="w-full">
               <thead className="bg-white/5 border-b border-white/6">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                     Usuário
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden sm:table-cell">
                     Função
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden md:table-cell">
                     Telefone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden sm:table-cell">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden md:table-cell">
                     Data de Cadastro
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
@@ -480,36 +480,36 @@ export default function UsuariosPage() {
               <tbody className="divide-y divide-white/6">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-white/5">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center">
-                          <span className="text-yellow-400 font-bold text-sm">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-yellow-400 font-bold text-xs md:text-sm">
                             {user.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-white">{user.name}</div>
-                          <div className="text-sm text-white/60">{user.email}</div>
+                        <div className="ml-2 md:ml-4 min-w-0">
+                          <div className="text-xs md:text-sm font-medium text-white truncate">{user.name}</div>
+                          <div className="text-xs md:text-sm text-white/60 truncate hidden sm:block">{user.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden sm:table-cell">
                       <div className="flex items-center">
-                        <Shield className="w-4 h-4 text-white/40 mr-2" />
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                        <Shield className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/40 mr-1.5 md:mr-2" />
+                        <span className={`inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
                           {getRoleText(user.role)}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
                       {user.phone ? (
-                        <span className="text-sm text-white">{user.phone}</span>
+                        <span className="text-xs md:text-sm text-white">{user.phone}</span>
                       ) : (
-                        <span className="text-sm text-white/40">Não informado</span>
+                        <span className="text-xs md:text-sm text-white/40">Não informado</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden sm:table-cell">
+                      <span className={`inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         user.isActive 
                           ? 'bg-green-400/20 text-green-400 border border-green-400/30' 
                           : 'bg-red-400/20 text-red-400 border border-red-400/30'
@@ -517,34 +517,34 @@ export default function UsuariosPage() {
                         {user.isActive ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-white/60">
+                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
+                      <span className="text-xs md:text-sm text-white/60">
                         {new Date(user.createdAt).toLocaleDateString('pt-BR')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm font-medium">
+                      <div className="flex space-x-1.5 md:space-x-2">
                         <button
                           onClick={() => handleEdit(user)}
-                          className="text-yellow-400 hover:text-yellow-300"
+                          className="text-blue-400 hover:text-blue-300 p-1.5 md:p-2 rounded-lg hover:bg-blue-500/10 transition-all"
                           title="Editar"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         </button>
                         <button
                           onClick={() => handleToggleActive(user.id, user.isActive)}
-                          className={user.isActive ? 'text-yellow-400 hover:text-yellow-300' : 'text-green-400 hover:text-green-300'}
+                          className={user.isActive ? 'text-yellow-400 hover:text-yellow-300 p-1.5 md:p-2 rounded-lg hover:bg-yellow-500/10 transition-all' : 'text-green-400 hover:text-green-300 p-1.5 md:p-2 rounded-lg hover:bg-green-500/10 transition-all'}
                           title={user.isActive ? 'Desativar' : 'Ativar'}
                         >
-                          {user.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          {user.isActive ? <EyeOff className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Eye className="w-3.5 h-3.5 md:w-4 md:h-4" />}
                         </button>
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="text-red-400 hover:text-red-300"
+                          className="text-red-400 hover:text-red-300 p-1.5 md:p-2 rounded-lg hover:bg-red-500/10 transition-all"
                           title="Excluir"
                           disabled={user.role === 'ADMIN' && filteredUsers.filter(u => u.role === 'ADMIN').length === 1}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         </button>
                       </div>
                     </td>
@@ -558,28 +558,28 @@ export default function UsuariosPage() {
 
       {/* Resumo */}
       {users.length > 0 && (
-        <div className="mt-8 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Resumo de Usuários</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="mt-6 md:mt-8 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Resumo de Usuários</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <div>
-              <p className="text-sm text-white/60">Total de Usuários</p>
-              <p className="text-2xl font-bold text-white">{users.length}</p>
+              <p className="text-xs md:text-sm text-white/60">Total de Usuários</p>
+              <p className="text-xl md:text-2xl font-bold text-white">{users.length}</p>
             </div>
             <div>
-              <p className="text-sm text-white/60">Administradores</p>
-              <p className="text-2xl font-bold text-purple-400">
+              <p className="text-xs md:text-sm text-white/60">Administradores</p>
+              <p className="text-xl md:text-2xl font-bold text-purple-400">
                 {users.filter(u => u.role === 'ADMIN').length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-white/60">Barbeiros</p>
-              <p className="text-2xl font-bold text-blue-400">
+              <p className="text-xs md:text-sm text-white/60">Barbeiros</p>
+              <p className="text-xl md:text-2xl font-bold text-blue-400">
                 {users.filter(u => u.role === 'BARBER').length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-white/60">Clientes</p>
-              <p className="text-2xl font-bold text-green-400">
+              <p className="text-xs md:text-sm text-white/60">Clientes</p>
+              <p className="text-xl md:text-2xl font-bold text-green-400">
                 {users.filter(u => u.role === 'CLIENT').length}
               </p>
             </div>

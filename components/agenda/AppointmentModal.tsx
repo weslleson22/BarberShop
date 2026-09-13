@@ -278,34 +278,35 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
+      <div className="modal-responsive bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-white">
             {appointment ? 'Editar Agendamento' : 'Novo Agendamento'}
           </h2>
           <button
             onClick={onClose}
             className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            aria-label="Fechar modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Client Selection - Only show for ADMIN/BARBER */}
           {!isClient && (
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
+              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Cliente *
               </label>
               <select
                 name="clientId"
                 value={formData.clientId}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
                 required
               >
                 <option value="" className="bg-gray-900">Selecione um cliente</option>
@@ -321,19 +322,19 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           {/* Client Info Display - Only for CLIENT */}
           {isClient && (
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
+              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Cliente
               </label>
-              <div className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                    <span className="text-black font-bold text-sm">
+              <div className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white">
+                <div className="flex items-center space-x-2 md:space-x-3">
+                  <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-black font-bold text-xs md:text-sm">
                       {user?.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <div>
-                    <p className="text-white font-medium">{user?.name || 'Usuário'}</p>
-                    <p className="text-white/60 text-sm">{user?.email || 'Email não informado'}</p>
+                  <div className="min-w-0">
+                    <p className="text-white font-medium text-sm md:text-base truncate">{user?.name || 'Usuário'}</p>
+                    <p className="text-white/60 text-xs md:text-sm truncate">{user?.email || 'Email não informado'}</p>
                   </div>
                 </div>
               </div>
@@ -342,14 +343,14 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
           {/* Service Selection */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">
+            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Serviço *
             </label>
             <select
               name="serviceId"
               value={formData.serviceId}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+              className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
               required
             >
               <option value="" className="bg-gray-900">Selecione um serviço</option>
@@ -366,14 +367,14 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
           {/* Barber Selection */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">
+            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Barbeiro *
             </label>
             <select
               name="barberId"
               value={formData.barberId}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+              className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
               required
             >
               <option value="" className="bg-gray-900">Selecione um barbeiro</option>
@@ -386,9 +387,9 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           </div>
 
           {/* Date Selection */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
+              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Data *
               </label>
               <input
@@ -402,12 +403,12 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                   }
                 }}
                 min={new Date().toISOString().split('T')[0]} // Prevent past dates
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
                 required
               />
             </div>
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
+              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Horário Término *
               </label>
               <input
@@ -416,7 +417,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                 value={formData.endTime}
                 onChange={handleInputChange}
                 min={formData.startTime || new Date().toISOString().slice(0, 16)} // Must be after start time
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
                 required
                 readOnly // Auto-calculated based on service duration
               />
@@ -426,10 +427,10 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           {/* Available Time Slots */}
           {selectedDate && formData.barberId && (
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
+              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Horários Disponíveis *
               </label>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 md:gap-2 max-h-32 md:max-h-40 overflow-y-auto">
                 {availableSlots.length > 0 ? (
                   availableSlots.map((slot) => (
                     <button
@@ -450,7 +451,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                           }))
                         }
                       }}
-                      className={`px-3 py-2 text-sm rounded-lg border transition-all ${
+                      className={`px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm rounded-lg border transition-all ${
                         formData.startTime === `${selectedDate}T${slot}:00`
                           ? 'bg-yellow-400/20 border-yellow-400 text-yellow-400'
                           : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white'
@@ -460,12 +461,12 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                     </button>
                   ))
                 ) : (
-                  <div className="col-span-full text-center py-4">
-                    <p className="text-white/60">Nenhum horário disponível</p>
+                  <div className="col-span-full text-center py-3 md:py-4">
+                    <p className="text-white/60 text-xs md:text-sm">Nenhum horário disponível</p>
                   </div>
                 )}
               </div>
-              <p className="text-white/40 text-xs mt-2">
+              <p className="text-white/40 text-xs mt-1.5 md:mt-2">
                 Horários de atendimento: 08:00 - 20:00 (intervalos de 30min)
               </p>
             </div>
@@ -473,7 +474,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
           {/* Notes */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">
+            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Observações
             </label>
             <textarea
@@ -481,24 +482,24 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
               value={formData.notes}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all resize-none"
+              className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all resize-none text-sm md:text-base"
               placeholder="Observações sobre o agendamento..."
             />
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-4 pt-4 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-white/80 hover:text-white border border-white/20 rounded-xl hover:bg-white/10 transition-all"
+              className="px-4 md:px-6 py-2.5 md:py-3 text-white/80 hover:text-white border border-white/20 rounded-lg md:rounded-xl hover:bg-white/10 transition-all text-sm md:text-base"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-2 disabled:opacity-50"
+              className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 text-sm md:text-base"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>

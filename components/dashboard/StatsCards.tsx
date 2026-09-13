@@ -155,15 +155,15 @@ export default function StatsCards() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-2xl p-6 animate-pulse">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-white/10 rounded-xl"></div>
-              <div className="w-16 h-6 bg-white/10 rounded-lg"></div>
+          <div key={i} className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 animate-pulse">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-lg md:rounded-xl"></div>
+              <div className="w-14 h-5 md:w-16 md:h-6 bg-white/10 rounded-lg"></div>
             </div>
-            <div className="w-24 h-8 bg-white/10 rounded-lg mb-2"></div>
-            <div className="w-20 h-4 bg-white/10 rounded-lg"></div>
+            <div className="w-20 h-6 md:w-24 md:h-8 bg-white/10 rounded-lg mb-1 md:mb-2"></div>
+            <div className="w-16 h-3 md:w-20 md:h-4 bg-white/10 rounded-lg"></div>
           </div>
         ))}
       </div>
@@ -172,14 +172,14 @@ export default function StatsCards() {
 
   if (!stats) {
     return (
-      <div className="text-center py-12">
-        <p className="text-white/60">Erro ao carregar estatísticas</p>
+      <div className="text-center py-8 md:py-12">
+        <p className="text-white/60 text-sm md:text-base">Erro ao carregar estatísticas</p>
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {statCards.map((stat, index) => {
         const Icon = stat.icon
         const isPositive = stat.changeType === 'increase'
@@ -187,11 +187,11 @@ export default function StatsCards() {
         return (
           <div
             key={index}
-            className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6 hover:border-white/10 transition-all duration-300"
+            className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-white/10 transition-all duration-300"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center`}>
-                <Icon className="w-6 h-6 text-white" />
+            <div className="flex items-start justify-between mb-3 md:mb-4">
+              <div className={`w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br ${stat.gradient} rounded-lg md:rounded-xl flex items-center justify-center`}>
+                <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               <div className={`flex items-center space-x-1 px-2 py-1 rounded-lg ${
                 isPositive 
@@ -199,15 +199,15 @@ export default function StatsCards() {
                   : 'bg-red-500/20 text-red-400 border border-red-500/30'
               }`}>
                 {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                <span className="text-sm font-medium">
+                <span className="text-xs md:text-sm font-medium">
                   {Math.abs(stat.change)}%
                 </span>
               </div>
             </div>
             
             <div>
-              <p className="text-white/60 text-sm mb-1">{stat.title}</p>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
+              <p className="text-white/60 text-xs md:text-sm mb-1">{stat.title}</p>
+              <p className="text-lg md:text-2xl font-bold text-white">{stat.value}</p>
               <p className="text-white/40 text-xs mt-1">
                 vs. semana anterior
               </p>

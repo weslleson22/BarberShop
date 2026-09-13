@@ -239,42 +239,42 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900">
       <AppSidebar />
       
-      <div className="lg:pl-80">
+      <div className="md:pl-[280px] lg:pl-[320px] transition-all duration-300">
         <DashboardHeader />
         
-        <div className="p-6">
+        <div className="container-responsive py-6">
           {/* KPI Cards */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <StatsCards />
           </div>
 
           {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Revenue Chart - 2 columns */}
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* Revenue Chart - 2 columns on desktop */}
+            <div className="col-span-1 md:col-span-2 lg:col-span-2">
               <RevenueChart />
             </div>
             
             {/* Today Appointments - 1 column */}
-            <div>
+            <div className="col-span-1">
               <TodayAppointments />
             </div>
           </div>
 
           {/* Second Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
             {/* Popular Services */}
-            <div>
+            <div className="col-span-1">
               <PopularServices />
             </div>
             
             {/* Recent Clients */}
-            <div>
+            <div className="col-span-1">
               <RecentClients />
             </div>
             
             {/* Finance Summary */}
-            <div>
+            <div className="col-span-1">
               <FinanceSummary />
             </div>
           </div>

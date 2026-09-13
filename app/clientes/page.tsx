@@ -165,10 +165,24 @@ export default function ClientesPage() {
     setEditingClient(null)
   }
 
-  const handleDeleteClient = (clientId: string) => {
-    if (confirm('Tem certeza que deseja excluir este cliente?')) {
-      // TODO: Implement delete API call
-      console.log('Delete client:', clientId)
+  const handleDeleteClient = async (clientId: string) => {
+    if (confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')) {
+      try {
+        const response = await fetch(`/api/clients?id=${clientId}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          alert('Cliente excluído com sucesso!')
+          fetchClients() // Refresh clients after delete
+        } else {
+          const error = await response.json()
+          alert(error.error || 'Erro ao excluir cliente')
+        }
+      } catch (error) {
+        console.error('Error deleting client:', error)
+        alert('Erro ao excluir cliente')
+      }
     }
   }
 

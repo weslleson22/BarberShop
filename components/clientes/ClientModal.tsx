@@ -141,36 +141,37 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
+      <div className="modal-responsive bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-white">
             {client ? 'Editar Cliente' : 'Novo Cliente'}
           </h2>
           <button
             onClick={onClose}
             className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            aria-label="Fechar modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">
+            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Nome *
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
                 placeholder="Ex: João Silva"
                 required
                 maxLength={100}
@@ -181,17 +182,17 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
 
           {/* Phone */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">
+            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Telefone *
             </label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
                 placeholder="(00) 00000-0000"
                 required
                 maxLength={15}
@@ -202,17 +203,17 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
 
           {/* Email */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">
+            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
                 placeholder="email@exemplo.com"
                 maxLength={100}
               />
@@ -221,18 +222,18 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-4 pt-4 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-white/80 hover:text-white border border-white/20 rounded-xl hover:bg-white/10 transition-all"
+              className="px-4 md:px-6 py-2.5 md:py-3 text-white/80 hover:text-white border border-white/20 rounded-lg md:rounded-xl hover:bg-white/10 transition-all text-sm md:text-base"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-2 disabled:opacity-50"
+              className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 text-sm md:text-base"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>

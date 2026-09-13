@@ -181,46 +181,46 @@ export default function AgendaPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
       {/* Sidebar Fixado atrás do conteúdo */}
-      <div className="fixed inset-y-0 left-0 z-20 w-80">
+      <div className="fixed inset-y-0 left-0 z-20 sidebar-responsive">
         <AgendaSidebar />
       </div>
       
       {/* Conteúdo principal à frente do sidebar */}
-      <div className="lg:pl-80 relative z-10">
+      <div className="md:pl-[280px] lg:pl-[320px] relative z-10 transition-all duration-300">
         <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
           <AgendaHeader onNewAppointment={handleNewAppointment} onDateFilter={handleDateSelect} />
           
-          <div className="p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <div className="container-responsive py-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
             {/* Calendar View - 2 columns */}
             <div className="lg:col-span-2">
               <CalendarView onDateSelect={handleDateSelect} selectedDate={selectedDate} />
             </div>
             
             {/* Quick Stats - 1 column */}
-            <div className="space-y-3">
-              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4">
-                <h3 className="text-lg font-semibold text-white mb-3">Resumo do Dia</h3>
-                <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
+              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-3 md:p-4">
+                <h3 className="text-base md:text-lg font-semibold text-white mb-2 md:mb-3">Resumo do Dia</h3>
+                <div className="space-y-2 md:space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-white/60">Total</span>
-                    <span className="text-2xl font-bold text-white">{appointments.length}</span>
+                    <span className="text-white/60 text-xs md:text-sm">Total</span>
+                    <span className="text-xl md:text-2xl font-bold text-white">{appointments.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-white/60">Pendentes</span>
-                    <span className="text-xl font-bold text-yellow-400">
+                    <span className="text-white/60 text-xs md:text-sm">Pendentes</span>
+                    <span className="text-lg md:text-xl font-bold text-yellow-400">
                       {appointments.filter(a => a.status === 'PENDING').length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-white/60">Concluídos</span>
-                    <span className="text-xl font-bold text-green-400">
+                    <span className="text-white/60 text-xs md:text-sm">Concluídos</span>
+                    <span className="text-lg md:text-xl font-bold text-green-400">
                       {appointments.filter(a => a.status === 'COMPLETED').length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-white/60">Faturamento</span>
-                    <span className="text-xl font-bold text-yellow-400">
+                    <span className="text-white/60 text-xs md:text-sm">Faturamento</span>
+                    <span className="text-lg md:text-xl font-bold text-yellow-400">
                       {formatCurrency(appointments.reduce((sum, a) => sum + a.totalAmount, 0))}
                     </span>
                   </div>

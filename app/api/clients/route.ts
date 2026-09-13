@@ -95,3 +95,50 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// DELETE - Excluir cliente
+export async function DELETE(request: NextRequest) {
+  try {
+    const token = request.cookies.get('auth-token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.barbershopId) {
+      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const clientId = searchParams.get('id')
+
+    if (!clientId) {
+      return NextResponse.json({ error: 'ID do cliente não fornecido' }, { status: 400 })
+    }
+
+    // Verificar se o cliente pertence à barbearia do usuário
+    const client = await prisma.client.findFirst({
+      where: {
+        id: clientId,
+        barbershopId: decoded.barbershopId,
+      },
+    })
+
+    if (!client) {
+      return NextResponse.json({ error: 'Cliente não encontrado' }, { status: 404 })
+    }
+
+    // Excluir o cliente
+    await prisma.client.delete({
+      where: { id: clientId },
+    })
+
+    return NextResponse.json({ message: 'Cliente excluído com sucesso' })
+  } catch (error) {
+    console.error('Delete client error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erro ao excluir cliente' },
+      { status: 500 }
+    )
+  }
+}

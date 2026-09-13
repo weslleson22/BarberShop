@@ -146,16 +146,17 @@ export default function AppSidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl text-black"
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl text-black shadow-lg"
+        aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
       >
         {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-20 w-80 bg-gradient-to-br from-gray-950 via-blue-950 to-black border-r border-white/6
+        fixed inset-y-0 left-0 z-20 sidebar-responsive bg-gradient-to-br from-gray-950 via-blue-950 to-black border-r border-white/6
         transform transition-transform duration-300 ease-in-out
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -198,7 +199,7 @@ export default function AppSidebar() {
           </nav>
 
           {/* Upgrade Card */}
-          <div className="p-4 border-t border-white/6">
+          <div className="p-4 border-t border-white/6 hidden md:block">
             <div className="bg-gradient-to-br from-yellow-400/10 to-yellow-600/10 border border-yellow-400/20 rounded-xl p-4">
               <div className="flex items-center space-x-2 mb-2">
                 <Crown className="w-4 h-4 text-yellow-400" />
@@ -207,7 +208,7 @@ export default function AppSidebar() {
               <p className="text-white/80 text-sm mb-3">
                 Desbloqueie relatórios avançados e recursos ilimitados
               </p>
-              <button className="w-full py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all">
+              <button className="w-full py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all text-sm">
                 Fazer Upgrade
               </button>
             </div>

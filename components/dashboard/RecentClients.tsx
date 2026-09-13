@@ -86,9 +86,9 @@ export default function RecentClients() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-        <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400"></div>
+      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+        <div className="flex items-center justify-center h-24 md:h-32">
+          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-yellow-400"></div>
         </div>
       </div>
     )
@@ -97,70 +97,70 @@ export default function RecentClients() {
   const getStatusBadge = (client: Client) => {
     if (isReturningClient(client)) {
       return (
-        <span className="px-2 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-medium">
+        <span className="px-1.5 md:px-2 py-0.5 md:py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-medium">
           Recorrente
         </span>
       )
     }
     return (
-      <span className="px-2 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-medium">
+      <span className="px-1.5 md:px-2 py-0.5 md:py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-medium">
         Novo
       </span>
     )
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
-          <h3 className="text-xl font-semibold text-white">Últimos Clientes</h3>
-          <p className="text-white/60 text-sm">Atendimentos recentes</p>
+          <h3 className="text-lg md:text-xl font-semibold text-white">Últimos Clientes</h3>
+          <p className="text-white/60 text-xs md:text-sm">Atendimentos recentes</p>
         </div>
         <div className="flex items-center space-x-2 text-white/60">
-          <Users className="w-4 h-4" />
-          <span className="text-sm">5 clientes</span>
+          <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <span className="text-xs md:text-sm">5 clientes</span>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2 md:space-y-3">
         {clients.map((client) => (
           <div
             key={client.id}
-            className="flex items-center justify-between p-4 bg-white/5 border border-white/6 rounded-xl hover:bg-white/10 transition-all"
+            className="flex items-center justify-between p-3 md:p-4 bg-white/5 border border-white/6 rounded-lg md:rounded-xl hover:bg-white/10 transition-all"
           >
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
               {/* Avatar */}
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                <span className="text-black font-bold text-sm">{getInitials(client.name)}</span>
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-black font-bold text-xs md:text-sm">{getInitials(client.name)}</span>
               </div>
 
               {/* Client Info */}
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <p className="text-white font-medium">{client.name}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-1.5 md:space-x-2 mb-1">
+                  <p className="text-white font-medium text-sm md:text-base truncate">{client.name}</p>
                   {getStatusBadge(client)}
                 </div>
-                <div className="flex items-center space-x-4 text-white/60 text-sm">
+                <div className="flex items-center space-x-2 md:space-x-4 text-white/60 text-xs md:text-sm">
                   <div className="flex items-center space-x-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>{formatDate(client.createdAt)}</span>
+                    <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                    <span className="truncate">{formatDate(client.createdAt)}</span>
                   </div>
-                  <span>{client.phone}</span>
+                  <span className="hidden sm:inline truncate">{client.phone}</span>
                 </div>
               </div>
             </div>
 
             {/* Value */}
-            <div className="text-right">
-              <p className="text-white font-semibold">{client._count?.appointments || 0} agend.</p>
+            <div className="text-right flex-shrink-0 ml-2">
+              <p className="text-white font-semibold text-xs md:text-sm">{client._count?.appointments || 0} agend.</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* View All Button */}
-      <div className="mt-6 pt-4 border-t border-white/6">
-        <button className="w-full py-3 text-yellow-400 hover:text-yellow-300 font-medium transition-colors">
+      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
+        <button className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors">
           Ver todos os clientes
         </button>
       </div>

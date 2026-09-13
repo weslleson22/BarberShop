@@ -128,47 +128,47 @@ export default function PopularServices() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-        <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400"></div>
+      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+        <div className="flex items-center justify-center h-24 md:h-32">
+          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-yellow-400"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
-          <h3 className="text-xl font-semibold text-white">Serviços Mais Procurados</h3>
-          <p className="text-white/60 text-sm">Este mês</p>
+          <h3 className="text-lg md:text-xl font-semibold text-white">Serviços Mais Procurados</h3>
+          <p className="text-white/60 text-xs md:text-sm">Este mês</p>
         </div>
         <div className="flex items-center space-x-2 text-green-400">
-          <TrendingUp className="w-4 h-4" />
-          <span className="text-sm">+{services.length > 0 ? services.length * 5 : 0}%</span>
+          <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <span className="text-xs md:text-sm">+{services.length > 0 ? services.length * 5 : 0}%</span>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {services.map((service, index) => (
-          <div key={index} className="space-y-2">
+          <div key={index} className="space-y-1.5 md:space-y-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 bg-gradient-to-br ${service.color} rounded-lg flex items-center justify-center`}>
-                  <Scissors className="w-4 h-4 text-white" />
+              <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
+                <div className={`w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br ${service.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                  <Scissors className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
                 </div>
-                <div>
-                  <p className="text-white font-medium">{service.name}</p>
-                  <p className="text-white/60 text-sm">{service.count} agendamentos</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-white font-medium text-sm md:text-base truncate">{service.name}</p>
+                  <p className="text-white/60 text-xs md:text-sm">{service.count} agendamentos</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-white font-semibold">{service.percentage}%</p>
+              <div className="text-right flex-shrink-0 ml-2">
+                <p className="text-white font-semibold text-sm md:text-base">{service.percentage}%</p>
               </div>
             </div>
             
             {/* Progress Bar */}
-            <div className="w-full bg-white/10 rounded-full h-2">
+            <div className="w-full bg-white/10 rounded-full h-1.5 md:h-2">
               <div 
                 className={`h-full bg-gradient-to-r ${service.color} rounded-full transition-all duration-500`}
                 style={{ width: `${service.percentage}%` }}
@@ -179,8 +179,8 @@ export default function PopularServices() {
       </div>
 
       {/* View All Button */}
-      <div className="mt-6 pt-4 border-t border-white/6">
-        <button className="w-full py-3 text-yellow-400 hover:text-yellow-300 font-medium transition-colors">
+      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
+        <button className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors">
           Ver todos os serviços
         </button>
       </div>

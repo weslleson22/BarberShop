@@ -105,9 +105,9 @@ export default function TodayAppointments() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-        <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400"></div>
+      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+        <div className="flex items-center justify-center h-24 md:h-32">
+          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-yellow-400"></div>
         </div>
       </div>
     )
@@ -129,40 +129,40 @@ export default function TodayAppointments() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
-          <h3 className="text-xl font-semibold text-white">Agendamentos de Hoje</h3>
-          <p className="text-white/60 text-sm">{appointments.length} agendamentos</p>
+          <h3 className="text-lg md:text-xl font-semibold text-white">Agendamentos de Hoje</h3>
+          <p className="text-white/60 text-xs md:text-sm">{appointments.length} agendamentos</p>
         </div>
         <div className="flex items-center space-x-2 text-white/60">
-          <Clock className="w-4 h-4" />
-          <span className="text-sm">Hoje</span>
+          <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <span className="text-xs md:text-sm">Hoje</span>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2 md:space-y-3">
         {appointments.map((appointment) => (
           <div
             key={appointment.id}
-            className="flex items-center justify-between p-4 bg-white/5 border border-white/6 rounded-xl hover:bg-white/10 transition-all"
+            className="flex items-center justify-between p-3 md:p-4 bg-white/5 border border-white/6 rounded-lg md:rounded-xl hover:bg-white/10 transition-all"
           >
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
               {/* Time */}
-              <div className="text-center">
-                <p className="text-white font-semibold">{formatTime(appointment.startTime)}</p>
+              <div className="text-center flex-shrink-0">
+                <p className="text-white font-semibold text-sm md:text-base">{formatTime(appointment.startTime)}</p>
                 <p className="text-white/40 text-xs">30min</p>
               </div>
 
               {/* Client Info */}
-              <div className="flex-1">
-                <p className="text-white font-medium">{appointment.client.name}</p>
-                <p className="text-white/60 text-sm">{appointment.service.name}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium text-sm md:text-base truncate">{appointment.client.name}</p>
+                <p className="text-white/60 text-xs md:text-sm truncate">{appointment.service.name}</p>
               </div>
             </div>
 
             {/* Status */}
-            <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg border ${getStatusColor(appointment.status)}`}>
+            <div className={`flex items-center space-x-1.5 md:space-x-2 px-2 md:px-3 py-1 rounded-lg border flex-shrink-0 ${getStatusColor(appointment.status)}`}>
               {getStatusIcon(appointment.status)}
               <span className="text-xs font-medium">{getStatusText(appointment.status)}</span>
             </div>
@@ -171,8 +171,8 @@ export default function TodayAppointments() {
       </div>
 
       {/* View All Button */}
-      <div className="mt-6 pt-4 border-t border-white/6">
-        <button className="w-full py-3 text-yellow-400 hover:text-yellow-300 font-medium transition-colors">
+      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
+        <button className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors">
           Ver todos os agendamentos
         </button>
       </div>
