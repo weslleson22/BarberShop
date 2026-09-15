@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import { ensureClientForUser } from './client-sync'
+import type { UserRole } from './roles'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
 
@@ -9,7 +10,7 @@ export interface JWTPayload {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'BARBER' | 'CLIENT'
+  role: UserRole
   barbershopId?: string
 }
 

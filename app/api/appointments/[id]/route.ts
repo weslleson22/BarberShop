@@ -1,5 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/api-auth'
+
+// Carrega o agendamento e valida que quem está chamando tem permissão sobre
+// ele: mesmo tenant sempre, e para BARBER/CLIENT também precisa ser "dono"
+// do agendamento (o próprio barbeiro ou o próprio cliente).
+async function loadAuthorizedAppointment(id: string, user: NonNullable<ReturnType<typeof getAuthUser>>) {
+  const appointment = await prisma.appointment.findUnique({
+    where: { id },
+    include: { client: true },
+  })
+
+  if (!appointment || appointment.barbershopId !== user.barbershopId) {
+    return { appointment: null, allowed: false }
+  }
+
+  if (user.role === 'ADMIN' || user.role === 'RECEPTIONIST') {
+    return { appointment, allowed: true }
+  }
+
+  if (user.role === 'BARBER') {
+    return { appointment, allowed: appointment.barberId === user.id }
+  }
+
+  // CLIENT: só o próprio agendamento (Appointment.clientId -> Client.id, não User.id)
+  return { appointment, allowed: appointment.client.userId === user.id }
+}
 
 // GET - Obter agendamento específico
 export async function GET(
@@ -8,37 +34,29 @@ export async function GET(
 ) {
   const params = await props.params
   try {
-    const appointment = await prisma.appointment.findUnique({
-      where: {
-        id: params.id,
-      },
+    const user = getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const { appointment, allowed } = await loadAuthorizedAppointment(params.id, user)
+    if (!appointment || !allowed) {
+      return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 })
+    }
+
+    const full = await prisma.appointment.findUnique({
+      where: { id: params.id },
       include: {
         client: true,
-        barber: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        barber: { select: { id: true, name: true, email: true } },
         service: true,
       },
     })
 
-    if (!appointment) {
-      return NextResponse.json(
-        { error: 'Agendamento não encontrado' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(appointment)
+    return NextResponse.json(full)
   } catch (error) {
     console.error('Get appointment error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar agendamento' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao buscar agendamento' }, { status: 500 })
   }
 }
 
@@ -49,71 +67,49 @@ export async function PUT(
 ) {
   const params = await props.params
   try {
-    const body = await request.json()
-    const {
-      clientId,
-      serviceId,
-      barberId,
-      startTime,
-      endTime,
-      totalAmount,
-      notes,
-      status
-    } = body
-
-    // Verificar se o agendamento existe
-    const existingAppointment = await prisma.appointment.findUnique({
-      where: { id: params.id }
-    })
-
-    if (!existingAppointment) {
-      return NextResponse.json(
-        { error: 'Agendamento não encontrado' },
-        { status: 404 }
-      )
+    const user = getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    // Validar campos obrigatórios
-    if (!clientId || !serviceId || !barberId || !startTime || !endTime) {
+    const { appointment: existingAppointment, allowed } = await loadAuthorizedAppointment(params.id, user)
+    if (!existingAppointment || !allowed) {
+      return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const { serviceId, barberId, startTime, endTime, totalAmount, notes, status } = body
+    // clientId nunca vem do corpo: mantém o dono original do agendamento
+    // (evita que alguém "transfira" um agendamento pra outro cliente)
+    const clientId = existingAppointment.clientId
+
+    if (!serviceId || !barberId || !startTime || !endTime) {
       return NextResponse.json(
         { error: 'Campos obrigatórios não preenchidos' },
         { status: 400 }
       )
     }
 
-    // Converter datas se forem strings
     const startDateTime = typeof startTime === 'string' ? new Date(startTime) : startTime
     const endDateTime = typeof endTime === 'string' ? new Date(endTime) : endTime
 
-    // Verificar se o serviço existe
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId }
+    const service = await prisma.service.findFirst({
+      where: { id: serviceId, barbershopId: user.barbershopId },
     })
 
     if (!service) {
-      return NextResponse.json(
-        { error: 'Serviço não encontrado' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Serviço não encontrado' }, { status: 404 })
     }
 
-    // Verificar disponibilidade do horário (excluindo este agendamento)
     const conflictingAppointment = await prisma.appointment.findFirst({
       where: {
+        barbershopId: user.barbershopId,
         barberId,
-        startTime: {
-          lt: endDateTime
-        },
-        endTime: {
-          gt: startDateTime
-        },
-        status: {
-          not: 'CANCELLED'
-        },
-        id: {
-          not: params.id // Excluir o agendamento atual da verificação
-        }
-      }
+        startTime: { lt: endDateTime },
+        endTime: { gt: startDateTime },
+        status: { not: 'CANCELLED' },
+        id: { not: params.id },
+      },
     })
 
     if (conflictingAppointment) {
@@ -123,11 +119,8 @@ export async function PUT(
       )
     }
 
-    // Atualizar o agendamento
     const updatedAppointment = await prisma.appointment.update({
-      where: {
-        id: params.id,
-      },
+      where: { id: params.id },
       data: {
         clientId,
         serviceId,
@@ -140,79 +133,52 @@ export async function PUT(
       },
       include: {
         client: true,
-        barber: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        barber: { select: { id: true, name: true, email: true } },
         service: true,
       },
     })
 
-    console.log('Agendamento atualizado:', updatedAppointment)
     return NextResponse.json(updatedAppointment)
   } catch (error) {
     console.error('Update appointment error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao atualizar agendamento' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao atualizar agendamento' }, { status: 500 })
   }
 }
 
-// DELETE - Excluir/Cancelar agendamento
+// DELETE - Cancelar agendamento
 export async function DELETE(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
 ) {
   const params = await props.params
   try {
-    // Verificar se o agendamento existe
-    const existingAppointment = await prisma.appointment.findUnique({
-      where: { id: params.id }
-    })
-
-    if (!existingAppointment) {
-      return NextResponse.json(
-        { error: 'Agendamento não encontrado' },
-        { status: 404 }
-      )
+    const user = getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    // Marcar como cancelado em vez de excluir
+    const { appointment: existingAppointment, allowed } = await loadAuthorizedAppointment(params.id, user)
+    if (!existingAppointment || !allowed) {
+      return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 })
+    }
+
     const cancelledAppointment = await prisma.appointment.update({
-      where: {
-        id: params.id,
-      },
-      data: {
-        status: 'CANCELLED',
-      },
+      where: { id: params.id },
+      data: { status: 'CANCELLED' },
       include: {
         client: true,
-        barber: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        barber: { select: { id: true, name: true, email: true } },
         service: true,
       },
     })
 
-    console.log('Agendamento cancelado:', cancelledAppointment)
     return NextResponse.json({
       message: 'Agendamento cancelado com sucesso',
-      appointment: cancelledAppointment
+      appointment: cancelledAppointment,
     })
   } catch (error) {
     console.error('Cancel appointment error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao cancelar agendamento' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao cancelar agendamento' }, { status: 500 })
   }
 }
 
@@ -223,56 +189,42 @@ export async function PATCH(
 ) {
   const params = await props.params
   try {
+    const user = getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const { appointment: existingAppointment, allowed } = await loadAuthorizedAppointment(params.id, user)
+    if (!existingAppointment || !allowed) {
+      return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 })
+    }
+
     const body = await request.json()
     const { status } = body
 
     if (!status) {
-      return NextResponse.json(
-        { error: 'Status não fornecido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Status não fornecido' }, { status: 400 })
     }
 
-    // Verificar se o agendamento existe
-    const existingAppointment = await prisma.appointment.findUnique({
-      where: { id: params.id }
-    })
-
-    if (!existingAppointment) {
-      return NextResponse.json(
-        { error: 'Agendamento não encontrado' },
-        { status: 404 }
-      )
+    // Cliente só pode cancelar o próprio agendamento por aqui, não marcar
+    // como confirmado/concluído (isso é operação da equipe da barbearia)
+    if (user.role === 'CLIENT' && status !== 'CANCELLED') {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
     }
 
-    // Atualizar apenas o status
     const updatedAppointment = await prisma.appointment.update({
-      where: {
-        id: params.id,
-      },
-      data: {
-        status,
-      },
+      where: { id: params.id },
+      data: { status },
       include: {
         client: true,
-        barber: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        barber: { select: { id: true, name: true, email: true } },
         service: true,
       },
     })
 
-    console.log('Status do agendamento atualizado:', updatedAppointment)
     return NextResponse.json(updatedAppointment)
   } catch (error) {
     console.error('Update appointment status error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao atualizar status do agendamento' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao atualizar status do agendamento' }, { status: 500 })
   }
 }

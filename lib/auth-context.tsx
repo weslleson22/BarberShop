@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { useIdleLogout } from '@/hooks/useIdleLogout'
+import type { UserRole } from './roles'
 
 const IDLE_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutos de inatividade
 
@@ -9,7 +10,7 @@ interface User {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'BARBER' | 'CLIENT'
+  role: UserRole
   barbershopId: string
   isActive: boolean
   avatar?: string
@@ -137,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     setUser(null)
     setLoading(false)
 
@@ -145,9 +146,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_data')
 
-    // Clear auth cookies
-    document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-    document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    // O cookie 'auth-token' é httpOnly (não pode mais ser limpo via
+    // document.cookie), então o servidor precisa limpá-lo. Aguardamos a
+    // resposta antes de navegar para garantir que o cookie já foi limpo.
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch {
+      // Se a chamada falhar, ainda assim seguimos com o redirect local
+    }
 
     // Force redirect to clear any residual state
     if (typeof window !== 'undefined') {

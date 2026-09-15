@@ -1,4 +1,4 @@
-const CACHE_NAME = 'barbershop-scheduler-v2'
+const CACHE_NAME = 'barbershop-scheduler-v3'
 // Apenas assets estáticos que não mudam de conteúdo sob a mesma URL.
 // Páginas HTML não entram aqui: elas são sempre buscadas da rede (ver
 // estratégia network-first abaixo) para nunca servir uma versão desatualizada

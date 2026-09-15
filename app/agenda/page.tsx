@@ -50,7 +50,7 @@ export default function AgendaPage() {
       console.log('Data selecionada:', selectedDate)
       
       // Apenas agendamentos reais do Prisma via API pública
-      const response = await fetch('/api/appointments/public')
+      const response = await fetch('/api/appointments')
       if (response.ok) {
         const data = await response.json()
         console.log('Agendamentos recebidos do Prisma:', data.length)

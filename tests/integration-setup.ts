@@ -79,7 +79,7 @@ export const createTestBarbershop = async (overrides = {}) => {
   })
 }
 
-export const createTestUser = async (barbershopId: string, role: 'ADMIN' | 'BARBER' | 'CLIENT' = 'BARBER', overrides = {}) => {
+export const createTestUser = async (barbershopId: string, role: 'ADMIN' | 'BARBER' | 'RECEPTIONIST' | 'CLIENT' = 'BARBER', overrides = {}) => {
   return await prisma.user.create({
     data: {
       name: 'Usuário Teste',

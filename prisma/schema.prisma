@@ -159,6 +159,7 @@ model Payment {
 enum UserRole {
   ADMIN
   BARBER
+  RECEPTIONIST
   CLIENT
 }
 

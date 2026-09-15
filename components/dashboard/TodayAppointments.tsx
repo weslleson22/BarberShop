@@ -37,13 +37,20 @@ export default function TodayAppointments() {
       console.log('=== BUSCANDO AGENDAMENTOS DE HOJE ===')
       console.log('Data de hoje:', todayStr)
       
-      const response = await fetch('/api/appointments/public')
+      const response = await fetch('/api/appointments')
+      if (!response.ok) {
+        console.error('Erro ao buscar agendamentos de hoje:', response.status)
+        setAppointments([])
+        return
+      }
+
       const allAppointments = await response.json()
-      
-      console.log('Total de agendamentos recebidos:', allAppointments.length)
-      
+      const validAppointments = Array.isArray(allAppointments)
+        ? allAppointments.filter((apt: any) => apt?.client && apt?.service)
+        : []
+
       // Filter appointments for today
-      const todayAppointments = allAppointments.filter((apt: any) => {
+      const todayAppointments = validAppointments.filter((apt: any) => {
         const aptDate = new Date(apt.startTime).toISOString().split('T')[0]
         const isToday = aptDate === todayStr
         

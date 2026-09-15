@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser, requireRole } from '@/lib/api-auth'
 
-// GET - Buscar estatísticas reais do dashboard
+// GET - Buscar estatísticas reais do dashboard, restritas à barbearia do usuário autenticado
 export async function GET(request: NextRequest) {
   try {
-    console.log('=== BUSCANDO ESTATÍSTICAS REAIS DO DASHBOARD ===')
-    
-    // Buscar todos os agendamentos
+    const user = getAuthUser(request)
+    if (!requireRole(user, ['ADMIN', 'BARBER', 'RECEPTIONIST'])) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const barbershopId = user.barbershopId
+
+    // Buscar todos os agendamentos da barbearia
     const appointments = await prisma.appointment.findMany({
+      where: { barbershopId },
       include: {
         client: true,
         service: true,
@@ -15,23 +22,19 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    console.log('Total de agendamentos encontrados:', appointments.length)
+    // Buscar todos os clientes da barbearia
+    const clients = await prisma.client.findMany({ where: { barbershopId } })
 
-    // Buscar todos os clientes
-    const clients = await prisma.client.findMany()
-    console.log('Total de clientes encontrados:', clients.length)
+    // Buscar todos os serviços da barbearia
+    const services = await prisma.service.findMany({ where: { barbershopId } })
 
-    // Buscar todos os serviços
-    const services = await prisma.service.findMany()
-    console.log('Total de serviços encontrados:', services.length)
-
-    // Buscar todos os usuários barbeiros
+    // Buscar todos os usuários barbeiros da barbearia
     const barbers = await prisma.user.findMany({
       where: {
+        barbershopId,
         role: 'BARBER'
       }
     })
-    console.log('Total de barbeiros encontrados:', barbers.length)
 
     // Calcular estatísticas
     const totalAppointments = appointments.length

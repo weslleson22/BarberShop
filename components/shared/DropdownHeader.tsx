@@ -3,17 +3,19 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
-import { 
-  Home, 
-  LayoutDashboard, 
-  Calendar, 
-  Users, 
-  Scissors, 
-  UserCog, 
-  Settings, 
-  Search, 
-  Bell, 
-  LogOut, 
+import { ROLE_LABELS, type UserRole } from '@/lib/roles'
+import {
+  Home,
+  LayoutDashboard,
+  Calendar,
+  CalendarClock,
+  Users,
+  Scissors,
+  UserCog,
+  Settings,
+  Search,
+  Bell,
+  LogOut,
   ChevronDown,
   Menu,
   X
@@ -24,18 +26,42 @@ interface MenuItem {
   label: string
   path: string
   icon: any
-  roles?: ('ADMIN' | 'BARBER' | 'CLIENT')[]
 }
 
-const menuItems: MenuItem[] = [
-  { id: 'home', label: 'Página Inicial', path: '/', icon: Home },
-  { id: 'dashboard', label: 'Dashboard', path: '/dashboard/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'BARBER'] },
-  { id: 'agenda', label: 'Agendamentos', path: '/agenda', icon: Calendar, roles: ['ADMIN', 'BARBER'] },
-  { id: 'clientes', label: 'Clientes', path: '/clientes', icon: Users, roles: ['ADMIN', 'BARBER'] },
-  { id: 'servicos', label: 'Serviços', path: '/servicos', icon: Scissors, roles: ['ADMIN', 'BARBER'] },
-  { id: 'profissionais', label: 'Profissionais', path: '/usuarios', icon: UserCog, roles: ['ADMIN'] },
-  { id: 'configuracoes', label: 'Configurações', path: '/configuracoes', icon: Settings, roles: ['ADMIN', 'BARBER', 'CLIENT'] },
-]
+// Cada perfil vê apenas os itens que fazem sentido para sua função — não é
+// a mesma lista com botões escondidos depois. Isso é só a experiência de
+// navegação; a proteção de verdade está no middleware e nas rotas de API.
+function getMenuItems(role?: UserRole): MenuItem[] {
+  if (!role) {
+    // Visitante não autenticado
+    return [{ id: 'home', label: 'Página Inicial', path: '/', icon: Home }]
+  }
+
+  if (role === 'CLIENT') {
+    return [
+      { id: 'inicio', label: 'Início', path: '/dashboard', icon: Home },
+      { id: 'agendar', label: 'Agendar', path: '/agendar', icon: Calendar },
+      { id: 'meus-agendamentos', label: 'Meus Agendamentos', path: '/meus-agendamentos', icon: CalendarClock },
+      { id: 'configuracoes', label: 'Configurações', path: '/configuracoes', icon: Settings },
+    ]
+  }
+
+  // Equipe: ADMIN, BARBER, RECEPTIONIST
+  const items: MenuItem[] = [
+    { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { id: 'agenda', label: 'Agenda', path: '/agenda', icon: Calendar },
+    { id: 'clientes', label: 'Clientes', path: '/clientes', icon: Users },
+    { id: 'servicos', label: 'Serviços', path: '/servicos', icon: Scissors },
+  ]
+
+  if (role === 'ADMIN') {
+    items.push({ id: 'equipe', label: 'Equipe', path: '/usuarios', icon: UserCog })
+  }
+
+  items.push({ id: 'configuracoes', label: 'Configurações', path: '/configuracoes', icon: Settings })
+
+  return items
+}
 
 export default function DropdownHeader() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -61,11 +87,7 @@ export default function DropdownHeader() {
     return pathname.startsWith(path)
   }
 
-  // Itens sem `roles` ficam visíveis para todos (inclusive visitante não logado);
-  // os demais só aparecem para quem tem o papel exigido.
-  const visibleMenuItems = menuItems.filter(
-    (item) => !item.roles || (user?.role && item.roles.includes(user.role))
-  )
+  const visibleMenuItems = getMenuItems(user?.role)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-gray-900/95 to-gray-950/95 backdrop-blur-md border-b border-white/10">
@@ -165,7 +187,7 @@ export default function DropdownHeader() {
               </div>
               <div className="hidden sm:block min-w-0">
                 <p className="text-white font-medium text-sm truncate">{user?.name || 'Usuário'}</p>
-                <p className="text-yellow-400 text-xs">{user?.role || 'CLIENT'}</p>
+                <p className="text-yellow-400 text-xs">{ROLE_LABELS[user?.role || 'CLIENT']}</p>
               </div>
               <button 
                 onClick={handleLogout}

@@ -22,9 +22,16 @@ export async function GET(request: NextRequest) {
       barbershopId: decoded.barbershopId,
     }
 
-    // CLIENT só pode ver seus próprios agendamentos
+    // CLIENT só pode ver seus próprios agendamentos. Appointment.clientId
+    // referencia Client.id, não User.id — é preciso resolver o Client
+    // vinculado a este usuário antes de filtrar (antes disso a comparação
+    // era contra o id errado e sempre voltava vazio).
     if (decoded.role === 'CLIENT') {
-      where.clientId = decoded.id
+      const client = await prisma.client.findUnique({ where: { userId: decoded.id } })
+      if (!client) {
+        return NextResponse.json([])
+      }
+      where.clientId = client.id
     }
 
     if (date) {
@@ -86,8 +93,25 @@ export async function POST(request: NextRequest) {
     const decoded = verifyToken(token)
     const data = await request.json()
 
+    // Nunca confiar no clientId enviado pelo corpo da requisição quando quem
+    // está criando o agendamento é o próprio cliente — força o vínculo com o
+    // Client já associado à conta autenticada (impede um cliente agendar em
+    // nome de outro cliente alterando o clientId na requisição).
+    let clientId = data.clientId
+    if (decoded.role === 'CLIENT') {
+      const client = await prisma.client.findUnique({ where: { userId: decoded.id } })
+      if (!client) {
+        return NextResponse.json(
+          { error: 'Nenhum cadastro de cliente vinculado a esta conta' },
+          { status: 400 }
+        )
+      }
+      clientId = client.id
+    }
+
     const appointment = await criarAgendamento({
       ...data,
+      clientId,
       barbershopId: decoded.barbershopId,
       createdBy: decoded.id,
     })

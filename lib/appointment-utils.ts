@@ -122,7 +122,7 @@ export function validateAppointmentTime(
  * Verifica permissão de acesso baseada no papel do usuário (RBAC)
  */
 export function checkPermission(
-  userRole: 'ADMIN' | 'BARBER' | 'CLIENT',
+  userRole: 'ADMIN' | 'BARBER' | 'RECEPTIONIST' | 'CLIENT',
   resource: string,
   action: 'create' | 'read' | 'update' | 'delete'
 ): boolean {
@@ -141,6 +141,13 @@ export function checkPermission(
       users: ['read'],
       reports: ['read']
     },
+    RECEPTIONIST: {
+      appointments: ['create', 'read', 'update', 'delete'],
+      clients: ['create', 'read', 'update', 'delete'],
+      services: ['read'],
+      users: [],
+      reports: []
+    },
     CLIENT: {
       appointments: ['create', 'read'],
       clients: ['read'],
@@ -149,7 +156,7 @@ export function checkPermission(
       reports: []
     }
   }
-  
+
   return permissions[userRole]?.[resource]?.includes(action) || false
 }
 

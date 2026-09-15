@@ -30,11 +30,17 @@ export default function PopularServices() {
       console.log('Mês atual:', currentMonth + 1, 'Ano:', currentYear)
       
       // Fetch all appointments
-      const response = await fetch('/api/appointments/public')
+      const response = await fetch('/api/appointments')
+      if (!response.ok) {
+        console.error('Erro ao buscar agendamentos:', response.status)
+        return
+      }
+
       const allAppointments = await response.json()
-      
-      console.log('Total de agendamentos:', allAppointments.length)
-      
+      if (!Array.isArray(allAppointments)) {
+        return
+      }
+
       // Filter appointments for current month
       const currentMonthAppointments = allAppointments.filter((apt: any) => {
         const aptDate = new Date(apt.startTime)

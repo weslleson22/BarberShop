@@ -33,9 +33,19 @@ export default function FinanceSummary() {
       console.log('Mês atual:', currentMonth + 1, 'Ano:', currentYear)
       
       // Fetch all appointments
-      const response = await fetch('/api/appointments/public')
+      const response = await fetch('/api/appointments')
+      if (!response.ok) {
+        console.error('Erro ao buscar dados financeiros:', response.status)
+        setFinanceData([])
+        return
+      }
+
       const allAppointments = await response.json()
-      
+      if (!Array.isArray(allAppointments)) {
+        setFinanceData([])
+        return
+      }
+
       console.log('Total de agendamentos:', allAppointments.length)
       
       // Filter appointments for current month

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser, requireRole } from '@/lib/api-auth'
 
 export async function GET(request: NextRequest) {
   try {
+    const user = getAuthUser(request)
+    if (!requireRole(user, ['ADMIN', 'BARBER', 'RECEPTIONIST'])) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
     // Get the last 7 days
     const endDate = new Date()
     const startDate = new Date()
@@ -10,11 +16,10 @@ export async function GET(request: NextRequest) {
     startDate.setHours(0, 0, 0, 0)
     endDate.setHours(23, 59, 59, 999)
 
-    console.log('Fetching revenue data from:', startDate, 'to:', endDate)
-
-    // Fetch completed appointments in the date range
+    // Fetch completed appointments in the date range, scoped to the user's barbershop
     const appointments = await prisma.appointment.findMany({
       where: {
+        barbershopId: user.barbershopId,
         status: 'COMPLETED',
         startTime: {
           gte: startDate,

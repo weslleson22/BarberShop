@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser, requireRole } from '@/lib/api-auth'
 
-// GET - Listar clientes
+// GET - Listar clientes (equipe da barbearia; ADMIN/BARBER/RECEPTIONIST)
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!requireRole(decoded, ['ADMIN', 'BARBER', 'RECEPTIONIST'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
 
@@ -54,17 +53,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Criar cliente
+// POST - Criar cliente (ADMIN/RECEPTIONIST; BARBER só visualiza)
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!requireRole(decoded, ['ADMIN', 'RECEPTIONIST']) || !decoded.barbershopId) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-
-    const decoded = verifyToken(token)
-    if (!decoded || !decoded.barbershopId) {
-      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
     }
 
     const { name, email, phone, notes } = await request.json()
@@ -96,17 +90,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Excluir cliente
+// DELETE - Excluir cliente (ADMIN/RECEPTIONIST; BARBER só visualiza)
 export async function DELETE(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!requireRole(decoded, ['ADMIN', 'RECEPTIONIST']) || !decoded.barbershopId) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-
-    const decoded = verifyToken(token)
-    if (!decoded || !decoded.barbershopId) {
-      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)

@@ -281,10 +281,21 @@ describe('Appointment Utils - Unit Tests', () => {
       expect(checkPermission('CLIENT', 'users', 'create')).toBe(false)
       expect(checkPermission('CLIENT', 'services', 'read')).toBe(true)
     })
-    
+
+    it('RECEPTIONIST administra agenda e clientes, mas não usuários', () => {
+      expect(checkPermission('RECEPTIONIST', 'appointments', 'delete')).toBe(true)
+      expect(checkPermission('RECEPTIONIST', 'clients', 'create')).toBe(true)
+      expect(checkPermission('RECEPTIONIST', 'clients', 'delete')).toBe(true)
+      expect(checkPermission('RECEPTIONIST', 'services', 'read')).toBe(true)
+      expect(checkPermission('RECEPTIONIST', 'services', 'update')).toBe(false)
+      expect(checkPermission('RECEPTIONIST', 'users', 'read')).toBe(false)
+      expect(checkPermission('RECEPTIONIST', 'users', 'create')).toBe(false)
+    })
+
     it('deve rejeitar permissões inexistentes', () => {
       expect(checkPermission('CLIENT', 'users', 'read')).toBe(false)
       expect(checkPermission('BARBER', 'reports', 'create')).toBe(false)
+      expect(checkPermission('RECEPTIONIST', 'reports', 'read')).toBe(false)
     })
   })
   

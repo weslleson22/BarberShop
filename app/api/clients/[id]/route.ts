@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser, requireRole } from '@/lib/api-auth'
 
 const EMAIL_PATTERN = /^[a-z0-9._%+\-]+@[a-z0-9.-]+\.[a-z]{2,}$/
 
-// PUT - Atualizar cliente
+// PUT - Atualizar cliente (ADMIN/RECEPTIONIST; BARBER só visualiza)
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!requireRole(decoded, ['ADMIN', 'RECEPTIONIST']) || !decoded.barbershopId) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-
-    const decoded = verifyToken(token)
-    if (!decoded || !decoded.barbershopId) {
-      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
     }
 
     const { id } = await context.params

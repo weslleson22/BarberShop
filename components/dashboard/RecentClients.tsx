@@ -31,10 +31,18 @@ export default function RecentClients() {
       console.log('=== BUSCANDO CLIENTES RECENTES ===')
       
       const response = await fetch('/api/clients/all')
+      if (!response.ok) {
+        console.error('Erro ao buscar clientes recentes:', response.status)
+        setClients([])
+        return
+      }
+
       const allClients = await response.json()
-      
-      console.log('Total de clientes recebidos:', allClients.length)
-      
+      if (!Array.isArray(allClients)) {
+        setClients([])
+        return
+      }
+
       // Sort by last appointment date if available, otherwise by creation date
       const recentClients = allClients
         .sort((a: Client, b: Client) => {

@@ -2,6 +2,7 @@ import './globals.css'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth-context'
 import { DatabaseProvider } from '@/components/database-validation/DatabaseValidator'
+import { ServiceWorkerUpdater } from '@/components/ServiceWorkerUpdater'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -67,23 +68,7 @@ export default function RootLayout({
             {children}
           </AuthProvider>
         </DatabaseProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
-                });
-              }
-            `,
-          }}
-        />
+        <ServiceWorkerUpdater />
       </body>
     </html>
   )

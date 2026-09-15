@@ -6,13 +6,14 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { maskPhone, maskName, maskEmail } from '@/lib/utils'
+import type { UserRole } from '@/lib/roles'
 
 interface User {
   id: string
   name: string
   email: string
   phone?: string
-  role: 'ADMIN' | 'BARBER' | 'CLIENT'
+  role: UserRole
   isActive: boolean
   createdAt: string
   barbershopId: string
@@ -32,7 +33,7 @@ export default function UsuariosPage() {
     name: '',
     email: '',
     phone: '',
-    role: 'BARBER' as 'ADMIN' | 'BARBER' | 'CLIENT',
+    role: 'BARBER' as UserRole,
     password: '',
     isActive: true,
     avatar: '',
@@ -242,7 +243,7 @@ export default function UsuariosPage() {
       console.log('=== EXCLUIR USUÁRIO DO PRISMA ===')
       console.log('ID do usuário para excluir:', userId)
       
-      const response = await fetch(`/api/users?id=${userId}`, {
+      const response = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
       })
       
@@ -277,6 +278,8 @@ export default function UsuariosPage() {
         return 'bg-purple-100 text-purple-800'
       case 'BARBER':
         return 'bg-blue-100 text-blue-800'
+      case 'RECEPTIONIST':
+        return 'bg-yellow-100 text-yellow-800'
       case 'CLIENT':
         return 'bg-green-100 text-green-800'
       default:
@@ -290,6 +293,8 @@ export default function UsuariosPage() {
         return 'Administrador'
       case 'BARBER':
         return 'Barbeiro'
+      case 'RECEPTIONIST':
+        return 'Recepcionista'
       case 'CLIENT':
         return 'Cliente'
       default:
@@ -456,6 +461,7 @@ export default function UsuariosPage() {
                   <option value="" className="bg-gray-900">Selecione...</option>
                   <option value="ADMIN" className="bg-gray-900">Administrador</option>
                   <option value="BARBER" className="bg-gray-900">Barbeiro</option>
+                  <option value="RECEPTIONIST" className="bg-gray-900">Recepcionista</option>
                   <option value="CLIENT" className="bg-gray-900">Cliente</option>
                 </select>
               </div>
