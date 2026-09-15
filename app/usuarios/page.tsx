@@ -5,6 +5,7 @@ import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera } from 'l
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
+import { maskPhone } from '@/lib/utils'
 
 interface User {
   id: string
@@ -434,7 +435,8 @@ export default function UsuariosPage() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                  maxLength={15}
                   className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
                   placeholder="(00) 00000-0000"
                 />

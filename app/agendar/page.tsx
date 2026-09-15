@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home } from 'lucide-react'
 import Link from 'next/link'
 import DropdownHeader from '@/components/shared/DropdownHeader'
+import { maskPhone } from '@/lib/utils'
 
 const NAME_MAX = 50
 const EMAIL_MAX = 80
@@ -21,14 +22,6 @@ function maskName(value: string) {
         : ''
     )
     .join(' ')
-}
-
-function maskPhone(value: string) {
-  const cleaned = value.replace(/\D/g, '').slice(0, 11)
-
-  if (cleaned.length <= 2) return cleaned
-  if (cleaned.length <= 7) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`
-  return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`
 }
 
 function maskEmail(value: string) {
