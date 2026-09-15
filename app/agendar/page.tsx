@@ -5,40 +5,13 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home } from 'lucide-react'
 import Link from 'next/link'
 import DropdownHeader from '@/components/shared/DropdownHeader'
-import { maskPhone } from '@/lib/utils'
+import { maskPhone, maskName as maskNameShared, maskEmail as maskEmailShared } from '@/lib/utils'
 
 const NAME_MAX = 50
 const EMAIL_MAX = 80
 
-function maskName(value: string) {
-  return value
-    .replace(/[^A-Za-zÀ-ÿ'\-\s]/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .slice(0, NAME_MAX)
-    .split(' ')
-    .map((word) =>
-      word.length > 0
-        ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-        : ''
-    )
-    .join(' ')
-}
-
-function maskEmail(value: string) {
-  let formatted = value
-    .toLowerCase()
-    .replace(/\s/g, '')
-    .replace(/[^a-z0-9@._+\-]/g, '')
-
-  const atIndex = formatted.indexOf('@')
-  if (atIndex !== -1) {
-    const local = formatted.slice(0, atIndex).replace(/@/g, '')
-    const domain = formatted.slice(atIndex + 1).replace(/@/g, '')
-    formatted = `${local}@${domain}`
-  }
-
-  return formatted.slice(0, EMAIL_MAX)
-}
+const maskName = (value: string) => maskNameShared(value, NAME_MAX)
+const maskEmail = (value: string) => maskEmailShared(value, EMAIL_MAX)
 
 interface Service {
   id: string
