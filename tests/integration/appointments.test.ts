@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { prisma } from '../setup'
-import { createTestBarbershop, createTestUser, createTestService, createTestClient, createTestAppointment } from '../setup'
+import { prisma } from '../integration-setup'
+import { createTestBarbershop, createTestUser, createTestService, createTestClient, createTestAppointment } from '../integration-setup'
 
 describe('Appointments Integration Tests', () => {
   let barbershopId: string
