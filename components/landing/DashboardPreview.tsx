@@ -4,12 +4,12 @@ import { Calendar, Users, DollarSign, TrendingUp, Clock, BarChart3, Settings, Me
 
 export default function DashboardPreview() {
   return (
-    <div className="relative mx-auto max-w-6xl">
+    <div className="relative mx-auto w-full max-w-6xl">
       {/* Main Dashboard Card */}
       <div className="bg-gradient-to-br from-gray-900/90 to-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex">
+        <div className="flex flex-col md:flex-row">
           {/* Sidebar */}
-          <div className="w-64 bg-black/50 border-r border-white/10 p-4">
+          <div className="hidden md:block md:w-56 lg:w-64 shrink-0 bg-black/50 border-r border-white/10 p-4">
             <div className="space-y-2">
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30">
                 <BarChart3 className="w-5 h-5 text-yellow-400" />
@@ -47,20 +47,20 @@ export default function DashboardPreview() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 min-w-0 p-4 sm:p-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-2xl font-bold text-white">Dashboard</h3>
-                <p className="text-white/60">Bem-vindo de volta, João</p>
+            <div className="flex items-center justify-between mb-6 gap-2">
+              <div className="min-w-0">
+                <h3 className="text-xl sm:text-2xl font-bold text-white truncate">Dashboard</h3>
+                <p className="text-white/60 text-sm sm:text-base truncate">Bem-vindo de volta, João</p>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 shrink-0">
                 <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full"></div>
               </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Calendar className="w-5 h-5 text-blue-400" />
@@ -91,47 +91,47 @@ export default function DashboardPreview() {
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
               <h4 className="text-white font-medium mb-4">Próximos Agendamentos</h4>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                <div className="flex items-center justify-between gap-2 p-3 bg-white/5 rounded-lg">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-8 h-8 shrink-0 bg-blue-500/20 rounded-full flex items-center justify-center">
                       <Users className="w-4 h-4 text-blue-400" />
                     </div>
-                    <div>
-                      <p className="text-white text-sm">Carlos Silva</p>
-                      <p className="text-white/60 text-xs">Corte + Barba</p>
+                    <div className="min-w-0">
+                      <p className="text-white text-sm truncate">Carlos Silva</p>
+                      <p className="text-white/60 text-xs truncate">Corte + Barba</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="text-white text-sm">14:30</p>
                     <p className="text-green-400 text-xs">Confirmado</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
+                <div className="flex items-center justify-between gap-2 p-3 bg-white/5 rounded-lg">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-8 h-8 shrink-0 bg-purple-500/20 rounded-full flex items-center justify-center">
                       <Users className="w-4 h-4 text-purple-400" />
                     </div>
-                    <div>
-                      <p className="text-white text-sm">Maria Santos</p>
-                      <p className="text-white/60 text-xs">Progressiva</p>
+                    <div className="min-w-0">
+                      <p className="text-white text-sm truncate">Maria Santos</p>
+                      <p className="text-white/60 text-xs truncate">Progressiva</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="text-white text-sm">15:45</p>
                     <p className="text-yellow-400 text-xs">Pendente</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                <div className="flex items-center justify-between gap-2 p-3 bg-white/5 rounded-lg">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-8 h-8 shrink-0 bg-green-500/20 rounded-full flex items-center justify-center">
                       <Users className="w-4 h-4 text-green-400" />
                     </div>
-                    <div>
-                      <p className="text-white text-sm">João Oliveira</p>
-                      <p className="text-white/60 text-xs">Barba</p>
+                    <div className="min-w-0">
+                      <p className="text-white text-sm truncate">João Oliveira</p>
+                      <p className="text-white/60 text-xs truncate">Barba</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="text-white text-sm">16:00</p>
                     <p className="text-green-400 text-xs">Confirmado</p>
                   </div>
@@ -142,14 +142,14 @@ export default function DashboardPreview() {
             {/* Revenue Chart */}
             <div className="bg-white/5 border border-white/10 rounded-xl p-4">
               <h4 className="text-white font-medium mb-4">Receita Mensal</h4>
-              <div className="flex items-end space-x-2 h-32">
-                <div className="w-8 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '60%'}}></div>
-                <div className="w-8 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '80%'}}></div>
-                <div className="w-8 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '45%'}}></div>
-                <div className="w-8 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '90%'}}></div>
-                <div className="w-8 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '70%'}}></div>
-                <div className="w-8 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '85%'}}></div>
-                <div className="w-8 bg-gradient-to-t from-yellow-400/60 to-yellow-500 rounded-t" style={{height: '100%'}}></div>
+              <div className="flex items-end gap-1.5 sm:gap-2 h-32 overflow-x-auto">
+                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '60%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '80%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '45%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '90%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '70%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '85%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/60 to-yellow-500 rounded-t" style={{height: '100%'}}></div>
               </div>
               <div className="flex justify-between mt-2 text-xs text-white/40">
                 <span>Seg</span>

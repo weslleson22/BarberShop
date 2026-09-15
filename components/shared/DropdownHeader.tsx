@@ -24,16 +24,17 @@ interface MenuItem {
   label: string
   path: string
   icon: any
+  roles?: ('ADMIN' | 'BARBER' | 'CLIENT')[]
 }
 
 const menuItems: MenuItem[] = [
   { id: 'home', label: 'Página Inicial', path: '/', icon: Home },
-  { id: 'dashboard', label: 'Dashboard', path: '/dashboard/dashboard', icon: LayoutDashboard },
-  { id: 'agenda', label: 'Agendamentos', path: '/agenda', icon: Calendar },
-  { id: 'clientes', label: 'Clientes', path: '/clientes', icon: Users },
-  { id: 'servicos', label: 'Serviços', path: '/servicos', icon: Scissors },
-  { id: 'profissionais', label: 'Profissionais', path: '/usuarios', icon: UserCog },
-  { id: 'configuracoes', label: 'Configurações', path: '/configuracoes', icon: Settings },
+  { id: 'dashboard', label: 'Dashboard', path: '/dashboard/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'BARBER'] },
+  { id: 'agenda', label: 'Agendamentos', path: '/agenda', icon: Calendar, roles: ['ADMIN', 'BARBER'] },
+  { id: 'clientes', label: 'Clientes', path: '/clientes', icon: Users, roles: ['ADMIN', 'BARBER'] },
+  { id: 'servicos', label: 'Serviços', path: '/servicos', icon: Scissors, roles: ['ADMIN', 'BARBER'] },
+  { id: 'profissionais', label: 'Profissionais', path: '/usuarios', icon: UserCog, roles: ['ADMIN'] },
+  { id: 'configuracoes', label: 'Configurações', path: '/configuracoes', icon: Settings, roles: ['ADMIN', 'BARBER', 'CLIENT'] },
 ]
 
 export default function DropdownHeader() {
@@ -59,6 +60,12 @@ export default function DropdownHeader() {
     if (path === '/') return pathname === '/'
     return pathname.startsWith(path)
   }
+
+  // Itens sem `roles` ficam visíveis para todos (inclusive visitante não logado);
+  // os demais só aparecem para quem tem o papel exigido.
+  const visibleMenuItems = menuItems.filter(
+    (item) => !item.roles || (user?.role && item.roles.includes(user.role))
+  )
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-gray-900/95 to-gray-950/95 backdrop-blur-md border-b border-white/10">
@@ -95,7 +102,7 @@ export default function DropdownHeader() {
 
               {isDropdownOpen && (
                 <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden">
-                  {menuItems.map((item) => {
+                  {visibleMenuItems.map((item) => {
                     const Icon = item.icon
                     return (
                       <button
@@ -176,7 +183,7 @@ export default function DropdownHeader() {
         {isMobileMenuOpen && (
           <div className="lg:hidden mt-4 pt-4 border-t border-white/10">
             <div className="space-y-2">
-              {menuItems.map((item) => {
+              {visibleMenuItems.map((item) => {
                 const Icon = item.icon
                 return (
                   <button

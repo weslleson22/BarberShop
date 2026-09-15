@@ -72,10 +72,16 @@ export function Sidebar({ className }: SidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, logout, loading } = useAuth()
 
+  // Não renderiza o menu enquanto está carregando o usuário
+  if (loading) {
+    return null
+  }
+
+  // Só mostra itens se user?.role estiver definido
   const filteredItems = sidebarItems.filter(item => 
-    !item.roles || item.roles.includes(user?.role || 'CLIENT')
+    user?.role && item.roles?.includes(user.role)
   )
 
   const handleLogout = () => {

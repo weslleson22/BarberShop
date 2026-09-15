@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import DropdownHeader from '@/components/shared/DropdownHeader'
@@ -44,6 +44,7 @@ export default function NewAgendarPage() {
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
@@ -56,6 +57,21 @@ export default function NewAgendarPage() {
       notes: '',
     },
   })
+
+  // Preenche automaticamente os campos do cliente se estiver logado como CLIENT
+  useEffect(() => {
+    if (user?.role === 'CLIENT') {
+      reset({
+        clientName: user.name || '',
+        clientPhone: user.phone || '',
+        clientEmail: user.email || '',
+        serviceId: '',
+        date: '',
+        time: '',
+        notes: '',
+      })
+    }
+  }, [user, reset])
 
   const selectedDate = watch('date')
   const selectedService = watch('serviceId')
@@ -138,6 +154,13 @@ export default function NewAgendarPage() {
               </div>
               
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+  {user?.role === 'CLIENT' && (
+    <>
+      <input type="hidden" {...register('clientName')} value={user.name || ''} />
+      <input type="hidden" {...register('clientPhone')} value={user.phone || ''} />
+      <input type="hidden" {...register('clientEmail')} value={user.email || ''} />
+    </>
+  )}
                 {/* Client Information */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Informações do Cliente</h3>

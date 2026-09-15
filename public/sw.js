@@ -1,8 +1,9 @@
-const CACHE_NAME = 'barbershop-scheduler-v1'
+const CACHE_NAME = 'barbershop-scheduler-v2'
+// Apenas assets estáticos que não mudam de conteúdo sob a mesma URL.
+// Páginas HTML não entram aqui: elas são sempre buscadas da rede (ver
+// estratégia network-first abaixo) para nunca servir uma versão desatualizada
+// após um novo deploy.
 const urlsToCache = [
-  '/',
-  '/dashboard',
-  '/agendar',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -16,49 +17,55 @@ self.addEventListener('install', (event) => {
         console.log('Opened cache')
         return cache.addAll(urlsToCache)
       })
+      // Ativa o novo SW imediatamente, sem esperar as abas antigas fecharem,
+      // para que um novo deploy entre em vigor sem exigir ação do usuário.
+      .then(() => self.skipWaiting())
   )
 })
 
-// Fetch event - serve from cache when offline
+// Fetch event
+// - Navegações/HTML: network-first, para nunca servir uma página desatualizada
+//   após um novo deploy (cache só é usado como fallback quando offline).
+// - Demais assets estáticos: cache-first (arquivos do _next/static já têm
+//   hash no nome, então são seguros para cache agressivo).
 self.addEventListener('fetch', (event) => {
+  const { request } = event
+
+  // Nunca interceptar chamadas de API: elas devem sempre ir para a rede.
+  if (request.url.includes('/api/')) {
+    return
+  }
+
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const responseToCache = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache))
+          return response
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+    )
+    return
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse
+      }
+
+      return fetch(request.clone()).then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response
         }
 
-        // Clone the request
-        const fetchRequest = event.request.clone()
+        const responseToCache = response.clone()
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache))
 
-        return fetch(fetchRequest).then(
-          (response) => {
-            // Check if valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response
-            }
-
-            // Clone the response
-            const responseToCache = response.clone()
-
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                // Don't cache API requests
-                if (!event.request.url.includes('/api/')) {
-                  cache.put(event.request, responseToCache)
-                }
-              })
-
-            return response
-          }
-        ).catch(() => {
-          // Return cached page for navigation requests when offline
-          if (event.request.mode === 'navigate') {
-            return caches.match('/')
-          }
-        })
+        return response
       })
+    })
   )
 })
 
@@ -74,7 +81,8 @@ self.addEventListener('activate', (event) => {
           }
         })
       )
-    })
+      // Assume o controle de todas as abas abertas imediatamente.
+    }).then(() => self.clients.claim())
   )
 })
 

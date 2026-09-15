@@ -6,6 +6,47 @@ import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home } from 'lucide-react
 import Link from 'next/link'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 
+const NAME_MAX = 50
+const EMAIL_MAX = 80
+
+function maskName(value: string) {
+  return value
+    .replace(/[^A-Za-zÀ-ÿ'\-\s]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .slice(0, NAME_MAX)
+    .split(' ')
+    .map((word) =>
+      word.length > 0
+        ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        : ''
+    )
+    .join(' ')
+}
+
+function maskPhone(value: string) {
+  const cleaned = value.replace(/\D/g, '').slice(0, 11)
+
+  if (cleaned.length <= 2) return cleaned
+  if (cleaned.length <= 7) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`
+  return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`
+}
+
+function maskEmail(value: string) {
+  let formatted = value
+    .toLowerCase()
+    .replace(/\s/g, '')
+    .replace(/[^a-z0-9@._+\-]/g, '')
+
+  const atIndex = formatted.indexOf('@')
+  if (atIndex !== -1) {
+    const local = formatted.slice(0, atIndex).replace(/@/g, '')
+    const domain = formatted.slice(atIndex + 1).replace(/@/g, '')
+    formatted = `${local}@${domain}`
+  }
+
+  return formatted.slice(0, EMAIL_MAX)
+}
+
 interface Service {
   id: string
   name: string
@@ -135,19 +176,30 @@ export default function AgendarPage() {
           { startTime: new Date(date + 'T16:00:00'), endTime: new Date(date + 'T16:30:00') },
         ]
         
+        const now = new Date()
+
         // Verificar quais horários estão disponíveis
         const availableSlots = allSlots.map(slot => {
+          // Não permitir agendar em horário que já passou
+          if (slot.startTime <= now) {
+            return { ...slot, isAvailable: false }
+          }
+
           // Verificar se este horário conflita com algum agendamento existente
+          // do mesmo barbeiro (agendamentos cancelados não bloqueiam o horário)
           const isBooked = existingAppointments.some((apt: any) => {
+            if (apt.barberId !== selectedBarber.id) return false
+            if (apt.status === 'CANCELLED') return false
+
             const aptStart = new Date(apt.startTime)
             const aptEnd = new Date(aptStart.getTime() + apt.service.duration * 60000)
             const slotStart = slot.startTime
             const slotEnd = slot.endTime
-            
+
             // Verificar sobreposição de horários
             return (slotStart < aptEnd && slotEnd > aptStart)
           })
-          
+
           return {
             ...slot,
             isAvailable: !isBooked
@@ -197,8 +249,23 @@ export default function AgendarPage() {
   }
 
   const handleBooking = async () => {
-    if (!selectedService || !selectedBarber || !selectedTime || !clientData.name || !clientData.phone) {
+    if (!selectedService || !selectedBarber || !selectedTime || !clientData.name.trim() || !clientData.phone) {
       alert('Por favor, preencha todos os campos obrigatórios')
+      return
+    }
+
+    if (clientData.name.trim().length > NAME_MAX) {
+      alert(`O nome deve ter no máximo ${NAME_MAX} caracteres`)
+      return
+    }
+
+    if (clientData.phone.replace(/\D/g, '').length < 10) {
+      alert('Informe um telefone válido com DDD')
+      return
+    }
+
+    if (clientData.email && !/^[a-z0-9._%+\-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(clientData.email)) {
+      alert('Informe um e-mail válido')
       return
     }
 
@@ -210,7 +277,7 @@ export default function AgendarPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(clientData),
+        body: JSON.stringify({ ...clientData, name: clientData.name.trim() }),
       })
 
       let client
@@ -218,7 +285,7 @@ export default function AgendarPage() {
         client = await clientResponse.json()
       } else {
         // Se já existir, buscar por telefone
-        const searchResponse = await fetch(`/api/clients/public?phone=${clientData.phone}`)
+        const searchResponse = await fetch(`/api/clients/public?phone=${encodeURIComponent(clientData.phone)}`)
         if (searchResponse.ok) {
           const existingClients = await searchResponse.json()
           client = existingClients[0]
@@ -294,10 +361,10 @@ export default function AgendarPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black py-8">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
           </div>
         </div>
       </div>
@@ -431,13 +498,13 @@ export default function AgendarPage() {
             {/* Time Selection */}
             {selectedDate && (
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/80 mb-2">
                   Horários Disponíveis
                 </label>
                 {loading ? (
                   <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-600">Carregando horários...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+                    <p className="mt-2 text-white/60">Carregando horários...</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
@@ -446,11 +513,13 @@ export default function AgendarPage() {
                         key={index}
                         onClick={() => handleTimeSelect(slot)}
                         disabled={!slot.isAvailable}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          slot.isAvailable
-                            ? 'bg-white border border-gray-300 hover:bg-blue-50 hover:border-blue-500 cursor-pointer'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        } ${selectedTime === slot ? 'bg-blue-600 text-white' : ''}`}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
+                          selectedTime === slot
+                            ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black border-yellow-400'
+                            : slot.isAvailable
+                            ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-yellow-400/50 cursor-pointer'
+                            : 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed'
+                        }`}
                       >
                         {formatTime(slot.startTime)}
                       </button>
@@ -462,42 +531,49 @@ export default function AgendarPage() {
 
             {/* Client Information */}
             {selectedTime && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold mb-4">Seus Dados</h3>
+              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6">
+                <h3 className="text-lg font-semibold mb-4 text-white">Seus Dados</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-white/80 mb-1">
                       Nome *
                     </label>
                     <input
                       type="text"
                       value={clientData.name}
-                      onChange={(e) => setClientData({ ...clientData, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => setClientData({ ...clientData, name: maskName(e.target.value) })}
+                      maxLength={NAME_MAX}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                       placeholder="Seu nome completo"
                     />
+                    <p className="mt-1 text-xs text-white/40 text-right">
+                      {clientData.name.length}/{NAME_MAX}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-white/80 mb-1">
                       Telefone *
                     </label>
                     <input
                       type="tel"
+                      inputMode="numeric"
                       value={clientData.phone}
-                      onChange={(e) => setClientData({ ...clientData, phone: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => setClientData({ ...clientData, phone: maskPhone(e.target.value) })}
+                      maxLength={15}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                       placeholder="(00) 00000-0000"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-white/80 mb-1">
                       E-mail
                     </label>
                     <input
                       type="email"
                       value={clientData.email}
-                      onChange={(e) => setClientData({ ...clientData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => setClientData({ ...clientData, email: maskEmail(e.target.value) })}
+                      maxLength={EMAIL_MAX}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                       placeholder="seu@email.com"
                     />
                   </div>
@@ -505,8 +581,8 @@ export default function AgendarPage() {
 
                 <button
                   onClick={handleBooking}
-                  disabled={loading || !clientData.name || !clientData.phone}
-                  className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  disabled={loading || !clientData.name.trim() || clientData.phone.replace(/\D/g, '').length < 10}
+                  className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black py-3 px-4 rounded-xl font-medium hover:from-yellow-500 hover:to-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {loading ? 'Agendando...' : 'Confirmar Agendamento'}
                 </button>
@@ -519,7 +595,7 @@ export default function AgendarPage() {
         {step > 1 && (
           <button
             onClick={() => setStep(step - 1)}
-            className="mt-6 text-gray-600 hover:text-gray-800 font-medium"
+            className="mt-6 mb-8 text-white/60 hover:text-yellow-400 font-medium transition-colors"
           >
             ← Voltar
           </button>

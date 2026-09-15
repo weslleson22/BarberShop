@@ -53,6 +53,7 @@ model User {
   // Relations
   appointments Appointment[]
   createdAppointments Appointment[] @relation("AppointmentCreator")
+  client       Client?
 
   @@map("users")
 }
@@ -71,6 +72,10 @@ model Client {
   // Multi-tenant
   barbershopId String
   barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  // Conta de login vinculada (quando o cliente também é um usuário do sistema, role CLIENT)
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // Relations
   appointments Appointment[]

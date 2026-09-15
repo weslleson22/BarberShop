@@ -81,10 +81,44 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Serviço encontrado:', { duration: service.duration, price: service.price })
-    
+
     // Converter startTime para Date
     const startTimeDate = new Date(startTime)
+
+    if (isNaN(startTimeDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Data/hora inválida' },
+        { status: 400 }
+      )
+    }
+
+    // Não permitir agendar em horário que já passou
+    if (startTimeDate <= new Date()) {
+      return NextResponse.json(
+        { error: 'Não é possível agendar em um horário que já passou' },
+        { status: 400 }
+      )
+    }
+
     const endTime = new Date(startTimeDate.getTime() + service.duration * 60 * 1000)
+
+    // Verificar se o barbeiro já possui agendamento que sobreponha esse horário
+    const conflictingAppointment = await prisma.appointment.findFirst({
+      where: {
+        barberId,
+        status: { not: 'CANCELLED' },
+        startTime: { lt: endTime },
+        endTime: { gt: startTimeDate },
+      },
+      select: { id: true },
+    })
+
+    if (conflictingAppointment) {
+      return NextResponse.json(
+        { error: 'Esse horário já foi reservado para este barbeiro. Escolha outro horário.' },
+        { status: 409 }
+      )
+    }
 
     // Criar o agendamento
     const appointment = await prisma.appointment.create({

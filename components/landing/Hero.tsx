@@ -29,9 +29,9 @@ export default function Hero() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl"></div>
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 items-center min-w-0">
           {/* Left Content */}
-          <div className="space-y-8">
+          <div className="space-y-8 min-w-0">
             {/* Badge */}
             <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full">
               <Star className="w-4 h-4 text-yellow-400" />
@@ -105,7 +105,7 @@ export default function Hero() {
           </div>
 
           {/* Right Content - Dashboard Preview */}
-          <div className="relative">
+          <div className="relative min-w-0">
             <DashboardPreview />
             
             {/* Floating Elements */}

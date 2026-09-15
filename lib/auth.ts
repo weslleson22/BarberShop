@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
+import { ensureClientForUser } from './client-sync'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
 
@@ -124,6 +125,21 @@ export async function createUser(data: {
       },
     },
   })
+
+  // Se o novo usuário é um cliente, garantir que ele apareça na Lista de Clientes
+  if (user.role === 'CLIENT' && user.barbershopId) {
+    try {
+      await ensureClientForUser({
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        barbershopId: user.barbershopId,
+      })
+    } catch (syncError) {
+      console.error('Erro ao vincular Client ao usuário criado:', syncError)
+    }
+  }
 
   const token = generateToken({
     id: user.id,

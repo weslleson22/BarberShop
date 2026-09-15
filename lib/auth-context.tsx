@@ -1,6 +1,9 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { useIdleLogout } from '@/hooks/useIdleLogout'
+
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutos de inatividade
 
 interface User {
   id: string
@@ -29,6 +32,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Verifica localmente se o JWT ainda não expirou (mesma lógica do middleware)
+function isTokenValid(token: string): boolean {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return false
+    const payload = JSON.parse(atob(parts[1]))
+    return !payload.exp || payload.exp * 1000 > Date.now()
+  } catch {
+    return false
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -37,8 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for existing session on mount
     const token = localStorage.getItem('auth_token')
     const userData = localStorage.getItem('user_data')
-    
-    if (token && userData) {
+
+    if (token && userData && isTokenValid(token)) {
       try {
         const parsedUser = JSON.parse(userData)
         setUser(parsedUser)
@@ -47,6 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('auth_token')
         localStorage.removeItem('user_data')
       }
+    } else if (token || userData) {
+      // Token ausente/expirado ou dados corrompidos: não iniciar com sessão residual
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('user_data')
     }
     
     setLoading(false)
@@ -118,23 +137,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null)
     setLoading(false)
-    
+
     // Clear localStorage
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_data')
-    
+
     // Clear auth cookies
     document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-    
+
     // Force redirect to clear any residual state
     if (typeof window !== 'undefined') {
-      window.location.href = '/'
+      window.location.href = '/login'
     }
-  }
+  }, [])
+
+  // Logout automático por inatividade (somente com usuário autenticado)
+  useIdleLogout(logout, !!user, IDLE_TIMEOUT_MS)
 
   const updateUser = (userData: Partial<User>) => {
     setUser(prev => {

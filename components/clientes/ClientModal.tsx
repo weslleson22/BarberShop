@@ -112,6 +112,13 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
         return
       }
 
+      const phoneDigits = formData.phone.replace(/\D/g, '')
+      if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+        alert('Informe um telefone válido com DDD, no formato (00) 00000-0000')
+        setLoading(false)
+        return
+      }
+
       if (formData.email && !EMAIL_PATTERN.test(formData.email)) {
         alert('Informe um e-mail válido no formato nome@dominio.com')
         setLoading(false)
@@ -174,6 +181,12 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
       setLoading(false)
     }
   }
+
+  const trimmedName = formData.name.trim()
+  const phoneDigits = formData.phone.replace(/\D/g, '')
+  const isPhoneValid = phoneDigits.length >= 10 && phoneDigits.length <= 11
+  const isEmailValid = !formData.email || EMAIL_PATTERN.test(formData.email)
+  const isFormValid = trimmedName.length >= NAME_MIN && isPhoneValid && isEmailValid
 
   if (!isOpen) return null
 
@@ -243,7 +256,13 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
                 maxLength={15}
               />
             </div>
-            <p className="text-white/40 text-xs mt-1">Formato automático: (00) 00000-0000</p>
+            {formData.phone && !isPhoneValid ? (
+              <p className="text-red-400 text-xs mt-1">
+                Telefone incompleto. Informe DDD + número, formato (00) 00000-0000
+              </p>
+            ) : (
+              <p className="text-white/40 text-xs mt-1">Formato automático: (00) 00000-0000</p>
+            )}
           </div>
 
           {/* Email */}
@@ -265,9 +284,15 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
                 autoComplete="email"
               />
             </div>
-            <p className="text-white/40 text-xs mt-1">
-              Máscara: minúsculas, um @ e formato nome@dominio.com
-            </p>
+            {formData.email && !isEmailValid ? (
+              <p className="text-red-400 text-xs mt-1">
+                E-mail inválido. Use o formato nome@dominio.com
+              </p>
+            ) : (
+              <p className="text-white/40 text-xs mt-1">
+                Máscara: minúsculas, um @ e formato nome@dominio.com
+              </p>
+            )}
           </div>
 
           {/* Actions */}
@@ -281,8 +306,8 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 text-sm md:text-base"
+              disabled={loading || !isFormValid}
+              className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>

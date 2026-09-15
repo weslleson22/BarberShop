@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import { ensureClientForUser } from '@/lib/client-sync'
 import jwt from 'jsonwebtoken'
 
 // GET - Listar usuários
@@ -132,6 +133,22 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('Usuário criado com sucesso:', user)
+
+    // Se o novo usuário é um cliente, garantir que ele apareça na Lista de Clientes
+    if (user.role === 'CLIENT') {
+      try {
+        await ensureClientForUser({
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          barbershopId: user.barbershopId,
+        })
+      } catch (syncError) {
+        console.error('Erro ao vincular Client ao usuário criado:', syncError)
+      }
+    }
+
     return NextResponse.json(user, { status: 201 })
   } catch (error) {
     console.error('Create user error:', error)
