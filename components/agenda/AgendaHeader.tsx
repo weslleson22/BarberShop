@@ -29,9 +29,9 @@ export default function AgendaHeader({ onNewAppointment, onDateFilter }: AgendaH
         </div>
 
         {/* Toolbar - Busca, Filtros e Ações */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Search Bar */}
-          <div className="relative flex-1 min-w-[200px] max-w-md">
+          <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
             <input
               type="text"
@@ -43,7 +43,7 @@ export default function AgendaHeader({ onNewAppointment, onDateFilter }: AgendaH
           </div>
 
           {/* Filters and Actions */}
-          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             {/* Status Filter */}
             <div className="relative flex-shrink-0">
               <select
@@ -81,13 +81,12 @@ export default function AgendaHeader({ onNewAppointment, onDateFilter }: AgendaH
             </button>
 
             {/* New Appointment Button */}
-            <button 
+            <button
               onClick={onNewAppointment}
-              className="px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-2 flex-shrink-0"
+              className="w-full sm:w-auto px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 flex-shrink-0"
             >
               <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">Novo Agendamento</span>
-              <span className="sm:hidden">Novo</span>
+              <span>Novo Agendamento</span>
             </button>
           </div>
         </div>

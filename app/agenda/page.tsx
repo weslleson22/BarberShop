@@ -217,10 +217,10 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
-      
+
       {/* Conteúdo Principal */}
       <div className="w-full px-4 md:px-6">
         {/* Header fixo no topo */}
