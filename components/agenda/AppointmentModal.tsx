@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { X, Calendar, Clock, User, DollarSign, Save, Plus, Search } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { calculateAvailableSlots } from '@/lib/appointment-utils'
 
 interface Client {
   id: string
@@ -169,34 +170,49 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
     }
   }
 
-  const fetchAvailableSlots = async (date: string, barberId: string) => {
+  const fetchAvailableSlots = async (date: string, barberId: string, serviceId?: string) => {
     try {
-      console.log('Buscando horários disponíveis para:', date, barberId)
-      
-      // Generate time slots from 8:00 to 20:00
-      const slots = []
-      const workingHours = {
-        start: 8, // 8:00 AM
-        end: 20   // 8:00 PM
+      const selectedService = services.find((s) => s.id === (serviceId ?? formData.serviceId))
+      // Sem serviço escolhido ainda, usa a menor granularidade (30min) só
+      // pra mostrar a grade de horários; assim que o serviço é selecionado,
+      // handleInputChange já busca de novo com a duração real.
+      const duration = selectedService?.duration || 30
+
+      const response = await fetch(
+        `/api/appointments?date=${date}&barberId=${barberId}`
+      )
+
+      if (!response.ok) {
+        console.error('Erro ao buscar agendamentos existentes:', response.status)
+        setAvailableSlots([])
+        return
       }
-      
-      for (let hour = workingHours.start; hour < workingHours.end; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-          slots.push(time)
-        }
-      }
-      
-      // Filter out booked slots (mock implementation)
-      // In production, this would check against actual appointments
-      const availableSlots = slots.filter(slot => {
-        // Mock: some slots are unavailable
-        const mockUnavailable = ['09:00', '10:30', '14:00', '15:30', '16:00']
-        return !mockUnavailable.includes(slot)
-      })
-      
-      console.log('Horários disponíveis:', availableSlots)
-      setAvailableSlots(availableSlots)
+
+      const existingAppointmentsRaw = await response.json()
+      const barberAppointments = (Array.isArray(existingAppointmentsRaw) ? existingAppointmentsRaw : [])
+        .filter((apt: any) => apt.status !== 'CANCELLED')
+        .map((apt: any) => ({
+          id: apt.id,
+          startTime: new Date(apt.startTime),
+          endTime: new Date(apt.endTime),
+          service: { duration: apt.service.duration, price: 0, name: '' },
+          client: { name: '' },
+          barber: { name: '' },
+        }))
+
+      const dateObj = new Date(`${date}T00:00:00`)
+      const slots = calculateAvailableSlots(dateObj, duration, barberAppointments)
+
+      const now = new Date()
+      const availableTimes = slots
+        .filter((slot) => slot.isAvailable && slot.startTime > now)
+        .map((slot) => {
+          const h = slot.startTime.getHours().toString().padStart(2, '0')
+          const m = slot.startTime.getMinutes().toString().padStart(2, '0')
+          return `${h}:${m}`
+        })
+
+      setAvailableSlots(availableTimes)
     } catch (error) {
       console.error('Error fetching available slots:', error)
       setAvailableSlots([])
@@ -213,10 +229,17 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
       if (selectedService && formData.startTime) {
         const start = new Date(formData.startTime)
         const end = new Date(start.getTime() + selectedService.duration * 60000)
-        setFormData(prev => ({ 
-          ...prev, 
+        setFormData(prev => ({
+          ...prev,
           endTime: end.toISOString().slice(0, 16)
         }))
+      }
+
+      // Recalcula os horários disponíveis já com a duração do serviço
+      // escolhido (a grade muda: um serviço mais longo reduz os últimos
+      // horários possíveis do dia).
+      if (selectedDate && formData.barberId) {
+        fetchAvailableSlots(selectedDate, formData.barberId, value)
       }
     }
 

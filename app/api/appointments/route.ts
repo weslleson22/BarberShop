@@ -39,14 +39,19 @@ export async function GET(request: NextRequest) {
       startDate.setHours(0, 0, 0, 0)
       const endDate = new Date(date)
       endDate.setHours(23, 59, 59, 999)
-      
+
       where.startTime = {
         gte: startDate,
         lte: endDate,
       }
     }
 
-    if (barberId) {
+    // BARBER só enxerga a própria agenda — nunca confiar num barberId vindo
+    // da query string para essa role, senão um barbeiro poderia consultar a
+    // agenda de outro só trocando o parâmetro.
+    if (decoded.role === 'BARBER') {
+      where.barberId = decoded.id
+    } else if (barberId) {
       where.barberId = barberId
     }
 

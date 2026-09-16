@@ -41,41 +41,28 @@ export default function AgendaPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [statusFilter, setStatusFilter] = useState('')
+  const [barberFilter, setBarberFilter] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
 
   const fetchAppointments = async () => {
     try {
-      console.log('=== BUSCANDO AGENDAMENTOS DO PRISMA PARA AGENDA ===')
-      console.log('Data selecionada:', selectedDate)
-      
-      // Apenas agendamentos reais do Prisma via API pública
-      const response = await fetch('/api/appointments')
+      const dateString = selectedDate.toISOString().split('T')[0]
+      const params = new URLSearchParams({ date: dateString })
+      if (statusFilter) params.set('status', statusFilter)
+      if (barberFilter) params.set('barberId', barberFilter)
+
+      const response = await fetch(`/api/appointments?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
-        console.log('Agendamentos recebidos do Prisma:', data.length)
-        console.log('Dados completos:', data)
-        
-        // Filtrar agendamentos pela data selecionada
-        const selectedDateString = selectedDate.toISOString().split('T')[0]
-        console.log('Data selecionada (string):', selectedDateString)
-        
-        const filteredAppointments = data.filter((apt: any) => {
-          const aptDate = new Date(apt.startTime).toISOString().split('T')[0]
-          const matches = aptDate === selectedDateString
-          console.log(`Agendamento ${apt.id}: ${apt.client?.name} - Status: ${apt.status} - Data: ${aptDate} vs Selecionada: ${selectedDateString} - Match: ${matches}`)
-          return matches
-        })
-        
-        console.log('Agendamentos filtrados para a data:', filteredAppointments.length)
-        console.log('Agendamentos filtrados:', filteredAppointments)
-        setAppointments(filteredAppointments)
+        setAppointments(Array.isArray(data) ? data : [])
       } else {
-        console.error('Erro ao buscar agendamentos do Prisma:', response.status, response.statusText)
+        console.error('Erro ao buscar agendamentos:', response.status, response.statusText)
         setAppointments([])
       }
     } catch (error) {
-      console.error('Error ao buscar agendamentos do Prisma:', error)
+      console.error('Error ao buscar agendamentos:', error)
       setAppointments([])
     } finally {
       setLoading(false)
@@ -84,7 +71,7 @@ export default function AgendaPage() {
 
   useEffect(() => {
     fetchAppointments()
-  }, [selectedDate])
+  }, [selectedDate, statusFilter, barberFilter])
 
   // Aguardar carregamento inicial do contexto
   if (authLoading) {
@@ -225,7 +212,13 @@ export default function AgendaPage() {
       <div className="w-full px-4 md:px-6">
         {/* Header fixo no topo */}
         <div className="flex-shrink-0">
-          <AgendaHeader onNewAppointment={handleNewAppointment} onDateFilter={handleDateSelect} />
+          <AgendaHeader
+            onNewAppointment={handleNewAppointment}
+            onDateFilter={handleDateSelect}
+            onStatusFilter={setStatusFilter}
+            onBarberFilter={setBarberFilter}
+            hideBarberFilter={user?.role === 'BARBER'}
+          />
         </div>
         
         {/* Conteúdo com scroll */}

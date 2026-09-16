@@ -6,6 +6,7 @@ import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home } from 'lucide-react
 import Link from 'next/link'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { maskPhone, maskName as maskNameShared, maskEmail as maskEmailShared } from '@/lib/utils'
+import { calculateAvailableSlots } from '@/lib/appointment-utils'
 
 const NAME_MAX = 50
 const EMAIL_MAX = 80
@@ -123,69 +124,39 @@ export default function AgendarPage() {
       // Buscar agendamentos existentes do Prisma para verificar horários ocupados
       const response = await fetch('/api/appointments/public')
       if (response.ok) {
-        const existingAppointments = await response.json()
-        console.log('Agendamentos existentes no Prisma:', existingAppointments)
-        
-        // Gerar horários disponíveis baseado nos agendamentos existentes
-        const allSlots = [
-          { startTime: new Date(date + 'T08:00:00'), endTime: new Date(date + 'T08:30:00') },
-          { startTime: new Date(date + 'T08:30:00'), endTime: new Date(date + 'T09:00:00') },
-          { startTime: new Date(date + 'T09:00:00'), endTime: new Date(date + 'T09:30:00') },
-          { startTime: new Date(date + 'T09:30:00'), endTime: new Date(date + 'T10:00:00') },
-          { startTime: new Date(date + 'T10:00:00'), endTime: new Date(date + 'T10:30:00') },
-          { startTime: new Date(date + 'T10:30:00'), endTime: new Date(date + 'T11:00:00') },
-          { startTime: new Date(date + 'T11:00:00'), endTime: new Date(date + 'T11:30:00') },
-          { startTime: new Date(date + 'T14:00:00'), endTime: new Date(date + 'T14:30:00') },
-          { startTime: new Date(date + 'T14:30:00'), endTime: new Date(date + 'T15:00:00') },
-          { startTime: new Date(date + 'T15:00:00'), endTime: new Date(date + 'T15:30:00') },
-          { startTime: new Date(date + 'T15:30:00'), endTime: new Date(date + 'T16:00:00') },
-          { startTime: new Date(date + 'T16:00:00'), endTime: new Date(date + 'T16:30:00') },
-        ]
-        
-        const now = new Date()
+        const existingAppointmentsRaw = await response.json()
 
-        // Verificar quais horários estão disponíveis
-        const availableSlots = allSlots.map(slot => {
-          // Não permitir agendar em horário que já passou
-          if (slot.startTime <= now) {
-            return { ...slot, isAvailable: false }
-          }
-
-          // Verificar se este horário conflita com algum agendamento existente
-          // do mesmo barbeiro (agendamentos cancelados não bloqueiam o horário)
-          const isBooked = existingAppointments.some((apt: any) => {
-            if (apt.barberId !== selectedBarber.id) return false
-            if (apt.status === 'CANCELLED') return false
-
-            const aptStart = new Date(apt.startTime)
-            const aptEnd = new Date(aptStart.getTime() + apt.service.duration * 60000)
-            const slotStart = slot.startTime
-            const slotEnd = slot.endTime
-
-            // Verificar sobreposição de horários
-            return (slotStart < aptEnd && slotEnd > aptStart)
+        // Só interessa os agendamentos deste barbeiro, ainda não cancelados
+        const barberAppointments = existingAppointmentsRaw
+          .filter((apt: any) => apt.barberId === selectedBarber.id && apt.status !== 'CANCELLED')
+          .map((apt: any) => {
+            const startTime = new Date(apt.startTime)
+            return {
+              id: apt.id,
+              startTime,
+              endTime: new Date(startTime.getTime() + apt.service.duration * 60000),
+              service: { duration: apt.service.duration, price: 0, name: '' },
+              client: { name: '' },
+              barber: { name: '' },
+            }
           })
 
-          return {
-            ...slot,
-            isAvailable: !isBooked
-          }
-        })
-        
-        console.log('Horários disponíveis calculados:', availableSlots.filter(s => s.isAvailable).length)
+        // Gera os horários (08:00-20:00) considerando a duração real do
+        // serviço selecionado — o último horário possível é aquele cujo
+        // término não ultrapassa 20:00.
+        const dateObj = new Date(date + 'T00:00:00')
+        const slots = calculateAvailableSlots(dateObj, selectedService.duration, barberAppointments)
+
+        const now = new Date()
+        const availableSlots = slots.map((slot) => ({
+          ...slot,
+          isAvailable: slot.isAvailable && slot.startTime > now,
+        }))
+
         setAvailableSlots(availableSlots)
       } else {
         console.error('Erro ao buscar agendamentos do Prisma:', response.status)
-        // Se falhar, mostrar todos como disponíveis - sem mockados fixos
-        const defaultSlots = [
-          { startTime: new Date(date + 'T08:00:00'), endTime: new Date(date + 'T08:30:00'), isAvailable: true },
-          { startTime: new Date(date + 'T08:30:00'), endTime: new Date(date + 'T09:00:00'), isAvailable: true },
-          { startTime: new Date(date + 'T09:00:00'), endTime: new Date(date + 'T09:30:00'), isAvailable: true },
-          { startTime: new Date(date + 'T09:30:00'), endTime: new Date(date + 'T10:00:00'), isAvailable: true },
-          { startTime: new Date(date + 'T10:00:00'), endTime: new Date(date + 'T10:30:00'), isAvailable: true },
-          { startTime: new Date(date + 'T10:30:00'), endTime: new Date(date + 'T11:00:00'), isAvailable: true },
-        ]
-        setAvailableSlots(defaultSlots)
+        setAvailableSlots([])
       }
     } catch (error) {
       console.error('Error ao buscar horários do Prisma:', error)

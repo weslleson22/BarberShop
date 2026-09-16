@@ -52,11 +52,13 @@ export default function MeusAgendamentosPage() {
 
   const { upcoming, history } = useMemo(() => {
     const now = new Date()
+    // Próximos: só PENDENTE/CONFIRMADO com data futura.
     const upcoming = appointments
-      .filter((a) => a.status !== 'CANCELLED' && new Date(a.startTime) >= now)
+      .filter((a) => (a.status === 'PENDING' || a.status === 'CONFIRMED') && new Date(a.startTime) >= now)
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+    // Histórico: concluído, cancelado, ou qualquer agendamento já passado.
     const history = appointments
-      .filter((a) => a.status === 'CANCELLED' || new Date(a.startTime) < now)
+      .filter((a) => a.status === 'COMPLETED' || a.status === 'CANCELLED' || new Date(a.startTime) < now)
       .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
     return { upcoming, history }
   }, [appointments])

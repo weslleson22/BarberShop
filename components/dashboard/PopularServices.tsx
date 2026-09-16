@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Scissors, TrendingUp } from 'lucide-react'
 
 interface ServiceData {
@@ -11,6 +12,7 @@ interface ServiceData {
 }
 
 export default function PopularServices() {
+  const router = useRouter()
   const [services, setServices] = useState<ServiceData[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -186,7 +188,10 @@ export default function PopularServices() {
 
       {/* View All Button */}
       <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
-        <button className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors">
+        <button
+          onClick={() => router.push('/servicos')}
+          className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors"
+        >
           Ver todos os serviços
         </button>
       </div>

@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/api-auth'
+import { notifyClientStatusChange, notifyAdminsLastMinuteCancellation } from '@/lib/notifications'
+
+// Dispara as notificações de mudança de status — nunca deixa uma falha aqui
+// derrubar a resposta da API, por isso é sempre chamado dentro de try/catch.
+async function handleStatusChangeNotifications(appointment: any, previousStatus: string) {
+  if (appointment.status === previousStatus) return
+
+  try {
+    await notifyClientStatusChange(appointment, appointment.status)
+    if (appointment.status === 'CANCELLED') {
+      await notifyAdminsLastMinuteCancellation(appointment)
+    }
+  } catch (error) {
+    console.error('Erro ao criar notificação de mudança de status:', error)
+  }
+}
 
 // Carrega o agendamento e valida que quem está chamando tem permissão sobre
 // ele: mesmo tenant sempre, e para BARBER/CLIENT também precisa ser "dono"
@@ -138,6 +154,8 @@ export async function PUT(
       },
     })
 
+    await handleStatusChangeNotifications(updatedAppointment, existingAppointment.status)
+
     return NextResponse.json(updatedAppointment)
   } catch (error) {
     console.error('Update appointment error:', error)
@@ -171,6 +189,8 @@ export async function DELETE(
         service: true,
       },
     })
+
+    await handleStatusChangeNotifications(cancelledAppointment, existingAppointment.status)
 
     return NextResponse.json({
       message: 'Agendamento cancelado com sucesso',
@@ -221,6 +241,8 @@ export async function PATCH(
         service: true,
       },
     })
+
+    await handleStatusChangeNotifications(updatedAppointment, existingAppointment.status)
 
     return NextResponse.json(updatedAppointment)
   } catch (error) {

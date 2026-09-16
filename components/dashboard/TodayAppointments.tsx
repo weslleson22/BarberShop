@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Clock, Users, CheckCircle, AlertCircle, XCircle, Calendar } from 'lucide-react'
 
 interface Appointment {
@@ -21,6 +22,7 @@ interface Appointment {
 }
 
 export default function TodayAppointments() {
+  const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -179,7 +181,10 @@ export default function TodayAppointments() {
 
       {/* View All Button */}
       <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
-        <button className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors">
+        <button
+          onClick={() => router.push('/agenda')}
+          className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors"
+        >
           Ver todos os agendamentos
         </button>
       </div>

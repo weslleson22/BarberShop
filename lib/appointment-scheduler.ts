@@ -1,4 +1,6 @@
 import { prisma } from './prisma'
+import { validateAppointmentTime } from './appointment-utils'
+import { notifyBarberNewAppointment, notifyAdminsNewAppointment } from './notifications'
 
 export interface TimeSlot {
   startTime: Date
@@ -105,6 +107,14 @@ export async function criarAgendamento(data: CreateAppointmentData): Promise<any
     const startTime = typeof data.startTime === 'string' ? new Date(data.startTime) : data.startTime
     const endTime = new Date(startTime.getTime() + service.duration * 60000)
 
+    // Validar horário de funcionamento (08:00-20:00) e que não é no passado.
+    // Antes desta checagem, criarAgendamento só validava conflito de horário
+    // — nada impedia criar um agendamento às 23h, por exemplo.
+    const timeValidation = validateAppointmentTime(startTime, service.duration)
+    if (!timeValidation.isValid) {
+      throw new Error(timeValidation.error || 'Horário inválido')
+    }
+
     // Verificar disponibilidade antes de criar
     const availability = await verificarDisponibilidade(
       data.barberId,
@@ -144,6 +154,15 @@ export async function criarAgendamento(data: CreateAppointmentData): Promise<any
       },
     })
 
+    // Notificar barbeiro e admins — nunca deixar uma falha aqui impedir o
+    // agendamento de ser criado, por isso fica fora da validação acima.
+    try {
+      await notifyBarberNewAppointment(appointment)
+      await notifyAdminsNewAppointment(appointment)
+    } catch (notificationError) {
+      console.error('Erro ao criar notificações de novo agendamento:', notificationError)
+    }
+
     return appointment
   } catch (error) {
     console.error('Error creating appointment:', error)
@@ -161,10 +180,10 @@ export async function getHorariosDisponiveis(
   serviceDuration: number
 ): Promise<TimeSlot[]> {
   const startOfDay = new Date(date)
-  startOfDay.setHours(9, 0, 0, 0) // Abertura às 9:00
+  startOfDay.setHours(8, 0, 0, 0) // Abertura às 8:00
 
   const endOfDay = new Date(date)
-  endOfDay.setHours(18, 0, 0, 0) // Fechamento às 18:00
+  endOfDay.setHours(20, 0, 0, 0) // Fechamento às 20:00
 
   const timeSlots: TimeSlot[] = []
   const slotDuration = 30 // Intervalos de 30 minutos

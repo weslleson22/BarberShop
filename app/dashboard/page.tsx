@@ -34,7 +34,7 @@ function ClientDashboard() {
 
   const now = new Date()
   const upcoming = appointments
-    .filter((a) => a.status !== 'CANCELLED' && new Date(a.startTime) >= now)
+    .filter((a) => (a.status === 'PENDING' || a.status === 'CONFIRMED') && new Date(a.startTime) >= now)
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0]
 
   const formatDate = (iso: string) =>

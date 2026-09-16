@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
+import { notifyAdminsNewClient } from '@/lib/notifications'
 
 // GET - Listar clientes (equipe da barbearia; ADMIN/BARBER/RECEPTIONIST)
 export async function GET(request: NextRequest) {
@@ -19,6 +20,12 @@ export async function GET(request: NextRequest) {
 
     const where: any = {
       barbershopId: decoded.barbershopId,
+    }
+
+    // Barbeiro só vê os clientes que já têm/tiveram agendamento com ele —
+    // não a base de clientes inteira da barbearia.
+    if (decoded.role === 'BARBER') {
+      where.appointments = { some: { barberId: decoded.id } }
     }
 
     if (search) {
@@ -79,6 +86,12 @@ export async function POST(request: NextRequest) {
         barbershopId: decoded.barbershopId,
       },
     })
+
+    try {
+      await notifyAdminsNewClient(client.name, decoded.barbershopId, decoded.id)
+    } catch (notificationError) {
+      console.error('Erro ao notificar admins sobre novo cliente:', notificationError)
+    }
 
     return NextResponse.json(client, { status: 201 })
   } catch (error) {

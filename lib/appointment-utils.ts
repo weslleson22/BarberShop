@@ -48,7 +48,7 @@ export function calculateAvailableSlots(
   date: Date,
   serviceDuration: number,
   existingAppointments: Appointment[],
-  workingHours = { start: 8, end: 18 }
+  workingHours = { start: 8, end: 20 }
 ): TimeSlot[] {
   const slots: TimeSlot[] = []
   
@@ -90,7 +90,7 @@ export function calculateAvailableSlots(
 export function validateAppointmentTime(
   startTime: Date,
   serviceDuration: number,
-  workingHours = { start: 8, end: 18 }
+  workingHours = { start: 8, end: 20 }
 ): { isValid: boolean; error?: string } {
   const now = new Date()
   const endTime = new Date(startTime.getTime() + serviceDuration * 60000)
@@ -105,16 +105,14 @@ export function validateAppointmentTime(
     return { isValid: false, error: 'Fora do horário de funcionamento' }
   }
   
-  if (endTime.getHours() > workingHours.end || 
+  // Terminar EXATAMENTE no horário de fechamento é permitido (ex.: serviço de
+  // 30min às 19:30 termina às 20:00 — é o último horário válido do dia);
+  // só rejeita quando realmente ultrapassa o fechamento.
+  if (endTime.getHours() > workingHours.end ||
       (endTime.getHours() === workingHours.end && endTime.getMinutes() > 0)) {
     return { isValid: false, error: 'Serviço ultrapassa o horário de funcionamento' }
   }
-  
-  // Serviço que termina exatamente no horário de fechamento também não é permitido
-  if (endTime.getHours() === workingHours.end && endTime.getMinutes() === 0) {
-    return { isValid: false, error: 'Serviço ultrapassa o horário de funcionamento' }
-  }
-  
+
   return { isValid: true }
 }
 

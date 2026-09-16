@@ -1,17 +1,60 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, ChevronDown, Plus, Bell } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, ChevronDown, Plus } from 'lucide-react'
+
+interface Barber {
+  id: string
+  name: string
+}
 
 interface AgendaHeaderProps {
   onNewAppointment?: () => void
   onDateFilter?: (date: Date) => void
+  onStatusFilter?: (status: string) => void
+  onBarberFilter?: (barberId: string) => void
+  /** Barbeiro logado não precisa escolher a si mesmo — o filtro some. */
+  hideBarberFilter?: boolean
 }
 
-export default function AgendaHeader({ onNewAppointment, onDateFilter }: AgendaHeaderProps) {
+export default function AgendaHeader({
+  onNewAppointment,
+  onDateFilter,
+  onStatusFilter,
+  onBarberFilter,
+  hideBarberFilter,
+}: AgendaHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFilter, setDateFilter] = useState('Hoje')
   const [statusFilter, setStatusFilter] = useState('Todos')
+  const [barberFilter, setBarberFilter] = useState('Todos')
+  const [barbers, setBarbers] = useState<Barber[]>([])
+
+  useEffect(() => {
+    if (hideBarberFilter) return
+    fetch('/api/users?role=BARBER')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setBarbers(Array.isArray(data) ? data : []))
+      .catch(() => setBarbers([]))
+  }, [hideBarberFilter])
+
+  const STATUS_VALUES: Record<string, string> = {
+    Todos: '',
+    Pendente: 'PENDING',
+    Confirmado: 'CONFIRMED',
+    Concluído: 'COMPLETED',
+    Cancelado: 'CANCELLED',
+  }
+
+  const handleStatusChange = (label: string) => {
+    setStatusFilter(label)
+    onStatusFilter?.(STATUS_VALUES[label] ?? '')
+  }
+
+  const handleBarberChange = (barberId: string) => {
+    setBarberFilter(barberId)
+    onBarberFilter?.(barberId === 'Todos' ? '' : barberId)
+  }
 
   return (
     <div className="bg-gradient-to-b from-gray-900/50 to-transparent border-b border-white/6">
@@ -48,7 +91,7 @@ export default function AgendaHeader({ onNewAppointment, onDateFilter }: AgendaH
             <div className="relative flex-shrink-0">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => handleStatusChange(e.target.value)}
                 className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[100px]"
               >
                 <option value="Todos" className="bg-gray-900">Todos</option>
@@ -59,6 +102,23 @@ export default function AgendaHeader({ onNewAppointment, onDateFilter }: AgendaH
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
             </div>
+
+            {/* Barber Filter */}
+            {!hideBarberFilter && (
+              <div className="relative flex-shrink-0">
+                <select
+                  value={barberFilter}
+                  onChange={(e) => handleBarberChange(e.target.value)}
+                  className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[110px]"
+                >
+                  <option value="Todos" className="bg-gray-900">Todos barbeiros</option>
+                  {barbers.map((b) => (
+                    <option key={b.id} value={b.id} className="bg-gray-900">{b.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
+              </div>
+            )}
 
             {/* Date Filter */}
             <div className="relative flex-shrink-0">
@@ -75,10 +135,6 @@ export default function AgendaHeader({ onNewAppointment, onDateFilter }: AgendaH
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
             </div>
 
-            {/* Notification Button */}
-            <button className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all flex-shrink-0">
-              <Bell className="w-5 h-5 text-white" />
-            </button>
 
             {/* New Appointment Button */}
             <button

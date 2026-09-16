@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { criarAgendamento } from '@/lib/appointment-scheduler'
 
 // GET - Disponibilidade de horários para o fluxo de agendamento sem login.
 // Esta rota é pública de propósito (o visitante ainda não tem conta), então
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     // confiar que o serviceId/barberId enviados já são consistentes entre si
     const service = await prisma.service.findFirst({
       where: { id: serviceId, barbershopId },
-      select: { duration: true, price: true }
+      select: { id: true },
     })
 
     if (!service) {
@@ -80,7 +81,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Converter startTime para Date
     const startTimeDate = new Date(startTime)
 
     if (isNaN(startTimeDate.getTime())) {
@@ -90,67 +90,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Não permitir agendar em horário que já passou
-    if (startTimeDate <= new Date()) {
-      return NextResponse.json(
-        { error: 'Não é possível agendar em um horário que já passou' },
-        { status: 400 }
-      )
-    }
-
-    const endTime = new Date(startTimeDate.getTime() + service.duration * 60 * 1000)
-
-    // Verificar se o barbeiro já possui agendamento que sobreponha esse horário
-    const conflictingAppointment = await prisma.appointment.findFirst({
-      where: {
-        barberId,
-        status: { not: 'CANCELLED' },
-        startTime: { lt: endTime },
-        endTime: { gt: startTimeDate },
-      },
-      select: { id: true },
+    // Delega criação (valida horário de funcionamento 08:00-20:00, conflito
+    // de agenda e dispara as notificações) para a mesma função usada pelo
+    // fluxo autenticado — evita duas implementações divergentes da mesma regra.
+    const appointment = await criarAgendamento({
+      barbershopId,
+      clientId,
+      barberId,
+      serviceId,
+      startTime: startTimeDate,
+      notes: notes || '',
     })
 
-    if (conflictingAppointment) {
-      return NextResponse.json(
-        { error: 'Esse horário já foi reservado para este barbeiro. Escolha outro horário.' },
-        { status: 409 }
-      )
-    }
-
-    // Criar o agendamento
-    const appointment = await prisma.appointment.create({
-      data: {
-        clientId,
-        barberId,
-        serviceId,
-        startTime: startTimeDate,
-        endTime,
-        status: 'PENDING',
-        notes: notes || '',
-        barbershopId,
-        totalAmount: service.price,
-      },
-      include: {
-        client: true,
-        barber: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        service: true,
-      },
-    })
-
-    console.log('Agendamento criado com sucesso:', appointment)
     return NextResponse.json(appointment, { status: 201 })
   } catch (error) {
     console.error('Create appointment error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erro ao criar agendamento' },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }

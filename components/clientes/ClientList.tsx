@@ -9,6 +9,10 @@ interface Client {
   phone: string
   email?: string
   createdAt: string
+  lastAppointment?: {
+    service: string
+    startTime: string
+  }
   _count?: {
     appointments: number
   }
@@ -236,6 +240,11 @@ export default function ClientList({
                         <span className="text-white font-semibold text-sm md:text-base">{client._count?.appointments || 0}</span>
                         <span className="text-white/60 text-xs md:text-sm hidden sm:inline">visitas</span>
                       </div>
+                      {client.lastAppointment && (
+                        <p className="text-white/50 text-xs mt-1 hidden md:block">
+                          Última: {new Date(client.lastAppointment.startTime).toLocaleDateString('pt-BR')} · {client.lastAppointment.service}
+                        </p>
+                      )}
                     </td>
                     <td className="px-3 md:px-4 py-3 md:py-4 hidden md:table-cell">
                       <div className="text-white/80 text-xs md:text-sm">

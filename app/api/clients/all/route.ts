@@ -11,10 +11,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
+    const where: any = { barbershopId: user.barbershopId }
+
+    // Barbeiro só vê os clientes que já têm/tiveram agendamento com ele —
+    // não a base de clientes inteira da barbearia.
+    if (user.role === 'BARBER') {
+      where.appointments = { some: { barberId: user.id } }
+    }
+
     const clients = await prisma.client.findMany({
-      where: {
-        barbershopId: user.barbershopId,
-      },
+      where,
       include: {
         _count: {
           select: {

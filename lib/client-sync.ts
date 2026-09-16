@@ -1,4 +1,5 @@
 import { prisma } from './prisma'
+import { notifyAdminsNewClient } from './notifications'
 
 interface SyncClientParams {
   userId: string
@@ -55,7 +56,7 @@ export async function ensureClientForUser({
     })
   }
 
-  return prisma.client.create({
+  const newClient = await prisma.client.create({
     data: {
       name,
       email: normalizedEmail || null,
@@ -66,4 +67,12 @@ export async function ensureClientForUser({
       userId,
     },
   })
+
+  try {
+    await notifyAdminsNewClient(newClient.name, barbershopId)
+  } catch (error) {
+    console.error('Erro ao notificar admins sobre novo cliente:', error)
+  }
+
+  return newClient
 }

@@ -14,6 +14,10 @@ interface Client {
   phone: string
   email?: string
   createdAt: string
+  lastAppointment?: {
+    service: string
+    startTime: string
+  }
   _count?: {
     appointments: number
   }
@@ -29,7 +33,7 @@ export default function ClientesPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null)
 
   useEffect(() => {
-    if (user && (user.role === 'ADMIN' || user.role === 'BARBER')) {
+    if (user && (user.role === 'ADMIN' || user.role === 'BARBER' || user.role === 'RECEPTIONIST')) {
       fetchClients()
     }
   }, [user])
@@ -45,7 +49,7 @@ export default function ClientesPage() {
   }
 
   // Verificar se usuário tem permissão
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'BARBER')) {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'BARBER' && user.role !== 'RECEPTIONIST')) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

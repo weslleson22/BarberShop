@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
 import { ROLE_LABELS, type UserRole } from '@/lib/roles'
+import NotificationBell from './NotificationBell'
 import {
   Home,
   LayoutDashboard,
@@ -14,7 +15,6 @@ import {
   UserCog,
   Settings,
   Search,
-  Bell,
   LogOut,
   ChevronDown,
   Menu,
@@ -165,10 +165,7 @@ export default function DropdownHeader() {
           {/* Right Actions */}
           <div className="flex items-center gap-2">
             {/* Notifications */}
-            <button className="relative p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all" aria-label="Notificações">
-              <Bell className="w-5 h-5 text-white" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            {user && <NotificationBell />}
 
             {/* User Avatar */}
             <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg">

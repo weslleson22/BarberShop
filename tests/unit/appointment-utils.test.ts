@@ -237,25 +237,45 @@ describe('Appointment Utils - Unit Tests', () => {
     })
     
     it('deve rejeitar horário após o funcionamento', () => {
-      // Criar data futura após o horário de funcionamento
+      // Criar data futura após o horário de funcionamento (padrão: 08:00-20:00)
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
-      tomorrow.setHours(19, 0, 0, 0)
-      
+      tomorrow.setHours(20, 30, 0, 0)
+
       const result = validateAppointmentTime(tomorrow, 30)
-      
+
       expect(result.isValid).toBe(false)
       expect(result.error).toBe('Fora do horário de funcionamento')
     })
+
+    it('deve permitir o último horário possível às 19:30 (serviço de 30min, fecha às 20:00)', () => {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      tomorrow.setHours(19, 30, 0, 0)
+
+      const result = validateAppointmentTime(tomorrow, 30)
+
+      expect(result.isValid).toBe(true)
+    })
     
-    it('deve rejeitar serviço que ultrapassa horário de funcionamento', () => {
-      // Criar data futura com serviço que termina após o horário de funcionamento (18:00)
+    it('deve permitir serviço que termina exatamente no horário de fechamento', () => {
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
       tomorrow.setHours(16, 30, 0, 0) // 16:30
-      
-      const result = validateAppointmentTime(tomorrow, 90, { start: 8, end: 18 }) // 90 minutos = termina às 18:00
-      
+
+      const result = validateAppointmentTime(tomorrow, 90, { start: 8, end: 18 }) // 90 minutos = termina exatamente às 18:00
+
+      expect(result.isValid).toBe(true)
+    })
+
+    it('deve rejeitar serviço que ultrapassa horário de funcionamento', () => {
+      // Serviço que realmente ultrapassa o fechamento (18:00)
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      tomorrow.setHours(17, 0, 0, 0) // 17:00
+
+      const result = validateAppointmentTime(tomorrow, 90, { start: 8, end: 18 }) // 90 minutos = termina às 18:30, ultrapassa
+
       expect(result.isValid).toBe(false)
       expect(result.error).toBe('Serviço ultrapassa o horário de funcionamento')
     })
