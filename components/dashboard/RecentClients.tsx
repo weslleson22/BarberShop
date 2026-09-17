@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Users, Calendar, DollarSign } from 'lucide-react'
 
 interface Client {
@@ -20,7 +20,6 @@ interface Client {
 }
 
 export default function RecentClients() {
-  const router = useRouter()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -199,12 +198,12 @@ export default function RecentClients() {
 
       {/* View All Button */}
       <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
-        <button
-          onClick={() => router.push('/clientes')}
-          className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors"
+        <Link
+          href="/clientes"
+          className="block w-full py-2.5 md:py-3 text-center text-yellow-400 hover:text-yellow-300 hover:bg-white/5 font-medium text-sm md:text-base rounded-lg transition-all"
         >
           Ver todos os clientes
-        </button>
+        </Link>
       </div>
     </div>
   )

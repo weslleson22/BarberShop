@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home, Star, Award, CheckCircle2, Scissors, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { maskPhone, maskName as maskNameShared, maskEmail as maskEmailShared } from '@/lib/utils'
@@ -26,6 +27,9 @@ interface Barber {
   id: string
   name: string
   email: string
+  avatar?: string
+  bio?: string
+  phone?: string
 }
 
 interface TimeSlot {
@@ -36,6 +40,7 @@ interface TimeSlot {
 
 export default function AgendarPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [step, setStep] = useState(1)
   const [services, setServices] = useState<Service[]>([])
   const [barbers, setBarbers] = useState<Barber[]>([])
@@ -57,6 +62,16 @@ export default function AgendarPage() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      setClientData((prev) => ({
+        name: prev.name || user.name || '',
+        email: prev.email || user.email || '',
+        phone: prev.phone || user.phone || '',
+      }))
+    }
+  }, [user])
 
   useEffect(() => {
     if (mounted) {
@@ -208,13 +223,24 @@ export default function AgendarPage() {
 
     setLoading(true)
     try {
-      // Criar cliente primeiro
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const authHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (token) {
+        authHeaders['Authorization'] = `Bearer ${token}`
+      }
+
+      // Criar ou buscar cliente
       const clientResponse = await fetch('/api/clients/public', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...clientData, name: clientData.name.trim() }),
+        headers: authHeaders,
+        credentials: 'include',
+        body: JSON.stringify({ 
+          ...clientData, 
+          name: clientData.name.trim(),
+          userId: user?.id,
+        }),
       })
 
       let client
@@ -222,7 +248,10 @@ export default function AgendarPage() {
         client = await clientResponse.json()
       } else {
         // Se já existir, buscar por telefone
-        const searchResponse = await fetch(`/api/clients/public?phone=${encodeURIComponent(clientData.phone)}`)
+        const searchResponse = await fetch(`/api/clients/public?phone=${encodeURIComponent(clientData.phone)}`, {
+          headers: authHeaders,
+          credentials: 'include',
+        })
         if (searchResponse.ok) {
           const existingClients = await searchResponse.json()
           client = existingClients[0]
@@ -246,9 +275,8 @@ export default function AgendarPage() {
 
       const appointmentResponse = await fetch('/api/appointments/public', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders,
+        credentials: 'include',
         body: JSON.stringify(appointmentData),
       })
 
@@ -256,6 +284,16 @@ export default function AgendarPage() {
         const appointment = await appointmentResponse.json()
         console.log('Agendamento criado no Prisma:', appointment)
         
+        // Notificar sininho em tempo real (mesma aba e outras abas abertas)
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('notification-refresh'))
+          try {
+            const bc = new BroadcastChannel('barbershop-notifications')
+            bc.postMessage({ type: 'APPOINTMENT_CREATED', appointmentId: appointment.id })
+            bc.close()
+          } catch {}
+        }
+
         alert('Agendamento realizado com sucesso!\n\n' +
               'Serviço: ' + selectedService.name + '\n' +
               'Barbeiro: ' + selectedBarber.name + '\n' +
@@ -264,7 +302,11 @@ export default function AgendarPage() {
               'Telefone: ' + clientData.phone + '\n' +
               'ID do Agendamento: ' + appointment.id)
 
-        router.push('/')
+        if (user?.role === 'CLIENT') {
+          router.push('/meus-agendamentos')
+        } else {
+          router.push('/dashboard')
+        }
       } else {
         const error = await appointmentResponse.json()
         alert(error.error || 'Erro ao realizar agendamento')
@@ -375,25 +417,125 @@ export default function AgendarPage() {
         {/* Step 2: Select Barber */}
         {step === 2 && (
           <div>
-            <h2 className="text-2xl font-bold text-center mb-8 text-white">Escolha o Barbeiro</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {barbers.map((barber) => (
-                <div
-                  key={barber.id}
-                  onClick={() => handleBarberSelect(barber)}
-                  className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6 cursor-pointer hover:bg-white/10 transition-all border-2 border-transparent hover:border-yellow-400/50"
-                >
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-black" />
+            <div className="text-center mb-8">
+              <span className="text-yellow-400 text-xs font-bold uppercase tracking-widest px-3 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded-full inline-block mb-3">
+                Passo 2 de 3
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Escolha o Barbeiro</h2>
+              <p className="text-white/60 text-sm md:text-base max-w-lg mx-auto">
+                Selecione o profissional especialista para realizar seu atendimento
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {barbers.map((barber) => {
+                const isSelected = selectedBarber?.id === barber.id
+                return (
+                  <div
+                    key={barber.id}
+                    onClick={() => handleBarberSelect(barber)}
+                    className={`relative group bg-gradient-to-br from-gray-800/60 to-black/60 border rounded-2xl p-5 md:p-6 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+                      isSelected
+                        ? 'border-yellow-400 ring-2 ring-yellow-400/40 bg-yellow-400/5'
+                        : 'border-white/10 hover:border-yellow-400/50 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    {/* Header do Card com Foto, Status e Informações */}
+                    <div className="flex items-start gap-4">
+                      {/* Avatar / Foto */}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 p-0.5 shadow-lg shadow-black/50">
+                          <div className="w-full h-full bg-gray-900 rounded-[14px] overflow-hidden flex items-center justify-center">
+                            {barber.avatar ? (
+                              <img
+                                src={barber.avatar}
+                                alt={barber.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <span className="text-yellow-400 font-bold text-2xl">
+                                {barber.name.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Status Disponível */}
+                        <div className="absolute -bottom-1.5 -right-1.5 bg-emerald-950 border border-emerald-500/40 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span className="text-[10px] font-semibold text-emerald-300">Ativo</span>
+                        </div>
+                      </div>
+
+                      {/* Nome, Título e Avaliação */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-yellow-400 transition-colors truncate">
+                            {barber.name}
+                          </h3>
+                          {isSelected && (
+                            <span className="flex items-center gap-1 text-[11px] font-bold text-yellow-400 bg-yellow-400/10 border border-yellow-400/30 px-2 py-0.5 rounded-full flex-shrink-0">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Selecionado
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-yellow-400/90 text-xs font-medium mb-2 flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5 flex-shrink-0" />
+                          Barbeiro Profissional
+                        </p>
+
+                        <div className="flex items-center gap-2 text-xs text-white/70">
+                          <div className="flex items-center text-yellow-400">
+                            <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400 mr-1" />
+                            <span className="font-bold text-white text-xs">4.9</span>
+                          </div>
+                          <span className="text-white/30">•</span>
+                          <span className="text-white/60 text-xs">Atendimento Premium</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="ml-4">
-                      <h3 className="text-lg font-semibold text-white">{barber.name}</h3>
-                      <p className="text-white/60">{barber.email}</p>
+
+                    {/* Descrição / Bio */}
+                    <div className="mt-4 pt-3 border-t border-white/5">
+                      <p className="text-white/70 text-xs sm:text-sm leading-relaxed line-clamp-2">
+                        {barber.bio || 'Especialista em cortes modernos, visagismo masculino e barboterapia completa com toalha quente.'}
+                      </p>
+                    </div>
+
+                    {/* Especialidades / Tags */}
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 text-white/80 border border-white/10">
+                        ✂️ Degradê / Fade
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 text-white/80 border border-white/10">
+                        🧔 Barboterapia
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 text-white/80 border border-white/10">
+                        💈 Tesoura & Navalha
+                      </span>
+                    </div>
+
+                    {/* Botão de Seleção */}
+                    <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                      <span className="text-white/40 text-xs">
+                        {barber.phone ? `WhatsApp: ${barber.phone}` : 'Atendimento por horário'}
+                      </span>
+                      <button
+                        type="button"
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-yellow-400 text-black shadow-md shadow-yellow-400/20'
+                            : 'bg-white/10 text-white group-hover:bg-yellow-400 group-hover:text-black'
+                        }`}
+                      >
+                        {isSelected ? 'Selecionado' : 'Escolher Barbeiro'}
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
@@ -411,9 +553,18 @@ export default function AgendarPage() {
                   <p className="font-medium text-white">{selectedService?.name}</p>
                   <p className="text-yellow-400">{selectedService && formatCurrency(selectedService.price)}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-white/60">Barbeiro</p>
-                  <p className="font-medium text-white">{selectedBarber?.name}</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center flex-shrink-0 border border-yellow-400/30">
+                    {selectedBarber?.avatar ? (
+                      <img src={selectedBarber.avatar} alt={selectedBarber.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-black font-bold text-xs">{selectedBarber?.name?.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/60">Barbeiro</p>
+                    <p className="font-semibold text-white text-sm">{selectedBarber?.name}</p>
+                  </div>
                 </div>
               </div>
             </div>

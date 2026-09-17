@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Menu, X, LogIn, ArrowRight } from 'lucide-react'
+import NotificationBell from '@/components/shared/NotificationBell'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -46,7 +47,8 @@ export default function Header() {
           </nav>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
+            {user && <NotificationBell />}
             <button 
               onClick={handleLogin}
               className="px-4 py-2 text-white/80 hover:text-white border border-white/20 rounded-lg transition-all hover:border-white/40"
@@ -62,13 +64,16 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-white/80 hover:text-white"
-          >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Mobile Menu Button & Notification */}
+          <div className="md:hidden flex items-center gap-2">
+            {user && <NotificationBell />}
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 text-white/80 hover:text-white"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}

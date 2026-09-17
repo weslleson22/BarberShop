@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Clock, Users, CheckCircle, AlertCircle, XCircle, Calendar } from 'lucide-react'
 
 interface Appointment {
@@ -18,11 +18,11 @@ interface Appointment {
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED'
   barber: {
     name: string
+    avatar?: string
   }
 }
 
 export default function TodayAppointments() {
-  const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -32,13 +32,12 @@ export default function TodayAppointments() {
 
   const fetchTodayAppointments = async () => {
     try {
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date()
-      const todayStr = today.toISOString().split('T')[0]
-      
-      console.log('=== BUSCANDO AGENDAMENTOS DE HOJE ===')
-      console.log('Data de hoje:', todayStr)
-      
+      // Local today date bounds
+      const now = new Date()
+      const todayYear = now.getFullYear()
+      const todayMonth = now.getMonth()
+      const todayDay = now.getDate()
+
       const response = await fetch('/api/appointments')
       if (!response.ok) {
         console.error('Erro ao buscar agendamentos de hoje:', response.status)
@@ -51,24 +50,16 @@ export default function TodayAppointments() {
         ? allAppointments.filter((apt: any) => apt?.client && apt?.service)
         : []
 
-      // Filter appointments for today
+      // Filter appointments for today using local calendar date
       const todayAppointments = validAppointments.filter((apt: any) => {
-        const aptDate = new Date(apt.startTime).toISOString().split('T')[0]
-        const isToday = aptDate === todayStr
-        
-        if (isToday) {
-          console.log('Agendamento de hoje encontrado:', {
-            client: apt.client,
-            service: apt.service,
-            time: apt.startTime,
-            status: apt.status
-          })
-        }
-        
-        return isToday
+        const aptDate = new Date(apt.startTime)
+        return (
+          aptDate.getFullYear() === todayYear &&
+          aptDate.getMonth() === todayMonth &&
+          aptDate.getDate() === todayDay
+        )
       })
-      
-      console.log('Agendamentos de hoje filtrados:', todayAppointments.length)
+
       setAppointments(todayAppointments)
       
     } catch (error) {
@@ -170,24 +161,44 @@ export default function TodayAppointments() {
               </div>
             </div>
 
-            {/* Status */}
-            <div className={`flex items-center space-x-1.5 md:space-x-2 px-2 md:px-3 py-1 rounded-lg border flex-shrink-0 ${getStatusColor(appointment.status)}`}>
-              {getStatusIcon(appointment.status)}
-              <span className="text-xs font-medium">{getStatusText(appointment.status)}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+              {/* Barber Info */}
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg flex-shrink-0">
+                {appointment.barber?.avatar ? (
+                  <img
+                    src={appointment.barber.avatar}
+                    alt={appointment.barber.name}
+                    className="w-5 h-5 rounded-full object-cover border border-yellow-400/40"
+                  />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                    <span className="text-black font-bold text-[10px]">
+                      {appointment.barber?.name?.charAt(0).toUpperCase() || 'B'}
+                    </span>
+                  </div>
+                )}
+                <span className="text-white/80 text-xs truncate max-w-[110px]">
+                  {appointment.barber?.name || 'Barbeiro'}
+                </span>
+              </div>
 
-      {/* View All Button */}
-      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
-        <button
-          onClick={() => router.push('/agenda')}
-          className="w-full py-2.5 md:py-3 text-yellow-400 hover:text-yellow-300 font-medium text-sm md:text-base transition-colors"
-        >
-          Ver todos os agendamentos
-        </button>
-      </div>
+              {/* Status */}
+              <div className={`flex items-center space-x-1.5 md:space-x-2 px-2 md:px-3 py-1 rounded-lg border flex-shrink-0 ${getStatusColor(appointment.status)}`}>
+                {getStatusIcon(appointment.status)}
+                <span className="text-xs font-medium">{getStatusText(appointment.status)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* View All Button */}
+        <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
+          <Link
+            href="/agenda"
+            className="block w-full py-2.5 md:py-3 text-center text-yellow-400 hover:text-yellow-300 hover:bg-white/5 font-medium text-sm md:text-base rounded-lg transition-all"
+          >
+            Ver todos os agendamentos
+          </Link>
+        </div>
     </div>
   )
 }

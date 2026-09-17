@@ -17,7 +17,7 @@ interface ClientAppointment {
   startTime: string
   status: string
   service: { name: string; price: number }
-  barber: { name: string }
+  barber: { name: string; avatar?: string }
 }
 
 function ClientDashboard() {
@@ -65,7 +65,22 @@ function ClientDashboard() {
                     <Clock className="w-4 h-4" />
                     {formatDate(upcoming.startTime)}
                   </div>
-                  <p className="text-white/70 text-sm">com {upcoming.barber.name}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center flex-shrink-0 border border-yellow-400/30">
+                      {upcoming.barber?.avatar ? (
+                        <img
+                          src={upcoming.barber.avatar}
+                          alt={upcoming.barber.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-black font-bold text-[10px]">
+                          {upcoming.barber?.name?.charAt(0).toUpperCase() || 'B'}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-white/80 text-sm">com <span className="text-white font-medium">{upcoming.barber.name}</span></p>
+                  </div>
                 </>
               ) : (
                 <p className="text-white/60">Você não tem nenhum agendamento futuro.</p>

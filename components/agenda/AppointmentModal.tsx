@@ -85,6 +85,13 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
       fetchBarbers()
       
       if (appointment) {
+        const startD = new Date(appointment.startTime)
+        const endD = new Date(appointment.endTime)
+        const dateStr = !isNaN(startD.getTime())
+          ? `${startD.getFullYear()}-${String(startD.getMonth() + 1).padStart(2, '0')}-${String(startD.getDate()).padStart(2, '0')}`
+          : ''
+
+        setSelectedDate(dateStr)
         setFormData({
           clientId: appointment.client?.id || '',
           serviceId: appointment.service?.id || '',
@@ -94,6 +101,9 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           notes: appointment.notes || ''
         })
         setClientQuery(appointment.client?.name || '')
+        if (dateStr && appointment.barber?.id) {
+          fetchAvailableSlots(dateStr, appointment.barber.id, appointment.service?.id)
+        }
       } else {
         setFormData({
           clientId: isClient ? user?.id || '' : '',
@@ -190,7 +200,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
       const existingAppointmentsRaw = await response.json()
       const barberAppointments = (Array.isArray(existingAppointmentsRaw) ? existingAppointmentsRaw : [])
-        .filter((apt: any) => apt.status !== 'CANCELLED')
+        .filter((apt: any) => apt.status !== 'CANCELLED' && (!appointment?.id || apt.id !== appointment.id))
         .map((apt: any) => ({
           id: apt.id,
           startTime: new Date(apt.startTime),
@@ -205,7 +215,11 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
       const now = new Date()
       const availableTimes = slots
-        .filter((slot) => slot.isAvailable && slot.startTime > now)
+        .filter((slot) => {
+          const isFuture = slot.startTime > now
+          const isCurrentSlot = appointment?.startTime && Math.abs(new Date(appointment.startTime).getTime() - slot.startTime.getTime()) < 60000
+          return slot.isAvailable && (isFuture || isCurrentSlot)
+        })
         .map((slot) => {
           const h = slot.startTime.getHours().toString().padStart(2, '0')
           const m = slot.startTime.getMinutes().toString().padStart(2, '0')
@@ -264,41 +278,55 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
     setLoading(true)
 
     try {
-      const selectedService = services.find(s => s.id === formData.serviceId)
-      const selectedClient = clients.find(c => c.id === formData.clientId)
-      const selectedBarber = barbers.find(b => b.id === formData.barberId)
+      const selectedService = services.find(s => s.id === formData.serviceId) || appointment?.service
+      const selectedClient = clients.find(c => c.id === formData.clientId) || appointment?.client
+      const selectedBarber = barbers.find(b => b.id === formData.barberId) || appointment?.barber
 
-      if (!selectedService || !selectedClient || !selectedBarber) {
+      if (!formData.serviceId || (!formData.clientId && !isClient && !appointment?.client?.id) || !formData.barberId || !formData.startTime) {
         alert('Por favor, preencha todos os campos obrigatórios')
         setLoading(false)
         return
       }
 
+      const totalAmount = selectedService ? Number(selectedService.price) : Number(appointment?.totalAmount || 0)
+
       const appointmentData = {
-        clientId: formData.clientId,
+        clientId: formData.clientId || (isClient ? user?.id : appointment?.client?.id),
         serviceId: formData.serviceId,
         barberId: formData.barberId,
         startTime: new Date(formData.startTime),
         endTime: new Date(formData.endTime),
-        totalAmount: selectedService.price,
+        totalAmount,
         notes: formData.notes
       }
 
       console.log('Enviando dados do agendamento:', appointmentData)
 
       if (appointment?.id) {
-        // Update existing appointment
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+        const authHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+
         const response = await fetch(`/api/appointments/${appointment.id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: authHeaders,
+          credentials: 'include',
           body: JSON.stringify(appointmentData),
         })
 
         if (response.ok) {
           const result = await response.json()
           console.log('Agendamento atualizado:', result)
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('notification-refresh'))
+            try {
+              const channel = new BroadcastChannel('barbershop-notifications')
+              channel.postMessage({ type: 'APPOINTMENT_UPDATED' })
+              channel.close()
+            } catch {}
+          }
           onSave(result)
           onClose()
         } else {
@@ -308,17 +336,30 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
         }
       } else {
         // Create new appointment
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+        const authHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+
         const response = await fetch('/api/appointments', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: authHeaders,
+          credentials: 'include',
           body: JSON.stringify(appointmentData),
         })
 
         if (response.ok) {
           const result = await response.json()
           console.log('Agendamento criado:', result)
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('notification-refresh'))
+            try {
+              const channel = new BroadcastChannel('barbershop-notifications')
+              channel.postMessage({ type: 'APPOINTMENT_CREATED' })
+              channel.close()
+            } catch {}
+          }
           onSave(result)
           onClose()
         } else {

@@ -1,6 +1,6 @@
 import { prisma } from './prisma'
 import { validateAppointmentTime } from './appointment-utils'
-import { notifyBarberNewAppointment, notifyAdminsNewAppointment } from './notifications'
+import { notifyBarberNewAppointment, notifyAdminsNewAppointment, notifyClientNewAppointment } from './notifications'
 
 export interface TimeSlot {
   startTime: Date
@@ -159,6 +159,7 @@ export async function criarAgendamento(data: CreateAppointmentData): Promise<any
     try {
       await notifyBarberNewAppointment(appointment)
       await notifyAdminsNewAppointment(appointment)
+      await notifyClientNewAppointment(appointment)
     } catch (notificationError) {
       console.error('Erro ao criar notificações de novo agendamento:', notificationError)
     }

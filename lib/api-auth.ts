@@ -5,7 +5,15 @@ import { verifyToken, JWTPayload } from './auth'
 // Único ponto de verdade para "quem está fazendo esta requisição" nas rotas de API —
 // nunca confiar em barbershopId/userId/role enviados no corpo/query da requisição.
 export function getAuthUser(request: NextRequest): JWTPayload | null {
-  const token = request.cookies.get('auth-token')?.value
+  let token = request.cookies.get('auth-token')?.value
+
+  if (!token) {
+    const authHeader = request.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7)
+    }
+  }
+
   if (!token) return null
 
   try {

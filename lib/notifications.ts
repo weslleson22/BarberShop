@@ -6,8 +6,10 @@ import { prisma } from './prisma'
 // derrubar a operação principal (criar agendamento, mudar status etc.), por
 // isso cada chamada é envolvida em try/catch pelos callers.
 
-function formatDateTime(date: Date): string {
-  return date.toLocaleString('pt-BR', {
+function formatDateTime(date: Date | string): string {
+  const d = date instanceof Date ? date : new Date(date)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -57,6 +59,25 @@ export async function notifyAdminsNewAppointment(appointment: AppointmentForNoti
   )
 }
 
+// Cliente: confirmação de novo agendamento realizado.
+export async function notifyClientNewAppointment(
+  appointment: AppointmentForNotification & { createdBy?: string | null }
+) {
+  const client = await prisma.client.findUnique({
+    where: { id: appointment.clientId },
+    select: { userId: true },
+  })
+
+  const targetUserId = client?.userId || appointment.createdBy
+  if (!targetUserId) return
+
+  await createNotification(
+    targetUserId,
+    'Agendamento confirmado',
+    `Seu agendamento para ${formatDateTime(appointment.startTime)} foi realizado com sucesso.`
+  )
+}
+
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'marcado como pendente',
   CONFIRMED: 'confirmado',
@@ -87,7 +108,12 @@ export async function notifyClientStatusChange(
 
 // Admins da barbearia: cancelamento de última hora (dentro de 2h do horário marcado).
 export async function notifyAdminsLastMinuteCancellation(appointment: AppointmentForNotification) {
-  const hoursUntilAppointment = (appointment.startTime.getTime() - Date.now()) / (1000 * 60 * 60)
+  const appointmentTime = appointment.startTime instanceof Date
+    ? appointment.startTime.getTime()
+    : new Date(appointment.startTime).getTime()
+  if (isNaN(appointmentTime)) return
+
+  const hoursUntilAppointment = (appointmentTime - Date.now()) / (1000 * 60 * 60)
   if (hoursUntilAppointment > 2 || hoursUntilAppointment < 0) return
 
   const admins = await prisma.user.findMany({

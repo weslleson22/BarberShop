@@ -11,7 +11,7 @@ interface ClientAppointment {
   startTime: string
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
   service: { name: string; price: number }
-  barber: { name: string }
+  barber: { name: string; avatar?: string }
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -155,7 +155,15 @@ export default function MeusAgendamentosPage() {
                       {formatDate(a.startTime)}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <UserIcon className="w-3.5 h-3.5" />
+                      {a.barber?.avatar ? (
+                        <img
+                          src={a.barber.avatar}
+                          alt={a.barber.name}
+                          className="w-4 h-4 rounded-full object-cover border border-yellow-400/40"
+                        />
+                      ) : (
+                        <UserIcon className="w-3.5 h-3.5" />
+                      )}
                       {a.barber.name}
                     </span>
                   </div>

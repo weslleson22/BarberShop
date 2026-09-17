@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { criarAgendamento } from '@/lib/appointment-scheduler'
+import { getAuthUser } from '@/lib/api-auth'
 
 // GET - Disponibilidade de horários para o fluxo de agendamento sem login.
 // Esta rota é pública de propósito (o visitante ainda não tem conta), então
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
     // Delega criação (valida horário de funcionamento 08:00-20:00, conflito
     // de agenda e dispara as notificações) para a mesma função usada pelo
     // fluxo autenticado — evita duas implementações divergentes da mesma regra.
+    const authUser = getAuthUser(request)
     const appointment = await criarAgendamento({
       barbershopId,
       clientId,
@@ -100,6 +102,7 @@ export async function POST(request: NextRequest) {
       serviceId,
       startTime: startTimeDate,
       notes: notes || '',
+      createdBy: authUser?.id,
     })
 
     return NextResponse.json(appointment, { status: 201 })

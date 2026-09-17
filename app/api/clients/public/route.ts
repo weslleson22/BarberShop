@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/api-auth'
 
 // GET - Buscar clientes (público)
 export async function GET(request: NextRequest) {
@@ -57,7 +58,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { name, phone, email } = data
+    const { name, phone, email, userId } = data
+    const authUser = getAuthUser(request)
+    const finalUserId = userId || authUser?.id
 
     console.log('Dados recebidos para criar cliente:', { name, phone, email })
 
@@ -95,18 +98,26 @@ export async function POST(request: NextRequest) {
     console.log('Cliente existente encontrado:', existingClient)
 
     if (existingClient) {
+      if (!existingClient.userId && finalUserId) {
+        await prisma.client.update({
+          where: { id: existingClient.id },
+          data: { userId: finalUserId },
+        })
+        existingClient.userId = finalUserId
+      }
       console.log('Retornando cliente existente:', existingClient)
       return NextResponse.json(existingClient)
     }
 
     // Criar novo cliente
-    console.log('Criando novo cliente com dados:', { name, phone, email })
+    console.log('Criando novo cliente com dados:', { name, phone, email, userId: finalUserId })
     const client = await prisma.client.create({
       data: {
         name,
         phone,
         email: email || null,
-        barbershopId
+        barbershopId,
+        userId: finalUserId || null,
       }
     })
 

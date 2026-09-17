@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
@@ -8,6 +8,7 @@ import AgendaHeader from '@/components/agenda/AgendaHeader'
 import CalendarView from '@/components/agenda/CalendarView'
 import AppointmentList from '@/components/agenda/AppointmentList'
 import AppointmentModal from '@/components/agenda/AppointmentModal'
+import AppointmentDetailsModal from '@/components/agenda/AppointmentDetailsModal'
 
 interface Appointment {
   id: string
@@ -35,23 +36,69 @@ interface Appointment {
   }
 }
 
+// Formatação segura de data no timezone local (evita bug de offset UTC após as 21h)
+function formatLocalDate(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export default function AgendaPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [datePeriod, setDatePeriod] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all')
   const [statusFilter, setStatusFilter] = useState('')
   const [barberFilter, setBarberFilter] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  
+  // Modais
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [selectedDetailsAppointment, setSelectedDetailsAppointment] = useState<Appointment | null>(null)
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
-      const dateString = selectedDate.toISOString().split('T')[0]
-      const params = new URLSearchParams({ date: dateString })
+      setLoading(true)
+      const params = new URLSearchParams()
+
+      // Filtro de data por período ou dia específico
+      if (datePeriod === 'custom') {
+        params.set('date', formatLocalDate(selectedDate))
+      } else if (datePeriod === 'today') {
+        const todayStr = formatLocalDate(new Date())
+        params.set('date', todayStr)
+      } else if (datePeriod === 'week') {
+        const now = new Date()
+        const dayOfWeek = now.getDay()
+        const startOfWeek = new Date(now)
+        startOfWeek.setDate(now.getDate() - dayOfWeek)
+        startOfWeek.setHours(0, 0, 0, 0)
+        
+        const endOfWeek = new Date(startOfWeek)
+        endOfWeek.setDate(startOfWeek.getDate() + 6)
+        endOfWeek.setHours(23, 59, 59, 999)
+
+        params.set('startDate', startOfWeek.toISOString())
+        params.set('endDate', endOfWeek.toISOString())
+      } else if (datePeriod === 'month') {
+        const year = selectedDate.getFullYear()
+        const month = selectedDate.getMonth()
+        const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0)
+        const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999)
+
+        params.set('startDate', startOfMonth.toISOString())
+        params.set('endDate', endOfMonth.toISOString())
+      }
+      // datePeriod === 'all': sem restrição de data
+
       if (statusFilter) params.set('status', statusFilter)
       if (barberFilter) params.set('barberId', barberFilter)
+      if (searchQuery.trim()) params.set('search', searchQuery.trim())
 
       const response = await fetch(`/api/appointments?${params.toString()}`)
       if (response.ok) {
@@ -67,69 +114,39 @@ export default function AgendaPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedDate, datePeriod, statusFilter, barberFilter, searchQuery])
 
   useEffect(() => {
     fetchAppointments()
-  }, [selectedDate, statusFilter, barberFilter])
+  }, [fetchAppointments])
 
   // Aguardar carregamento inicial do contexto
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Carregando...</p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400 mx-auto mb-4"></div>
       </div>
     )
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value)
-  }
-
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-800'
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'CANCELLED':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'Concluído'
-      case 'PENDING':
-        return 'Pendente'
-      case 'CANCELLED':
-        return 'Cancelado'
-      default:
-        return status
-    }
-  }
-
   const handleDateSelect = (date: Date) => {
-    console.log('handleDateSelect chamado com:', date)
     setSelectedDate(date)
+    setDatePeriod('custom')
+  }
+
+  const handlePeriodChange = (period: 'all' | 'today' | 'week' | 'month') => {
+    setDatePeriod(period)
+    if (period === 'today') {
+      setSelectedDate(new Date())
+    }
+  }
+
+  const handleMonthSelect = (monthDate: Date) => {
+    setSelectedDate(monthDate)
+    setDatePeriod('month')
   }
 
   const handleNewAppointment = () => {
-    console.log('handleNewAppointment chamado')
     setEditingAppointment(null)
     setIsModalOpen(true)
   }
@@ -139,27 +156,44 @@ export default function AgendaPage() {
     setIsModalOpen(true)
   }
 
-  const handleSaveAppointment = (appointment: Appointment) => {
-    fetchAppointments() // Refresh appointments after save
+  const handleViewDetails = (appointment: Appointment) => {
+    setSelectedDetailsAppointment(appointment)
+    setIsDetailsOpen(true)
+  }
+
+  const handleSaveAppointment = () => {
+    fetchAppointments()
     setIsModalOpen(false)
     setEditingAppointment(null)
+  }
+
+  const triggerNotificationRefresh = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('notification-refresh'))
+      try {
+        const channel = new BroadcastChannel('barbershop-notifications')
+        channel.postMessage({ type: 'APPOINTMENT_STATUS_CHANGED' })
+        channel.close()
+      } catch {}
+    }
   }
 
   const handleDeleteAppointment = async (appointment: Appointment) => {
     if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
       try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
         const response = await fetch(`/api/appointments/${appointment.id}`, {
           method: 'DELETE',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          credentials: 'include',
         })
 
         if (response.ok) {
-          const result = await response.json()
-          console.log('Agendamento cancelado:', result)
-          await fetchAppointments() // Refresh appointments after cancel
+          await fetchAppointments()
+          triggerNotificationRefresh()
           alert('Agendamento cancelado com sucesso!')
         } else {
           const error = await response.json()
-          console.error('Erro ao cancelar:', error)
           alert(error.error || 'Erro ao cancelar agendamento')
         }
       } catch (error) {
@@ -171,22 +205,24 @@ export default function AgendaPage() {
 
   const handleStatusChange = async (appointment: Appointment, newStatus: string) => {
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
       const response = await fetch(`/api/appointments/${appointment.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
       })
 
       if (response.ok) {
-        const result = await response.json()
-        console.log('Status atualizado:', result)
-        await fetchAppointments() // Refresh appointments after status change
-        alert(`Agendamento marcado como ${newStatus === 'COMPLETED' ? 'concluído' : 'cancelado'} com sucesso!`)
+        await fetchAppointments()
+        triggerNotificationRefresh()
+        const label = newStatus === 'COMPLETED' ? 'concluído' : newStatus === 'CONFIRMED' ? 'confirmado' : 'atualizado'
+        alert(`Agendamento marcado como ${label} com sucesso!`)
       } else {
         const error = await response.json()
-        console.error('Erro ao atualizar status:', error)
         alert(error.error || 'Erro ao atualizar status do agendamento')
       }
     } catch (error) {
@@ -195,12 +231,25 @@ export default function AgendaPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400"></div>
-      </div>
-    )
+  const getPeriodLabel = () => {
+    switch (datePeriod) {
+      case 'today':
+        return 'Hoje'
+      case 'week':
+        return 'Esta Semana'
+      case 'month': {
+        const monthNames = [
+          'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ]
+        return `Mês de ${monthNames[selectedDate.getMonth()]}/${selectedDate.getFullYear()}`
+      }
+      case 'custom':
+        return selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      case 'all':
+      default:
+        return 'Geral (Todos)'
+    }
   }
 
   return (
@@ -210,120 +259,152 @@ export default function AgendaPage() {
 
       {/* Conteúdo Principal */}
       <div className="w-full px-4 md:px-6">
-        {/* Header fixo no topo */}
+        {/* Header com controles de busca e filtro */}
         <div className="flex-shrink-0">
           <AgendaHeader
             onNewAppointment={handleNewAppointment}
-            onDateFilter={handleDateSelect}
+            onDatePeriodFilter={handlePeriodChange}
             onStatusFilter={setStatusFilter}
             onBarberFilter={setBarberFilter}
+            onSearchChange={setSearchQuery}
             hideBarberFilter={user?.role === 'BARBER'}
+            currentPeriod={datePeriod === 'custom' ? 'all' : datePeriod}
+            currentStatus={statusFilter}
+            currentBarber={barberFilter}
+            searchQuery={searchQuery}
           />
         </div>
         
-        {/* Conteúdo com scroll */}
+        {/* Conteúdo da Agenda */}
         <div className="flex-1 min-w-0">
-          <div className="container-responsive py-4 px-4 md:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
-            {/* Calendar View - 2 columns */}
-            <div className="lg:col-span-2">
-              <CalendarView onDateSelect={handleDateSelect} selectedDate={selectedDate} />
-            </div>
-            
-            {/* Quick Stats - 1 column */}
-            <div className="space-y-2 md:space-y-3">
-              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-4 md:p-5">
-                <h3 className="text-base md:text-lg font-semibold text-white mb-4">Resumo do Dia</h3>
-                <div className="space-y-3">
-                  {/* Total */}
-                  <div className="flex items-center justify-between py-2 border-b border-white/10">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-blue-400 text-sm font-bold">T</span>
-                      </div>
-                      <span className="text-white/80 text-sm">Total</span>
-                    </div>
-                    <span className="text-xl md:text-2xl font-bold text-white">{appointments.length}</span>
+          <div className="container-responsive py-4 px-2 md:px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+              {/* Calendar View - 2 colunas */}
+              <div className="lg:col-span-2">
+                <CalendarView 
+                  onDateSelect={handleDateSelect} 
+                  onMonthSelect={handleMonthSelect}
+                  selectedDate={selectedDate} 
+                  isMonthView={datePeriod === 'month'}
+                />
+              </div>
+              
+              {/* Resumo do Período - 1 coluna (sem Faturamento, foco em agendamentos) */}
+              <div className="space-y-2 md:space-y-3">
+                <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4 md:p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base md:text-lg font-bold text-white">Resumo: {getPeriodLabel()}</h3>
+                    {datePeriod !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => setDatePeriod('all')}
+                        className="text-xs text-yellow-400 hover:text-yellow-300 underline"
+                      >
+                        Ver todos
+                      </button>
+                    )}
                   </div>
 
-                  {/* Pendentes */}
-                  <div className="flex items-center justify-between py-2 border-b border-white/10">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-yellow-400 text-sm font-bold">P</span>
+                  <div className="space-y-3">
+                    {/* Total */}
+                    <div className="flex items-center justify-between py-2 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                          <span className="text-blue-400 text-xs font-bold">T</span>
+                        </div>
+                        <span className="text-white/80 text-sm">Total</span>
                       </div>
-                      <span className="text-white/80 text-sm">Pendentes</span>
+                      <span className="text-xl font-bold text-white">{appointments.length}</span>
                     </div>
-                    <span className="text-lg md:text-xl font-bold text-yellow-400">
-                      {appointments.filter(a => a.status === 'PENDING').length}
-                    </span>
-                  </div>
 
-                  {/* Concluídos */}
-                  <div className="flex items-center justify-between py-2 border-b border-white/10">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-green-400 text-sm font-bold">C</span>
+                    {/* Pendentes e Confirmados */}
+                    <div className="flex items-center justify-between py-2 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                          <span className="text-yellow-400 text-xs font-bold">P</span>
+                        </div>
+                        <span className="text-white/80 text-sm">Pendentes / Confirmados</span>
                       </div>
-                      <span className="text-white/80 text-sm">Concluídos</span>
+                      <span className="text-lg font-bold text-yellow-400">
+                        {appointments.filter(a => a.status === 'PENDING' || a.status === 'CONFIRMED').length}
+                      </span>
                     </div>
-                    <span className="text-lg md:text-xl font-bold text-green-400">
-                      {appointments.filter(a => a.status === 'COMPLETED').length}
-                    </span>
-                  </div>
 
-                  {/* Cancelados */}
-                  <div className="flex items-center justify-between py-2 border-b border-white/10">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-red-400 text-sm font-bold">X</span>
+                    {/* Concluídos */}
+                    <div className="flex items-center justify-between py-2 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-green-500/20 rounded-lg flex items-center justify-center">
+                          <span className="text-green-400 text-xs font-bold">C</span>
+                        </div>
+                        <span className="text-white/80 text-sm">Concluídos</span>
                       </div>
-                      <span className="text-white/80 text-sm">Cancelados</span>
+                      <span className="text-lg font-bold text-green-400">
+                        {appointments.filter(a => a.status === 'COMPLETED').length}
+                      </span>
                     </div>
-                    <span className="text-lg md:text-xl font-bold text-red-400">
-                      {appointments.filter(a => a.status === 'CANCELLED').length}
-                    </span>
-                  </div>
 
-                  {/* Faturamento */}
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-yellow-400 text-sm font-bold">R$</span>
+                    {/* Cancelados */}
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-red-500/20 rounded-lg flex items-center justify-center">
+                          <span className="text-red-400 text-xs font-bold">X</span>
+                        </div>
+                        <span className="text-white/80 text-sm">Cancelados</span>
                       </div>
-                      <span className="text-white/80 text-sm">Faturamento</span>
+                      <span className="text-lg font-bold text-red-400">
+                        {appointments.filter(a => a.status === 'CANCELLED').length}
+                      </span>
                     </div>
-                    <span className="text-lg md:text-xl font-bold text-yellow-400">
-                      {formatCurrency(appointments.reduce((sum, a) => {
-                        // Usar o preço do serviço se totalAmount não estiver disponível
-                        const amount = a.totalAmount || a.service?.price || 0
-                        return sum + (typeof amount === 'number' ? amount : parseFloat(String(amount)) || 0)
-                      }, 0))}
-                    </span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Appointments List */}
-          <AppointmentList 
-            appointments={appointments}
-            loading={loading}
-            onEdit={handleEditAppointment}
-            onDelete={handleDeleteAppointment}
-            onStatusChange={handleStatusChange}
-          />
+            {/* Appointments List */}
+            <AppointmentList 
+              appointments={appointments}
+              loading={loading}
+              onEdit={handleEditAppointment}
+              onDelete={handleDeleteAppointment}
+              onStatusChange={handleStatusChange}
+              onViewDetails={handleViewDetails}
+              userRole={user?.role}
+              titlePrefix={getPeriodLabel()}
+            />
           </div>
         </div>
       </div>
 
-      {/* Appointment Modal */}
+      {/* Appointment Modal (Criar / Editar) */}
       <AppointmentModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setEditingAppointment(null)
+        }}
         onSave={handleSaveAppointment}
         appointment={editingAppointment}
+      />
+
+      {/* Appointment Details Modal (Visualizar Detalhes) */}
+      <AppointmentDetailsModal
+        isOpen={isDetailsOpen}
+        onClose={() => {
+          setIsDetailsOpen(false)
+          setSelectedDetailsAppointment(null)
+        }}
+        appointment={selectedDetailsAppointment}
+        onEdit={(apt) => {
+          setIsDetailsOpen(false)
+          handleEditAppointment(apt as Appointment)
+        }}
+        onStatusChange={(apt, status) => {
+          handleStatusChange(apt as Appointment, status)
+        }}
+        onCancel={(apt) => {
+          handleDeleteAppointment(apt as Appointment)
+        }}
+        userRole={user?.role}
       />
     </div>
   )

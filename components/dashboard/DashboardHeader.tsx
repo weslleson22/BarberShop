@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { Search, Bell, Calendar, User, Filter, ChevronDown, LogOut } from 'lucide-react'
+import { Search, Calendar, User, Filter, ChevronDown, LogOut } from 'lucide-react'
+import NotificationBell from '@/components/shared/NotificationBell'
 
 export default function DashboardHeader() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -73,10 +74,7 @@ export default function DashboardHeader() {
             </div>
 
             {/* Notifications */}
-            <button className="relative p-2 md:p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 transition-all flex-shrink-0" aria-label="Notificações">
-              <Bell className="w-4 h-4 md:w-5 md:h-5 text-white" />
-              <span className="absolute top-1.5 md:top-2 right-1.5 md:right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <NotificationBell />
 
             {/* Calendar */}
             <button className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 transition-all hidden sm:flex flex-shrink-0" aria-label="Calendário">
@@ -136,10 +134,7 @@ export default function DashboardHeader() {
           </div>
 
           {/* Notifications */}
-          <button className="relative p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all flex-shrink-0" aria-label="Notificações">
-            <Bell className="w-4 h-4 text-white" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <NotificationBell />
 
           {/* User Avatar - Mobile */}
           <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg flex-shrink-0">

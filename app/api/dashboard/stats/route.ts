@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
     // Calcular estatísticas
     const totalAppointments = appointments.length
     const completedAppointments = appointments.filter(apt => apt.status === 'COMPLETED').length
-    const pendingAppointments = appointments.filter(apt => apt.status === 'PENDING').length
+    const pendingAppointments = appointments.filter(apt => apt.status === 'PENDING' || apt.status === 'CONFIRMED').length
+    const confirmedAppointments = appointments.filter(apt => apt.status === 'CONFIRMED').length
     const cancelledAppointments = appointments.filter(apt => apt.status === 'CANCELLED').length
     
     // Faturamento total (apenas concluídos)
@@ -125,6 +126,7 @@ export async function GET(request: NextRequest) {
         total: totalAppointments,
         completed: completedAppointments,
         pending: pendingAppointments,
+        confirmed: confirmedAppointments,
         cancelled: cancelledAppointments,
         change: appointmentsChange,
         changeType: appointmentsChange >= 0 ? 'increase' : 'decrease'

@@ -317,7 +317,7 @@ describe('Appointments Integration Tests', () => {
             status: 'PENDING',
             totalAmount: 35.0,
             barbershopId
-          }
+          } as any
         })
       ).rejects.toThrow()
     })

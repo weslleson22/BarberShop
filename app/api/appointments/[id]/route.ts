@@ -64,7 +64,7 @@ export async function GET(
       where: { id: params.id },
       include: {
         client: true,
-        barber: { select: { id: true, name: true, email: true } },
+        barber: { select: { id: true, name: true, email: true, avatar: true, phone: true, bio: true } },
         service: true,
       },
     })
@@ -149,7 +149,7 @@ export async function PUT(
       },
       include: {
         client: true,
-        barber: { select: { id: true, name: true, email: true } },
+        barber: { select: { id: true, name: true, email: true, avatar: true, phone: true, bio: true } },
         service: true,
       },
     })
@@ -185,7 +185,7 @@ export async function DELETE(
       data: { status: 'CANCELLED' },
       include: {
         client: true,
-        barber: { select: { id: true, name: true, email: true } },
+        barber: { select: { id: true, name: true, email: true, avatar: true, phone: true, bio: true } },
         service: true,
       },
     })
@@ -237,7 +237,7 @@ export async function PATCH(
       data: { status },
       include: {
         client: true,
-        barber: { select: { id: true, name: true, email: true } },
+        barber: { select: { id: true, name: true, email: true, avatar: true, phone: true, bio: true } },
         service: true,
       },
     })

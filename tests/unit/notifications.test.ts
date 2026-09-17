@@ -12,6 +12,7 @@ import { prisma } from '@/lib/prisma'
 import {
   notifyBarberNewAppointment,
   notifyAdminsNewAppointment,
+  notifyClientNewAppointment,
   notifyClientStatusChange,
   notifyAdminsLastMinuteCancellation,
   notifyAdminsNewClient,
@@ -103,5 +104,43 @@ describe('lib/notifications', () => {
         where: expect.objectContaining({ id: { not: 'admin_1' } }),
       })
     )
+  })
+
+  it('notifica o cliente vinculado sobre novo agendamento realizado', async () => {
+    clientFindUniqueMock.mockResolvedValue({ userId: 'user_client_1' })
+    await notifyClientNewAppointment(futureAppointment(24))
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: 'user_client_1',
+          title: 'Agendamento confirmado',
+        }),
+      })
+    )
+  })
+
+  it('notifica createdBy quando Client.userId ainda não está cadastrado', async () => {
+    clientFindUniqueMock.mockResolvedValue({ userId: null })
+    await notifyClientNewAppointment({
+      ...futureAppointment(24),
+      createdBy: 'user_logged_in_creator',
+    })
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: 'user_logged_in_creator',
+          title: 'Agendamento confirmado',
+        }),
+      })
+    )
+  })
+
+  it('não cria notificação para cliente se nem Client.userId nem createdBy existirem', async () => {
+    clientFindUniqueMock.mockResolvedValue({ userId: null })
+    await notifyClientNewAppointment(futureAppointment(24))
+
+    expect(createMock).not.toHaveBeenCalled()
   })
 })

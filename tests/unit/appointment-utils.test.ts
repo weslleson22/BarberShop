@@ -124,7 +124,7 @@ describe('Appointment Utils - Unit Tests', () => {
   
   describe('calculateAvailableSlots', () => {
     it('deve calcular slots disponíveis quando não há agendamentos', () => {
-      const existingAppointments = []
+      const existingAppointments: Appointment[] = []
       const date = new Date('2026-04-20')
       
       const slots = calculateAvailableSlots(date, 30, existingAppointments)
@@ -178,7 +178,7 @@ describe('Appointment Utils - Unit Tests', () => {
     })
     
     it('deve respeitar horário de funcionamento', () => {
-      const existingAppointments = []
+      const existingAppointments: Appointment[] = []
       const date = new Date('2026-04-20')
       
       const slots = calculateAvailableSlots(date, 30, existingAppointments, { start: 9, end: 17 })
@@ -190,7 +190,7 @@ describe('Appointment Utils - Unit Tests', () => {
     })
     
     it('deve calcular corretamente duração do serviço', () => {
-      const existingAppointments = []
+      const existingAppointments: Appointment[] = []
       const date = new Date('2026-04-20')
       
       // Serviço de 60 minutos

@@ -3,20 +3,23 @@ import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { criarAgendamento, getHorariosDisponiveis } from '@/lib/appointment-scheduler'
 
+import { getAuthUser } from '@/lib/api-auth'
+
 // GET - Listar agendamentos
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!decoded) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
-
-    const decoded = verifyToken(token)
     const { searchParams } = new URL(request.url)
     
     const date = searchParams.get('date')
+    const startDateParam = searchParams.get('startDate')
+    const endDateParam = searchParams.get('endDate')
     const barberId = searchParams.get('barberId')
     const status = searchParams.get('status')
+    const search = searchParams.get('search')
 
     const where: any = {
       barbershopId: decoded.barbershopId,
@@ -34,15 +37,31 @@ export async function GET(request: NextRequest) {
       where.clientId = client.id
     }
 
-    if (date) {
-      const startDate = new Date(date)
-      startDate.setHours(0, 0, 0, 0)
-      const endDate = new Date(date)
-      endDate.setHours(23, 59, 59, 999)
-
+    if (startDateParam && endDateParam) {
+      const gteDate = new Date(new Date(startDateParam).getTime() - 4 * 60 * 60 * 1000)
+      const lteDate = new Date(new Date(endDateParam).getTime() + 4 * 60 * 60 * 1000)
       where.startTime = {
-        gte: startDate,
-        lte: endDate,
+        gte: gteDate,
+        lte: lteDate,
+      }
+    } else if (date) {
+      // Cria o intervalo de início e fim do dia considerando possíveis diferenças de fuso
+      // (buffer de UTC-4 a UTC+2 para garantir que agendamentos noturnos ou matutinos
+      // não sejam omitidos pelo timezone do servidor).
+      const [year, month, day] = date.split('-').map(Number)
+      if (year && month && day) {
+        // Início: 00:00:00 do dia em UTC menos 4 horas de margem
+        const startDayUtc = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+        const endDayUtc = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+        
+        // Abrange início com 4 horas antes (UTC-4) e fim com 4 horas depois (UTC+4)
+        const gteDate = new Date(startDayUtc.getTime() - 4 * 60 * 60 * 1000)
+        const lteDate = new Date(endDayUtc.getTime() + 4 * 60 * 60 * 1000)
+
+        where.startTime = {
+          gte: gteDate,
+          lte: lteDate,
+        }
       }
     }
 
@@ -51,12 +70,27 @@ export async function GET(request: NextRequest) {
     // agenda de outro só trocando o parâmetro.
     if (decoded.role === 'BARBER') {
       where.barberId = decoded.id
-    } else if (barberId) {
+    } else if (barberId && barberId !== 'all') {
       where.barberId = barberId
     }
 
-    if (status) {
-      where.status = status
+    if (status && status !== 'all') {
+      if (status === 'PENDING_OR_CONFIRMED') {
+        where.status = { in: ['PENDING', 'CONFIRMED'] }
+      } else {
+        where.status = status
+      }
+    }
+
+    if (search && search.trim()) {
+      const term = search.trim()
+      where.OR = [
+        { client: { name: { contains: term, mode: 'insensitive' } } },
+        { client: { phone: { contains: term, mode: 'insensitive' } } },
+        { barber: { name: { contains: term, mode: 'insensitive' } } },
+        { service: { name: { contains: term, mode: 'insensitive' } } },
+        { notes: { contains: term, mode: 'insensitive' } },
+      ]
     }
 
     const appointments = await prisma.appointment.findMany({
@@ -68,6 +102,9 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             email: true,
+            avatar: true,
+            phone: true,
+            bio: true,
           },
         },
         service: true,
@@ -90,12 +127,10 @@ export async function GET(request: NextRequest) {
 // POST - Criar agendamento
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!decoded) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
-
-    const decoded = verifyToken(token)
     const data = await request.json()
 
     // Nunca confiar no clientId enviado pelo corpo da requisição quando quem
