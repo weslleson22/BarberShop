@@ -52,12 +52,31 @@ export async function authenticateUser(email: string, password: string) {
     return null
   }
 
+  let finalBarbershopId = user.barbershopId
+
+  // Se o usuário é ADMIN ou RECEPTIONIST, garantir que o login emita o token já alinhado com a barbearia ativa
+  if (user.role === 'ADMIN' || user.role === 'RECEPTIONIST') {
+    const activeAppt = await prisma.appointment.findFirst({
+      select: { barbershopId: true },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (activeAppt?.barbershopId && activeAppt.barbershopId !== finalBarbershopId) {
+      finalBarbershopId = activeAppt.barbershopId
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { barbershopId: finalBarbershopId },
+        })
+      } catch {}
+    }
+  }
+
   const token = generateToken({
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
-    barbershopId: user.barbershopId,
+    barbershopId: finalBarbershopId,
   })
 
   return {
@@ -66,7 +85,7 @@ export async function authenticateUser(email: string, password: string) {
       name: user.name,
       email: user.email,
       role: user.role,
-      barbershopId: user.barbershopId,
+      barbershopId: finalBarbershopId,
       phone: user.phone,
       avatar: user.avatar,
       barbershop: user.barbershop,
