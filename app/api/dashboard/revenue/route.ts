@@ -21,6 +21,42 @@ export async function GET(request: NextRequest) {
       barbershopId = dbUser?.barbershopId
     }
 
+    // Se o usuário é ADMIN ou RECEPTIONIST, sincronizar com a barbearia ativa
+    // (onde os agendamentos mais recentes foram criados)
+    if (user.role === 'ADMIN' || user.role === 'RECEPTIONIST') {
+      const latestAppt = await prisma.appointment.findFirst({
+        select: { barbershopId: true },
+        orderBy: { createdAt: 'desc' }
+      })
+      if (latestAppt?.barbershopId && latestAppt.barbershopId !== barbershopId) {
+        barbershopId = latestAppt.barbershopId
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { barbershopId }
+          })
+        } catch {}
+      }
+    }
+
+    // Se o usuário é BARBER, sincronizar com a barbearia onde os agendamentos do barbeiro estão
+    if (user.role === 'BARBER') {
+      const barberAppt = await prisma.appointment.findFirst({
+        where: { barberId: user.id },
+        select: { barbershopId: true },
+        orderBy: { createdAt: 'desc' }
+      })
+      if (barberAppt?.barbershopId && barberAppt.barbershopId !== barbershopId) {
+        barbershopId = barberAppt.barbershopId
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { barbershopId }
+          })
+        } catch {}
+      }
+    }
+
     if (!barbershopId) {
       const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
       barbershopId = firstShop?.id
@@ -37,6 +73,7 @@ export async function GET(request: NextRequest) {
     const appointments = await prisma.appointment.findMany({
       where: {
         ...(barbershopId ? { barbershopId } : {}),
+        ...(user.role === 'BARBER' ? { barberId: user.id } : {}),
         status: 'COMPLETED',
         startTime: {
           gte: startDate,

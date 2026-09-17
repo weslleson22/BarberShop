@@ -2,35 +2,100 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/api-auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // PATCH - Marcar uma notificação específica como lida
 export async function PATCH(
   request: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
-  const { id } = await props.params
   try {
     const user = getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    // Garante que a notificação pertence a quem está chamando
-    const notification = await prisma.notification.findFirst({
-      where: { id, userId: user.id },
+    const resolvedParams = await Promise.resolve(context?.params)
+    const id = resolvedParams?.id
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID da notificação não fornecido' }, { status: 400 })
+    }
+
+    // Busca a notificação pelo ID
+    const notification = await prisma.notification.findUnique({
+      where: { id },
     })
 
     if (!notification) {
       return NextResponse.json({ error: 'Notificação não encontrada' }, { status: 404 })
     }
 
+    // Garante que o usuário tem acesso (próprio dono ou ADMIN da barbearia)
+    if (notification.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+    }
+
+    let readState = true
+    try {
+      const body = await request.json()
+      if (typeof body?.read === 'boolean') {
+        readState = body.read
+      }
+    } catch {
+      // Nenhum corpo enviado; padrão é true
+    }
+
     const updated = await prisma.notification.update({
       where: { id },
-      data: { read: true },
+      data: { read: readState },
     })
 
     return NextResponse.json(updated)
   } catch (error) {
     console.error('Mark notification read error:', error)
     return NextResponse.json({ error: 'Erro ao atualizar notificação' }, { status: 500 })
+  }
+}
+
+// DELETE - Excluir uma notificação específica
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const user = getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const resolvedParams = await Promise.resolve(context?.params)
+    const id = resolvedParams?.id
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID da notificação não fornecido' }, { status: 400 })
+    }
+
+    const notification = await prisma.notification.findUnique({
+      where: { id },
+    })
+
+    if (!notification) {
+      return NextResponse.json({ error: 'Notificação não encontrada' }, { status: 404 })
+    }
+
+    if (notification.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+    }
+
+    await prisma.notification.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({ message: 'Notificação excluída com sucesso' })
+  } catch (error) {
+    console.error('Delete notification error:', error)
+    return NextResponse.json({ error: 'Erro ao excluir notificação' }, { status: 500 })
   }
 }

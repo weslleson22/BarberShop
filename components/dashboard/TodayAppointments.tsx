@@ -25,6 +25,7 @@ interface Appointment {
 
 export default function TodayAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [totalToday, setTotalToday] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function TodayAppointments() {
       if (!response.ok) {
         console.error('Erro ao buscar agendamentos de hoje:', response.status)
         setAppointments([])
+        setTotalToday(0)
         return
       }
 
@@ -54,21 +56,26 @@ export default function TodayAppointments() {
         ? allAppointments.filter((apt: any) => apt?.client && apt?.service)
         : []
 
-      // Filter appointments for today using local calendar date
-      const todayAppointments = validAppointments.filter((apt: any) => {
-        const aptDate = new Date(apt.startTime)
-        return (
-          aptDate.getFullYear() === todayYear &&
-          aptDate.getMonth() === todayMonth &&
-          aptDate.getDate() === todayDay
-        )
-      })
+      // Filter appointments for today using local calendar date and sort chronologically
+      const todayAppointments = validAppointments
+        .filter((apt: any) => {
+          const aptDate = new Date(apt.startTime)
+          return (
+            aptDate.getFullYear() === todayYear &&
+            aptDate.getMonth() === todayMonth &&
+            aptDate.getDate() === todayDay
+          )
+        })
+        .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
 
-      setAppointments(todayAppointments)
+      setTotalToday(todayAppointments.length)
+      // Exibir no máximo 5 agendamentos no dashboard
+      setAppointments(todayAppointments.slice(0, 5))
       
     } catch (error) {
       console.error('Erro ao buscar agendamentos de hoje:', error)
       setAppointments([])
+      setTotalToday(0)
     } finally {
       setLoading(false)
     }
@@ -137,7 +144,9 @@ export default function TodayAppointments() {
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
           <h3 className="text-lg md:text-xl font-semibold text-white">Agendamentos de Hoje</h3>
-          <p className="text-white/60 text-xs md:text-sm">{appointments.length} agendamentos</p>
+          <p className="text-white/60 text-xs md:text-sm">
+            {totalToday > 5 ? `5 de ${totalToday} agendamentos` : `${totalToday} agendamento${totalToday === 1 ? '' : 's'}`}
+          </p>
         </div>
         <div className="flex items-center space-x-2 text-white/60">
           <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -145,25 +154,32 @@ export default function TodayAppointments() {
         </div>
       </div>
 
-      <div className="space-y-2 md:space-y-3">
-        {appointments.map((appointment) => (
-          <div
-            key={appointment.id}
-            className="flex items-center justify-between p-3 md:p-4 bg-white/5 border border-white/6 rounded-lg md:rounded-xl hover:bg-white/10 transition-all"
-          >
-            <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
-              {/* Time */}
-              <div className="text-center flex-shrink-0">
-                <p className="text-white font-semibold text-sm md:text-base">{formatTime(appointment.startTime)}</p>
-                <p className="text-white/40 text-xs">30min</p>
-              </div>
+      {appointments.length === 0 ? (
+        <div className="text-center py-8 px-4 bg-white/[0.02] border border-white/5 rounded-xl">
+          <Calendar className="w-8 h-8 text-white/20 mx-auto mb-2" />
+          <p className="text-white/80 font-medium text-sm">Nenhum agendamento para hoje</p>
+          <p className="text-white/40 text-xs mt-1">Os agendamentos confirmados para hoje aparecerão listados aqui.</p>
+        </div>
+      ) : (
+        <div className="space-y-2 md:space-y-3">
+          {appointments.map((appointment) => (
+            <div
+              key={appointment.id}
+              className="flex items-center justify-between p-3 md:p-4 bg-white/5 border border-white/6 rounded-lg md:rounded-xl hover:bg-white/10 transition-all"
+            >
+              <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
+                {/* Time */}
+                <div className="text-center flex-shrink-0">
+                  <p className="text-white font-semibold text-sm md:text-base">{formatTime(appointment.startTime)}</p>
+                  <p className="text-white/40 text-xs">30min</p>
+                </div>
 
-              {/* Client Info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-medium text-sm md:text-base truncate">{appointment.client.name}</p>
-                <p className="text-white/60 text-xs md:text-sm truncate">{appointment.service.name}</p>
+                {/* Client Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium text-sm md:text-base truncate">{appointment.client.name}</p>
+                  <p className="text-white/60 text-xs md:text-sm truncate">{appointment.service.name}</p>
+                </div>
               </div>
-            </div>
 
               {/* Barber Info */}
               <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg flex-shrink-0">
@@ -193,6 +209,7 @@ export default function TodayAppointments() {
             </div>
           ))}
         </div>
+      )}
 
         {/* View All Button */}
         <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
@@ -200,7 +217,7 @@ export default function TodayAppointments() {
             href="/agenda"
             className="block w-full py-2.5 md:py-3 text-center text-yellow-400 hover:text-yellow-300 hover:bg-white/5 font-medium text-sm md:text-base rounded-lg transition-all"
           >
-            Ver todos os agendamentos
+            Ver todos os agendamentos {totalToday > 5 ? `(${totalToday})` : ''}
           </Link>
         </div>
     </div>

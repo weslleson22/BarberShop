@@ -49,3 +49,23 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Erro ao atualizar notificações' }, { status: 500 })
   }
 }
+
+// DELETE - Limpar notificações lidas do usuário
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    await prisma.notification.deleteMany({
+      where: { userId: user.id, read: true },
+    })
+
+    return NextResponse.json({ message: 'Notificações lidas removidas' })
+  } catch (error) {
+    console.error('Delete notifications error:', error)
+    return NextResponse.json({ error: 'Erro ao remover notificações' }, { status: 500 })
+  }
+}
+

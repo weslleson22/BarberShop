@@ -25,6 +25,42 @@ export async function GET(request: NextRequest) {
       })
       barbershopId = dbUser?.barbershopId
     }
+
+    // Se o usuário é ADMIN ou RECEPTIONIST, sincronizar com a barbearia ativa
+    if (decoded.role === 'ADMIN' || decoded.role === 'RECEPTIONIST') {
+      const latestAppt = await prisma.appointment.findFirst({
+        select: { barbershopId: true },
+        orderBy: { createdAt: 'desc' }
+      })
+      if (latestAppt?.barbershopId && latestAppt.barbershopId !== barbershopId) {
+        barbershopId = latestAppt.barbershopId
+        try {
+          await prisma.user.update({
+            where: { id: decoded.id },
+            data: { barbershopId }
+          })
+        } catch {}
+      }
+    }
+
+    // Se o usuário é BARBER, sincronizar com a barbearia onde os agendamentos do barbeiro estão
+    if (decoded.role === 'BARBER') {
+      const barberAppt = await prisma.appointment.findFirst({
+        where: { barberId: decoded.id },
+        select: { barbershopId: true },
+        orderBy: { createdAt: 'desc' }
+      })
+      if (barberAppt?.barbershopId && barberAppt.barbershopId !== barbershopId) {
+        barbershopId = barberAppt.barbershopId
+        try {
+          await prisma.user.update({
+            where: { id: decoded.id },
+            data: { barbershopId }
+          })
+        } catch {}
+      }
+    }
+
     if (!barbershopId) {
       const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
       barbershopId = firstShop?.id
