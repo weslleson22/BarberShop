@@ -86,7 +86,47 @@ export async function POST(request: NextRequest) {
       console.log('Usando barbearia fallback:', barbershopId)
     }
 
-    // Verificar se cliente já existe
+    // 1. Se o usuário estiver autenticado, priorizar o Client já vinculado ao seu ID
+    if (finalUserId) {
+      const userLinkedClient = await prisma.client.findUnique({
+        where: { userId: finalUserId }
+      })
+      if (userLinkedClient) {
+        // Atualiza telefone e nome se foram preenchidos
+        const updated = await prisma.client.update({
+          where: { id: userLinkedClient.id },
+          data: {
+            name: name || userLinkedClient.name,
+            phone: phone || userLinkedClient.phone,
+            email: email || userLinkedClient.email,
+          }
+        })
+        console.log('Usando Client vinculado ao usuário autenticado:', updated.id)
+        return NextResponse.json(updated)
+      }
+    }
+
+    // 2. Verificar se existe cliente com o mesmo email sem userId
+    if (email && email.trim()) {
+      const existingByEmail = await prisma.client.findFirst({
+        where: {
+          email: email.trim().toLowerCase(),
+          barbershopId,
+        }
+      })
+      if (existingByEmail) {
+        if (!existingByEmail.userId && finalUserId) {
+          await prisma.client.update({
+            where: { id: existingByEmail.id },
+            data: { userId: finalUserId, name: name || existingByEmail.name, phone: phone || existingByEmail.phone }
+          })
+          existingByEmail.userId = finalUserId
+        }
+        return NextResponse.json(existingByEmail)
+      }
+    }
+
+    // 3. Verificar se cliente já existe pelo telefone
     console.log('Verificando cliente existente com telefone:', phone)
     const existingClient = await prisma.client.findFirst({
       where: {
@@ -98,15 +138,24 @@ export async function POST(request: NextRequest) {
     console.log('Cliente existente encontrado:', existingClient)
 
     if (existingClient) {
+      // Se não tem userId vinculado e temos um usuário logado, vincula a ele
       if (!existingClient.userId && finalUserId) {
         await prisma.client.update({
           where: { id: existingClient.id },
           data: { userId: finalUserId },
         })
         existingClient.userId = finalUserId
+        return NextResponse.json(existingClient)
       }
-      console.log('Retornando cliente existente:', existingClient)
-      return NextResponse.json(existingClient)
+      
+      // Se já está vinculado a OUTRO usuário e o usuário atual está autenticado,
+      // não repassar o Client de outra pessoa. Criar um novo exclusivo para este usuário.
+      if (existingClient.userId && finalUserId && existingClient.userId !== finalUserId) {
+        console.log('Telefone pertence a outro usuário cadastrado; criando Client novo para este usuário')
+      } else {
+        console.log('Retornando cliente existente:', existingClient)
+        return NextResponse.json(existingClient)
+      }
     }
 
     // Criar novo cliente

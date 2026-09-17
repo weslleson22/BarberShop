@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Clock, Users, CheckCircle, AlertCircle, XCircle, Calendar } from 'lucide-react'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface Appointment {
   id: string
@@ -38,7 +39,10 @@ export default function TodayAppointments() {
       const todayMonth = now.getMonth()
       const todayDay = now.getDate()
 
-      const response = await fetch('/api/appointments')
+      const response = await fetch('/api/appointments', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
       if (!response.ok) {
         console.error('Erro ao buscar agendamentos de hoje:', response.status)
         setAppointments([])

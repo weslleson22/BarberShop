@@ -12,9 +12,10 @@ vi.mock('@/lib/api-auth', () => ({
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    user: { findMany: vi.fn(), create: vi.fn(), findFirst: vi.fn() },
-    client: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), delete: vi.fn() },
-    appointment: { findUnique: vi.fn(), update: vi.fn() },
+    user: { findMany: vi.fn(), create: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
+    client: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), delete: vi.fn(), update: vi.fn() },
+    appointment: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+    service: { findMany: vi.fn() },
   },
 }))
 
@@ -217,5 +218,76 @@ describe('GET/PUT/DELETE /api/appointments/[id] — ownership e tenant', () => {
     })
     const res = await PATCH(req, paramsFor('apt_1'))
     expect(res.status).toBe(200)
+  })
+})
+
+describe('GET /api/appointments — filtro abrangente para CLIENT', () => {
+  beforeEach(() => {
+    mockedGetAuthUser.mockReset()
+    ;(prisma.appointment.findMany as any).mockReset()
+    ;(prisma.client.findUnique as any).mockReset()
+  })
+
+  it('CLIENT busca agendamentos por clientId, createdBy e email', async () => {
+    mockedGetAuthUser.mockReturnValue(makeUser({
+      id: 'client_user_1',
+      role: 'CLIENT',
+      email: 'client@test.com',
+      barbershopId: 'barbershop_A'
+    }))
+    ;(prisma.client.findUnique as any).mockResolvedValue({ id: 'client_rec_1', userId: 'client_user_1' })
+    ;(prisma.appointment.findMany as any).mockResolvedValue([])
+
+    const { GET } = await import('@/app/api/appointments/route')
+    const res = await GET(makeRequest('http://localhost/api/appointments'))
+
+    expect(res.status).toBe(200)
+    expect(prisma.appointment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          barbershopId: 'barbershop_A',
+          AND: expect.arrayContaining([
+            expect.objectContaining({
+              OR: expect.arrayContaining([
+                { createdBy: 'client_user_1' },
+                { client: { userId: 'client_user_1' } },
+                { clientId: 'client_rec_1' },
+                { client: { email: 'client@test.com' } },
+              ])
+            })
+          ])
+        })
+      })
+    )
+  })
+})
+
+describe('GET /api/dashboard/stats — autorização e resiliência', () => {
+  beforeEach(() => {
+    mockedGetAuthUser.mockReset()
+    ;(prisma.appointment.findMany as any).mockReset()
+    ;(prisma.client.findMany as any).mockReset()
+    ;(prisma.service.findMany as any).mockReset()
+    ;(prisma.user.findMany as any).mockReset()
+  })
+
+  it('permite CLIENT buscar estatísticas sem erro 401', async () => {
+    mockedGetAuthUser.mockReturnValue(makeUser({
+      id: 'client_user_1',
+      role: 'CLIENT',
+      email: 'client@test.com',
+      barbershopId: 'barbershop_A'
+    }))
+    ;(prisma.appointment.findMany as any).mockResolvedValue([])
+    ;(prisma.client.findMany as any).mockResolvedValue([])
+    ;(prisma.service.findMany as any).mockResolvedValue([])
+    ;(prisma.user.findMany as any).mockResolvedValue([])
+
+    const { GET } = await import('@/app/api/dashboard/stats/route')
+    const res = await GET(makeRequest('http://localhost/api/dashboard/stats'))
+
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.appointments).toBeDefined()
   })
 })

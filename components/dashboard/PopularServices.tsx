@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Scissors, TrendingUp } from 'lucide-react'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface ServiceData {
   name: string
@@ -31,7 +32,10 @@ export default function PopularServices() {
       console.log('Mês atual:', currentMonth + 1, 'Ano:', currentYear)
       
       // Fetch all appointments
-      const response = await fetch('/api/appointments')
+      const response = await fetch('/api/appointments', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
       if (!response.ok) {
         console.error('Erro ao buscar agendamentos:', response.status)
         return

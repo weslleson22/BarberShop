@@ -21,20 +21,58 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const search = searchParams.get('search')
 
-    const where: any = {
-      barbershopId: decoded.barbershopId,
+    let barbershopId = decoded.barbershopId
+    if (!barbershopId && decoded.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId
     }
 
-    // CLIENT só pode ver seus próprios agendamentos. Appointment.clientId
-    // referencia Client.id, não User.id — é preciso resolver o Client
-    // vinculado a este usuário antes de filtrar (antes disso a comparação
-    // era contra o id errado e sempre voltava vazio).
+    const where: any = {}
+    if (barbershopId) {
+      where.barbershopId = barbershopId
+    }
+
+    // CLIENT só pode ver seus próprios agendamentos.
+    // Considera agendamentos por clientId vinculado, createdBy (criados pelo usuário),
+    // userId do client ou email, garantindo que nenhum agendamento seja perdido.
     if (decoded.role === 'CLIENT') {
-      const client = await prisma.client.findUnique({ where: { userId: decoded.id } })
-      if (!client) {
-        return NextResponse.json([])
+      let client = await prisma.client.findUnique({ where: { userId: decoded.id } })
+
+      // Se ainda não estiver vinculado, tentar auto-vincular por email
+      if (!client && decoded.email) {
+        const existingByEmail = await prisma.client.findFirst({
+          where: { email: decoded.email.trim().toLowerCase(), userId: null }
+        })
+        if (existingByEmail) {
+          try {
+            client = await prisma.client.update({
+              where: { id: existingByEmail.id },
+              data: { userId: decoded.id }
+            })
+          } catch {}
+        }
       }
-      where.clientId = client.id
+
+      const clientConditions: any[] = [
+        { createdBy: decoded.id },
+        { client: { userId: decoded.id } },
+      ]
+
+      if (client?.id) {
+        clientConditions.push({ clientId: client.id })
+      }
+
+      if (decoded.email) {
+        clientConditions.push({ client: { email: decoded.email.trim().toLowerCase() } })
+      }
+
+      where.AND = [
+        ...(where.AND || []),
+        { OR: clientConditions }
+      ]
     }
 
     if (startDateParam && endDateParam) {

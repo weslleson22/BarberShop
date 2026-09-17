@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateUser } from '@/lib/auth'
+import { ensureClientForUser } from '@/lib/client-sync'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +20,21 @@ export async function POST(request: NextRequest) {
         { error: 'Credenciais inválidas' },
         { status: 401 }
       )
+    }
+
+    // Se for um usuário CLIENT, garante que ele possua o registro correspondente em Client
+    if (result.user.role === 'CLIENT' && result.user.barbershopId) {
+      try {
+        await ensureClientForUser({
+          userId: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          phone: result.user.phone,
+          barbershopId: result.user.barbershopId,
+        })
+      } catch (syncErr) {
+        console.error('Erro ao sincronizar Client no login:', syncErr)
+      }
     }
 
     const response = NextResponse.json(result)

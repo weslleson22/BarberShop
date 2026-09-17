@@ -11,6 +11,7 @@ import TodayAppointments from '@/components/dashboard/TodayAppointments'
 import PopularServices from '@/components/dashboard/PopularServices'
 import FinanceSummary from '@/components/dashboard/FinanceSummary'
 import RecentClients from '@/components/dashboard/RecentClients'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface ClientAppointment {
   id: string
@@ -25,7 +26,10 @@ function ClientDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/appointments')
+    fetch('/api/appointments', {
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setAppointments(Array.isArray(data) ? data : []))
       .catch(() => setAppointments([]))

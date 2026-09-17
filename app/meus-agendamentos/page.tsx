@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
 import { Calendar, Clock, Plus, User as UserIcon, X } from 'lucide-react'
 import DropdownHeader from '@/components/shared/DropdownHeader'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface ClientAppointment {
   id: string
@@ -39,7 +40,10 @@ export default function MeusAgendamentosPage() {
 
   const loadAppointments = () => {
     setLoading(true)
-    fetch('/api/appointments')
+    fetch('/api/appointments', {
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setAppointments(Array.isArray(data) ? data : []))
       .catch(() => setAppointments([]))
@@ -72,7 +76,8 @@ export default function MeusAgendamentosPage() {
     try {
       const res = await fetch(`/api/appointments/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'include',
         body: JSON.stringify({ status: 'CANCELLED' }),
       })
       if (res.ok) {

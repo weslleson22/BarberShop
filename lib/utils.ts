@@ -45,3 +45,12 @@ export function maskEmail(value: string, maxLen = 80): string {
 
   return formatted.slice(0, maxLen)
 }
+
+// Retorna headers com o token JWT de autenticação do localStorage se disponível no browser
+export function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extraHeaders,
+  }
+}

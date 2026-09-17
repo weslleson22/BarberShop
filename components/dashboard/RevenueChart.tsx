@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import NoSSR from './NoSSR'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface RevenueData {
   name: string
@@ -18,7 +19,10 @@ export default function RevenueChart() {
   useEffect(() => {
     const fetchRevenueData = async () => {
       try {
-        const response = await fetch('/api/dashboard/revenue')
+        const response = await fetch('/api/dashboard/revenue', {
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        })
         if (response.ok) {
           const revenueData = await response.json()
           setData(revenueData)

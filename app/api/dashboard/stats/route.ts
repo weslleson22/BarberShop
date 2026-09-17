@@ -6,15 +6,43 @@ import { getAuthUser, requireRole } from '@/lib/api-auth'
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
-    if (!requireRole(user, ['ADMIN', 'BARBER', 'RECEPTIONIST'])) {
+    if (!requireRole(user, ['ADMIN', 'BARBER', 'RECEPTIONIST', 'CLIENT'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const barbershopId = user.barbershopId
+    let barbershopId = user.barbershopId
+    if (!barbershopId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId
+    }
 
-    // Buscar todos os agendamentos da barbearia
+    if (!barbershopId) {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id
+    }
+
+    if (!barbershopId) {
+      return NextResponse.json({ error: 'Barbearia não encontrada' }, { status: 404 })
+    }
+
+    // Se for CLIENT, filtra apenas os agendamentos do próprio cliente
+    const appointmentWhere: any = { barbershopId }
+    if (user.role === 'CLIENT') {
+      const client = await prisma.client.findUnique({ where: { userId: user.id } })
+      appointmentWhere.OR = [
+        ...(client ? [{ clientId: client.id }] : []),
+        { createdBy: user.id },
+        { client: { userId: user.id } },
+        ...(user.email ? [{ client: { email: user.email.trim().toLowerCase() } }] : [])
+      ]
+    }
+
+    // Buscar todos os agendamentos da barbearia (ou do cliente)
     const appointments = await prisma.appointment.findMany({
-      where: { barbershopId },
+      where: appointmentWhere,
       include: {
         client: true,
         service: true,

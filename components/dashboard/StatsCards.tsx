@@ -48,6 +48,8 @@ interface DashboardStats {
   }
 }
 
+import { getAuthHeaders } from '@/lib/utils'
+
 export default function StatsCards() {
   const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -60,7 +62,10 @@ export default function StatsCards() {
   const fetchStats = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/dashboard/stats')
+      const response = await fetch('/api/dashboard/stats', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
       if (response.ok) {
         const data = await response.json()
         console.log('Estatísticas do dashboard:', data)

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Users, Calendar, DollarSign } from 'lucide-react'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface Client {
   id: string
@@ -31,7 +32,10 @@ export default function RecentClients() {
     try {
       console.log('=== BUSCANDO CLIENTES RECENTES ===')
       
-      const response = await fetch('/api/clients/all')
+      const response = await fetch('/api/clients/all', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
       if (!response.ok) {
         console.error('Erro ao buscar clientes recentes:', response.status)
         setClients([])
