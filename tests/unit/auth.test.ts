@@ -30,6 +30,7 @@ function buildDbUser(overrides: Record<string, any> = {}) {
     barbershopId: 'barbershop_1',
     isActive: true,
     avatar: null,
+    phone: '(11) 99999-9999',
     barbershop: { id: 'barbershop_1', name: 'Barbearia Central' },
     ...overrides,
   }
