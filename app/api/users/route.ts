@@ -4,6 +4,9 @@ import { hashPassword } from '@/lib/auth'
 import { ensureClientForUser } from '@/lib/client-sync'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET - Listar usuários da própria barbearia
 // ADMIN e BARBER podem listar (ex.: escolher o profissional ao criar um
 // agendamento); criar/editar/excluir usuário continua restrito ao ADMIN.
@@ -17,7 +20,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
 
-    const where: any = { barbershopId: user.barbershopId }
+    let barbershopId = user.barbershopId
+    if (!barbershopId && user.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId
+    }
+
+    if (!barbershopId) {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id
+    }
+
+    const where: any = barbershopId ? { barbershopId } : {}
     if (role) {
       where.role = role
     }

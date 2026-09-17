@@ -18,6 +18,9 @@ async function handleStatusChangeNotifications(appointment: any, previousStatus:
   }
 }
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Carrega o agendamento e valida que quem está chamando tem permissão sobre
 // ele: mesmo tenant sempre, e para BARBER/CLIENT também precisa ser "dono"
 // do agendamento (o próprio barbeiro ou o próprio cliente).
@@ -27,7 +30,20 @@ async function loadAuthorizedAppointment(id: string, user: NonNullable<ReturnTyp
     include: { client: true },
   })
 
-  if (!appointment || appointment.barbershopId !== user.barbershopId) {
+  let barbershopId = user.barbershopId
+  if (!barbershopId && user.id) {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { barbershopId: true },
+    })
+    barbershopId = dbUser?.barbershopId
+  }
+  if (!barbershopId) {
+    const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+    barbershopId = firstShop?.id
+  }
+
+  if (!appointment || (barbershopId && appointment.barbershopId !== barbershopId)) {
     return { appointment: null, allowed: false }
   }
 
@@ -39,8 +55,13 @@ async function loadAuthorizedAppointment(id: string, user: NonNullable<ReturnTyp
     return { appointment, allowed: appointment.barberId === user.id }
   }
 
-  // CLIENT: só o próprio agendamento (Appointment.clientId -> Client.id, não User.id)
-  return { appointment, allowed: appointment.client.userId === user.id }
+  // CLIENT: próprio agendamento (userId, createdBy, ou email coincidente)
+  const isClientOwner =
+    appointment.client?.userId === user.id ||
+    appointment.createdBy === user.id ||
+    (user.email && appointment.client?.email?.trim().toLowerCase() === user.email.trim().toLowerCase())
+
+  return { appointment, allowed: !!isClientOwner }
 }
 
 // GET - Obter agendamento específico

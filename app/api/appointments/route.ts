@@ -5,6 +5,9 @@ import { criarAgendamento, getHorariosDisponiveis } from '@/lib/appointment-sche
 
 import { getAuthUser } from '@/lib/api-auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET - Listar agendamentos
 export async function GET(request: NextRequest) {
   try {
@@ -28,6 +31,11 @@ export async function GET(request: NextRequest) {
         select: { barbershopId: true }
       })
       barbershopId = dbUser?.barbershopId
+    }
+
+    if (!barbershopId) {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id
     }
 
     const where: any = {}

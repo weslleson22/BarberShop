@@ -9,6 +9,7 @@ import CalendarView from '@/components/agenda/CalendarView'
 import AppointmentList from '@/components/agenda/AppointmentList'
 import AppointmentModal from '@/components/agenda/AppointmentModal'
 import AppointmentDetailsModal from '@/components/agenda/AppointmentDetailsModal'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface Appointment {
   id: string
@@ -100,7 +101,13 @@ export default function AgendaPage() {
       if (barberFilter) params.set('barberId', barberFilter)
       if (searchQuery.trim()) params.set('search', searchQuery.trim())
 
-      const response = await fetch(`/api/appointments?${params.toString()}`)
+      const queryString = params.toString()
+      const url = queryString ? `/api/appointments?${queryString}` : '/api/appointments'
+
+      const response = await fetch(url, {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
       if (response.ok) {
         const data = await response.json()
         setAppointments(Array.isArray(data) ? data : [])

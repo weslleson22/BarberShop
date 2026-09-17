@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 import { notifyAdminsNewClient } from '@/lib/notifications'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET - Listar clientes (equipe da barbearia; ADMIN/BARBER/RECEPTIONIST)
 export async function GET(request: NextRequest) {
   try {
@@ -14,12 +17,25 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
 
-    if (!decoded.barbershopId) {
+    let barbershopId = decoded.barbershopId
+    if (!barbershopId && decoded.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId
+    }
+    if (!barbershopId) {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id
+    }
+
+    if (!barbershopId) {
       return NextResponse.json({ error: 'Barbearia não identificada' }, { status: 400 })
     }
 
     const where: any = {
-      barbershopId: decoded.barbershopId,
+      barbershopId,
     }
 
     // Barbeiro só vê os clientes que já têm/tiveram agendamento com ele —

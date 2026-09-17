@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Menu, X, LogIn, ArrowRight } from 'lucide-react'
-import NotificationBell from '@/components/shared/NotificationBell'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -15,18 +14,22 @@ export default function Header() {
     if (user) {
       router.push('/dashboard')
     } else {
-      router.push('/login')
+      router.push('/register')
     }
   }
 
   const handleLogin = () => {
-    router.push('/login')
+    if (user) {
+      router.push('/dashboard')
+    } else {
+      router.push('/login')
+    }
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl border-b border-white/8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
@@ -48,7 +51,6 @@ export default function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-3">
-            {user && <NotificationBell />}
             <button 
               onClick={handleLogin}
               className="px-4 py-2 text-white/80 hover:text-white border border-white/20 rounded-lg transition-all hover:border-white/40"
@@ -64,9 +66,8 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Mobile Menu Button & Notification */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
-            {user && <NotificationBell />}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 text-white/80 hover:text-white"

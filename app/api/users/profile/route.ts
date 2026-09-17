@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
+import { getAuthUser } from '@/lib/api-auth'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar token
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!decoded) {
       return NextResponse.json(
         { error: 'Não autorizado' },
-        { status: 401 }
-      )
-    }
-
-    // Decodificar token
-    let decoded: any
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret')
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Token inválido' },
         { status: 401 }
       )
     }
@@ -28,7 +19,6 @@ export async function GET(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: {
         id: decoded.id,
-        barbershopId: decoded.barbershopId
       },
       select: {
         id: true,
@@ -72,22 +62,10 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Verificar token
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!decoded) {
       return NextResponse.json(
         { error: 'Não autorizado' },
-        { status: 401 }
-      )
-    }
-
-    // Decodificar token
-    let decoded: any
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret')
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Token inválido' },
         { status: 401 }
       )
     }

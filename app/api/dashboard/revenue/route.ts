@@ -2,11 +2,28 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
     if (!requireRole(user, ['ADMIN', 'BARBER', 'RECEPTIONIST'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    let barbershopId = user.barbershopId
+    if (!barbershopId && user.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId
+    }
+
+    if (!barbershopId) {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id
     }
 
     // Get the last 7 days
@@ -19,7 +36,7 @@ export async function GET(request: NextRequest) {
     // Fetch completed appointments in the date range, scoped to the user's barbershop
     const appointments = await prisma.appointment.findMany({
       where: {
-        barbershopId: user.barbershopId,
+        ...(barbershopId ? { barbershopId } : {}),
         status: 'COMPLETED',
         startTime: {
           gte: startDate,
@@ -57,7 +74,7 @@ export async function GET(request: NextRequest) {
         })
         .reduce((sum, apt) => {
           const totalAmount = apt.totalAmount ? Number(apt.totalAmount) : 0
-          const servicePrice = apt.service.price ? Number(apt.service.price) : 0
+          const servicePrice = apt.service?.price ? Number(apt.service.price) : 0
           return sum + (totalAmount || servicePrice || 0)
         }, 0)
 

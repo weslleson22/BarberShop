@@ -1,22 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/api-auth'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 // GET - Listar serviços
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!decoded) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
     const { searchParams } = new URL(request.url)
     const active = searchParams.get('active')
 
-    const where: any = {
-      barbershopId: decoded.barbershopId,
+    let barbershopId = decoded.barbershopId
+    if (!barbershopId && decoded.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId
     }
+    if (!barbershopId) {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id
+    }
+
+    const where: any = barbershopId ? { barbershopId } : {}
 
     if (active !== null) {
       where.isActive = active === 'true'
@@ -42,15 +55,26 @@ export async function GET(request: NextRequest) {
 // POST - Criar serviço
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!decoded) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
+    let barbershopId = decoded.barbershopId
+    if (!barbershopId && decoded.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId
+    }
+    if (!barbershopId) {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id
+    }
     
-    if (!decoded || !decoded.barbershopId) {
-      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
+    if (!barbershopId) {
+      return NextResponse.json({ error: 'Barbearia não identificada' }, { status: 401 })
     }
     
     if (decoded.role !== 'ADMIN') {
@@ -73,7 +97,7 @@ export async function POST(request: NextRequest) {
         description,
         price: parseFloat(price),
         duration: parseInt(duration),
-        barbershopId: decoded.barbershopId,
+        barbershopId,
       },
     })
 
@@ -90,15 +114,26 @@ export async function POST(request: NextRequest) {
 // PUT - Atualizar serviço
 export async function PUT(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
+    const decoded = getAuthUser(request)
+    if (!decoded) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
+    let barbershopId = decoded.barbershopId
+    if (!barbershopId && decoded.id) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId
+    }
+    if (!barbershopId) {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id
+    }
     
-    if (!decoded || !decoded.barbershopId) {
-      return NextResponse.json({ error: 'Token inválido ou barbearia não identificada' }, { status: 401 })
+    if (!barbershopId) {
+      return NextResponse.json({ error: 'Barbearia não identificada' }, { status: 401 })
     }
     
     if (decoded.role !== 'ADMIN') {

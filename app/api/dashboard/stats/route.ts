@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET - Buscar estatísticas reais do dashboard, restritas à barbearia do usuário autenticado
 export async function GET(request: NextRequest) {
   try {
@@ -74,7 +77,7 @@ export async function GET(request: NextRequest) {
     // Faturamento total (apenas concluídos)
     const totalRevenue = appointments
       .filter(apt => apt.status === 'COMPLETED')
-      .reduce((sum, apt) => sum + Number(apt.totalAmount), 0)
+      .reduce((sum, apt) => sum + (Number(apt.totalAmount) || 0), 0)
     
     // Ticket médio
     const averageTicket = completedAppointments > 0 ? totalRevenue / completedAppointments : 0
@@ -124,7 +127,7 @@ export async function GET(request: NextRequest) {
                aptDate.getFullYear() === currentYear &&
                apt.status === 'COMPLETED'
       })
-      .reduce((sum, apt) => sum + Number(apt.totalAmount), 0)
+      .reduce((sum, apt) => sum + (Number(apt.totalAmount) || 0), 0)
     
     const previousMonthRevenue = appointments
       .filter(apt => {
@@ -135,7 +138,7 @@ export async function GET(request: NextRequest) {
                aptDate.getFullYear() === prevYear &&
                apt.status === 'COMPLETED'
       })
-      .reduce((sum, apt) => sum + Number(apt.totalAmount), 0)
+      .reduce((sum, apt) => sum + (Number(apt.totalAmount) || 0), 0)
     
     const revenueChange = previousMonthRevenue > 0 
       ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100

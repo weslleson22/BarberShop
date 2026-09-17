@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Search, ChevronDown, Plus, Filter, Calendar } from 'lucide-react'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface Barber {
   id: string
@@ -37,7 +38,10 @@ export default function AgendaHeader({
 
   useEffect(() => {
     if (hideBarberFilter) return
-    fetch('/api/users?role=BARBER')
+    fetch('/api/users?role=BARBER', {
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setBarbers(Array.isArray(data) ? data : []))
       .catch(() => setBarbers([]))

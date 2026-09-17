@@ -9,8 +9,11 @@ export function getAuthUser(request: NextRequest): JWTPayload | null {
 
   if (!token) {
     const authHeader = request.headers.get('authorization')
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7)
+    if (authHeader) {
+      const match = authHeader.match(/^Bearer\s+(.+)$/i)
+      if (match) {
+        token = match[1]
+      }
     }
   }
 
