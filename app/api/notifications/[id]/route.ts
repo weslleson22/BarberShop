@@ -8,7 +8,7 @@ export const revalidate = 0
 // PATCH - Marcar uma notificação específica como lida
 export async function PATCH(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getAuthUser(request)
@@ -16,8 +16,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const resolvedParams = await Promise.resolve(context?.params)
-    const id = resolvedParams?.id
+    const { id } = await context.params
 
     if (!id) {
       return NextResponse.json({ error: 'ID da notificação não fornecido' }, { status: 400 })
@@ -62,7 +61,7 @@ export async function PATCH(
 // DELETE - Excluir uma notificação específica
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getAuthUser(request)
@@ -70,8 +69,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const resolvedParams = await Promise.resolve(context?.params)
-    const id = resolvedParams?.id
+    const { id } = await context.params
 
     if (!id) {
       return NextResponse.json({ error: 'ID da notificação não fornecido' }, { status: 400 })
