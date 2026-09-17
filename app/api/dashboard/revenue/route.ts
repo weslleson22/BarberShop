@@ -80,8 +80,15 @@ export async function GET(request: NextRequest) {
           lte: endDate
         }
       },
-      include: {
-        service: true
+      select: {
+        id: true,
+        startTime: true,
+        totalAmount: true,
+        service: {
+          select: {
+            price: true
+          }
+        }
       },
       orderBy: {
         startTime: 'asc'

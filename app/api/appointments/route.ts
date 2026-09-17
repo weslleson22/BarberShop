@@ -175,21 +175,46 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    // Seleciona campos essenciais explicitamente sem carregar imagens/avatares em base64,
+    // garantindo que a resposta não ultrapasse o limite de 5MB do Prisma Data Platform.
     const appointments = await prisma.appointment.findMany({
       where,
-      include: {
-        client: true,
+      select: {
+        id: true,
+        startTime: true,
+        endTime: true,
+        status: true,
+        notes: true,
+        totalAmount: true,
+        createdAt: true,
+        barbershopId: true,
+        clientId: true,
+        barberId: true,
+        serviceId: true,
+        client: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
         barber: {
           select: {
             id: true,
             name: true,
             email: true,
-            avatar: true,
             phone: true,
-            bio: true,
           },
         },
-        service: true,
+        service: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            duration: true,
+          },
+        },
       },
       orderBy: {
         startTime: 'asc',

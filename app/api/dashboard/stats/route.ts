@@ -79,28 +79,40 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // Buscar todos os agendamentos da barbearia (ou do cliente)
+    // Buscar todos os agendamentos da barbearia (ou do cliente) com select refinado
+    // (evita carregar fotos/avatares em base64 que ultrapassam o limite de 5MB do Prisma)
     const appointments = await prisma.appointment.findMany({
       where: appointmentWhere,
-      include: {
-        client: true,
-        service: true,
-        barber: true,
+      select: {
+        id: true,
+        status: true,
+        startTime: true,
+        totalAmount: true,
       },
     })
 
-    // Buscar todos os clientes da barbearia
-    const clients = await prisma.client.findMany({ where: { barbershopId } })
+    // Buscar clientes apenas com id e createdAt (necessários para contagem e crescimento)
+    const clients = await prisma.client.findMany({
+      where: { barbershopId },
+      select: {
+        id: true,
+        createdAt: true,
+      },
+    })
 
-    // Buscar todos os serviços da barbearia
-    const services = await prisma.service.findMany({ where: { barbershopId } })
+    // Contagem de serviços da barbearia
+    const services = await prisma.service.findMany({
+      where: { barbershopId },
+      select: { id: true },
+    })
 
-    // Buscar todos os usuários barbeiros da barbearia
+    // Contagem de barbeiros da barbearia
     const barbers = await prisma.user.findMany({
       where: {
         barbershopId,
         role: 'BARBER'
-      }
+      },
+      select: { id: true },
     })
 
     // Calcular estatísticas
