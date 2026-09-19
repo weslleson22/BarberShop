@@ -1,35 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+import { getAuthUser, requireRole } from '@/lib/api-auth'
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
+
+  // Bloqueio rigoroso em produção
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Endpoint não disponível em produção' }, { status: 404 })
+  }
+
+  // Apenas usuários com papel DEVELOPER podem acessar em desenvolvimento
+  const user = getAuthUser(request)
+  if (!user || !requireRole(user, ['DEVELOPER'])) {
+    return NextResponse.json({ error: 'Acesso restrito ao papel DEVELOPER' }, { status: 403 })
+  }
   
   try {
-    // Capturar todas as variáveis de ambiente relevantes
+    const rawDbUrl = process.env.DATABASE_URL || ''
+    // Mascarar senha caso exista na URL
+    const maskedDbUrl = rawDbUrl.replace(/(:[^:@]+)@/, ':****@')
+
     const envVars = {
-      databaseUrl: process.env.DATABASE_URL || 'Não definida',
-      jwtSecret: process.env.JWT_SECRET || 'Não definida',
-      nextAuthSecret: process.env.NEXTAUTH_SECRET || 'Não definida',
-      nextAuthUrl: process.env.NEXTAUTH_URL || 'Não definida',
+      databaseUrl: maskedDbUrl ? maskedDbUrl.substring(0, 30) + '...' : 'Não definida',
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
+      hasNextAuthUrl: !!process.env.NEXTAUTH_URL,
       nodeEnv: process.env.NODE_ENV || 'development',
-      
-      // Status flags
-      hasDatabaseUrl: !!process.env.DATABASE_URL && process.env.DATABASE_URL !== 'Não definida',
-      hasJwtSecret: !!process.env.JWT_SECRET && process.env.JWT_SECRET !== 'Não definida',
-      hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET && process.env.NEXTAUTH_SECRET !== 'Não definida',
-      hasNextAuthUrl: !!process.env.NEXTAUTH_URL && process.env.NEXTAUTH_URL !== 'Não definida',
-      
-      // Informações adicionais
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
-      
-      // Debug adicional
-      allEnvKeys: Object.keys(process.env).filter(key => 
-        key.includes('DATABASE') || 
-        key.includes('JWT') || 
-        key.includes('NEXTAUTH') || 
-        key.includes('NODE_ENV')
-      )
     }
 
     // Testar conexão com banco de dados

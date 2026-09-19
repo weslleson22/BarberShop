@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, createContext, useContext } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 interface DatabaseContextType {
   isValidated: boolean
@@ -27,6 +27,7 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     // Só validar em produção ou quando explicitamente solicitado
@@ -79,12 +80,14 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
     validateDatabaseConnection()
   }
 
-  // Em produção, se não estiver conectado, redirecionar para página de validação
+  // Em produção, redirecionar para validação apenas se for rota interna protegida, nunca a landing page pública '/'
   useEffect(() => {
+    if (pathname === '/' || pathname === '/loading') return
+
     if (process.env.NODE_ENV === 'production' && isValidated && !isConnected) {
       router.push('/loading')
     }
-  }, [isValidated, isConnected, router])
+  }, [isValidated, isConnected, router, pathname])
 
   return (
     <DatabaseContext.Provider

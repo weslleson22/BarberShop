@@ -10,60 +10,27 @@ export const revalidate = 0
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
-    if (!requireRole(user, ['ADMIN', 'BARBER', 'RECEPTIONIST'])) {
+    if (!requireRole(user, ['DEVELOPER', 'ADMIN', 'BARBER', 'RECEPTIONIST'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    let barbershopId = user.barbershopId
-    if (!barbershopId && user.id) {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { barbershopId: true }
-      })
-      barbershopId = dbUser?.barbershopId
-    }
+    const { searchParams } = new URL(request.url)
+    const requestedShopId = searchParams.get('barbershopId')
 
-    // Se o usuário é ADMIN ou RECEPTIONIST, sincronizar com a barbearia ativa
-    if (user.role === 'ADMIN' || user.role === 'RECEPTIONIST') {
-      const latestAppt = await prisma.appointment.findFirst({
-        select: { barbershopId: true },
-        orderBy: { createdAt: 'desc' }
-      })
-      if (latestAppt?.barbershopId && latestAppt.barbershopId !== barbershopId) {
-        barbershopId = latestAppt.barbershopId
-        try {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { barbershopId }
-          })
-        } catch {}
+    let barbershopId: string | null = null
+    if (user.role === 'DEVELOPER') {
+      barbershopId = requestedShopId || user.barbershopId || null
+    } else {
+      barbershopId = user.barbershopId || null
+      if (!barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
       }
     }
 
-    // Se o usuário é BARBER, sincronizar com a barbearia onde os agendamentos do barbeiro estão
-    if (user.role === 'BARBER') {
-      const barberAppt = await prisma.appointment.findFirst({
-        where: { barberId: user.id },
-        select: { barbershopId: true },
-        orderBy: { createdAt: 'desc' }
-      })
-      if (barberAppt?.barbershopId && barberAppt.barbershopId !== barbershopId) {
-        barbershopId = barberAppt.barbershopId
-        try {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { barbershopId }
-          })
-        } catch {}
-      }
+    const where: any = {}
+    if (barbershopId) {
+      where.barbershopId = barbershopId
     }
-
-    if (!barbershopId) {
-      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
-      barbershopId = firstShop?.id
-    }
-
-    const where: any = barbershopId ? { barbershopId } : {}
 
     // Barbeiro só vê os clientes que já têm/tiveram agendamento com ele —
     // não a base de clientes inteira da barbearia.

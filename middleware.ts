@@ -18,16 +18,24 @@ export async function middleware(request: NextRequest) {
   const publicPrefixes = ['/login', '/register', '/agendar', '/servicos']
 
   // Rotas que precisam de autenticação (mas não necessariamente bloqueio por role)
-  const authRequiredPaths = ['/dashboard', '/agenda', '/clientes', '/usuarios', '/configuracoes', '/perfil', '/meus-agendamentos']
+  const authRequiredPaths = [
+    '/developer',
+    '/dashboard',
+    '/agenda',
+    '/clientes',
+    '/usuarios',
+    '/configuracoes',
+    '/perfil',
+    '/meus-agendamentos',
+  ]
 
-  // Definir rotas por role. Toda rota staff-only (agenda/clientes de gestão)
-  // inclui RECEPTIONIST — recepção administra agenda e clientes, mas não
-  // gerencia a equipe (/usuarios continua ADMIN-only).
+  // Definir rotas por role
   const roleBasedRoutes: Record<string, UserRole[]> = {
-    '/dashboard': ALL_ROLES,
+    '/developer': ['DEVELOPER'],
+    '/usuarios': ['DEVELOPER', 'ADMIN'],
     '/agenda': ['ADMIN', 'BARBER', 'RECEPTIONIST'],
     '/clientes': ['ADMIN', 'BARBER', 'RECEPTIONIST'],
-    '/usuarios': ['ADMIN'],
+    '/dashboard': ['ADMIN', 'BARBER', 'RECEPTIONIST', 'CLIENT'],
     '/configuracoes': ALL_ROLES,
     '/perfil': ALL_ROLES,
     '/meus-agendamentos': ['CLIENT'],
@@ -64,19 +72,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
-    // Validar o token JWT. O middleware roda em runtime 'nodejs' (ver config
-    // abaixo), então podemos verificar a assinatura de verdade em vez de só
-    // decodificar o payload em base64 — decodificar sem verificar permitia
-    // que um token forjado (role/barbershopId adulterados) passasse por este
-    // gate de rota, mesmo que as chamadas de API continuassem protegidas.
     try {
       const payload = jwt.verify(token, JWT_SECRET) as { role: string; exp?: number }
 
+      // Se o usuário é DEVELOPER tentando acessar dashboard ou agenda, redireciona para /developer
+      if (payload.role === 'DEVELOPER' && (pathname.startsWith('/dashboard') || pathname.startsWith('/agenda') || pathname.startsWith('/clientes'))) {
+        return NextResponse.redirect(new URL('/developer', request.url))
+      }
+
       // Verificar se o usuário tem permissão para acessar esta rota
       if (allowedRoles.length > 0 && !allowedRoles.includes(payload.role)) {
-        const loginUrl = new URL('/login', request.url)
-        loginUrl.searchParams.set('redirect', pathname)
-        return NextResponse.redirect(loginUrl)
+        const redirectPath = payload.role === 'DEVELOPER' ? '/developer' : '/dashboard'
+        return NextResponse.redirect(new URL(redirectPath, request.url))
       }
 
     } catch (error) {

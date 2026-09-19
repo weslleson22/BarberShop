@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, createBarbershop } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function POST(request: NextRequest) {
   try {
     const { type, ...data } = await request.json()
@@ -19,8 +22,22 @@ export async function POST(request: NextRequest) {
 
       return response
     } else {
-      // Criar usuário regular
-      const result = await createUser(data)
+      // Criar cliente regular — NUNCA permitir escalada de privilégios via payload público
+      if (!data.name || !data.email || !data.password) {
+        return NextResponse.json(
+          { error: 'Nome, email e senha são obrigatórios' },
+          { status: 400 }
+        )
+      }
+
+      const result = await createUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+        barbershopId: data.barbershopId || null,
+        role: 'CLIENT',
+      })
 
       const response = NextResponse.json(result)
       response.cookies.set('auth-token', result.token, {

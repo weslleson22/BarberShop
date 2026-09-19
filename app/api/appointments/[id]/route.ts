@@ -30,20 +30,17 @@ async function loadAuthorizedAppointment(id: string, user: NonNullable<ReturnTyp
     include: { client: true },
   })
 
-  let barbershopId = user.barbershopId
-  if (!barbershopId && user.id) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { barbershopId: true },
-    })
-    barbershopId = dbUser?.barbershopId
-  }
-  if (!barbershopId) {
-    const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
-    barbershopId = firstShop?.id
+  if (!appointment) {
+    return { appointment: null, allowed: false }
   }
 
-  if (!appointment || (barbershopId && appointment.barbershopId !== barbershopId)) {
+  // Se for DEVELOPER, tem permissão global
+  if (user.role === 'DEVELOPER') {
+    return { appointment, allowed: true }
+  }
+
+  // Usuários comuns devem obrigatoriamente pertencer à mesma barbearia do agendamento
+  if (!user.barbershopId || appointment.barbershopId !== user.barbershopId) {
     return { appointment: null, allowed: false }
   }
 
@@ -131,16 +128,16 @@ export async function PUT(
     const endDateTime = typeof endTime === 'string' ? new Date(endTime) : endTime
 
     const service = await prisma.service.findFirst({
-      where: { id: serviceId, barbershopId: user.barbershopId },
+      where: { id: serviceId, barbershopId: existingAppointment.barbershopId },
     })
 
     if (!service) {
-      return NextResponse.json({ error: 'Serviço não encontrado' }, { status: 404 })
+      return NextResponse.json({ error: 'Serviço não encontrado nesta barbearia' }, { status: 404 })
     }
 
     const conflictingAppointment = await prisma.appointment.findFirst({
       where: {
-        barbershopId: user.barbershopId,
+        barbershopId: existingAppointment.barbershopId,
         barberId,
         startTime: { lt: endDateTime },
         endTime: { gt: startDateTime },

@@ -2,46 +2,53 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/api-auth'
 
-// GET - Buscar clientes (público)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+// GET - Buscar cliente por telefone (público)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const phone = searchParams.get('phone')
+    let barbershopId = searchParams.get('barbershopId')
 
-    // Buscar a primeira barbearia disponível
-    let barbershopId = 'cmo6dajse0000tlnihesqqda8' // fallback
-    
-    try {
-      const barbershop = await prisma.barbershop.findFirst({
-        select: { id: true }
-      })
-      if (barbershop) {
-        barbershopId = barbershop.id
-        console.log('Usando barbearia encontrada:', barbershopId)
-      }
-    } catch (error) {
-      console.log('Usando barbearia fallback:', barbershopId)
+    const authUser = getAuthUser(request)
+    if (!barbershopId && authUser?.barbershopId) {
+      barbershopId = authUser.barbershopId
     }
 
-    // Se phone for fornecido, buscar por telefone
-    if (phone) {
-      const clients = await prisma.client.findMany({
-        where: {
-          phone: phone,
-          barbershopId
-        }
+    if (!barbershopId) {
+      const activeShop = await prisma.barbershop.findFirst({
+        where: { isActive: true },
+        select: { id: true },
       })
-      return NextResponse.json(clients)
+      barbershopId = activeShop?.id || null
     }
 
-    // Se não, listar todos os clientes
+    if (!barbershopId) {
+      return NextResponse.json({ error: 'Barbearia não especificada' }, { status: 400 })
+    }
+
+    // Bloqueio de segurança: NUNCA listar todos os clientes de forma pública
+    if (!phone) {
+      return NextResponse.json(
+        { error: 'Telefone é obrigatório para consulta pública de cliente' },
+        { status: 400 }
+      )
+    }
+
     const clients = await prisma.client.findMany({
       where: {
-        barbershopId
+        phone: phone.trim(),
+        barbershopId,
       },
-      orderBy: {
-        name: 'asc'
-      }
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        barbershopId: true,
+      },
     })
 
     return NextResponse.json(clients)
@@ -71,19 +78,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar a primeira barbearia disponível
-    let barbershopId = 'cmo6dajse0000tlnihesqqda8' // fallback
-    
-    try {
-      const barbershop = await prisma.barbershop.findFirst({
+    let barbershopId = data.barbershopId || authUser?.barbershopId || null
+    if (!barbershopId) {
+      const activeShop = await prisma.barbershop.findFirst({
+        where: { isActive: true },
         select: { id: true }
       })
-      if (barbershop) {
-        barbershopId = barbershop.id
-        console.log('Usando barbearia encontrada:', barbershopId)
-      }
-    } catch (error) {
-      console.log('Usando barbearia fallback:', barbershopId)
+      barbershopId = activeShop?.id || null
+    }
+
+    if (!barbershopId) {
+      return NextResponse.json({ error: 'Barbearia obrigatória' }, { status: 400 })
     }
 
     // 1. Se o usuário estiver autenticado, priorizar o Client já vinculado ao seu ID

@@ -65,10 +65,10 @@ export default function UsuariosPage() {
         return
       }
       
-      // Apenas ADMIN pode acessar página de usuários
-      if (user.role !== 'ADMIN') {
-        console.log('USUÁRIOS: Usuário sem permissão - Role:', user.role, '- Redirecionando para dashboard')
-        router.push('/dashboard')
+      // Apenas ADMIN e DEVELOPER podem acessar página de usuários
+      if (user.role !== 'ADMIN' && user.role !== 'DEVELOPER') {
+        console.log('USUÁRIOS: Usuário sem permissão - Role:', user.role, '- Redirecionando')
+        router.push(user.role === 'CLIENT' ? '/meus-agendamentos' : '/dashboard')
         return
       }
       

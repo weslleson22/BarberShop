@@ -1,6 +1,10 @@
-// API pública para listar barbeiros (usada pelo agendamento sem login)
+// API pública para listar barbeiros (usada pelo agendamento)
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/api-auth'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,18 +12,39 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
+    let barbershopId = searchParams.get('barbershopId')
     
     // Apenas permitir BARBER para uso público
     if (role && role !== 'BARBER') {
       return NextResponse.json(
-        { error: 'Acesso não permitido para esta role' },
+        { error: 'Acesso não permitido para este papel' },
         { status: 403 }
       )
+    }
+
+    if (!barbershopId) {
+      const authUser = getAuthUser(request)
+      if (authUser?.barbershopId) {
+        barbershopId = authUser.barbershopId
+      }
+    }
+
+    if (!barbershopId) {
+      const activeShop = await prisma.barbershop.findFirst({
+        where: { isActive: true },
+        select: { id: true },
+      })
+      barbershopId = activeShop?.id || null
+    }
+
+    if (!barbershopId) {
+      return NextResponse.json([])
     }
     
     const where: any = {
       role: 'BARBER',
-      isActive: true
+      isActive: true,
+      barbershopId,
     }
     
     console.log('Buscando barbeiros públicos com filtro:', where)

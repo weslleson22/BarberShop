@@ -1,24 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser, requireRole } from '@/lib/api-auth'
 
 // PUT - Atualizar serviço (completo ou apenas isActive)
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    const user = getAuthUser(request)
+    if (!requireRole(user, ['DEVELOPER', 'ADMIN'])) {
+      return NextResponse.json({ error: 'Apenas administradores podem atualizar serviços' }, { status: 403 })
     }
 
-    const decoded = verifyToken(token)
     const { id } = await context.params
+
+    const serviceWhere: any = { id }
+    if (user.role !== 'DEVELOPER') {
+      if (!user.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      serviceWhere.barbershopId = user.barbershopId
+    }
 
     // Verificar se o serviço existe e pertence à barbearia do usuário
     const existingService = await prisma.service.findFirst({
-      where: {
-        id,
-        barbershopId: decoded.barbershopId,
-      },
+      where: serviceWhere,
     })
 
     if (!existingService) {
@@ -41,11 +45,11 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const updatedService = await prisma.service.update({
       where: { id },
       data: {
-        name,
-        description,
-        price: parseFloat(price),
-        duration: parseInt(duration),
-        isActive,
+        name: name !== undefined ? name : existingService.name,
+        description: description !== undefined ? description : existingService.description,
+        price: price !== undefined ? parseFloat(price) : existingService.price,
+        duration: duration !== undefined ? parseInt(duration) : existingService.duration,
+        isActive: isActive !== undefined ? isActive : existingService.isActive,
       },
     })
 
@@ -62,20 +66,24 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 // DELETE - Excluir serviço
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    const user = getAuthUser(request)
+    if (!requireRole(user, ['DEVELOPER', 'ADMIN'])) {
+      return NextResponse.json({ error: 'Apenas administradores podem excluir serviços' }, { status: 403 })
     }
 
-    const decoded = verifyToken(token)
     const { id } = await context.params
+
+    const serviceWhere: any = { id }
+    if (user.role !== 'DEVELOPER') {
+      if (!user.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      serviceWhere.barbershopId = user.barbershopId
+    }
 
     // Verificar se o serviço existe e pertence à barbearia do usuário
     const existingService = await prisma.service.findFirst({
-      where: {
-        id,
-        barbershopId: decoded.barbershopId,
-      },
+      where: serviceWhere,
       include: {
         _count: {
           select: {

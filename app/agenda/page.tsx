@@ -150,11 +150,25 @@ export default function AgendaPage() {
   }, [selectedDate, datePeriod, statusFilter, barberFilter, searchQuery])
 
   useEffect(() => {
-    fetchAppointments()
-  }, [fetchAppointments])
+    if (!authLoading) {
+      if (!user) {
+        router.push('/login')
+      } else if (user.role === 'DEVELOPER') {
+        router.replace('/developer')
+      } else if (user.role === 'CLIENT') {
+        router.replace('/meus-agendamentos')
+      }
+    }
+  }, [user, authLoading, router])
 
-  // Aguardar carregamento inicial do contexto
-  if (authLoading) {
+  useEffect(() => {
+    if (!authLoading && user && user.role !== 'DEVELOPER' && user.role !== 'CLIENT') {
+      fetchAppointments()
+    }
+  }, [authLoading, user, fetchAppointments])
+
+  // Aguardar carregamento inicial do contexto ou redirecionamento de role não permitida
+  if (authLoading || (user && (user.role === 'DEVELOPER' || user.role === 'CLIENT'))) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400 mx-auto mb-4"></div>

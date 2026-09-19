@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { criarAgendamento } from '@/lib/appointment-scheduler'
 import { getAuthUser } from '@/lib/api-auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET - Disponibilidade de horários para o fluxo de agendamento sem login.
 // Esta rota é pública de propósito (o visitante ainda não tem conta), então
 // só pode devolver o mínimo necessário para calcular conflitos de horário —
@@ -11,10 +14,39 @@ import { getAuthUser } from '@/lib/api-auth'
 // que já filtra pela barbearia do usuário logado).
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    let barbershopId = searchParams.get('barbershopId')
+    const barberId = searchParams.get('barberId')
+
+    if (!barbershopId) {
+      const authUser = getAuthUser(request)
+      if (authUser?.barbershopId) {
+        barbershopId = authUser.barbershopId
+      }
+    }
+
+    if (!barbershopId) {
+      const activeShop = await prisma.barbershop.findFirst({
+        where: { isActive: true },
+        select: { id: true },
+      })
+      barbershopId = activeShop?.id || null
+    }
+
+    if (!barbershopId) {
+      return NextResponse.json([])
+    }
+
+    const where: any = {
+      barbershopId,
+      status: { not: 'CANCELLED' },
+    }
+    if (barberId) {
+      where.barberId = barberId
+    }
+
     const appointments = await prisma.appointment.findMany({
-      where: {
-        status: { not: 'CANCELLED' },
-      },
+      where,
       select: {
         id: true,
         barberId: true,
@@ -43,18 +75,40 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { clientId, barberId, serviceId, startTime, notes } = data
+    const { clientId, barberId, serviceId, startTime, notes, barbershopId: bodyShopId } = data
 
-    // Buscar a primeira barbearia disponível (o fluxo público ainda não tem
-    // seleção de barbearia por tenant)
-    const barbershop = await prisma.barbershop.findFirst({ select: { id: true } })
-    if (!barbershop) {
+    let barbershopId = bodyShopId || null
+    if (!barbershopId) {
+      const authUser = getAuthUser(request)
+      if (authUser?.barbershopId) {
+        barbershopId = authUser.barbershopId
+      }
+    }
+
+    if (!barbershopId && serviceId) {
+      const svc = await prisma.service.findUnique({
+        where: { id: serviceId },
+        select: { barbershopId: true },
+      })
+      if (svc?.barbershopId) {
+        barbershopId = svc.barbershopId
+      }
+    }
+
+    if (!barbershopId) {
+      const barbershop = await prisma.barbershop.findFirst({
+        where: { isActive: true },
+        select: { id: true }
+      })
+      barbershopId = barbershop?.id || null
+    }
+
+    if (!barbershopId) {
       return NextResponse.json(
-        { error: 'Nenhuma barbearia disponível' },
+        { error: 'Nenhuma barbearia ativa disponível' },
         { status: 400 }
       )
     }
-    const barbershopId = barbershop.id
 
     // Serviço e barbeiro precisam pertencer a essa mesma barbearia — não
     // confiar que o serviceId/barberId enviados já são consistentes entre si

@@ -32,3 +32,20 @@ export function requireRole(
 ): user is JWTPayload {
   return !!user && roles.includes(user.role)
 }
+
+/**
+ * Determina o barbershopId seguro a ser usado na consulta ou mutação.
+ * - Usuários comuns (ADMIN, BARBER, RECEPTIONIST, CLIENT) NUNCA podem ver ou alterar outro tenant:
+ *   o retorno é estritamente user.barbershopId.
+ * - Usuário DEVELOPER tem acesso global ou pode especificar um tenant via overrideId.
+ */
+export function getSafeTenantId(user: JWTPayload, overrideId?: string | null): string | null {
+  if (user.role === 'DEVELOPER') {
+    return overrideId || user.barbershopId || null
+  }
+  return user.barbershopId || null
+}
+
+export function isDeveloper(user: JWTPayload | null): boolean {
+  return !!user && user.role === 'DEVELOPER'
+}

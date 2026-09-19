@@ -24,7 +24,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   register: (name: string, email: string, password: string, phone?: string, role?: string) => Promise<boolean>
   logout: () => void
   updateUser: (userData: Partial<User>) => void
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true)
       
@@ -84,22 +84,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Login failed')
-      }
+      const data = await response.json().catch(() => ({}))
 
-      const data = await response.json()
+      if (!response.ok) {
+        const errorMessage = data.error || data.message || 'Email ou senha incorretos'
+        return { success: false, error: errorMessage }
+      }
       
       // Store token and user data
       localStorage.setItem('auth_token', data.token)
       localStorage.setItem('user_data', JSON.stringify(data.user))
       setUser(data.user)
       
-      return true
-    } catch (error) {
+      return { success: true }
+    } catch (error: any) {
       console.error('Login error:', error)
-      return false
+      return { success: false, error: error?.message || 'Erro de conexão' }
     } finally {
       setLoading(false)
     }

@@ -18,6 +18,7 @@ model Barbershop {
   address     String?
   logo        String?
   description String?
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -47,8 +48,8 @@ model User {
   updatedAt   DateTime @updatedAt
 
   // Multi-tenant
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  barbershopId String?
+  barbershop   Barbershop? @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
 
   // Relations
   appointments Appointment[]
@@ -172,6 +173,7 @@ model Payment {
 }
 
 enum UserRole {
+  DEVELOPER
   ADMIN
   BARBER
   RECEPTIONIST

@@ -78,14 +78,24 @@ export default function AgendarPage() {
       fetchServices()
       fetchBarbers()
     }
-  }, [mounted])
+  }, [mounted, user?.barbershopId])
 
   const fetchServices = async () => {
     try {
       console.log('=== BUSCANDO SERVIÇOS DO PRISMA PARA AGENDAMENTO ===')
-      
-      // Apenas serviços reais do Prisma via API pública
-      const response = await fetch('/api/services/public')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const authHeaders: Record<string, string> = {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
+      const url = shopId ? `/api/services/public?barbershopId=${encodeURIComponent(shopId)}` : '/api/services/public'
+
+      // Apenas serviços reais do Prisma via API pública filtrada por barbearia
+      const response = await fetch(url, {
+        headers: authHeaders,
+        credentials: 'include',
+      })
       if (response.ok) {
         const data = await response.json()
         const activeServices = (Array.isArray(data) ? data : []).filter((s: any) => s.isActive !== false)
@@ -94,12 +104,10 @@ export default function AgendarPage() {
         setServices(activeServices)
       } else {
         console.error('Erro ao buscar serviços do Prisma:', response.status, response.statusText)
-        // Se falhar, mostrar array vazio - sem dados mockados
         setServices([])
       }
     } catch (error) {
       console.error('Error ao buscar serviços do Prisma:', error)
-      // Em caso de erro, mostrar array vazio - sem dados mockados
       setServices([])
     }
   }
@@ -107,22 +115,31 @@ export default function AgendarPage() {
   const fetchBarbers = async () => {
     try {
       console.log('=== BUSCANDO BARBEIROS DO PRISMA PARA AGENDAMENTO ===')
-      
-      // Apenas barbeiros reais do Prisma via API PÚBLICA (sem autenticação)
-      const response = await fetch('/api/users/public?role=BARBER')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const authHeaders: Record<string, string> = {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
+      const url = shopId
+        ? `/api/users/public?role=BARBER&barbershopId=${encodeURIComponent(shopId)}`
+        : '/api/users/public?role=BARBER'
+
+      const response = await fetch(url, {
+        headers: authHeaders,
+        credentials: 'include',
+      })
       if (response.ok) {
         const data = await response.json()
         console.log('Barbeiros recebidos do Prisma:', data)
         console.log('Total de barbeiros do Prisma:', data.length)
-        setBarbers(data)
+        setBarbers(Array.isArray(data) ? data : [])
       } else {
         console.error('Erro ao buscar barbeiros do Prisma:', response.status, response.statusText)
-        // Se falhar, mostrar array vazio - sem dados mockados
         setBarbers([])
       }
     } catch (error) {
       console.error('Error ao buscar barbeiros do Prisma:', error)
-      // Em caso de erro, mostrar array vazio - sem dados mockados
       setBarbers([])
     }
   }
@@ -137,8 +154,20 @@ export default function AgendarPage() {
       console.log('Data:', date)
       console.log('Serviço:', selectedService.name)
       
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
+      const aptUrl = `/api/appointments/public?barberId=${selectedBarber.id}&date=${date}${shopId ? `&barbershopId=${encodeURIComponent(shopId)}` : ''}`
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const authHeaders: Record<string, string> = {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+
       // Buscar agendamentos existentes do Prisma para verificar horários ocupados
-      const response = await fetch('/api/appointments/public')
+      const response = await fetch(aptUrl, {
+        headers: authHeaders,
+        credentials: 'include',
+      })
       if (response.ok) {
         const existingAppointmentsRaw = await response.json()
 
@@ -150,8 +179,8 @@ export default function AgendarPage() {
             return {
               id: apt.id,
               startTime,
-              endTime: new Date(startTime.getTime() + apt.service.duration * 60000),
-              service: { duration: apt.service.duration, price: 0, name: '' },
+              endTime: new Date(startTime.getTime() + (apt.service?.duration || 30) * 60000),
+              service: { duration: apt.service?.duration || 30, price: 0, name: '' },
               client: { name: '' },
               barber: { name: '' },
             }
@@ -263,12 +292,16 @@ export default function AgendarPage() {
         throw new Error('Não foi possível criar/encontrar o cliente')
       }
 
-      // Criar o agendamento usando a API pública
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
+
+      // Criar o agendamento usando a API pública com vinculação correta da barbearia
       const appointmentData = {
         clientId: client.id,
         barberId: selectedBarber.id,
         serviceId: selectedService.id,
         startTime: selectedTime.startTime,
+        barbershopId: shopId,
         notes: `Agendamento via site - Cliente: ${clientData.name}`,
       }
 

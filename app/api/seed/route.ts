@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import { getAuthUser, requireRole } from '@/lib/api-auth'
 
 export async function POST(request: NextRequest) {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'Seed desabilitado em ambiente de produção' },
+        { status: 403 }
+      )
+    }
+
+    const user = getAuthUser(request)
+    // Permite apenas se for DEVELOPER ou se rodando em localhost de forma estrita com secret
+    const seedKey = request.headers.get('x-seed-key')
+    const isDevSecret = process.env.SEED_SECRET && seedKey === process.env.SEED_SECRET
+    if (!isDevSecret && (!user || !requireRole(user, ['DEVELOPER']))) {
+      return NextResponse.json(
+        { error: 'Acesso negado. Apenas o DEVELOPER pode executar o seed do banco de dados.' },
+        { status: 403 }
+      )
+    }
+
     console.log('=== INICIANDO SEED DO BANCO DE DADOS ===')
     
     // Limpar dados existentes (opcional - comentar se quiser preservar)
@@ -211,20 +230,30 @@ export async function POST(request: NextRequest) {
       }
     })
     
+    return NextResponse.json({
+      message: 'Seed concluído com sucesso',
+    })
   } catch (error) {
     console.error('Erro no seed:', error)
     return NextResponse.json(
       { error: 'Erro ao criar dados de exemplo' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
-// Método GET para verificar dados existentes
-export async function GET() {
+// Método GET para verificar dados existentes (exclusivo DEVELOPER em desenvolvimento)
+export async function GET(request: NextRequest) {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Endpoint não disponível em produção' }, { status: 404 })
+    }
+
+    const user = getAuthUser(request)
+    if (!user || !requireRole(user, ['DEVELOPER'])) {
+      return NextResponse.json({ error: 'Acesso restrito ao papel DEVELOPER' }, { status: 403 })
+    }
+
     const stats = await prisma.$transaction([
       prisma.barbershop.count(),
       prisma.user.count(),

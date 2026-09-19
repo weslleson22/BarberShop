@@ -3,104 +3,149 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { Menu, X, LogIn, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+import { Menu, X, Calendar, ArrowRight, User, Sparkles } from 'lucide-react'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
 
-  const handleGetStarted = () => {
-    if (user) {
-      router.push('/dashboard')
-    } else {
-      router.push('/register')
-    }
+  const getUserDestination = () => {
+    if (!user) return '/login'
+    if (user.role === 'DEVELOPER') return '/developer'
+    if (user.role === 'CLIENT') return '/meus-agendamentos'
+    return '/dashboard'
   }
 
-  const handleLogin = () => {
-    if (user) {
-      router.push('/dashboard')
-    } else {
-      router.push('/login')
-    }
+  const handleBooking = () => {
+    router.push('/agendar')
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-              </svg>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#090D16]/80 backdrop-blur-xl border-b border-white/5 transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          
+          {/* Logo da Plataforma */}
+          <Link href="/" className="flex items-center space-x-3 group">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 p-0.5 shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/35 transition-all">
+              <div className="w-full h-full bg-[#0B1120] rounded-[10px] flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
+              </div>
             </div>
-            <span className="text-xl font-bold text-white">BarberShop SaaS</span>
-          </div>
+            <div>
+              <span className="text-xl font-bold tracking-tight text-white block leading-none">
+                Agenda<span className="text-blue-400">SaaS</span>
+              </span>
+              <span className="text-[10px] text-slate-400 tracking-wider uppercase font-medium">
+                Agendamento de Serviços
+              </span>
+            </div>
+          </Link>
 
-          {/* Desktop Menu */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#home" className="text-white/80 hover:text-white transition-colors">Início</a>
-            <a href="#features" className="text-white/80 hover:text-white transition-colors">Recursos</a>
-            <a href="#pricing" className="text-white/80 hover:text-white transition-colors">Preços</a>
-            <a href="#about" className="text-white/80 hover:text-white transition-colors">Sobre</a>
-            <a href="#contact" className="text-white/80 hover:text-white transition-colors">Contato</a>
+          {/* Menu Desktop */}
+          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
+            <a href="#home" className="hover:text-blue-400 transition-colors">Início</a>
+            <a href="#como-funciona" className="hover:text-blue-400 transition-colors">Como Agendar</a>
+            <a href="#recursos" className="hover:text-blue-400 transition-colors">Recursos do Sistema</a>
+            <a href="#beneficios" className="hover:text-blue-400 transition-colors">Vantagens</a>
           </nav>
 
-          {/* Desktop CTA */}
+          {/* Ações Desktop */}
           <div className="hidden md:flex items-center space-x-3">
-            <button 
-              onClick={handleLogin}
-              className="px-4 py-2 text-white/80 hover:text-white border border-white/20 rounded-lg transition-all hover:border-white/40"
+            {user ? (
+              <Link
+                href={getUserDestination()}
+                className="px-4 py-2.5 text-sm font-medium text-slate-200 hover:text-white bg-slate-900/80 hover:bg-slate-850 border border-slate-700/80 hover:border-slate-600 rounded-xl transition-all flex items-center space-x-2"
+              >
+                <User className="w-4 h-4 text-blue-400" />
+                <span>{user.name.split(' ')[0]} (Minha Conta)</span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl transition-all"
+              >
+                Entrar na Conta
+              </Link>
+            )}
+
+            <button
+              onClick={handleBooking}
+              className="px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2 group"
             >
-              {user ? 'Dashboard' : 'Entrar'}
-            </button>
-            <button 
-              onClick={handleGetStarted}
-              className="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-2"
-            >
-              <span>{user ? 'Ir para Dashboard' : 'Começar Agora'}</span>
-              <ArrowRight className="w-4 h-4" />
+              <Calendar className="w-4 h-4 text-blue-100" />
+              <span>Agendar Horário</span>
+              <ArrowRight className="w-4 h-4 text-blue-100 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Botão Menu Mobile */}
           <div className="md:hidden flex items-center gap-2">
-            <button 
+            <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-white/80 hover:text-white"
+              className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+              aria-label="Abrir menu"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Menu Mobile */}
         {isMenuOpen && (
-          <div className="md:hidden bg-black/90 backdrop-blur-xl border-t border-white/8">
-            <div className="px-4 py-6 space-y-4">
-              <a href="#home" className="block text-white/80 hover:text-white transition-colors">Início</a>
-              <a href="#features" className="block text-white/80 hover:text-white transition-colors">Recursos</a>
-              <a href="#pricing" className="block text-white/80 hover:text-white transition-colors">Preços</a>
-              <a href="#about" className="block text-white/80 hover:text-white transition-colors">Sobre</a>
-              <a href="#contact" className="block text-white/80 hover:text-white transition-colors">Contato</a>
-              <div className="pt-4 space-y-3">
-                <button 
-                  onClick={handleLogin}
-                  className="w-full px-4 py-2 text-white/80 hover:text-white border border-white/20 rounded-lg transition-all"
-                >
-                  {user ? 'Dashboard' : 'Entrar'}
-                </button>
-                <button 
-                  onClick={handleGetStarted}
-                  className="w-full px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2"
-                >
-                  <span>{user ? 'Ir para Dashboard' : 'Começar Agora'}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
+          <div className="md:hidden bg-[#0B1120]/95 backdrop-blur-2xl border-t border-white/10 py-6 px-4 space-y-4 rounded-b-2xl shadow-2xl animate-in slide-in-from-top-2 duration-200">
+            <nav className="flex flex-col space-y-3 text-base font-medium text-slate-300">
+              <a
+                href="#home"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+              >
+                Início
+              </a>
+              <a
+                href="#como-funciona"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+              >
+                Como Agendar
+              </a>
+              <a
+                href="#recursos"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+              >
+                Recursos do Sistema
+              </a>
+              <a
+                href="#beneficios"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+              >
+                Vantagens
+              </a>
+            </nav>
+
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false)
+                  handleBooking()
+                }}
+                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2"
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Agendar Horário Online</span>
+              </button>
+
+              <Link
+                href={getUserDestination()}
+                onClick={() => setIsMenuOpen(false)}
+                className="w-full py-3 px-4 text-center block text-slate-300 hover:text-white border border-slate-700/80 rounded-xl hover:bg-white/5 transition-all text-sm font-medium"
+              >
+                {user ? 'Acessar Meu Painel' : 'Entrar na Conta'}
+              </Link>
             </div>
           </div>
         )}

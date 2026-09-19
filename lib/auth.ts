@@ -11,7 +11,7 @@ export interface JWTPayload {
   name: string
   email: string
   role: UserRole
-  barbershopId?: string
+  barbershopId?: string | null
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -38,13 +38,24 @@ export async function authenticateUser(email: string, password: string) {
         select: {
           id: true,
           name: true,
+          isActive: true,
         },
       },
     },
   })
 
-  if (!user || !user.isActive) {
+  if (!user) {
     return null
+  }
+
+  // Se o usuário está desativado, bloqueia acesso
+  if (!user.isActive) {
+    throw new Error('Conta temporariamente suspensa')
+  }
+
+  // Se o usuário pertence a uma barbearia desativada, bloqueia acesso (exceto se for DEVELOPER)
+  if (user.barbershop && user.barbershop.isActive === false && user.role !== 'DEVELOPER') {
+    throw new Error('Conta temporariamente suspensa')
   }
 
   const isValidPassword = await verifyPassword(password, user.password)
@@ -52,31 +63,12 @@ export async function authenticateUser(email: string, password: string) {
     return null
   }
 
-  let finalBarbershopId = user.barbershopId
-
-  // Se o usuário é ADMIN ou RECEPTIONIST, garantir que o login emita o token já alinhado com a barbearia ativa
-  if (user.role === 'ADMIN' || user.role === 'RECEPTIONIST') {
-    const activeAppt = await prisma.appointment.findFirst({
-      select: { barbershopId: true },
-      orderBy: { createdAt: 'desc' },
-    })
-    if (activeAppt?.barbershopId && activeAppt.barbershopId !== finalBarbershopId) {
-      finalBarbershopId = activeAppt.barbershopId
-      try {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { barbershopId: finalBarbershopId },
-        })
-      } catch {}
-    }
-  }
-
   const token = generateToken({
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
-    barbershopId: finalBarbershopId,
+    barbershopId: user.barbershopId,
   })
 
   return {
@@ -85,7 +77,7 @@ export async function authenticateUser(email: string, password: string) {
       name: user.name,
       email: user.email,
       role: user.role,
-      barbershopId: finalBarbershopId,
+      barbershopId: user.barbershopId,
       phone: user.phone,
       avatar: user.avatar,
       barbershop: user.barbershop,
@@ -98,8 +90,8 @@ export async function createUser(data: {
   name: string
   email: string
   password: string
-  role: 'ADMIN' | 'BARBER' | 'CLIENT'
-  barbershopId?: string
+  role: UserRole
+  barbershopId?: string | null
   phone?: string
 }) {
   const existingUser = await prisma.user.findUnique({
@@ -110,14 +102,14 @@ export async function createUser(data: {
     throw new Error('Usuário já existe')
   }
 
-  // Para roles que não são CLIENT, barbershopId é obrigatório
-  if (data.role !== 'CLIENT' && !data.barbershopId) {
+  // Para roles que não são CLIENT ou DEVELOPER, barbershopId é obrigatório
+  if (data.role !== 'CLIENT' && data.role !== 'DEVELOPER' && !data.barbershopId) {
     throw new Error('barbershopId é obrigatório para esta role')
   }
 
   const hashedPassword = await hashPassword(data.password)
 
-  // Preparar dados para criação, removendo barbershopId se for undefined
+  // Preparar dados para criação
   const createData: any = {
     name: data.name,
     email: data.email,
@@ -125,12 +117,10 @@ export async function createUser(data: {
     role: data.role,
   }
 
-  // Adicionar barbershopId apenas se existir
   if (data.barbershopId) {
     createData.barbershopId = data.barbershopId
   }
 
-  // Adicionar phone se existir
   if (data.phone) {
     createData.phone = data.phone
   }
@@ -142,12 +132,13 @@ export async function createUser(data: {
         select: {
           id: true,
           name: true,
+          isActive: true,
         },
       },
     },
   })
 
-  // Se o novo usuário é um cliente, garantir que ele apareça na Lista de Clientes
+  // Se o novo usuário é um cliente com barbearia associada, garantir registro em Client
   if (user.role === 'CLIENT' && user.barbershopId) {
     try {
       await ensureClientForUser({
@@ -202,29 +193,73 @@ export async function createBarbershop(data: {
   })
 
   if (existingBarbershop) {
-    throw new Error('Barbearia já cadastrada')
+    throw new Error('Barbearia já cadastrada com este email')
   }
 
-  const barbershop = await prisma.barbershop.create({
-    data: {
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      address: data.address,
-    },
+  const existingUser = await prisma.user.findUnique({
+    where: { email: data.adminUser.email },
   })
 
-  const adminUser = await createUser({
-    name: data.adminUser.name,
-    email: data.adminUser.email,
-    password: data.adminUser.password,
-    role: 'ADMIN',
-    barbershopId: barbershop.id,
-    phone: data.adminUser.phone,
-  })
-
-  return {
-    barbershop,
-    adminUser,
+  if (existingUser) {
+    throw new Error('Usuário administrador já existe com este email')
   }
+
+  const hashedPassword = await hashPassword(data.adminUser.password)
+
+  return await prisma.$transaction(async (tx) => {
+    const barbershop = await tx.barbershop.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        isActive: true,
+      },
+    })
+
+    const user = await tx.user.create({
+      data: {
+        name: data.adminUser.name,
+        email: data.adminUser.email,
+        password: hashedPassword,
+        role: 'ADMIN',
+        barbershopId: barbershop.id,
+        phone: data.adminUser.phone,
+      },
+      include: {
+        barbershop: {
+          select: {
+            id: true,
+            name: true,
+            isActive: true,
+          },
+        },
+      },
+    })
+
+    const token = generateToken({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      barbershopId: user.barbershopId,
+    })
+
+    return {
+      barbershop,
+      adminUser: {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          barbershopId: user.barbershopId,
+          phone: user.phone,
+          avatar: user.avatar,
+          barbershop: user.barbershop,
+        },
+        token,
+      },
+    }
+  })
 }

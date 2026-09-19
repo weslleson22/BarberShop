@@ -1,32 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword, verifyToken } from '@/lib/auth'
+import { hashPassword } from '@/lib/auth'
 import { ensureClientForUser } from '@/lib/client-sync'
-
-function getAdmin(request: NextRequest) {
-  const token = request.cookies.get('auth-token')?.value
-  if (!token) return null
-
-  try {
-    const decoded = verifyToken(token)
-    return decoded.role === 'ADMIN' ? decoded : null
-  } catch {
-    return null
-  }
-}
+import { getAuthUser, requireRole } from '@/lib/api-auth'
 
 // PUT - Atualizar usuário (dados completos ou apenas um campo, ex: isActive)
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const admin = getAdmin(request)
-    if (!admin) {
+    const admin = getAuthUser(request)
+    if (!requireRole(admin, ['DEVELOPER', 'ADMIN'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
     const { id } = await context.params
 
+    const userWhere: any = { id }
+    if (admin.role !== 'DEVELOPER') {
+      if (!admin.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      userWhere.barbershopId = admin.barbershopId
+    }
+
     const existingUser = await prisma.user.findFirst({
-      where: { id, barbershopId: admin.barbershopId },
+      where: userWhere,
     })
 
     if (!existingUser) {
@@ -35,6 +32,14 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
     const data = await request.json()
     const { name, email, role, password, isActive, avatar, phone } = data
+
+    // Proteção contra escalada: ADMIN não pode promover para DEVELOPER nem alterar DEVELOPER
+    if (role === 'DEVELOPER' && admin.role !== 'DEVELOPER') {
+      return NextResponse.json({ error: 'Apenas desenvolvedores podem atribuir o papel DEVELOPER' }, { status: 403 })
+    }
+    if (existingUser.role === 'DEVELOPER' && admin.role !== 'DEVELOPER') {
+      return NextResponse.json({ error: 'Não autorizado a alterar este usuário' }, { status: 403 })
+    }
 
     // Verificar se o email já está em uso por outro usuário
     if (email && email !== existingUser.email) {
@@ -80,7 +85,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     })
 
     // Se o usuário é (ou passou a ser) cliente, garantir que apareça na Lista de Clientes
-    if (user.role === 'CLIENT') {
+    if (user.role === 'CLIENT' && user.barbershopId) {
       try {
         await ensureClientForUser({
           userId: user.id,
@@ -107,19 +112,31 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 // DELETE - Excluir usuário
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const admin = getAdmin(request)
-    if (!admin) {
+    const admin = getAuthUser(request)
+    if (!requireRole(admin, ['DEVELOPER', 'ADMIN'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
     const { id } = await context.params
 
+    const userWhere: any = { id }
+    if (admin.role !== 'DEVELOPER') {
+      if (!admin.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      userWhere.barbershopId = admin.barbershopId
+    }
+
     const existingUser = await prisma.user.findFirst({
-      where: { id, barbershopId: admin.barbershopId },
+      where: userWhere,
     })
 
     if (!existingUser) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
+    }
+
+    if (existingUser.role === 'DEVELOPER' && admin.role !== 'DEVELOPER') {
+      return NextResponse.json({ error: 'Não autorizado a excluir este usuário' }, { status: 403 })
     }
 
     const totalAppointments = await prisma.appointment.count({

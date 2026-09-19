@@ -21,60 +21,67 @@ import { useEffect } from 'react'
 //    recarregar, o usuário fica "preso" na versão antiga indefinidamente,
 //    mesmo com o SW novo já ativo.
 //
-// Dispositivo que nunca acessou o site = sem SW instalado = busca tudo da
-// rede e instala a versão mais recente na hora. Dispositivo que já usou =
-// SW antigo, sem nada forçando a checagem/adoção da versão nova. Isso bate
-// exatamente com o sintoma relatado.
-//
 // A correção: checar atualização proativamente (no load e quando a aba
 // ganha foco — não em polling agressivo) e, quando o navegador confirma que
 // um novo SW assumiu o controle, recarregar a página UMA única vez (nunca
 // mais de uma vez por troca real de controller, o que evita loop infinito).
+//
+// IMPORTANTE: Em localhost / desenvolvimento, NUNCA registrar o service worker,
+// pois ele intercepta chunks do Webpack HMR e causa "TypeError: Cannot read properties
+// of undefined (reading 'call')".
 export function ServiceWorkerUpdater() {
   useEffect(() => {
-    if (!('serviceWorker' in navigator)) return
+    if (typeof window === 'undefined') return
 
-    // IMPORTANTE: `controllerchange` também dispara na primeiríssima vez que
-    // uma página passa a ser controlada por QUALQUER service worker (ou
-    // seja, na primeira visita, quando ainda não havia nenhum). Recarregar
-    // nesse caso não tem utilidade nenhuma e pode interromper uma ação em
-    // andamento do usuário (ex.: um formulário sendo enviado). Só faz
-    // sentido recarregar quando já existia um controller ativo ANTES e ele
-    // mudou — isso sim é uma troca de versão de verdade.
-    const hadControllerOnLoad = !!navigator.serviceWorker.controller
-    let reloaded = false
-    let registration: ServiceWorkerRegistration | undefined
-
-    const checkForUpdate = () => {
-      registration?.update().catch(() => {})
+    // Limpar proativamente caches antigos com o prefixo legado 'barbershop-'
+    if ('caches' in window) {
+      caches.keys().then((keys) => {
+        for (const key of keys) {
+          if (key.startsWith('barbershop-')) {
+            caches.delete(key).catch(() => {})
+          }
+        }
+      }).catch(() => {})
     }
 
+    if (!('serviceWorker' in navigator)) return
+
+    // Em ambiente de desenvolvimento ou localhost/127.0.0.1, desregistrar Service Workers
+    // para que nada interfira no Fast Refresh / HMR do Next.js
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.endsWith('.local')
+
+    if (process.env.NODE_ENV !== 'production' || isLocalhost) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().catch(() => {})
+        }
+      }).catch(() => {})
+      return
+    }
+
+    // Em produção: registrar sw.js silenciosamente para fins de PWA/Push,
+    // sem disparar window.location.reload() forçado enquanto o usuário navega.
     navigator.serviceWorker
       .register('/sw.js')
-      .then((reg) => {
-        registration = reg
-
-        // Verifica assim que registra e sempre que a aba volta a ficar
-        // visível (ex.: usuário volta de outra aba/app) — cobre o caso comum
-        // de deixar o app aberto em background por muito tempo, sem depender
-        // só da heurística preguiçosa do navegador.
-        checkForUpdate()
+      .then((registration) => {
+        // Checar atualização quando a aba voltar a ficar visível
+        const checkForUpdate = () => {
+          registration.update().catch(() => {})
+        }
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'visible') checkForUpdate()
         })
       })
       .catch((error) => {
-        console.error('Falha ao registrar o service worker:', error)
+        console.warn('Falha ao registrar o service worker:', error)
       })
-
-    // Quando o SW que está controlando a página muda, recarrega uma única
-    // vez — mas só se já havia um controller antes (troca de versão real).
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloaded || !hadControllerOnLoad) return
-      reloaded = true
-      window.location.reload()
-    })
   }, [])
 
   return null
 }
+
+export default ServiceWorkerUpdater

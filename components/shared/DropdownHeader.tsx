@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Calendar,
   CalendarClock,
+  Building2,
   Users,
   Scissors,
   UserCog,
@@ -33,20 +34,28 @@ interface MenuItem {
 // navegação; a proteção de verdade está no middleware e nas rotas de API.
 function getMenuItems(role?: UserRole): MenuItem[] {
   if (!role) {
-    // Visitante não autenticado
     return [{ id: 'home', label: 'Página Inicial', path: '/', icon: Home }]
+  }
+
+  if (role === 'DEVELOPER') {
+    return [
+      { id: 'developer', label: 'Painel SaaS', path: '/developer', icon: LayoutDashboard },
+      { id: 'nova-barbearia', label: 'Cadastrar Barbearia', path: '/developer?action=new', icon: Building2 },
+      { id: 'usuarios', label: 'Usuários da Plataforma', path: '/usuarios', icon: UserCog },
+      { id: 'perfil', label: 'Meu Perfil', path: '/perfil', icon: Settings },
+    ]
   }
 
   if (role === 'CLIENT') {
     return [
-      { id: 'inicio', label: 'Início', path: '/dashboard', icon: Home },
-      { id: 'agendar', label: 'Agendar', path: '/agendar', icon: Calendar },
       { id: 'meus-agendamentos', label: 'Meus Agendamentos', path: '/meus-agendamentos', icon: CalendarClock },
+      { id: 'agendar', label: 'Novo Agendamento', path: '/agendar', icon: Calendar },
+      { id: 'perfil', label: 'Meu Perfil', path: '/perfil', icon: Home },
       { id: 'configuracoes', label: 'Configurações', path: '/configuracoes', icon: Settings },
     ]
   }
 
-  // Equipe: ADMIN, BARBER, RECEPTIONIST
+  // Equipe da barbearia: ADMIN, BARBER, RECEPTIONIST
   const items: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { id: 'agenda', label: 'Agenda', path: '/agenda', icon: Calendar },
@@ -105,8 +114,14 @@ export default function DropdownHeader() {
             </button>
 
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
+            <div
+              onClick={() => {
+                const target = user?.role === 'DEVELOPER' ? '/developer' : user?.role === 'CLIENT' ? '/meus-agendamentos' : user ? '/dashboard' : '/'
+                handleNavigation(target)
+              }}
+              className="flex items-center gap-2 cursor-pointer group"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Scissors className="w-6 h-6 text-black" />
               </div>
               <span className="text-xl font-bold text-white hidden sm:block">BarberShop</span>
@@ -164,8 +179,8 @@ export default function DropdownHeader() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            {/* Notifications */}
-            {user && <NotificationBell />}
+            {/* Notifications (apenas para equipe e clientes que possuem agendamentos) */}
+            {user && user.role !== 'DEVELOPER' && <NotificationBell />}
 
             {/* User Avatar */}
             <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg">

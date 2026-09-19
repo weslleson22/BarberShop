@@ -10,68 +10,27 @@ export const revalidate = 0
 export async function GET(request: NextRequest) {
   try {
     const decoded = getAuthUser(request)
-    if (!requireRole(decoded, ['ADMIN', 'BARBER', 'RECEPTIONIST'])) {
+    if (!requireRole(decoded, ['DEVELOPER', 'ADMIN', 'BARBER', 'RECEPTIONIST'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
+    const requestedShopId = searchParams.get('barbershopId')
 
-    let barbershopId = decoded.barbershopId
-    if (!barbershopId && decoded.id) {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: { barbershopId: true }
-      })
-      barbershopId = dbUser?.barbershopId
-    }
-
-    // Se o usuário é ADMIN ou RECEPTIONIST, sincronizar com a barbearia ativa
-    if (decoded.role === 'ADMIN' || decoded.role === 'RECEPTIONIST') {
-      const latestAppt = await prisma.appointment.findFirst({
-        select: { barbershopId: true },
-        orderBy: { createdAt: 'desc' }
-      })
-      if (latestAppt?.barbershopId && latestAppt.barbershopId !== barbershopId) {
-        barbershopId = latestAppt.barbershopId
-        try {
-          await prisma.user.update({
-            where: { id: decoded.id },
-            data: { barbershopId }
-          })
-        } catch {}
+    let barbershopId: string | null = null
+    if (decoded.role === 'DEVELOPER') {
+      barbershopId = requestedShopId || decoded.barbershopId || null
+    } else {
+      barbershopId = decoded.barbershopId || null
+      if (!barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
       }
     }
 
-    // Se o usuário é BARBER, sincronizar com a barbearia onde os agendamentos do barbeiro estão
-    if (decoded.role === 'BARBER') {
-      const barberAppt = await prisma.appointment.findFirst({
-        where: { barberId: decoded.id },
-        select: { barbershopId: true },
-        orderBy: { createdAt: 'desc' }
-      })
-      if (barberAppt?.barbershopId && barberAppt.barbershopId !== barbershopId) {
-        barbershopId = barberAppt.barbershopId
-        try {
-          await prisma.user.update({
-            where: { id: decoded.id },
-            data: { barbershopId }
-          })
-        } catch {}
-      }
-    }
-
-    if (!barbershopId) {
-      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
-      barbershopId = firstShop?.id
-    }
-
-    if (!barbershopId) {
-      return NextResponse.json({ error: 'Barbearia não identificada' }, { status: 400 })
-    }
-
-    const where: any = {
-      barbershopId,
+    const where: any = {}
+    if (barbershopId) {
+      where.barbershopId = barbershopId
     }
 
     // Barbeiro só vê os clientes que já têm/tiveram agendamento com ele —
@@ -126,11 +85,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const decoded = getAuthUser(request)
-    if (!requireRole(decoded, ['ADMIN', 'RECEPTIONIST']) || !decoded.barbershopId) {
+    if (!requireRole(decoded, ['DEVELOPER', 'ADMIN', 'RECEPTIONIST'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const { name, email, phone, notes } = await request.json()
+    const { name, email, phone, notes, barbershopId: bodyShopId } = await request.json()
 
     if (!name || !phone) {
       return NextResponse.json(
@@ -139,18 +98,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    let targetBarbershopId: string | null = null
+    if (decoded.role === 'DEVELOPER') {
+      targetBarbershopId = bodyShopId || decoded.barbershopId || null
+    } else {
+      targetBarbershopId = decoded.barbershopId || null
+    }
+
+    if (!targetBarbershopId) {
+      return NextResponse.json({ error: 'Barbearia obrigatória' }, { status: 400 })
+    }
+
     const client = await prisma.client.create({
       data: {
         name,
         email,
         phone,
         notes,
-        barbershopId: decoded.barbershopId,
+        barbershopId: targetBarbershopId,
       },
     })
 
     try {
-      await notifyAdminsNewClient(client.name, decoded.barbershopId, decoded.id)
+      await notifyAdminsNewClient(client.name, targetBarbershopId, decoded.id)
     } catch (notificationError) {
       console.error('Erro ao notificar admins sobre novo cliente:', notificationError)
     }
@@ -165,11 +135,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Excluir cliente (ADMIN/RECEPTIONIST; BARBER só visualiza)
+// DELETE - Excluir cliente (ADMIN/RECEPTIONIST/DEVELOPER)
 export async function DELETE(request: NextRequest) {
   try {
     const decoded = getAuthUser(request)
-    if (!requireRole(decoded, ['ADMIN', 'RECEPTIONIST']) || !decoded.barbershopId) {
+    if (!requireRole(decoded, ['DEVELOPER', 'ADMIN', 'RECEPTIONIST'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
@@ -180,12 +150,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID do cliente não fornecido' }, { status: 400 })
     }
 
-    // Verificar se o cliente pertence à barbearia do usuário
+    // Verificar se o cliente pertence à barbearia do usuário (DEVELOPER pode excluir qualquer um)
+    const clientWhere: any = { id: clientId }
+    if (decoded.role !== 'DEVELOPER') {
+      if (!decoded.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      clientWhere.barbershopId = decoded.barbershopId
+    }
+
     const client = await prisma.client.findFirst({
-      where: {
-        id: clientId,
-        barbershopId: decoded.barbershopId,
-      },
+      where: clientWhere,
     })
 
     if (!client) {

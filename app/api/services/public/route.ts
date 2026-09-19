@@ -1,34 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/api-auth'
 
-// GET - Listar serviços públicos (sem autenticação)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+// GET - Listar serviços públicos (ou da barbearia do usuário autenticado)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const active = searchParams.get('active')
+    let barbershopId = searchParams.get('barbershopId')
 
-    // Buscar a primeira barbearia disponível (ou criar lógica multi-tenant)
-    let barbershopId = 'cmo6dajse0000tlnihesqqda8' // fallback
-    
-    try {
-      const barbershop = await prisma.barbershop.findFirst({
-        select: { id: true }
-      })
-      if (barbershop) {
-        barbershopId = barbershop.id
-        console.log('Usando barbearia encontrada:', barbershopId)
+    if (!barbershopId) {
+      const authUser = getAuthUser(request)
+      if (authUser?.barbershopId) {
+        barbershopId = authUser.barbershopId
       }
-    } catch (error) {
-      console.log('Usando barbearia fallback:', barbershopId)
+    }
+
+    if (!barbershopId) {
+      const activeShop = await prisma.barbershop.findFirst({
+        where: { isActive: true },
+        select: { id: true },
+      })
+      barbershopId = activeShop?.id || null
+    }
+
+    if (!barbershopId) {
+      return NextResponse.json([])
     }
     
+    // Público só pode visualizar serviços que estejam ativos
     const where: any = {
       barbershopId,
       isActive: true,
-    }
-
-    if (active !== null) {
-      where.isActive = active === 'true'
     }
 
     const services = await prisma.service.findMany({

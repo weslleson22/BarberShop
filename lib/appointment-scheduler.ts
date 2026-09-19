@@ -123,6 +123,17 @@ export async function criarAgendamento(data: CreateAppointmentData): Promise<any
       throw new Error('Serviço não encontrado ou inativo')
     }
 
+    // Validar se o cliente pertence à mesma barbearia
+    const client = await prisma.client.findFirst({
+      where: {
+        id: data.clientId,
+        barbershopId: data.barbershopId,
+      },
+    })
+    if (!client) {
+      throw new Error('Cliente não encontrado nesta barbearia')
+    }
+
     // Validar se o barbeiro existe e está ativo
     const barber = await prisma.user.findFirst({
       where: {

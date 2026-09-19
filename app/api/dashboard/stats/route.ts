@@ -9,66 +9,30 @@ export const revalidate = 0
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    if (user.role === 'DEVELOPER') {
+      return NextResponse.json(
+        { error: 'Perfil DEVELOPER não tem acesso ao dashboard operacional da barbearia' },
+        { status: 403 }
+      )
+    }
+
     if (!requireRole(user, ['ADMIN', 'BARBER', 'RECEPTIONIST', 'CLIENT'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    let barbershopId = user.barbershopId
-    if (!barbershopId && user.id) {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { barbershopId: true }
-      })
-      barbershopId = dbUser?.barbershopId
-    }
-
-    // Se o usuário é ADMIN ou RECEPTIONIST, sincronizar com a barbearia ativa
-    // (onde os agendamentos mais recentes foram criados)
-    if (user.role === 'ADMIN' || user.role === 'RECEPTIONIST') {
-      const latestAppt = await prisma.appointment.findFirst({
-        select: { barbershopId: true },
-        orderBy: { createdAt: 'desc' }
-      })
-      if (latestAppt?.barbershopId && latestAppt.barbershopId !== barbershopId) {
-        barbershopId = latestAppt.barbershopId
-        try {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { barbershopId }
-          })
-        } catch {}
-      }
-    }
-
-    // Se o usuário é BARBER, sincronizar com a barbearia onde os agendamentos do barbeiro estão
-    if (user.role === 'BARBER') {
-      const barberAppt = await prisma.appointment.findFirst({
-        where: { barberId: user.id },
-        select: { barbershopId: true },
-        orderBy: { createdAt: 'desc' }
-      })
-      if (barberAppt?.barbershopId && barberAppt.barbershopId !== barbershopId) {
-        barbershopId = barberAppt.barbershopId
-        try {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { barbershopId }
-          })
-        } catch {}
-      }
-    }
-
+    const barbershopId = user.barbershopId || null
     if (!barbershopId) {
-      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
-      barbershopId = firstShop?.id
+      return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
     }
 
-    if (!barbershopId) {
-      return NextResponse.json({ error: 'Barbearia não encontrada' }, { status: 404 })
-    }
+    const whereShop = barbershopId ? { barbershopId } : {}
 
     // Se for CLIENT, filtra apenas os agendamentos do próprio cliente
-    const appointmentWhere: any = { barbershopId }
+    const appointmentWhere: any = { ...whereShop }
     if (user.role === 'CLIENT') {
       const client = await prisma.client.findUnique({ where: { userId: user.id } })
       appointmentWhere.OR = [
@@ -93,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     // Buscar clientes apenas com id e createdAt (necessários para contagem e crescimento)
     const clients = await prisma.client.findMany({
-      where: { barbershopId },
+      where: whereShop,
       select: {
         id: true,
         createdAt: true,
@@ -102,14 +66,14 @@ export async function GET(request: NextRequest) {
 
     // Contagem de serviços da barbearia
     const services = await prisma.service.findMany({
-      where: { barbershopId },
+      where: whereShop,
       select: { id: true },
     })
 
     // Contagem de barbeiros da barbearia
     const barbers = await prisma.user.findMany({
       where: {
-        barbershopId,
+        ...whereShop,
         role: 'BARBER'
       },
       select: { id: true },

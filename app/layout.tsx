@@ -8,27 +8,27 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   metadataBase: new URL('https://barber-shop-nine-ebon.vercel.app'),
-  title: 'BarberShop - Sistema Completo para Barbearias',
-  description: 'Sistema de agendamento online, gestão de clientes, controle financeiro e muito mais',
+  title: 'AgendaSaaS - Plataforma de Agendamento de Serviços Online',
+  description: 'Sistema de agendamento online em tempo real, gestão de horários, confirmações automáticas e controle de disponibilidade',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'BarberShop',
+    title: 'AgendaSaaS',
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
     type: 'website',
-    siteName: 'BarberShop',
-    title: 'BarberShop - Sistema Completo para Barbearias',
-    description: 'Sistema de agendamento online, gestão de clientes, controle financeiro e muito mais',
+    siteName: 'AgendaSaaS',
+    title: 'AgendaSaaS - Plataforma de Agendamento de Serviços Online',
+    description: 'Sistema de agendamento online em tempo real, gestão de horários, confirmações automáticas e controle de disponibilidade',
   },
   twitter: {
     card: 'summary',
-    title: 'BarberShop - Sistema Completo para Barbearias',
-    description: 'Sistema de agendamento online, gestão de clientes, controle financeiro e muito mais',
+    title: 'AgendaSaaS - Plataforma de Agendamento de Serviços Online',
+    description: 'Sistema de agendamento online em tempo real, gestão de horários, confirmações automáticas e controle de disponibilidade',
   },
 }
 
@@ -59,7 +59,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="BarberShop" />
+        <meta name="apple-mobile-web-app-title" content="AgendaSaaS" />
         <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" />
       </head>
       <body className={inter.className}>

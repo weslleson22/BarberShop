@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 
 export default function PerfilPage() {
-  const { user, logout, updateUser } = useAuth()
+  const { user, loading, logout, updateUser } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -26,6 +26,22 @@ export default function PerfilPage() {
     email: user?.email || '',
     avatar: user?.avatar || ''
   })
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        avatar: user.avatar || ''
+      })
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login')
+    }
+  }, [user, loading, router])
 
   const handleSaveProfile = async () => {
     setIsLoading(true)
@@ -68,8 +84,7 @@ export default function PerfilPage() {
     }
   }
 
-  if (!user) {
-    router.push('/login')
+  if (loading || !user) {
     return null
   }
 

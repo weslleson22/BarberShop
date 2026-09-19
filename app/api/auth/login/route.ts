@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authenticateUser } from '@/lib/auth'
 import { ensureClientForUser } from '@/lib/client-sync'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -17,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     if (!result) {
       return NextResponse.json(
-        { error: 'Credenciais inválidas' },
+        { error: 'Email ou senha incorretos' },
         { status: 401 }
       )
     }
@@ -49,9 +52,11 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     console.error('Login error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login'
+    const status = errorMessage.toLowerCase().includes('suspensa') ? 403 : 401
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erro ao fazer login' },
-      { status: 401 }
+      { error: errorMessage },
+      { status }
     )
   }
 }

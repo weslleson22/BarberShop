@@ -117,7 +117,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
       }
       setShowClientResults(false)
     }
-  }, [isOpen, appointment, isClient, user?.id])
+  }, [isOpen, appointment, isClient, user?.id, user?.barbershopId])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -133,11 +133,18 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
   const fetchClients = async () => {
     try {
       console.log('Buscando clientes...')
-      const response = await fetch('/api/clients/all')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const authHeaders: Record<string, string> = {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+      const response = await fetch('/api/clients/all', {
+        headers: authHeaders,
+        credentials: 'include',
+      })
       if (response.ok) {
         const data = await response.json()
         console.log('Clientes recebidos:', data)
-        setClients(data)
+        setClients(Array.isArray(data) ? data : [])
       } else {
         console.error('Erro na resposta:', response.status, response.statusText)
       }
@@ -148,12 +155,21 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
   const fetchServices = async () => {
     try {
-      console.log('Buscando serviços...')
-      const response = await fetch('/api/services/public')
+      console.log('Buscando serviços da barbearia do usuário...')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const authHeaders: Record<string, string> = {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+      const shopId = user?.barbershopId
+      const url = shopId ? `/api/services?active=true` : `/api/services/public`
+      const response = await fetch(url, {
+        headers: authHeaders,
+        credentials: 'include',
+      })
       if (response.ok) {
         const data = await response.json()
         console.log('Serviços recebidos:', data)
-        setServices(data)
+        setServices(Array.isArray(data) ? data.filter((s: any) => s.isActive !== false) : [])
       } else {
         console.error('Erro na resposta:', response.status, response.statusText)
       }
@@ -164,13 +180,31 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
   const fetchBarbers = async () => {
     try {
-      console.log('Buscando barbeiros...')
-      const response = await fetch('/api/users')
+      console.log('Buscando barbeiros da barbearia do usuário...')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const authHeaders: Record<string, string> = {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+      const response = await fetch('/api/users?role=BARBER', {
+        headers: authHeaders,
+        credentials: 'include',
+      })
       if (response.ok) {
         const data = await response.json()
-        const barbers = data.filter((user: any) => (user.role === 'BARBER' || user.role === 'ADMIN') && user.isActive !== false)
+        const barbers = (Array.isArray(data) ? data : []).filter((u: any) => (u.role === 'BARBER' || u.role === 'ADMIN') && u.isActive !== false)
         console.log('Barbeiros filtrados:', barbers)
         setBarbers(barbers)
+      } else if (isClient) {
+        const shopId = user?.barbershopId
+        const pubUrl = shopId ? `/api/users/public?role=BARBER&barbershopId=${encodeURIComponent(shopId)}` : `/api/users/public?role=BARBER`
+        const pubRes = await fetch(pubUrl, {
+          headers: authHeaders,
+          credentials: 'include',
+        })
+        if (pubRes.ok) {
+          const pubData = await pubRes.json()
+          setBarbers(Array.isArray(pubData) ? pubData : [])
+        }
       } else {
         console.error('Erro na resposta:', response.status, response.statusText)
       }
@@ -182,13 +216,18 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
   const fetchAvailableSlots = async (date: string, barberId: string, serviceId?: string) => {
     try {
       const selectedService = services.find((s) => s.id === (serviceId ?? formData.serviceId))
-      // Sem serviço escolhido ainda, usa a menor granularidade (30min) só
-      // pra mostrar a grade de horários; assim que o serviço é selecionado,
-      // handleInputChange já busca de novo com a duração real.
       const duration = selectedService?.duration || 30
 
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const authHeaders: Record<string, string> = {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
       const response = await fetch(
-        `/api/appointments?date=${date}&barberId=${barberId}`
+        `/api/appointments?date=${date}&barberId=${barberId}`,
+        {
+          headers: authHeaders,
+          credentials: 'include',
+        }
       )
 
       if (!response.ok) {

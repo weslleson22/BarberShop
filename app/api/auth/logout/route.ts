@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // POST - Encerrar sessão. O cookie 'auth-token' é httpOnly, então só o
 // servidor pode limpá-lo — o frontend não consegue mais fazer isso via
 // document.cookie (por isso este endpoint existe).

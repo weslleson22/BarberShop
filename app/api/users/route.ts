@@ -8,33 +8,31 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 // GET - Listar usuários da própria barbearia
-// ADMIN e BARBER podem listar (ex.: escolher o profissional ao criar um
-// agendamento); criar/editar/excluir usuário continua restrito ao ADMIN.
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
-    if (!requireRole(user, ['ADMIN', 'BARBER', 'RECEPTIONIST'])) {
+    if (!requireRole(user, ['DEVELOPER', 'ADMIN', 'BARBER', 'RECEPTIONIST'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
+    const requestedShopId = searchParams.get('barbershopId')
 
-    let barbershopId = user.barbershopId
-    if (!barbershopId && user.id) {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { barbershopId: true }
-      })
-      barbershopId = dbUser?.barbershopId
+    let barbershopId: string | null = null
+    if (user.role === 'DEVELOPER') {
+      barbershopId = requestedShopId || user.barbershopId || null
+    } else {
+      barbershopId = user.barbershopId || null
+      if (!barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
     }
 
-    if (!barbershopId) {
-      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
-      barbershopId = firstShop?.id
+    const where: any = {}
+    if (barbershopId) {
+      where.barbershopId = barbershopId
     }
-
-    const where: any = barbershopId ? { barbershopId } : {}
     if (role) {
       where.role = role
     }
@@ -71,18 +69,38 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const admin = getAuthUser(request)
-    if (!requireRole(admin, ['ADMIN']) || !admin.barbershopId) {
+    if (!requireRole(admin, ['DEVELOPER', 'ADMIN'])) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
     const data = await request.json()
-    const { name, email, password, role, isActive, avatar, phone } = data
+    const { name, email, password, role, isActive, avatar, phone, barbershopId: bodyShopId } = data
 
     if (!name || !email || !role || !password) {
       return NextResponse.json(
         { error: 'Nome, email, papel e senha são obrigatórios' },
         { status: 400 }
       )
+    }
+
+    // Apenas DEVELOPER pode criar outro DEVELOPER
+    if (role === 'DEVELOPER' && admin.role !== 'DEVELOPER') {
+      return NextResponse.json(
+        { error: 'Apenas desenvolvedores podem criar usuários com papel DEVELOPER' },
+        { status: 403 }
+      )
+    }
+
+    let targetBarbershopId: string | null = null
+    if (admin.role === 'DEVELOPER') {
+      targetBarbershopId = bodyShopId || admin.barbershopId || null
+    } else {
+      targetBarbershopId = admin.barbershopId || null
+    }
+
+    // Usuários com papel diferente de DEVELOPER precisam estar vinculados a uma barbearia
+    if (role !== 'DEVELOPER' && !targetBarbershopId) {
+      return NextResponse.json({ error: 'Barbearia obrigatória para este papel' }, { status: 400 })
     }
 
     const existingUser = await prisma.user.findFirst({
@@ -105,7 +123,7 @@ export async function POST(request: NextRequest) {
         role,
         password: hashedPassword,
         isActive: isActive !== undefined ? isActive : true,
-        barbershopId: admin.barbershopId,
+        barbershopId: targetBarbershopId,
         avatar,
         phone,
       },
@@ -123,7 +141,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Se o novo usuário é um cliente, garantir que ele apareça na Lista de Clientes
-    if (user.role === 'CLIENT') {
+    if (user.role === 'CLIENT' && user.barbershopId) {
       try {
         await ensureClientForUser({
           userId: user.id,

@@ -31,7 +31,7 @@ function buildDbUser(overrides: Record<string, any> = {}) {
     isActive: true,
     avatar: null,
     phone: '(11) 99999-9999',
-    barbershop: { id: 'barbershop_1', name: 'Barbearia Central' },
+    barbershop: { id: 'barbershop_1', name: 'Barbearia Central', isActive: true },
     ...overrides,
   }
 }
@@ -112,8 +112,20 @@ describe('authenticateUser (login)', () => {
     const hash = await hashPassword('senhaCorreta123')
     findUniqueMock.mockResolvedValue(buildDbUser({ password: hash, isActive: false }))
 
-    const result = await authenticateUser('barbeiro@teste.com', 'senhaCorreta123')
+    await expect(authenticateUser('barbeiro@teste.com', 'senhaCorreta123')).rejects.toThrow(
+      'Conta temporariamente suspensa'
+    )
+  })
 
-    expect(result).toBeNull()
+  it('rejeita quando a barbearia do usuário está desativada', async () => {
+    const hash = await hashPassword('senhaCorreta123')
+    findUniqueMock.mockResolvedValue(buildDbUser({
+      password: hash,
+      barbershop: { id: 'barbershop_1', name: 'Barbearia Central', isActive: false }
+    }))
+
+    await expect(authenticateUser('barbeiro@teste.com', 'senhaCorreta123')).rejects.toThrow(
+      'Conta temporariamente suspensa'
+    )
   })
 })

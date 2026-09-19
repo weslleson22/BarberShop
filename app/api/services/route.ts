@@ -15,21 +15,22 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const active = searchParams.get('active')
+    const requestedShopId = searchParams.get('barbershopId')
 
-    let barbershopId = decoded.barbershopId
-    if (!barbershopId && decoded.id) {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: { barbershopId: true }
-      })
-      barbershopId = dbUser?.barbershopId
-    }
-    if (!barbershopId) {
-      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
-      barbershopId = firstShop?.id
+    let barbershopId: string | null = null
+    if (decoded.role === 'DEVELOPER') {
+      barbershopId = requestedShopId || decoded.barbershopId || null
+    } else {
+      barbershopId = decoded.barbershopId || null
+      if (!barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
     }
 
-    const where: any = barbershopId ? { barbershopId } : {}
+    const where: any = {}
+    if (barbershopId) {
+      where.barbershopId = barbershopId
+    }
 
     if (active !== null) {
       where.isActive = active === 'true'
@@ -58,33 +59,23 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const decoded = getAuthUser(request)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-
-    let barbershopId = decoded.barbershopId
-    if (!barbershopId && decoded.id) {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: { barbershopId: true }
-      })
-      barbershopId = dbUser?.barbershopId
-    }
-    if (!barbershopId) {
-      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
-      barbershopId = firstShop?.id
-    }
-    
-    if (!barbershopId) {
-      return NextResponse.json({ error: 'Barbearia não identificada' }, { status: 401 })
-    }
-    
-    if (decoded.role !== 'ADMIN') {
+    if (!decoded || (decoded.role !== 'ADMIN' && decoded.role !== 'DEVELOPER')) {
       return NextResponse.json({ error: 'Apenas administradores podem criar serviços' }, { status: 403 })
     }
 
     const data = await request.json()
-    const { name, description, price, duration } = data
+    const { name, description, price, duration, barbershopId: bodyShopId } = data
+
+    let targetBarbershopId: string | null = null
+    if (decoded.role === 'DEVELOPER') {
+      targetBarbershopId = bodyShopId || decoded.barbershopId || null
+    } else {
+      targetBarbershopId = decoded.barbershopId || null
+    }
+
+    if (!targetBarbershopId) {
+      return NextResponse.json({ error: 'Barbearia obrigatória' }, { status: 400 })
+    }
 
     if (!name || !price || !duration) {
       return NextResponse.json(
@@ -99,7 +90,7 @@ export async function POST(request: NextRequest) {
         description,
         price: parseFloat(price),
         duration: parseInt(duration),
-        barbershopId,
+        barbershopId: targetBarbershopId,
       },
     })
 
@@ -117,28 +108,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const decoded = getAuthUser(request)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-
-    let barbershopId = decoded.barbershopId
-    if (!barbershopId && decoded.id) {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: { barbershopId: true }
-      })
-      barbershopId = dbUser?.barbershopId
-    }
-    if (!barbershopId) {
-      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
-      barbershopId = firstShop?.id
-    }
-    
-    if (!barbershopId) {
-      return NextResponse.json({ error: 'Barbearia não identificada' }, { status: 401 })
-    }
-    
-    if (decoded.role !== 'ADMIN') {
+    if (!decoded || (decoded.role !== 'ADMIN' && decoded.role !== 'DEVELOPER')) {
       return NextResponse.json({ error: 'Apenas administradores podem atualizar serviços' }, { status: 403 })
     }
 
@@ -171,8 +141,8 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Verificar se serviço pertence à barbearia do usuário
-    if (existingService.barbershopId !== decoded.barbershopId) {
+    // Verificar se serviço pertence à barbearia do usuário (DEVELOPER tem permissão global)
+    if (decoded.role !== 'DEVELOPER' && existingService.barbershopId !== decoded.barbershopId) {
       return NextResponse.json(
         { error: 'Você não pode atualizar este serviço' },
         { status: 403 }
