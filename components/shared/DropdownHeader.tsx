@@ -175,12 +175,16 @@ export default function DropdownHeader() {
                     src={user.avatar} 
                     alt="Avatar" 
                     className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      const sibling = e.currentTarget.nextElementSibling as HTMLElement
+                      if (sibling) sibling.style.display = 'flex'
+                    }}
                   />
-                ) : (
-                  <span className="text-black font-bold text-sm">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                )}
+                ) : null}
+                <span className={`text-black font-bold text-sm ${user?.avatar ? 'hidden' : 'flex'}`}>
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </span>
               </div>
               <div className="hidden sm:block min-w-0">
                 <p className="text-white font-medium text-sm truncate">{user?.name || 'Usuário'}</p>

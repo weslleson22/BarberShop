@@ -88,9 +88,10 @@ export default function AgendarPage() {
       const response = await fetch('/api/services/public')
       if (response.ok) {
         const data = await response.json()
-        console.log('Serviços recebidos do Prisma:', data)
-        console.log('Total de serviços do Prisma:', data.length)
-        setServices(data)
+        const activeServices = (Array.isArray(data) ? data : []).filter((s: any) => s.isActive !== false)
+        console.log('Serviços recebidos do Prisma:', activeServices)
+        console.log('Total de serviços ativos:', activeServices.length)
+        setServices(activeServices)
       } else {
         console.error('Erro ao buscar serviços do Prisma:', response.status, response.statusText)
         // Se falhar, mostrar array vazio - sem dados mockados

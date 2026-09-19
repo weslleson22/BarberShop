@@ -10,6 +10,7 @@ function formatDateTime(date: Date | string): string {
   const d = date instanceof Date ? date : new Date(date)
   if (isNaN(d.getTime())) return ''
   return d.toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',

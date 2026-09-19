@@ -39,7 +39,7 @@ export default function PerfilPage() {
       if (response.ok) {
         const updatedUser = await response.json()
         // Update user in context and localStorage
-        localStorage.setItem('user-data', JSON.stringify(updatedUser))
+        localStorage.setItem('user_data', JSON.stringify(updatedUser))
         // Atualizar o contexto do usuário
         updateUser(updatedUser)
         router.push('/perfil')

@@ -32,6 +32,26 @@ export async function verificarDisponibilidade(
   const endTime = new Date(startTime.getTime() + duration * 60000)
 
   try {
+    // Verificar se o barbeiro existe e está ativo
+    const barber = await prisma.user.findFirst({
+      where: {
+        id: barberId,
+        barbershopId,
+        role: 'BARBER',
+        isActive: true,
+      },
+      select: { id: true },
+    })
+
+    if (!barber) {
+      return {
+        available: false,
+        conflict: {
+          message: 'Barbeiro indisponível ou inativo',
+        },
+      }
+    }
+
     // Buscar todos os agendamentos confirmados para o barbeiro no mesmo dia
     const dayStart = new Date(startTime)
     dayStart.setHours(0, 0, 0, 0)
@@ -99,8 +119,23 @@ export async function criarAgendamento(data: CreateAppointmentData): Promise<any
       },
     })
 
-    if (!service) {
-      throw new Error('Serviço não encontrado')
+    if (!service || !service.isActive) {
+      throw new Error('Serviço não encontrado ou inativo')
+    }
+
+    // Validar se o barbeiro existe e está ativo
+    const barber = await prisma.user.findFirst({
+      where: {
+        id: data.barberId,
+        barbershopId: data.barbershopId,
+        role: 'BARBER',
+        isActive: true,
+      },
+      select: { id: true },
+    })
+
+    if (!barber) {
+      throw new Error('Barbeiro indisponível ou inativo')
     }
 
     // Converter startTime para Date se for string
@@ -180,6 +215,15 @@ export async function getHorariosDisponiveis(
   date: Date,
   serviceDuration: number
 ): Promise<TimeSlot[]> {
+  // Verificar se o barbeiro está ativo
+  const barber = await prisma.user.findFirst({
+    where: { id: barberId, barbershopId, role: 'BARBER', isActive: true },
+    select: { id: true },
+  })
+  if (!barber) {
+    return []
+  }
+
   const startOfDay = new Date(date)
   startOfDay.setHours(8, 0, 0, 0) // Abertura às 8:00
 

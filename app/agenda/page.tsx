@@ -104,13 +104,39 @@ export default function AgendaPage() {
       const queryString = params.toString()
       const url = queryString ? `/api/appointments?${queryString}` : '/api/appointments'
 
-      const response = await fetch(url, {
-        headers: getAuthHeaders(),
-        credentials: 'include',
-      })
+      const [response, barbersRes] = await Promise.all([
+        fetch(url, {
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        }),
+        fetch('/api/users?role=BARBER', {
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        }).catch(() => null)
+      ])
+
       if (response.ok) {
         const data = await response.json()
-        setAppointments(Array.isArray(data) ? data : [])
+        const barberMap = new Map<string, string>()
+        if (barbersRes && barbersRes.ok) {
+          try {
+            const barbersData = await barbersRes.json()
+            if (Array.isArray(barbersData)) {
+              barbersData.forEach((b: any) => {
+                if (b.id && b.avatar) barberMap.set(b.id, b.avatar)
+              })
+            }
+          } catch {}
+        }
+
+        const enriched = (Array.isArray(data) ? data : []).map((apt: any) => ({
+          ...apt,
+          barber: {
+            ...apt.barber,
+            avatar: apt.barber?.avatar || barberMap.get(apt.barberId) || barberMap.get(apt.barber?.id)
+          }
+        }))
+        setAppointments(enriched)
       } else {
         console.error('Erro ao buscar agendamentos:', response.status, response.statusText)
         setAppointments([])

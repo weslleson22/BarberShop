@@ -40,15 +40,34 @@ export default function TodayAppointments() {
       const todayMonth = now.getMonth()
       const todayDay = now.getDate()
 
-      const response = await fetch('/api/appointments', {
-        headers: getAuthHeaders(),
-        credentials: 'include',
-      })
+      const [response, barbersRes] = await Promise.all([
+        fetch('/api/appointments', {
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        }),
+        fetch('/api/users?role=BARBER', {
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        }).catch(() => null)
+      ])
+
       if (!response.ok) {
         console.error('Erro ao buscar agendamentos de hoje:', response.status)
         setAppointments([])
         setTotalToday(0)
         return
+      }
+
+      const barberMap = new Map<string, string>()
+      if (barbersRes && barbersRes.ok) {
+        try {
+          const barbersData = await barbersRes.json()
+          if (Array.isArray(barbersData)) {
+            barbersData.forEach((b: any) => {
+              if (b.id && b.avatar) barberMap.set(b.id, b.avatar)
+            })
+          }
+        } catch {}
       }
 
       const allAppointments = await response.json()
@@ -66,6 +85,13 @@ export default function TodayAppointments() {
             aptDate.getDate() === todayDay
           )
         })
+        .map((apt: any) => ({
+          ...apt,
+          barber: {
+            ...apt.barber,
+            avatar: apt.barber?.avatar || barberMap.get(apt.barberId) || barberMap.get(apt.barber?.id)
+          }
+        }))
         .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
 
       setTotalToday(todayAppointments.length)

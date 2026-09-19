@@ -33,6 +33,8 @@ export async function GET(request: NextRequest) {
 
     if (active !== null) {
       where.isActive = active === 'true'
+    } else if (decoded.role === 'CLIENT') {
+      where.isActive = true
     }
 
     const services = await prisma.service.findMany({

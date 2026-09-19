@@ -85,6 +85,32 @@ export function calculateAvailableSlots(
 }
 
 /**
+ * Extrai hora e minuto de uma data no fuso horário do Brasil (America/Sao_Paulo)
+ */
+export function getBrazilHoursAndMinutes(date: Date): { hours: number; minutes: number } {
+  try {
+    const formatter = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    })
+    const parts = formatter.formatToParts(date)
+    const hourPart = parts.find((p) => p.type === 'hour')?.value ?? '0'
+    const minutePart = parts.find((p) => p.type === 'minute')?.value ?? '0'
+    return {
+      hours: parseInt(hourPart, 10),
+      minutes: parseInt(minutePart, 10),
+    }
+  } catch {
+    return {
+      hours: date.getHours(),
+      minutes: date.getMinutes(),
+    }
+  }
+}
+
+/**
  * Valida se um horário é válido para agendamento
  */
 export function validateAppointmentTime(
@@ -100,16 +126,20 @@ export function validateAppointmentTime(
     return { isValid: false, error: 'Não é possível agendar no passado' }
   }
   
+  // Extrair horário no fuso do Brasil
+  const startHM = getBrazilHoursAndMinutes(startTime)
+  const endHM = getBrazilHoursAndMinutes(endTime)
+
   // Verificar se está dentro do horário de trabalho
-  if (startTime.getHours() < workingHours.start || startTime.getHours() >= workingHours.end) {
+  if (startHM.hours < workingHours.start || startHM.hours >= workingHours.end) {
     return { isValid: false, error: 'Fora do horário de funcionamento' }
   }
   
   // Terminar EXATAMENTE no horário de fechamento é permitido (ex.: serviço de
   // 30min às 19:30 termina às 20:00 — é o último horário válido do dia);
   // só rejeita quando realmente ultrapassa o fechamento.
-  if (endTime.getHours() > workingHours.end ||
-      (endTime.getHours() === workingHours.end && endTime.getMinutes() > 0)) {
+  if (endHM.hours > workingHours.end ||
+      (endHM.hours === workingHours.end && endHM.minutes > 0)) {
     return { isValid: false, error: 'Serviço ultrapassa o horário de funcionamento' }
   }
 

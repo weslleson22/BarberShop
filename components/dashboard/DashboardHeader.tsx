@@ -83,8 +83,20 @@ export default function DashboardHeader() {
 
             {/* User Avatar */}
             <div className="flex items-center space-x-2 md:space-x-3 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg md:rounded-xl flex-shrink-0">
-              <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-black font-bold text-xs md:text-sm">
+              <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt="Avatar"
+                    className="w-full h-full object-cover rounded-full"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      const sibling = e.currentTarget.nextElementSibling as HTMLElement
+                      if (sibling) sibling.style.display = 'flex'
+                    }}
+                  />
+                ) : null}
+                <span className={`text-black font-bold text-xs md:text-sm ${user?.avatar ? 'hidden' : 'flex'}`}>
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
@@ -138,8 +150,20 @@ export default function DashboardHeader() {
 
           {/* User Avatar - Mobile */}
           <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg flex-shrink-0">
-            <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-black font-bold text-xs">
+            <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Avatar"
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                    const sibling = e.currentTarget.nextElementSibling as HTMLElement
+                    if (sibling) sibling.style.display = 'flex'
+                  }}
+                />
+              ) : null}
+              <span className={`text-black font-bold text-xs ${user?.avatar ? 'hidden' : 'flex'}`}>
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </span>
             </div>

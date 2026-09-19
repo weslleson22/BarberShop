@@ -174,10 +174,12 @@ export default function ServicosPage() {
     }
   }
 
-  const filteredServices = services.filter(service =>
-    service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
+  const filteredServices = services
+    .filter(service => canManageServices || service.isActive)
+    .filter(service =>
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
 
   const formatCurrency = (value: number) => {
     // Garantir que o valor seja um número válido
@@ -420,15 +422,21 @@ export default function ServicosPage() {
                 </div>
 
                 {/* Botão principal - Alinhado na base */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    router.push('/agendar?service=' + service.id)
-                  }}
-                  className="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-black px-3 py-2 rounded-lg hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 transition-all font-bold text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 mb-3 mt-auto"
-                >
-                  Agendar Agora
-                </button>
+                {service.isActive ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      router.push('/agendar?service=' + service.id)
+                    }}
+                    className="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-black px-3 py-2 rounded-lg hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 transition-all font-bold text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 mb-3 mt-auto"
+                  >
+                    Agendar Agora
+                  </button>
+                ) : (
+                  <div className="w-full py-2 text-center text-red-400/80 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-semibold mb-3 mt-auto">
+                    Serviço Desativado
+                  </div>
+                )}
                 
                 {/* Ações de gerenciamento - Apenas para administradores */}
                 {canManageServices && (

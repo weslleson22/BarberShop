@@ -168,8 +168,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
-        console.log('Usuários recebidos:', data)
-        const barbers = data.filter((user: any) => user.role === 'BARBER' || user.role === 'ADMIN')
+        const barbers = data.filter((user: any) => (user.role === 'BARBER' || user.role === 'ADMIN') && user.isActive !== false)
         console.log('Barbeiros filtrados:', barbers)
         setBarbers(barbers)
       } else {

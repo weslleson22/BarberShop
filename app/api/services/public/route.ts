@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     
     const where: any = {
       barbershopId,
+      isActive: true,
     }
 
     if (active !== null) {
