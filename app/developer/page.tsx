@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import DropdownHeader from '@/components/shared/DropdownHeader'
-import { getAuthHeaders } from '@/lib/utils'
+import { getAuthHeaders, maskPhone, maskEmail, maskName } from '@/lib/utils'
+import AddressAutocomplete from '@/components/developer/AddressAutocomplete'
 import {
   Building2,
   Users,
@@ -163,24 +164,89 @@ export default function DeveloperDashboardPage() {
     }
   }
 
+  const handleInputChange = (field: string, value: string) => {
+    let formatted = value
+
+    if (field === 'phone' || field === 'adminPhone') {
+      formatted = maskPhone(value)
+    } else if (field === 'email' || field === 'adminEmail') {
+      formatted = maskEmail(value)
+    } else if (field === 'adminName') {
+      formatted = maskName(value)
+    }
+
+    setFormData((prev) => ({ ...prev, [field]: formatted }))
+  }
+
   const handleCreateBarbershop = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError(null)
 
+    const trimmedShopName = formData.name.trim()
+    const trimmedShopEmail = formData.email.trim()
+    const trimmedAdminName = formData.adminName.trim()
+    const trimmedAdminEmail = formData.adminEmail.trim()
+    const trimmedPassword = formData.adminPassword.trim()
+
+    // 1. Validação de campos obrigatórios
     if (
-      !formData.name.trim() ||
-      !formData.email.trim() ||
-      !formData.adminName.trim() ||
-      !formData.adminEmail.trim() ||
-      !formData.adminPassword.trim()
+      !trimmedShopName ||
+      !trimmedShopEmail ||
+      !trimmedAdminName ||
+      !trimmedAdminEmail ||
+      !trimmedPassword
     ) {
-      setFormError('Por favor, preencha todos os campos obrigatórios (*).')
+      setFormError('Por favor, preencha todos os campos obrigatórios marcados com (*).')
       return
     }
 
-    if (formData.adminPassword.length < 6) {
+    // 2. Validação do nome da unidade
+    if (trimmedShopName.length < 3) {
+      setFormError('O nome da barbearia deve ter pelo menos 3 caracteres.')
+      return
+    }
+
+    // 3. Validação do email comercial da barbearia
+    const emailRegex = /^[a-z0-9._%+\-]+@[a-z0-9.-]+\.[a-z]{2,}$/i
+    if (!emailRegex.test(trimmedShopEmail)) {
+      setFormError('O email comercial informado é inválido. Ex: contato@barbearia.com')
+      return
+    }
+
+    // 4. Validação do telefone da barbearia (se preenchido)
+    if (formData.phone) {
+      const phoneDigits = formData.phone.replace(/\D/g, '')
+      if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+        setFormError('Informe um telefone comercial válido com DDD no formato (00) 00000-0000.')
+        return
+      }
+    }
+
+    // 5. Validação do nome do administrador
+    if (trimmedAdminName.length < 3) {
+      setFormError('O nome do administrador deve ter pelo menos 3 caracteres.')
+      return
+    }
+
+    // 6. Validação do email do administrador
+    if (!emailRegex.test(trimmedAdminEmail)) {
+      setFormError('O email de acesso do administrador é inválido. Ex: admin@barbearia.com')
+      return
+    }
+
+    // 7. Validação da senha provisória
+    if (trimmedPassword.length < 6) {
       setFormError('A senha do administrador deve ter no mínimo 6 caracteres.')
       return
+    }
+
+    // 8. Validação do telefone do administrador (se preenchido)
+    if (formData.adminPhone) {
+      const adminPhoneDigits = formData.adminPhone.replace(/\D/g, '')
+      if (adminPhoneDigits.length < 10 || adminPhoneDigits.length > 11) {
+        setFormError('Informe um telefone do administrador válido com DDD no formato (00) 00000-0000.')
+        return
+      }
     }
 
     setIsSubmittingShop(true)
@@ -642,7 +708,7 @@ export default function DeveloperDashboardPage() {
                       required
                       placeholder="Ex: Barbearia Dom Pedro"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
                     />
                   </div>
@@ -658,42 +724,47 @@ export default function DeveloperDashboardPage() {
                         required
                         placeholder="contato@barbeariadompedro.com"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
                         className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                      Telefone / WhatsApp
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-medium text-gray-300">
+                        Telefone / WhatsApp
+                      </label>
+                      <span className="text-[10px] font-mono text-amber-400/80">(00) 00000-0000</span>
+                    </div>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
-                        type="text"
+                        type="tel"
+                        maxLength={15}
                         placeholder="(11) 98765-4321"
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition font-mono"
                       />
                     </div>
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                      Endereço Completo
-                    </label>
-                    <div className="relative">
-                      <MapPin className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        placeholder="Av. Paulista, 1000 - Bela Vista, São Paulo - SP"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
-                      />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-medium text-gray-300">
+                        Endereço Completo
+                      </label>
+                      <span className="text-[10px] text-amber-400/90 font-medium">
+                        ✦ Digite para sugerir cidades do Brasil
+                      </span>
                     </div>
+                    <AddressAutocomplete
+                      id="shop-address"
+                      value={formData.address}
+                      onChange={(val) => setFormData((prev) => ({ ...prev, address: val }))}
+                      placeholder="Ex: Av. Paulista, 1000 - São Paulo, SP (ou digite a cidade)"
+                    />
                   </div>
                 </div>
               </div>
@@ -714,7 +785,7 @@ export default function DeveloperDashboardPage() {
                       required
                       placeholder="Ex: Pedro Silva"
                       value={formData.adminName}
-                      onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
+                      onChange={(e) => handleInputChange('adminName', e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
                     />
                   </div>
@@ -730,7 +801,7 @@ export default function DeveloperDashboardPage() {
                         required
                         placeholder="pedro@barbeariadompedro.com"
                         value={formData.adminEmail}
-                        onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
+                        onChange={(e) => handleInputChange('adminEmail', e.target.value)}
                         className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
                       />
                     </div>
@@ -745,26 +816,31 @@ export default function DeveloperDashboardPage() {
                       <input
                         type="password"
                         required
+                        minLength={6}
                         placeholder="••••••••"
                         value={formData.adminPassword}
-                        onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
+                        onChange={(e) => handleInputChange('adminPassword', e.target.value)}
                         className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                      Telefone do Administrador
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-medium text-gray-300">
+                        Telefone do Administrador
+                      </label>
+                      <span className="text-[10px] font-mono text-blue-400/80">(00) 00000-0000</span>
+                    </div>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
-                        type="text"
+                        type="tel"
+                        maxLength={15}
                         placeholder="(11) 98765-4321"
                         value={formData.adminPhone}
-                        onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
+                        onChange={(e) => handleInputChange('adminPhone', e.target.value)}
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition font-mono"
                       />
                     </div>
                   </div>
