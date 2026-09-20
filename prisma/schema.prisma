@@ -18,9 +18,13 @@ model Barbershop {
   address     String?
   logo        String?
   description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive          Boolean   @default(true)
+  contractExpiresAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  createdById String?
+  creator     User?    @relation("BarbershopCreator", fields: [createdById], references: [id])
 
   // Relations
   users     User[]
@@ -54,6 +58,7 @@ model User {
   // Relations
   appointments Appointment[]
   createdAppointments Appointment[] @relation("AppointmentCreator")
+  createdBarbershops  Barbershop[]  @relation("BarbershopCreator")
   client       Client?
   notifications Notification[]
 

@@ -58,7 +58,15 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const updateData: any = {}
     if (name !== undefined) updateData.name = name
     if (email !== undefined) updateData.email = email
-    if (role !== undefined) updateData.role = role
+    if (role !== undefined) {
+      updateData.role = role
+      if (role === 'DEVELOPER') {
+        updateData.barbershopId = null
+      }
+    }
+    if (admin.role === 'DEVELOPER' && data.barbershopId !== undefined && role !== 'DEVELOPER') {
+      updateData.barbershopId = data.barbershopId || null
+    }
     if (isActive !== undefined) updateData.isActive = isActive
     if (avatar !== undefined) updateData.avatar = avatar
     if (phone !== undefined) updateData.phone = phone
@@ -79,6 +87,12 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         isActive: true,
         createdAt: true,
         barbershopId: true,
+        barbershop: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         avatar: true,
         phone: true,
       },

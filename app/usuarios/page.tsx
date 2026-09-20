@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera } from 'lucide-react'
+import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera, Building2, Crown } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
-import { maskPhone, maskName, maskEmail } from '@/lib/utils'
+import { maskPhone, maskName, maskEmail, getAuthHeaders } from '@/lib/utils'
 import type { UserRole } from '@/lib/roles'
 
 interface User {
@@ -16,7 +16,11 @@ interface User {
   role: UserRole
   isActive: boolean
   createdAt: string
-  barbershopId: string
+  barbershopId: string | null
+  barbershop?: {
+    id: string
+    name: string
+  } | null
   avatar?: string
 }
 
@@ -24,6 +28,7 @@ export default function UsuariosPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
+  const [barbershops, setBarbershops] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -34,6 +39,7 @@ export default function UsuariosPage() {
     email: '',
     phone: '',
     role: 'BARBER' as UserRole,
+    barbershopId: '',
     password: '',
     isActive: true,
     avatar: '',
@@ -87,32 +93,40 @@ export default function UsuariosPage() {
 
   const fetchUsers = async () => {
     try {
-      console.log('=== BUSCANDO USUÁRIOS DO PRISMA ===')
+      console.log('=== BUSCANDO USUÁRIOS DO PRISMA COM AUTH HEADERS ===')
       
-      // Buscando APENAS usuários reais do Prisma via API
-      const response = await fetch('/api/users')
+      const response = await fetch('/api/users', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
       
       if (response.ok) {
         const data = await response.json()
         console.log('Usuários recebidos do Prisma:', data)
-        console.log('Total de usuários do Prisma:', data.length)
-        
-        // Apenas dados do Prisma - sem mockados
         setUsers(data)
-        
-        // Validando se temos dados reais
-        if (data.length === 0) {
-          console.log('NENHUM usuário encontrado no Prisma')
-        } else {
-          console.log('Usuários do Prisma carregados com sucesso!')
-        }
       } else {
         console.error('Erro ao buscar usuários do Prisma:', response.status, response.statusText)
-        setUsers([]) // Array vazio em caso de erro
+        setUsers([])
+      }
+
+      // Se for DEVELOPER, buscar também lista de barbearias para poder vincular novos usuários
+      if (user?.role === 'DEVELOPER') {
+        try {
+          const shopRes = await fetch('/api/developer/barbershops', {
+            headers: getAuthHeaders(),
+            credentials: 'include',
+          })
+          if (shopRes.ok) {
+            const shops = await shopRes.json()
+            setBarbershops(shops)
+          }
+        } catch (err) {
+          console.error('Erro ao buscar barbearias para seleção:', err)
+        }
       }
     } catch (error) {
       console.error('Error ao buscar usuários do Prisma:', error)
-      setUsers([]) // Array vazio em caso de erro
+      setUsers([])
     } finally {
       setLoading(false)
     }
@@ -126,44 +140,61 @@ export default function UsuariosPage() {
       return
     }
 
+    if (user?.role === 'DEVELOPER' && formData.role !== 'DEVELOPER' && !formData.barbershopId) {
+      alert('Selecione a barbearia para este usuário')
+      return
+    }
+
     try {
       const operation = editingUser ? 'ATUALIZAR' : 'CRIAR'
       console.log(`=== ${operation} USUÁRIO NO PRISMA ===`)
-      console.log('Dados para enviar:', formData)
       
       const method = editingUser ? 'PUT' : 'POST'
       const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users'
       
-      console.log(`Método: ${method}`)
-      console.log(`URL: ${url}`)
+      const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        isActive: formData.isActive,
+        avatar: avatarPreview || formData.avatar,
+      }
+
+      if (formData.password) {
+        payload.password = formData.password
+      }
+
+      if (formData.role === 'DEVELOPER') {
+        payload.barbershopId = null
+      } else if (user?.role === 'DEVELOPER') {
+        payload.barbershopId = formData.barbershopId || null
+      }
       
       const response = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          avatar: avatarPreview || formData.avatar
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload),
       })
-      
-      console.log(`Status da resposta: ${response.status} ${response.statusText}`)
       
       if (response.ok) {
         const result = await response.json()
-        console.log(`Usuário ${operation.toLowerCase()} com sucesso no Prisma:`, result)
+        console.log(`Usuário ${operation.toLowerCase()} com sucesso:`, result)
         
-        // Atualizar a lista de usuários do Prisma
-        console.log('Atualizando lista de usuários do Prisma...')
         await fetchUsers()
         
         // Resetar formulário
-        setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true, avatar: '' })
+        setFormData({ name: '', email: '', phone: '', role: 'BARBER', barbershopId: '', password: '', isActive: true, avatar: '' })
         setAvatarPreview('')
         setAvatarFile(null)
         setShowAddForm(false)
         setEditingUser(null)
         
-        alert(`Usuário ${editingUser ? 'atualizado' : 'criado'} com sucesso no Prisma!`)
+        alert(`Usuário ${editingUser ? 'atualizado' : 'criado'} com sucesso!`)
       } else {
         const error = await response.json()
         console.error(`Erro ao ${operation.toLowerCase()} usuário:`, error)
@@ -171,25 +202,25 @@ export default function UsuariosPage() {
       }
     } catch (error) {
       console.error('Error na operação CRUD:', error)
-      alert('Erro na operação com o Prisma')
+      alert('Erro na operação com o servidor')
     }
   }
 
-  const handleEdit = (user: User) => {
-    console.log('=== EDITAR USUÁRIO DO PRISMA ===')
-    console.log('Usuário selecionado para edição:', user)
+  const handleEdit = (u: User) => {
+    console.log('=== EDITAR USUÁRIO DO PRISMA ===', u)
     
-    setEditingUser(user)
+    setEditingUser(u)
     setFormData({
-      name: user.name,
-      email: user.email,
-      phone: user.phone || '',
-      role: user.role,
+      name: u.name,
+      email: u.email,
+      phone: u.phone || '',
+      role: u.role,
+      barbershopId: u.barbershopId || '',
       password: '',
-      isActive: user.isActive,
-      avatar: user.avatar || '',
+      isActive: u.isActive,
+      avatar: u.avatar || '',
     })
-    setAvatarPreview(user.avatar || '')
+    setAvatarPreview(u.avatar || '')
     setShowAddForm(true)
   }
 
@@ -208,24 +239,20 @@ export default function UsuariosPage() {
 
   const handleToggleActive = async (userId: string, currentStatus: boolean) => {
     try {
-      console.log('=== ATIVAR/DESATIVAR USUÁRIO NO PRISMA ===')
-      console.log('ID do usuário:', userId)
-      console.log('Status atual:', currentStatus)
-      console.log('Novo status:', !currentStatus)
-      
       const response = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        credentials: 'include',
         body: JSON.stringify({ isActive: !currentStatus }),
       })
       
       if (response.ok) {
-        console.log('Usuário atualizado com sucesso no Prisma')
         await fetchUsers()
-        alert(`Usuário ${!currentStatus ? 'ativado' : 'desativado'} com sucesso no Prisma!`)
       } else {
         const error = await response.json()
-        console.error('Erro ao atualizar status:', error)
         alert(error.error || 'Erro ao atualizar usuário')
       }
     } catch (error) {
@@ -240,20 +267,17 @@ export default function UsuariosPage() {
     }
 
     try {
-      console.log('=== EXCLUIR USUÁRIO DO PRISMA ===')
-      console.log('ID do usuário para excluir:', userId)
-      
       const response = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
+        credentials: 'include',
       })
       
       if (response.ok) {
-        console.log('Usuário excluído com sucesso do Prisma')
         await fetchUsers()
-        alert('Usuário excluído com sucesso do Prisma!')
+        alert('Usuário excluído com sucesso!')
       } else {
         const error = await response.json()
-        console.error('Erro ao excluir usuário:', error)
         alert(error.error || 'Erro ao excluir usuário')
       }
     } catch (error) {
@@ -274,6 +298,8 @@ export default function UsuariosPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
+      case 'DEVELOPER':
+        return 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
       case 'ADMIN':
         return 'bg-purple-100 text-purple-800'
       case 'BARBER':
@@ -289,6 +315,8 @@ export default function UsuariosPage() {
 
   const getRoleText = (role: string) => {
     switch (role) {
+      case 'DEVELOPER':
+        return 'Desenvolvedor'
       case 'ADMIN':
         return 'Administrador'
       case 'BARBER':
@@ -338,7 +366,16 @@ export default function UsuariosPage() {
             onClick={() => {
               setShowAddForm(true)
               setEditingUser(null)
-              setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true, avatar: '' })
+              setFormData({ 
+                name: '', 
+                email: '', 
+                phone: '', 
+                role: user?.role === 'DEVELOPER' ? 'DEVELOPER' : 'BARBER', 
+                barbershopId: '', 
+                password: '', 
+                isActive: true, 
+                avatar: '' 
+              })
               setAvatarPreview('')
               setAvatarFile(null)
             }}
@@ -459,12 +496,42 @@ export default function UsuariosPage() {
                   required
                 >
                   <option value="" className="bg-gray-900">Selecione...</option>
+                  {user?.role === 'DEVELOPER' && (
+                    <option value="DEVELOPER" className="bg-gray-900 text-amber-400 font-medium">👑 Desenvolvedor (Plataforma)</option>
+                  )}
                   <option value="ADMIN" className="bg-gray-900">Administrador</option>
                   <option value="BARBER" className="bg-gray-900">Barbeiro</option>
                   <option value="RECEPTIONIST" className="bg-gray-900">Recepcionista</option>
                   <option value="CLIENT" className="bg-gray-900">Cliente</option>
                 </select>
               </div>
+
+              {/* Se o criador for Desenvolvedor e a função criada NÃO for DEVELOPER, selecionar a unidade/barbearia */}
+              {user?.role === 'DEVELOPER' && formData.role !== 'DEVELOPER' && (
+                <div className="md:col-span-2">
+                  <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5 flex items-center gap-1.5">
+                    <Building2 className="w-4 h-4 text-yellow-400" />
+                    Unidade / Barbearia vinculada *
+                  </label>
+                  <select
+                    value={formData.barbershopId}
+                    onChange={(e) => setFormData({ ...formData, barbershopId: e.target.value })}
+                    className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
+                    required
+                  >
+                    <option value="" className="bg-gray-900">Selecione a barbearia do usuário...</option>
+                    {barbershops.map((shop) => (
+                      <option key={shop.id} value={shop.id} className="bg-gray-900">
+                        {shop.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-white/40 mt-1">
+                    Como desenvolvedor, você pode atribuir colaboradores para qualquer barbearia cadastrada.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
                   Senha
@@ -496,7 +563,7 @@ export default function UsuariosPage() {
                 onClick={() => {
                   setShowAddForm(false)
                   setEditingUser(null)
-                  setFormData({ name: '', email: '', phone: '', role: 'BARBER', password: '', isActive: true, avatar: '' })
+                  setFormData({ name: '', email: '', phone: '', role: 'BARBER', barbershopId: '', password: '', isActive: true, avatar: '' })
                   setAvatarPreview('')
                   setAvatarFile(null)
                 }}
@@ -551,79 +618,94 @@ export default function UsuariosPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/6">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-white/5">
+                {filteredUsers.map((u) => (
+                  <tr key={u.id} className="hover:bg-white/5">
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {user.avatar ? (
+                          {u.avatar ? (
                             <img 
-                              src={user.avatar} 
-                              alt={user.name}
+                              src={u.avatar} 
+                              alt={u.name}
                               className="w-full h-full object-cover"
                             />
                           ) : (
                             <span className="text-yellow-400 font-bold text-xs md:text-sm">
-                              {user.name.charAt(0).toUpperCase()}
+                              {u.name.charAt(0).toUpperCase()}
                             </span>
                           )}
                         </div>
                         <div className="ml-2 md:ml-4 min-w-0">
-                          <div className="text-xs md:text-sm font-medium text-white truncate">{user.name}</div>
-                          <div className="text-xs md:text-sm text-white/60 truncate hidden sm:block">{user.email}</div>
+                          <div className="text-xs md:text-sm font-medium text-white truncate flex items-center gap-1.5">
+                            <span>{u.name}</span>
+                            {u.role === 'DEVELOPER' ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                <Crown className="w-3 h-3 text-amber-400" /> Global
+                              </span>
+                            ) : u.barbershop?.name ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/10 text-white/70 border border-white/10">
+                                <Building2 className="w-3 h-3 text-yellow-400" /> {u.barbershop.name}
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="text-xs md:text-sm text-white/60 truncate hidden sm:block">{u.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden sm:table-cell">
                       <div className="flex items-center">
                         <Shield className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/40 mr-1.5 md:mr-2" />
-                        <span className={`inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                          {getRoleText(user.role)}
+                        <span className={`inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(u.role)}`}>
+                          {getRoleText(u.role)}
                         </span>
                       </div>
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
-                      {user.phone ? (
-                        <span className="text-xs md:text-sm text-white">{user.phone}</span>
+                      {u.phone ? (
+                        <span className="text-xs md:text-sm text-white">{u.phone}</span>
                       ) : (
                         <span className="text-xs md:text-sm text-white/40">Não informado</span>
                       )}
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden sm:table-cell">
                       <span className={`inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.isActive 
+                        u.isActive 
                           ? 'bg-green-400/20 text-green-400 border border-green-400/30' 
                           : 'bg-red-400/20 text-red-400 border border-red-400/30'
                       }`}>
-                        {user.isActive ? 'Ativo' : 'Inativo'}
+                        {u.isActive ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
                       <span className="text-xs md:text-sm text-white/60">
-                        {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+                        {new Date(u.createdAt).toLocaleDateString('pt-BR')}
                       </span>
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm font-medium">
                       <div className="flex space-x-1.5 md:space-x-2">
                         <button
-                          onClick={() => handleEdit(user)}
+                          onClick={() => handleEdit(u)}
                           className="text-blue-400 hover:text-blue-300 p-1.5 md:p-2 rounded-lg hover:bg-blue-500/10 transition-all"
                           title="Editar"
                         >
                           <Edit className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         </button>
                         <button
-                          onClick={() => handleToggleActive(user.id, user.isActive)}
-                          className={user.isActive ? 'text-yellow-400 hover:text-yellow-300 p-1.5 md:p-2 rounded-lg hover:bg-yellow-500/10 transition-all' : 'text-green-400 hover:text-green-300 p-1.5 md:p-2 rounded-lg hover:bg-green-500/10 transition-all'}
-                          title={user.isActive ? 'Desativar' : 'Ativar'}
+                          onClick={() => handleToggleActive(u.id, u.isActive)}
+                          className={u.isActive ? 'text-yellow-400 hover:text-yellow-300 p-1.5 md:p-2 rounded-lg hover:bg-yellow-500/10 transition-all' : 'text-green-400 hover:text-green-300 p-1.5 md:p-2 rounded-lg hover:bg-green-500/10 transition-all'}
+                          title={u.isActive ? 'Desativar' : 'Ativar'}
                         >
-                          {user.isActive ? <EyeOff className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Eye className="w-3.5 h-3.5 md:w-4 md:h-4" />}
+                          {u.isActive ? <EyeOff className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Eye className="w-3.5 h-3.5 md:w-4 md:h-4" />}
                         </button>
                         <button
-                          onClick={() => handleDelete(user.id)}
-                          className="text-red-400 hover:text-red-300 p-1.5 md:p-2 rounded-lg hover:bg-red-500/10 transition-all"
+                          onClick={() => handleDelete(u.id)}
+                          className="text-red-400 hover:text-red-300 p-1.5 md:p-2 rounded-lg hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Excluir"
-                          disabled={user.role === 'ADMIN' && filteredUsers.filter(u => u.role === 'ADMIN').length === 1}
+                          disabled={
+                            u.id === user?.id || 
+                            (u.role === 'DEVELOPER' && filteredUsers.filter(item => item.role === 'DEVELOPER').length === 1) ||
+                            (u.role === 'ADMIN' && filteredUsers.filter(item => item.role === 'ADMIN').length === 1)
+                          }
                         >
                           <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         </button>
@@ -641,11 +723,19 @@ export default function UsuariosPage() {
       {users.length > 0 && (
         <div className="mt-6 md:mt-8 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-4 md:p-6">
           <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Resumo de Usuários</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
             <div>
               <p className="text-xs md:text-sm text-white/60">Total de Usuários</p>
               <p className="text-xl md:text-2xl font-bold text-white">{users.length}</p>
             </div>
+            {user?.role === 'DEVELOPER' && (
+              <div>
+                <p className="text-xs md:text-sm text-white/60">Desenvolvedores</p>
+                <p className="text-xl md:text-2xl font-bold text-amber-400">
+                  {users.filter(u => u.role === 'DEVELOPER').length}
+                </p>
+              </div>
+            )}
             <div>
               <p className="text-xs md:text-sm text-white/60">Administradores</p>
               <p className="text-xl md:text-2xl font-bold text-purple-400">

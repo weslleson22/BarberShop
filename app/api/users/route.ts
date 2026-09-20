@@ -45,6 +45,12 @@ export async function GET(request: NextRequest) {
         email: true,
         role: true,
         barbershopId: true,
+        barbershop: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         isActive: true,
         createdAt: true,
         avatar: true,
@@ -92,8 +98,10 @@ export async function POST(request: NextRequest) {
     }
 
     let targetBarbershopId: string | null = null
-    if (admin.role === 'DEVELOPER') {
-      targetBarbershopId = bodyShopId || admin.barbershopId || null
+    if (role === 'DEVELOPER') {
+      targetBarbershopId = null
+    } else if (admin.role === 'DEVELOPER') {
+      targetBarbershopId = bodyShopId || null
     } else {
       targetBarbershopId = admin.barbershopId || null
     }

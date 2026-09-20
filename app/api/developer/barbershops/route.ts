@@ -23,8 +23,30 @@ export async function GET(request: NextRequest) {
         logo: true,
         description: true,
         isActive: true,
+        contractExpiresAt: true,
         createdAt: true,
         updatedAt: true,
+        createdById: true,
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        users: {
+          where: { role: 'ADMIN' },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            role: true,
+            isActive: true,
+            createdAt: true,
+          },
+          take: 1,
+        },
         _count: {
           select: {
             users: true,
@@ -57,7 +79,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, isActive, name, email, phone, address } = body
+    const { id, isActive, name, email, phone, address, contractExpiresAt } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID da barbearia é obrigatório' }, { status: 400 })
@@ -77,6 +99,9 @@ export async function PATCH(request: NextRequest) {
     if (email) updateData.email = email
     if (phone !== undefined) updateData.phone = phone
     if (address !== undefined) updateData.address = address
+    if (contractExpiresAt !== undefined) {
+      updateData.contractExpiresAt = contractExpiresAt ? new Date(contractExpiresAt) : null
+    }
 
     const updated = await prisma.barbershop.update({
       where: { id },
@@ -102,7 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, phone, address, adminName, adminEmail, adminPassword, adminPhone } = body
+    const { name, email, phone, address, adminName, adminEmail, adminPassword, adminPhone, contractExpiresAt } = body
 
     if (!name || !email || !adminName || !adminEmail || !adminPassword) {
       return NextResponse.json(
@@ -117,6 +142,8 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       address,
+      contractExpiresAt: contractExpiresAt ? new Date(contractExpiresAt) : null,
+      createdById: user.id,
       adminUser: {
         name: adminName,
         email: adminEmail,

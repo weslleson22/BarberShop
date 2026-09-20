@@ -25,6 +25,12 @@ import {
   Lock,
   UserCheck,
   Search,
+  Calendar,
+  Clock,
+  Info,
+  CalendarClock,
+  Shield,
+  Crown,
 } from 'lucide-react'
 
 interface BarbershopData {
@@ -35,6 +41,22 @@ interface BarbershopData {
   address: string | null
   isActive: boolean
   createdAt: string
+  contractExpiresAt: string | null
+  createdById: string | null
+  creator?: {
+    id: string
+    name: string
+    email: string
+  } | null
+  users?: Array<{
+    id: string
+    name: string
+    email: string
+    phone: string | null
+    role: string
+    isActive: boolean
+    createdAt: string
+  }>
   _count?: {
     users?: number
     clients?: number
@@ -90,6 +112,11 @@ export default function DeveloperDashboardPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
 
+  // Modal "Detalhes da Barbearia"
+  const [selectedShopForDetails, setSelectedShopForDetails] = useState<BarbershopData | null>(null)
+  const [isUpdatingContract, setIsUpdatingContract] = useState(false)
+  const [contractEditDate, setContractEditDate] = useState('')
+
   // Modal "+ Nova Barbearia"
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isSubmittingShop, setIsSubmittingShop] = useState(false)
@@ -103,6 +130,7 @@ export default function DeveloperDashboardPage() {
     adminEmail: '',
     adminPassword: '',
     adminPhone: '',
+    contractExpiresAt: '',
   })
 
   useEffect(() => {
@@ -278,6 +306,7 @@ export default function DeveloperDashboardPage() {
         adminEmail: '',
         adminPassword: '',
         adminPhone: '',
+        contractExpiresAt: '',
       })
 
       await loadData()
@@ -285,6 +314,92 @@ export default function DeveloperDashboardPage() {
       setFormError(err.message || 'Erro inesperado ao cadastrar barbearia.')
     } finally {
       setIsSubmittingShop(false)
+    }
+  }
+
+  const getContractStatus = (contractExpiresAt: string | null) => {
+    if (!contractExpiresAt) {
+      return {
+        label: 'Vitalício',
+        color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+        isExpired: false,
+        daysRemaining: null,
+      }
+    }
+
+    const now = new Date()
+    const expDate = new Date(contractExpiresAt)
+    const diffTime = expDate.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays < 0) {
+      return {
+        label: `Expirado (${expDate.toLocaleDateString('pt-BR')})`,
+        color: 'bg-red-500/20 text-red-400 border border-red-500/30',
+        isExpired: true,
+        daysRemaining: diffDays,
+      }
+    } else if (diffDays <= 15) {
+      return {
+        label: `Expira em ${diffDays}d (${expDate.toLocaleDateString('pt-BR')})`,
+        color: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+        isExpired: false,
+        daysRemaining: diffDays,
+      }
+    } else {
+      return {
+        label: `Até ${expDate.toLocaleDateString('pt-BR')}`,
+        color: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+        isExpired: false,
+        daysRemaining: diffDays,
+      }
+    }
+  }
+
+  const handleOpenDetails = (shop: BarbershopData) => {
+    setSelectedShopForDetails(shop)
+    if (shop.contractExpiresAt) {
+      const d = new Date(shop.contractExpiresAt)
+      setContractEditDate(d.toISOString().split('T')[0])
+    } else {
+      setContractEditDate('')
+    }
+  }
+
+  const handleUpdateContract = async () => {
+    if (!selectedShopForDetails) return
+    setIsUpdatingContract(true)
+    try {
+      const res = await fetch('/api/developer/barbershops', {
+        method: 'PATCH',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'include',
+        body: JSON.stringify({
+          id: selectedShopForDetails.id,
+          contractExpiresAt: contractEditDate ? new Date(contractEditDate).toISOString() : null,
+        }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Erro ao atualizar contrato')
+      }
+
+      const updated = await res.json()
+      setBarbershops((prev) =>
+        prev.map((s) => (s.id === updated.id ? { ...s, contractExpiresAt: updated.contractExpiresAt } : s))
+      )
+      setSelectedShopForDetails((prev) =>
+        prev ? { ...prev, contractExpiresAt: updated.contractExpiresAt } : null
+      )
+      setMessage({
+        type: 'success',
+        text: `Vencimento do contrato de "${selectedShopForDetails.name}" atualizado com sucesso!`,
+      })
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Erro ao atualizar contrato' })
+    } finally {
+      setIsUpdatingContract(false)
     }
   }
 
@@ -530,19 +645,20 @@ export default function DeveloperDashboardPage() {
               <thead>
                 <tr className="bg-gray-900/80 text-gray-400 border-b border-gray-800">
                   <th className="py-3.5 px-4 font-semibold">Barbearia</th>
+                  <th className="py-3.5 px-4 font-semibold">Cadastrado em</th>
+                  <th className="py-3.5 px-4 font-semibold">Contrato</th>
                   <th className="py-3.5 px-4 font-semibold">Contato</th>
-                  <th className="py-3.5 px-4 font-semibold">Endereço</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Equipe</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Clientes</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Serviços</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Status</th>
-                  <th className="py-3.5 px-4 font-semibold text-right">Ação</th>
+                  <th className="py-3.5 px-4 font-semibold text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800/60">
                 {filteredBarbershops.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-gray-500">
+                    <td colSpan={9} className="py-12 text-center text-gray-500">
                       <div className="flex flex-col items-center justify-center gap-3 max-w-sm mx-auto">
                         <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                           <Building2 className="w-6 h-6 text-amber-400" />
@@ -579,13 +695,32 @@ export default function DeveloperDashboardPage() {
                       <td className="py-4 px-4">
                         <div className="font-semibold text-white">{shop.name}</div>
                         <div className="text-xs text-gray-500 font-mono">ID: {shop.id}</div>
+                        {shop.creator && (
+                          <div className="text-[11px] text-amber-400/80 mt-0.5 flex items-center gap-1">
+                            <Crown className="w-3 h-3 text-amber-400" /> Por: {shop.creator.name}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-4 px-4 whitespace-nowrap text-xs text-gray-300">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                          {new Date(shop.createdAt).toLocaleDateString('pt-BR')}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        {(() => {
+                          const status = getContractStatus(shop.contractExpiresAt)
+                          return (
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${status.color}`}>
+                              <CalendarClock className="w-3.5 h-3.5" />
+                              {status.label}
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td className="py-4 px-4">
-                        <div className="text-gray-300">{shop.email}</div>
+                        <div className="text-gray-300 text-xs">{shop.email}</div>
                         <div className="text-xs text-gray-500">{shop.phone || 'Sem telefone'}</div>
-                      </td>
-                      <td className="py-4 px-4 max-w-xs truncate text-gray-300 text-xs">
-                        {shop.address || 'Não informado'}
                       </td>
                       <td className="py-4 px-4 text-center font-medium text-gray-200">
                         {shop._count?.users ?? 0}
@@ -613,22 +748,33 @@ export default function DeveloperDashboardPage() {
                         </span>
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <button
-                          onClick={() => toggleBarbershopStatus(shop)}
-                          disabled={actionLoadingId === shop.id}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
-                            shop.isActive
-                              ? 'border-red-800/80 bg-red-950/20 text-red-400 hover:bg-red-900/30'
-                              : 'border-emerald-800/80 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-900/30'
-                          } disabled:opacity-50`}
-                        >
-                          <Power className="h-3.5 w-3.5" />
-                          {actionLoadingId === shop.id
-                            ? 'Alterando...'
-                            : shop.isActive
-                            ? 'Desativar'
-                            : 'Ativar'}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDetails(shop)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-blue-800/80 bg-blue-950/20 text-blue-400 hover:bg-blue-900/30 transition cursor-pointer"
+                            title="Ver Detalhes da Barbearia"
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                            Ver Detalhes
+                          </button>
+                          <button
+                            onClick={() => toggleBarbershopStatus(shop)}
+                            disabled={actionLoadingId === shop.id}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
+                              shop.isActive
+                                ? 'border-red-800/80 bg-red-950/20 text-red-400 hover:bg-red-900/30'
+                                : 'border-emerald-800/80 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-900/30'
+                            } disabled:opacity-50 cursor-pointer`}
+                          >
+                            <Power className="h-3.5 w-3.5" />
+                            {actionLoadingId === shop.id
+                              ? 'Alterando...'
+                              : shop.isActive
+                              ? 'Desativar'
+                              : 'Ativar'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -766,6 +912,85 @@ export default function DeveloperDashboardPage() {
                       placeholder="Ex: Av. Paulista, 1000 - São Paulo, SP (ou digite a cidade)"
                     />
                   </div>
+
+                  {/* Vigência do Contrato */}
+                  <div className="sm:col-span-2 border-t border-gray-800/80 pt-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-medium text-amber-300 flex items-center gap-1.5">
+                        <CalendarClock className="w-4 h-4 text-amber-400" />
+                        Vigência / Vencimento do Contrato
+                      </label>
+                      <span className="text-[10px] text-gray-400">
+                        Opcional (Deixe em branco para vitalício)
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const d = new Date()
+                          d.setDate(d.getDate() + 30)
+                          setFormData(prev => ({ ...prev, contractExpiresAt: d.toISOString().split('T')[0] }))
+                        }}
+                        className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                      >
+                        +30 dias
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const d = new Date()
+                          d.setDate(d.getDate() + 90)
+                          setFormData(prev => ({ ...prev, contractExpiresAt: d.toISOString().split('T')[0] }))
+                        }}
+                        className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                      >
+                        +90 dias (3m)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const d = new Date()
+                          d.setDate(d.getDate() + 180)
+                          setFormData(prev => ({ ...prev, contractExpiresAt: d.toISOString().split('T')[0] }))
+                        }}
+                        className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                      >
+                        +180 dias (6m)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const d = new Date()
+                          d.setDate(d.getDate() + 365)
+                          setFormData(prev => ({ ...prev, contractExpiresAt: d.toISOString().split('T')[0] }))
+                        }}
+                        className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                      >
+                        +365 dias (1 ano)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, contractExpiresAt: '' }))
+                        }}
+                        className="px-2 py-1 text-xs rounded bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-800/60 transition cursor-pointer"
+                      >
+                        Vitalício (Sem vencimento)
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <Calendar className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="date"
+                        value={formData.contractExpiresAt}
+                        onChange={(e) => setFormData(prev => ({ ...prev, contractExpiresAt: e.target.value }))}
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-amber-500 transition"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -853,14 +1078,14 @@ export default function DeveloperDashboardPage() {
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
                   disabled={isSubmittingShop}
-                  className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition"
+                  className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingShop}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-sm transition shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-sm transition shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmittingShop ? (
                     <>
@@ -876,6 +1101,287 @@ export default function DeveloperDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal "Detalhes da Barbearia" */}
+      {selectedShopForDetails && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-amber-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-white">{selectedShopForDetails.name}</h3>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        selectedShopForDetails.isActive
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                      }`}
+                    >
+                      {selectedShopForDetails.isActive ? 'Ativa' : 'Desativada'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 font-mono mt-0.5">ID: {selectedShopForDetails.id}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedShopForDetails(null)}
+                className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6 max-h-[72vh] overflow-y-auto pr-1">
+              {/* Card 1: Registro & Origem */}
+              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Informações de Cadastro
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="text-gray-500 block mb-1">Data e Hora do Cadastro:</span>
+                    <span className="text-gray-200 font-medium text-sm flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-amber-400" />
+                      {new Date(selectedShopForDetails.createdAt).toLocaleString('pt-BR')}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block mb-1">Cadastrado por:</span>
+                    {selectedShopForDetails.creator ? (
+                      <div className="text-gray-200">
+                        <span className="font-semibold text-amber-300 flex items-center gap-1">
+                          <Crown className="w-3.5 h-3.5" />
+                          {selectedShopForDetails.creator.name}
+                        </span>
+                        <span className="text-gray-400 text-[11px]">{selectedShopForDetails.creator.email}</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 italic">Sistema / Registro Direto</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block mb-1">Email Comercial:</span>
+                    <span className="text-gray-200 font-mono">{selectedShopForDetails.email}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block mb-1">Telefone da Unidade:</span>
+                    <span className="text-gray-200 font-mono">{selectedShopForDetails.phone || 'Não informado'}</span>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-gray-500 block mb-1">Endereço:</span>
+                    <span className="text-gray-200">{selectedShopForDetails.address || 'Não informado'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Contrato & Vigência */}
+              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                    <CalendarClock className="w-4 h-4" />
+                    Contrato & Vigência da Licença
+                  </h4>
+                  {(() => {
+                    const status = getContractStatus(selectedShopForDetails.contractExpiresAt)
+                    return (
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${status.color}`}>
+                        <CalendarClock className="w-3.5 h-3.5" />
+                        Status: {status.label}
+                      </span>
+                    )
+                  })()}
+                </div>
+
+                <p className="text-xs text-gray-400 mb-4">
+                  {selectedShopForDetails.contractExpiresAt
+                    ? `O contrato desta unidade expira em ${new Date(selectedShopForDetails.contractExpiresAt).toLocaleDateString('pt-BR')}. Você pode estender ou renovar o prazo abaixo.`
+                    : 'Esta unidade possui contrato vitalício / sem data de expiração cadastrada.'}
+                </p>
+
+                {/* Formulário de Renovação / Alteração */}
+                <div className="bg-gray-900/80 border border-gray-800 rounded-lg p-3.5">
+                  <label className="block text-xs font-medium text-gray-300 mb-2">
+                    Alterar / Renovar Data de Expiração do Contrato:
+                  </label>
+
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date()
+                        d.setDate(d.getDate() + 30)
+                        setContractEditDate(d.toISOString().split('T')[0])
+                      }}
+                      className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                    >
+                      +30 dias
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date()
+                        d.setDate(d.getDate() + 90)
+                        setContractEditDate(d.toISOString().split('T')[0])
+                      }}
+                      className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                    >
+                      +90 dias (3m)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date()
+                        d.setDate(d.getDate() + 180)
+                        setContractEditDate(d.toISOString().split('T')[0])
+                      }}
+                      className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                    >
+                      +180 dias (6m)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date()
+                        d.setDate(d.getDate() + 365)
+                        setContractEditDate(d.toISOString().split('T')[0])
+                      }}
+                      className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                    >
+                      +365 dias (1 ano)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setContractEditDate('')}
+                      className="px-2 py-1 text-xs rounded bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-800/60 transition cursor-pointer"
+                    >
+                      Tornar Vitalício
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="relative flex-1">
+                      <Calendar className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="date"
+                        value={contractEditDate}
+                        onChange={(e) => setContractEditDate(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleUpdateContract}
+                      disabled={isUpdatingContract}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs transition disabled:opacity-50 cursor-pointer shadow-md shadow-emerald-600/20"
+                    >
+                      {isUpdatingContract ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Salvar Vigência
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Administrador da Unidade */}
+              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <UserCheck className="w-4 h-4" />
+                  Administrador(es) da Unidade
+                </h4>
+
+                {(() => {
+                  const admins = (selectedShopForDetails.users || []).filter(u => u.role === 'ADMIN')
+                  if (admins.length === 0) {
+                    return (
+                      <p className="text-xs text-gray-500 italic">
+                        Nenhum usuário com função de Administrador vinculado a esta barbearia.
+                      </p>
+                    )
+                  }
+                  return (
+                    <div className="space-y-3">
+                      {admins.map((adm) => (
+                        <div key={adm.id} className="p-3 bg-gray-900/90 border border-gray-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                          <div>
+                            <div className="font-semibold text-white text-sm flex items-center gap-2">
+                              {adm.name}
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${adm.isActive ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                {adm.isActive ? 'Ativo' : 'Inativo'}
+                              </span>
+                            </div>
+                            <div className="text-gray-400 mt-0.5">{adm.email} • {adm.phone || 'Sem telefone'}</div>
+                          </div>
+                          <div className="text-right text-gray-500 text-[11px]">
+                            Cadastrado em: {new Date(adm.createdAt).toLocaleDateString('pt-BR')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+              </div>
+
+              {/* Card 4: Métricas do Tenant */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800 text-center">
+                  <div className="text-xl font-bold text-white">{selectedShopForDetails._count?.users ?? 0}</div>
+                  <div className="text-[11px] text-gray-400 mt-1">Colaboradores</div>
+                </div>
+                <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800 text-center">
+                  <div className="text-xl font-bold text-white">{selectedShopForDetails._count?.clients ?? 0}</div>
+                  <div className="text-[11px] text-gray-400 mt-1">Clientes</div>
+                </div>
+                <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800 text-center">
+                  <div className="text-xl font-bold text-white">{selectedShopForDetails._count?.services ?? 0}</div>
+                  <div className="text-[11px] text-gray-400 mt-1">Serviços</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-5 border-t border-gray-800 mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  toggleBarbershopStatus(selectedShopForDetails)
+                  setSelectedShopForDetails((prev) => prev ? { ...prev, isActive: !prev.isActive } : null)
+                }}
+                disabled={actionLoadingId === selectedShopForDetails.id}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border transition ${
+                  selectedShopForDetails.isActive
+                    ? 'border-red-800/80 bg-red-950/20 text-red-400 hover:bg-red-900/30'
+                    : 'border-emerald-800/80 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-900/30'
+                } disabled:opacity-50 cursor-pointer`}
+              >
+                <Power className="w-4 h-4" />
+                {selectedShopForDetails.isActive ? 'Desativar Unidade' : 'Ativar Unidade'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedShopForDetails(null)}
+                className="px-5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-semibold transition cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}

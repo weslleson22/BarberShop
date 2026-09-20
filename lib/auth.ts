@@ -181,6 +181,8 @@ export async function createBarbershop(data: {
   email: string
   phone?: string
   address?: string
+  contractExpiresAt?: Date | string | null
+  createdById?: string | null
   adminUser: {
     name: string
     email: string
@@ -214,6 +216,8 @@ export async function createBarbershop(data: {
         phone: data.phone,
         address: data.address,
         isActive: true,
+        contractExpiresAt: data.contractExpiresAt ? new Date(data.contractExpiresAt) : null,
+        createdById: data.createdById || null,
       },
     })
 
