@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Users, Calendar, DollarSign } from 'lucide-react'
+import { Users, Calendar, DollarSign, Crown } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
 
 interface Client {
   id: string
   name: string
   phone: string
+  isVip?: boolean
   createdAt: string
   lastAppointment?: {
     service: string
@@ -164,8 +165,14 @@ export default function RecentClients() {
 
               {/* Client Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-1.5 md:space-x-2 mb-1">
+                <div className="flex items-center space-x-1.5 md:space-x-2 mb-1 flex-wrap gap-y-1">
                   <p className="text-white font-medium text-sm md:text-base truncate">{client.name}</p>
+                  {Boolean(client.isVip) && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 rounded-lg text-xs font-bold flex-shrink-0">
+                      <Crown className="w-3 h-3 text-yellow-400" />
+                      VIP
+                    </span>
+                  )}
                   {getStatusBadge(client)}
                 </div>
                 <div className="flex items-center space-x-2 md:space-x-4 text-white/60 text-xs md:text-sm">

@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
         logo: true,
         description: true,
         isActive: true,
+        status: true,
         contractExpiresAt: true,
         createdAt: true,
         updatedAt: true,
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PATCH - Ativar/Desativar ou editar barbearia (exclusivo DEVELOPER)
+// PATCH - Ativar/Desativar, aprovar/rejeitar ou editar barbearia (exclusivo DEVELOPER)
 export async function PATCH(request: NextRequest) {
   try {
     const user = getAuthUser(request)
@@ -79,7 +80,19 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, isActive, name, email, phone, address, contractExpiresAt } = body
+    const {
+      id,
+      status,
+      isActive,
+      name,
+      email,
+      phone,
+      address,
+      contractExpiresAt,
+      adminName,
+      adminEmail,
+      adminPhone,
+    } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID da barbearia é obrigatório' }, { status: 400 })
@@ -87,6 +100,12 @@ export async function PATCH(request: NextRequest) {
 
     const barbershop = await prisma.barbershop.findUnique({
       where: { id },
+      include: {
+        users: {
+          where: { role: 'ADMIN' },
+          take: 1,
+        },
+      },
     })
 
     if (!barbershop) {
@@ -94,13 +113,65 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData: any = {}
-    if (typeof isActive === 'boolean') updateData.isActive = isActive
-    if (name) updateData.name = name
-    if (email) updateData.email = email
-    if (phone !== undefined) updateData.phone = phone
-    if (address !== undefined) updateData.address = address
+
+    // Tratamento de Status (Aprovação / Rejeição)
+    if (status) {
+      updateData.status = status
+      if (status === 'APPROVED') {
+        updateData.isActive = true
+        // Ativar o administrador da barbearia
+        if (typeof (prisma.user as any)?.updateMany === 'function') {
+          await prisma.user.updateMany({
+            where: { barbershopId: id, role: 'ADMIN' },
+            data: { isActive: true },
+          })
+        }
+      } else if (status === 'REJECTED') {
+        updateData.isActive = false
+        // Desativar o administrador da barbearia
+        if (typeof (prisma.user as any)?.updateMany === 'function') {
+          await prisma.user.updateMany({
+            where: { barbershopId: id, role: 'ADMIN' },
+            data: { isActive: false },
+          })
+        }
+      }
+    }
+
+    // Ativação / Desativação manual direta
+    if (typeof isActive === 'boolean') {
+      updateData.isActive = isActive
+      // Se desativar ou ativar a barbearia, sincroniza com o admin principal
+      if (typeof (prisma.user as any)?.updateMany === 'function') {
+        await prisma.user.updateMany({
+          where: { barbershopId: id, role: 'ADMIN' },
+          data: { isActive },
+        })
+      }
+    }
+
+    // Complementação / Edição de dados do estabelecimento
+    if (name) updateData.name = name.trim()
+    if (email) updateData.email = email.trim()
+    if (phone !== undefined) updateData.phone = phone ? phone.trim() : null
+    if (address !== undefined) updateData.address = address ? address.trim() : null
     if (contractExpiresAt !== undefined) {
       updateData.contractExpiresAt = contractExpiresAt ? new Date(contractExpiresAt) : null
+    }
+
+    // Se o desenvolvedor editar dados do administrador responsável
+    if (adminName || adminEmail || adminPhone !== undefined) {
+      const adminUser = barbershop.users?.[0]
+      if (adminUser && typeof (prisma.user as any)?.update === 'function') {
+        const adminUpdateData: any = {}
+        if (adminName) adminUpdateData.name = adminName.trim()
+        if (adminEmail) adminUpdateData.email = adminEmail.trim()
+        if (adminPhone !== undefined) adminUpdateData.phone = adminPhone ? adminPhone.trim() : null
+        await prisma.user.update({
+          where: { id: adminUser.id },
+          data: adminUpdateData,
+        })
+      }
     }
 
     const updated = await prisma.barbershop.update({
@@ -142,6 +213,8 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       address,
+      status: 'APPROVED',
+      isActive: true,
       contractExpiresAt: contractExpiresAt ? new Date(contractExpiresAt) : null,
       createdById: user.id,
       adminUser: {
@@ -149,6 +222,7 @@ export async function POST(request: NextRequest) {
         email: adminEmail,
         password: adminPassword,
         phone: adminPhone || phone,
+        isActive: true,
       },
     })
 
@@ -161,4 +235,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

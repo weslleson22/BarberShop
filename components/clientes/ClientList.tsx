@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Users, Filter, ChevronDown, Search, Edit, Trash2, MessageSquare, Phone, Mail, Calendar, User } from 'lucide-react'
+import { Users, Filter, ChevronDown, Search, Edit, Trash2, MessageSquare, Phone, Mail, Calendar, User, Crown } from 'lucide-react'
 
 interface Client {
   id: string
   name: string
   phone: string
   email?: string
+  isVip?: boolean
   createdAt: string
   lastAppointment?: {
     service: string
@@ -47,7 +48,7 @@ export default function ClientList({
       const matchesStatus = filterStatus === 'all' || 
                            (filterStatus === 'new' && (client._count?.appointments || 0) <= 3) ||
                            (filterStatus === 'regular' && (client._count?.appointments || 0) > 3 && (client._count?.appointments || 0) <= 10) ||
-                           (filterStatus === 'vip' && (client._count?.appointments || 0) > 10)
+                           (filterStatus === 'vip' && (Boolean(client.isVip) || (client._count?.appointments || 0) > 10))
       
       return matchesSearch && matchesStatus
     })
@@ -71,7 +72,7 @@ export default function ClientList({
       case 'regular':
         return clients.filter(c => (c._count?.appointments || 0) > 3 && (c._count?.appointments || 0) <= 10).length
       case 'vip':
-        return clients.filter(c => (c._count?.appointments || 0) > 10).length
+        return clients.filter(c => Boolean(c.isVip) || (c._count?.appointments || 0) > 10).length
       default:
         return 0
     }
@@ -215,7 +216,15 @@ export default function ClientList({
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <p className="text-white font-semibold text-sm md:text-lg truncate">{client.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-white font-semibold text-sm md:text-lg truncate">{client.name}</p>
+                            {Boolean(client.isVip) && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-gradient-to-r from-yellow-400/20 to-amber-500/20 text-yellow-300 border border-yellow-400/30 flex-shrink-0 shadow-sm shadow-yellow-400/10">
+                                <Crown className="w-3 h-3 text-yellow-400" />
+                                VIP
+                              </span>
+                            )}
+                          </div>
                           <p className="text-white/60 text-xs md:text-sm hidden md:block">ID: {client.id}</p>
                         </div>
                       </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home, Star, Award, CheckCircle2, Scissors, Sparkles } from 'lucide-react'
+import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home, Star, Award, CheckCircle2, Scissors, Sparkles, Shield } from 'lucide-react'
 import Link from 'next/link'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { maskPhone, maskName as maskNameShared, maskEmail as maskEmailShared } from '@/lib/utils'
@@ -28,7 +28,8 @@ interface Barber {
   name: string
   email: string
   avatar?: string
-  bio?: string
+  bio?: string | null
+  specialties?: string[]
   phone?: string
 }
 
@@ -40,7 +41,7 @@ interface TimeSlot {
 
 export default function AgendarPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [step, setStep] = useState(1)
   const [services, setServices] = useState<Service[]>([])
   const [barbers, setBarbers] = useState<Barber[]>([])
@@ -330,7 +331,7 @@ export default function AgendarPage() {
 
         alert('Agendamento realizado com sucesso!\n\n' +
               'Serviço: ' + selectedService.name + '\n' +
-              'Barbeiro: ' + selectedBarber.name + '\n' +
+              'Profissional: ' + selectedBarber.name + '\n' +
               'Data/Hora: ' + selectedTime.startTime.toLocaleString('pt-BR') + '\n' +
               'Cliente: ' + clientData.name + '\n' +
               'Telefone: ' + clientData.phone + '\n' +
@@ -372,14 +373,81 @@ export default function AgendarPage() {
     return today.toISOString().split('T')[0]
   }
 
-  if (!mounted) {
+  if (!mounted || authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black py-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+      </div>
+    )
+  }
+
+  // Agendamento exclusivo para clientes cadastrados com login de cliente
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20 flex flex-col justify-between">
+        <DropdownHeader />
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-gray-900/90 border border-yellow-500/30 rounded-2xl p-6 sm:p-8 backdrop-blur-xl text-center shadow-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mx-auto mb-4 text-yellow-400">
+              <User className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Acesso Exclusivo para Clientes</h2>
+            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+              O agendamento de horários online é exclusivo para clientes cadastrados com login de cliente. Por favor, faça login com sua conta para continuar.
+            </p>
+            <div className="space-y-3">
+              <Link
+                href="/login?redirect=/agendar"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-semibold rounded-xl text-sm transition-all shadow-lg shadow-yellow-500/20"
+              >
+                <span>Entrar com Login de Cliente</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/"
+                className="w-full flex items-center justify-center py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl text-xs font-medium transition"
+              >
+                Voltar para a Página Inicial
+              </Link>
+            </div>
           </div>
-        </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Usuários com outras roles (ADMIN, DEVELOPER, BARBER)
+  if (user.role !== 'CLIENT') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20 flex flex-col justify-between">
+        <DropdownHeader />
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-gray-900/90 border border-blue-500/30 rounded-2xl p-6 sm:p-8 backdrop-blur-xl text-center shadow-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4 text-blue-400">
+              <Shield className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Área Exclusiva de Clientes</h2>
+            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+              Você está conectado como <strong>{user.role}</strong>. O agendamento online através desta tela é destinado exclusivamente a usuários cadastrados como <strong>Cliente</strong>.
+              Administradores e profissionais devem gerenciar os horários no painel de controle.
+            </p>
+            <div className="space-y-3">
+              <Link
+                href={user.role === 'DEVELOPER' ? '/developer' : '/dashboard'}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-blue-500/20"
+              >
+                <span>Ir para o Painel de Gestão</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/"
+                className="w-full flex items-center justify-center py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl text-xs font-medium transition"
+              >
+                Voltar para a Página Inicial
+              </Link>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
@@ -406,7 +474,7 @@ export default function AgendarPage() {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black' : 'bg-white/10'}`}>
                 2
               </div>
-              <span className="ml-2">Barbeiro</span>
+              <span className="ml-2">Profissional</span>
             </div>
             <ArrowRight className="w-4 h-4 text-white/40" />
             <div className={`flex items-center ${step >= 3 ? 'text-yellow-400' : 'text-white/40'}`}>
@@ -448,14 +516,14 @@ export default function AgendarPage() {
           </div>
         )}
 
-        {/* Step 2: Select Barber */}
+        {/* Step 2: Select Professional */}
         {step === 2 && (
           <div>
             <div className="text-center mb-8">
               <span className="text-yellow-400 text-xs font-bold uppercase tracking-widest px-3 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded-full inline-block mb-3">
                 Passo 2 de 3
               </span>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Escolha o Barbeiro</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Escolha o Profissional</h2>
               <p className="text-white/60 text-sm md:text-base max-w-lg mx-auto">
                 Selecione o profissional especialista para realizar seu atendimento
               </p>
@@ -516,7 +584,7 @@ export default function AgendarPage() {
 
                         <p className="text-yellow-400/90 text-xs font-medium mb-2 flex items-center gap-1.5">
                           <Award className="w-3.5 h-3.5 flex-shrink-0" />
-                          Barbeiro Profissional
+                          Profissional Especialista
                         </p>
 
                         <div className="flex items-center gap-2 text-xs text-white/70">
@@ -530,30 +598,40 @@ export default function AgendarPage() {
                       </div>
                     </div>
 
-                    {/* Descrição / Bio */}
+                    {/* Descrição / Bio Real do Profissional */}
                     <div className="mt-4 pt-3 border-t border-white/5">
                       <p className="text-white/70 text-xs sm:text-sm leading-relaxed line-clamp-2">
-                        {barber.bio || 'Especialista em cortes modernos, visagismo masculino e barboterapia completa com toalha quente.'}
+                        {barber.bio || 'Profissional especialista em atendimento personalizado e serviços de alta qualidade.'}
                       </p>
                     </div>
 
-                    {/* Especialidades / Tags */}
+                    {/* Especialidades / Tags Reais do Profissional */}
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 text-white/80 border border-white/10">
-                        ✂️ Degradê / Fade
-                      </span>
-                      <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 text-white/80 border border-white/10">
-                        🧔 Barboterapia
-                      </span>
-                      <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 text-white/80 border border-white/10">
-                        💈 Tesoura & Navalha
-                      </span>
+                      {barber.specialties && barber.specialties.length > 0 ? (
+                        barber.specialties.map((spec) => (
+                          <span
+                            key={spec}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-yellow-400/10 text-yellow-300 border border-yellow-400/20"
+                          >
+                            ✦ {spec}
+                          </span>
+                        ))
+                      ) : (
+                        <>
+                          <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 text-white/80 border border-white/10">
+                            ✂️ Atendimento Especializado
+                          </span>
+                          <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 text-white/80 border border-white/10">
+                            ⭐ Serviços Personalizados
+                          </span>
+                        </>
+                      )}
                     </div>
 
                     {/* Botão de Seleção */}
                     <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
                       <span className="text-white/40 text-xs">
-                        {barber.phone ? `WhatsApp: ${barber.phone}` : 'Atendimento por horário'}
+                        {barber.phone ? `Contato: ${barber.phone}` : 'Atendimento por horário'}
                       </span>
                       <button
                         type="button"
@@ -563,7 +641,7 @@ export default function AgendarPage() {
                             : 'bg-white/10 text-white group-hover:bg-yellow-400 group-hover:text-black'
                         }`}
                       >
-                        {isSelected ? 'Selecionado' : 'Escolher Barbeiro'}
+                        {isSelected ? 'Selecionado' : 'Escolher Profissional'}
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -596,7 +674,7 @@ export default function AgendarPage() {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs text-white/60">Barbeiro</p>
+                    <p className="text-xs text-white/60">Profissional</p>
                     <p className="font-semibold text-white text-sm">{selectedBarber?.name}</p>
                   </div>
                 </div>

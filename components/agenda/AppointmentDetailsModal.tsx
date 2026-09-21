@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { X, Calendar, Clock, User, Phone, Mail, Scissors, DollarSign, FileText, CheckCircle, AlertCircle, XCircle, Edit } from 'lucide-react'
+import { X, Calendar, Clock, User, Phone, Mail, Scissors, DollarSign, FileText, CheckCircle, AlertCircle, XCircle, Edit, Crown } from 'lucide-react'
 
 export interface AppointmentDetails {
   id: string
@@ -10,11 +10,13 @@ export interface AppointmentDetails {
   status: string
   totalAmount: number
   notes?: string
+  isVip?: boolean
   client: {
     id: string
     name: string
     phone: string
     email?: string
+    isVip?: boolean
   }
   barber: {
     id: string
@@ -173,7 +175,15 @@ export default function AppointmentDetailsModal({
               <User className="w-4 h-4 text-blue-400" />
               <span>Cliente</span>
             </div>
-            <p className="text-white font-semibold text-base">{appointment.client.name}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-white font-semibold text-base">{appointment.client.name}</p>
+              {Boolean(appointment.isVip || appointment.client?.isVip) && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400/20 to-amber-500/20 text-yellow-300 border border-yellow-400/40 shadow-sm shadow-yellow-400/10">
+                  <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                  Cliente VIP
+                </span>
+              )}
+            </div>
             <div className="space-y-1 text-xs text-white/70">
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-white/40" />

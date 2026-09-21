@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
         phone: true,
         notes: true,
         isActive: true,
+        isVip: true,
         createdAt: true,
         updatedAt: true,
         barbershopId: true,

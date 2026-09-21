@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     }
 
     const data = await request.json()
-    const { name, email, role, password, isActive, avatar, phone } = data
+    const { name, email, role, password, isActive, avatar, phone, bio, specialties } = data
 
     // Proteção contra escalada: ADMIN não pode promover para DEVELOPER nem alterar DEVELOPER
     if (role === 'DEVELOPER' && admin.role !== 'DEVELOPER') {
@@ -70,6 +70,8 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     if (isActive !== undefined) updateData.isActive = isActive
     if (avatar !== undefined) updateData.avatar = avatar
     if (phone !== undefined) updateData.phone = phone
+    if (bio !== undefined) updateData.bio = bio || null
+    if (specialties !== undefined) updateData.specialties = Array.isArray(specialties) ? specialties : []
 
     // Só altera a senha se uma nova senha (não vazia) for enviada
     if (password) {
@@ -95,6 +97,8 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         },
         avatar: true,
         phone: true,
+        bio: true,
+        specialties: true,
       },
     })
 

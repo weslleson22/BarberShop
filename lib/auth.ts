@@ -39,6 +39,7 @@ export async function authenticateUser(email: string, password: string) {
           id: true,
           name: true,
           isActive: true,
+          status: true,
         },
       },
     },
@@ -46,6 +47,16 @@ export async function authenticateUser(email: string, password: string) {
 
   if (!user) {
     return null
+  }
+
+  // Se a barbearia associada estiver com status PENDING ou REJECTED (exceto DEVELOPER)
+  if (user.barbershop && user.role !== 'DEVELOPER') {
+    if (user.barbershop.status === 'PENDING') {
+      throw new Error('Cadastro em análise: sua conta está aguardando aprovação pelo desenvolvedor.')
+    }
+    if (user.barbershop.status === 'REJECTED') {
+      throw new Error('Solicitação de cadastro não aprovada.')
+    }
   }
 
   // Se o usuário está desativado, bloqueia acesso
@@ -181,6 +192,8 @@ export async function createBarbershop(data: {
   email: string
   phone?: string
   address?: string
+  status?: string
+  isActive?: boolean
   contractExpiresAt?: Date | string | null
   createdById?: string | null
   adminUser: {
@@ -188,6 +201,7 @@ export async function createBarbershop(data: {
     email: string
     password: string
     phone?: string
+    isActive?: boolean
   }
 }) {
   const existingBarbershop = await prisma.barbershop.findUnique({
@@ -207,6 +221,9 @@ export async function createBarbershop(data: {
   }
 
   const hashedPassword = await hashPassword(data.adminUser.password)
+  const isShopActive = data.isActive !== undefined ? data.isActive : true
+  const isAdminActive = data.adminUser.isActive !== undefined ? data.adminUser.isActive : isShopActive
+  const shopStatus = data.status || 'APPROVED'
 
   return await prisma.$transaction(async (tx) => {
     const barbershop = await tx.barbershop.create({
@@ -215,7 +232,8 @@ export async function createBarbershop(data: {
         email: data.email,
         phone: data.phone,
         address: data.address,
-        isActive: true,
+        status: shopStatus,
+        isActive: isShopActive,
         contractExpiresAt: data.contractExpiresAt ? new Date(data.contractExpiresAt) : null,
         createdById: data.createdById || null,
       },
@@ -229,6 +247,7 @@ export async function createBarbershop(data: {
         role: 'ADMIN',
         barbershopId: barbershop.id,
         phone: data.adminUser.phone,
+        isActive: isAdminActive,
       },
       include: {
         barbershop: {
@@ -236,6 +255,7 @@ export async function createBarbershop(data: {
             id: true,
             name: true,
             isActive: true,
+            status: true,
           },
         },
       },
@@ -261,6 +281,7 @@ export async function createBarbershop(data: {
           phone: user.phone,
           avatar: user.avatar,
           barbershop: user.barbershop,
+          isActive: user.isActive,
         },
         token,
       },

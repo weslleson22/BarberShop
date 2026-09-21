@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Clock, CheckCircle, AlertCircle, XCircle, MoreVertical, Edit, X, Eye, Calendar } from 'lucide-react'
+import { Clock, CheckCircle, AlertCircle, XCircle, MoreVertical, Edit, X, Eye, Calendar, Crown } from 'lucide-react'
 
 interface Appointment {
   id: string
@@ -10,11 +10,13 @@ interface Appointment {
   status: string
   totalAmount: number
   notes: string
+  isVip?: boolean
   client: {
     id: string
     name: string
     phone: string
     email?: string
+    isVip?: boolean
   }
   barber: {
     id: string
@@ -259,9 +261,17 @@ export default function AppointmentCard({
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`font-semibold text-sm md:text-base truncate ${
-                appointment.status === 'CANCELLED' ? 'text-white/60' : 'text-white'
-              }`}>{appointment.client?.name || 'Cliente'}</p>
+              <div className="flex items-center gap-2">
+                <p className={`font-semibold text-sm md:text-base truncate ${
+                  appointment.status === 'CANCELLED' ? 'text-white/60' : 'text-white'
+                }`}>{appointment.client?.name || 'Cliente'}</p>
+                {Boolean(appointment.isVip || appointment.client?.isVip) && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] md:text-[11px] font-bold bg-gradient-to-r from-yellow-400/20 to-amber-500/20 text-yellow-300 border border-yellow-400/40 flex-shrink-0 shadow-sm shadow-yellow-400/10">
+                    <Crown className="w-2.5 h-2.5 text-yellow-400" />
+                    VIP
+                  </span>
+                )}
+              </div>
               <p className={`text-xs ${
                 appointment.status === 'CANCELLED' ? 'text-white/40' : 'text-white/60'
               }`}>{appointment.client?.phone || 'Sem telefone'}</p>

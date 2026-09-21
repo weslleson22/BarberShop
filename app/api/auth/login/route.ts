@@ -51,12 +51,14 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error('Login error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login'
-    const status = errorMessage.toLowerCase().includes('suspensa') ? 403 : 401
+    const isForbidden =
+      errorMessage.toLowerCase().includes('suspensa') ||
+      errorMessage.toLowerCase().includes('análise') ||
+      errorMessage.toLowerCase().includes('aprova')
     return NextResponse.json(
       { error: errorMessage },
-      { status }
+      { status: isForbidden ? 403 : 401 }
     )
   }
 }

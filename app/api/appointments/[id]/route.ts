@@ -112,7 +112,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { serviceId, barberId, startTime, endTime, totalAmount, notes, status } = body
+    const { serviceId, barberId, startTime, endTime, totalAmount, notes, status, isVip } = body
     // clientId nunca vem do corpo: mantém o dono original do agendamento
     // (evita que alguém "transfira" um agendamento pra outro cliente)
     const clientId = existingAppointment.clientId
@@ -164,6 +164,7 @@ export async function PUT(
         totalAmount: totalAmount || service.price,
         notes: notes || '',
         status: status || existingAppointment.status,
+        isVip: isVip !== undefined ? Boolean(isVip) : existingAppointment.isVip,
       },
       include: {
         client: true,

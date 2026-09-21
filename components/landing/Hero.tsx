@@ -13,18 +13,14 @@ import {
   Sparkles, 
   Bell, 
   Star, 
-  CheckCircle, 
-  UserCheck,
+  Building2,
+  LogIn,
   Smartphone
 } from 'lucide-react'
 
 export default function Hero() {
   const { user } = useAuth()
   const router = useRouter()
-
-  const handleBooking = () => {
-    router.push('/agendar')
-  }
 
   const handleAccess = () => {
     if (user) {
@@ -57,46 +53,49 @@ export default function Hero() {
             {/* Badge de Destaque */}
             <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs sm:text-sm font-semibold tracking-wide">
               <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
-              <span>Plataforma Inteligente de Agendamento de Serviços</span>
+              <span>Plataforma Inteligente de Gestão e Agendamento</span>
             </div>
 
             {/* Título de Alto Impacto */}
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
-                Agende seus serviços com{' '}
+                Gestão e agendamentos com{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400">
-                  rapidez, pontualidade e praticidade.
+                  rapidez, controle e pontualidade.
                 </span>
               </h1>
               <p className="text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-normal">
-                Encontre horários livres em tempo real, escolha o serviço ideal em poucos segundos e receba lembretes automáticos diretamente no seu celular.
+                Conecte seu estabelecimento a clientes cadastrados. Controle horários em tempo real, organize equipes e ofereça agendamentos exclusivos com confirmação imediata.
               </p>
             </div>
 
             {/* Botões de Ação Principais */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
               <button 
-                onClick={handleBooking}
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold rounded-xl transition-all shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 flex items-center justify-center space-x-3 group"
+                onClick={handleAccess}
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold rounded-xl transition-all shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 flex items-center justify-center space-x-3 group cursor-pointer"
               >
-                <Calendar className="w-5 h-5 text-blue-100" />
-                <span className="text-base">Agendar um Horário Agora</span>
+                <LogIn className="w-5 h-5 text-blue-100" />
+                <span className="text-base">
+                  {user ? (user.role === 'CLIENT' ? 'Meus Agendamentos' : 'Acessar Meu Painel') : 'Acessar a Plataforma'}
+                </span>
                 <ArrowRight className="w-5 h-5 text-blue-100 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              <button 
-                onClick={handleAccess}
+              <Link 
+                href="/register"
                 className="w-full sm:w-auto px-7 py-4 text-slate-200 hover:text-white bg-slate-900/80 hover:bg-slate-800/90 border border-slate-700/80 hover:border-slate-600 rounded-xl transition-all flex items-center justify-center space-x-2 text-base font-medium"
               >
-                <span>{user ? 'Acessar Meu Painel' : 'Acessar Conta / Login'}</span>
-              </button>
+                <Building2 className="w-5 h-5 text-slate-400" />
+                <span>Cadastre sua Empresa</span>
+              </Link>
             </div>
 
             {/* Pilares em Destaque */}
             <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-slate-300">
               <div className="flex items-center space-x-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Horários em Tempo Real</span>
+                <span>Exclusivo para Clientes Cadastrados</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Bell className="w-4 h-4 text-cyan-400" />
@@ -104,7 +103,7 @@ export default function Hero() {
               </div>
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-blue-400" />
-                <span>Confirmação Segura</span>
+                <span>Isolamento Multi-tenant</span>
               </div>
             </div>
 
@@ -126,7 +125,7 @@ export default function Hero() {
                   </div>
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-white">Agendamentos Realizados</p>
+                  <p className="text-sm font-semibold text-white">Atendimentos Gerenciados</p>
                   <p className="text-xs text-slate-400">Pontualidade e satisfação comprovada</p>
                 </div>
               </div>
@@ -153,7 +152,7 @@ export default function Hero() {
                 <div className="relative h-96 sm:h-[430px] w-full rounded-2xl overflow-hidden">
                   <Image
                     src="/images/scheduling-hero.jpg"
-                    alt="Sistema de Agendamento de Serviços"
+                    alt="Sistema de Gestão e Agendamento de Serviços"
                     fill
                     className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                     priority
@@ -167,13 +166,13 @@ export default function Hero() {
                         <Calendar className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-white">Agenda Aberta Online</div>
-                        <div className="text-[11px] text-slate-400">Selecione seu horário favorito</div>
+                        <div className="text-xs font-bold text-white">Painel de Horários</div>
+                        <div className="text-[11px] text-slate-400">Controle inteligente de vagas</div>
                       </div>
                     </div>
                     <span className="flex items-center text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
-                      Disponível
+                      Online
                     </span>
                   </div>
 
@@ -185,8 +184,8 @@ export default function Hero() {
                           <CheckCircle2 className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-white">Serviço Agendado com Sucesso</p>
-                          <p className="text-[11px] text-slate-400">Lembrete enviado para seu WhatsApp</p>
+                          <p className="text-xs font-bold text-white">Serviço Confirmado</p>
+                          <p className="text-[11px] text-slate-400">Lembrete sincronizado na agenda</p>
                         </div>
                       </div>
                       <span className="text-xs font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-2.5 py-1 rounded-lg">
@@ -196,7 +195,7 @@ export default function Hero() {
 
                     {/* Grade de horários interativa em demonstração */}
                     <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                      <span className="text-slate-400 text-[11px]">Horários populares:</span>
+                      <span className="text-slate-400 text-[11px]">Horários do dia:</span>
                       <div className="flex space-x-1.5">
                         <span className="px-2 py-0.5 rounded bg-white/5 text-slate-400 text-[11px]">09:00</span>
                         <span className="px-2 py-0.5 rounded bg-white/5 text-slate-400 text-[11px]">11:00</span>
@@ -212,12 +211,12 @@ export default function Hero() {
               {/* Badges Flutuantes Exteriores */}
               <div className="absolute -top-3 -right-3 hidden sm:flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg shadow-blue-500/30">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Agendamento em 3 Passos</span>
+                <span>Gestão Completa SaaS</span>
               </div>
 
               <div className="absolute -bottom-3 -left-3 hidden sm:flex items-center space-x-1.5 bg-slate-900 border border-white/10 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-full shadow-xl">
                 <Smartphone className="w-3.5 h-3.5 text-blue-400" />
-                <span>Compatível com Celular & Web</span>
+                <span>Acesso Seguro via Web</span>
               </div>
 
             </div>

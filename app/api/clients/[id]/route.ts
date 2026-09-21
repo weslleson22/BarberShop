@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       return NextResponse.json({ error: 'Cliente não encontrado' }, { status: 404 })
     }
 
-    const { name, email, phone, notes, isActive } = await request.json()
+    const { name, email, phone, notes, isActive, isVip } = await request.json()
 
     const trimmedName = typeof name === 'string' ? name.trim() : existingClient.name
     if (!trimmedName) {
@@ -65,6 +65,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     if (email !== undefined) updateData.email = email || null
     if (notes !== undefined) updateData.notes = notes
     if (isActive !== undefined) updateData.isActive = isActive
+    if (isVip !== undefined) updateData.isVip = Boolean(isVip)
 
     const client = await prisma.client.update({
       where: { id },

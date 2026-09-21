@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
         name: true,
         phone: true,
         email: true,
+        isVip: true,
         barbershopId: true,
       },
     })
@@ -65,11 +66,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { name, phone, email, userId } = data
+    const { name, phone, email, userId, isVip } = data
     const authUser = getAuthUser(request)
     const finalUserId = userId || authUser?.id
 
-    console.log('Dados recebidos para criar cliente:', { name, phone, email })
+    console.log('Dados recebidos para criar cliente:', { name, phone, email, isVip })
 
     if (!name || !phone) {
       return NextResponse.json(
@@ -164,12 +165,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar novo cliente
-    console.log('Criando novo cliente com dados:', { name, phone, email, userId: finalUserId })
+    console.log('Criando novo cliente com dados:', { name, phone, email, userId: finalUserId, isVip })
     const client = await prisma.client.create({
       data: {
         name,
         phone,
         email: email || null,
+        isVip: Boolean(isVip),
         barbershopId,
         userId: finalUserId || null,
       }

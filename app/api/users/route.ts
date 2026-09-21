@@ -55,6 +55,8 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         avatar: true,
         phone: true,
+        bio: true,
+        specialties: true,
       },
       orderBy: {
         name: 'asc',
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json()
-    const { name, email, password, role, isActive, avatar, phone, barbershopId: bodyShopId } = data
+    const { name, email, password, role, isActive, avatar, phone, bio, specialties, barbershopId: bodyShopId } = data
 
     if (!name || !email || !role || !password) {
       return NextResponse.json(
@@ -134,6 +136,8 @@ export async function POST(request: NextRequest) {
         barbershopId: targetBarbershopId,
         avatar,
         phone,
+        bio: bio || null,
+        specialties: Array.isArray(specialties) ? specialties : [],
       },
       select: {
         id: true,
@@ -145,6 +149,8 @@ export async function POST(request: NextRequest) {
         barbershopId: true,
         avatar: true,
         phone: true,
+        bio: true,
+        specialties: true,
       }
     })
 

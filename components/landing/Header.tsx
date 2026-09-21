@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, X, Calendar, ArrowRight, User, Sparkles } from 'lucide-react'
+import { Menu, X, Calendar, ArrowRight, User, Building2, LogIn } from 'lucide-react'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -18,8 +18,11 @@ export default function Header() {
     return '/dashboard'
   }
 
-  const handleBooking = () => {
-    router.push('/agendar')
+  const getUserLabel = () => {
+    if (!user) return 'Minha Conta'
+    if (user.role === 'CLIENT') return 'Meus Agendamentos'
+    if (user.role === 'DEVELOPER') return 'Painel Developer'
+    return 'Painel de Gestão'
   }
 
   return (
@@ -39,7 +42,7 @@ export default function Header() {
                 Agenda<span className="text-blue-400">SaaS</span>
               </span>
               <span className="text-[10px] text-slate-400 tracking-wider uppercase font-medium">
-                Agendamento de Serviços
+                Gestão e Agendamentos
               </span>
             </div>
           </Link>
@@ -47,7 +50,6 @@ export default function Header() {
           {/* Menu Desktop */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
             <a href="#home" className="hover:text-blue-400 transition-colors">Início</a>
-            <a href="#como-funciona" className="hover:text-blue-400 transition-colors">Como Agendar</a>
             <a href="#recursos" className="hover:text-blue-400 transition-colors">Recursos do Sistema</a>
             <a href="#beneficios" className="hover:text-blue-400 transition-colors">Vantagens</a>
           </nav>
@@ -57,28 +59,32 @@ export default function Header() {
             {user ? (
               <Link
                 href={getUserDestination()}
-                className="px-4 py-2.5 text-sm font-medium text-slate-200 hover:text-white bg-slate-900/80 hover:bg-slate-850 border border-slate-700/80 hover:border-slate-600 rounded-xl transition-all flex items-center space-x-2"
+                className="px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2"
               >
-                <User className="w-4 h-4 text-blue-400" />
-                <span>{user.name.split(' ')[0]} (Minha Conta)</span>
+                <User className="w-4 h-4 text-blue-100" />
+                <span>{getUserLabel()}</span>
+                <ArrowRight className="w-4 h-4 text-blue-100" />
               </Link>
             ) : (
-              <Link
-                href="/login"
-                className="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl transition-all"
-              >
-                Entrar na Conta
-              </Link>
-            )}
+              <>
+                <Link
+                  href="/register"
+                  className="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl transition-all flex items-center space-x-1.5"
+                >
+                  <Building2 className="w-4 h-4 text-slate-400" />
+                  <span>Cadastre sua Empresa</span>
+                </Link>
 
-            <button
-              onClick={handleBooking}
-              className="px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2 group"
-            >
-              <Calendar className="w-4 h-4 text-blue-100" />
-              <span>Agendar Horário</span>
-              <ArrowRight className="w-4 h-4 text-blue-100 group-hover:translate-x-1 transition-transform" />
-            </button>
+                <Link
+                  href="/login"
+                  className="px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2 group"
+                >
+                  <LogIn className="w-4 h-4 text-blue-100" />
+                  <span>Entrar na Conta</span>
+                  <ArrowRight className="w-4 h-4 text-blue-100 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Botão Menu Mobile */}
@@ -105,13 +111,6 @@ export default function Header() {
                 Início
               </a>
               <a
-                href="#como-funciona"
-                onClick={() => setIsMenuOpen(false)}
-                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
-              >
-                Como Agendar
-              </a>
-              <a
                 href="#recursos"
                 onClick={() => setIsMenuOpen(false)}
                 className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
@@ -128,24 +127,35 @@ export default function Header() {
             </nav>
 
             <div className="pt-4 border-t border-white/10 space-y-3">
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false)
-                  handleBooking()
-                }}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2"
-              >
-                <Calendar className="w-4 h-4" />
-                <span>Agendar Horário Online</span>
-              </button>
+              {user ? (
+                <Link
+                  href={getUserDestination()}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2"
+                >
+                  <User className="w-4 h-4" />
+                  <span>{getUserLabel()}</span>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Entrar na Conta</span>
+                  </Link>
 
-              <Link
-                href={getUserDestination()}
-                onClick={() => setIsMenuOpen(false)}
-                className="w-full py-3 px-4 text-center block text-slate-300 hover:text-white border border-slate-700/80 rounded-xl hover:bg-white/5 transition-all text-sm font-medium"
-              >
-                {user ? 'Acessar Meu Painel' : 'Entrar na Conta'}
-              </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full py-3 px-4 text-center block text-slate-300 hover:text-white border border-slate-700/80 rounded-xl hover:bg-white/5 transition-all text-sm font-medium"
+                  >
+                    Cadastrar Empresa
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

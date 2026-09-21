@@ -149,6 +149,7 @@ export async function GET(request: NextRequest) {
         status: true,
         notes: true,
         totalAmount: true,
+        isVip: true,
         createdAt: true,
         barbershopId: true,
         clientId: true,
@@ -160,6 +161,7 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             phone: true,
+            isVip: true,
           },
         },
         barber: {

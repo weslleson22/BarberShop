@@ -1,15 +1,23 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { X, Calendar, Clock, User, DollarSign, Save, Plus, Search } from 'lucide-react'
+import { X, Calendar, Clock, User, DollarSign, Save, Plus, Search, Crown, Phone, Mail, Users } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { calculateAvailableSlots } from '@/lib/appointment-utils'
+
+function maskPhone(value: string) {
+  const cleaned = value.replace(/\D/g, '')
+  if (cleaned.length <= 2) return cleaned
+  if (cleaned.length <= 7) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`
+  return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`
+}
 
 interface Client {
   id: string
   name: string
   phone: string
   email?: string
+  isVip?: boolean
 }
 
 interface Service {
@@ -42,6 +50,11 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
     endTime: '',
     notes: ''
   })
+  const [clientMode, setClientMode] = useState<'registered' | 'unregistered'>('registered')
+  const [unregisteredName, setUnregisteredName] = useState('')
+  const [unregisteredPhone, setUnregisteredPhone] = useState('')
+  const [unregisteredEmail, setUnregisteredEmail] = useState('')
+  const [isVip, setIsVip] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [barbers, setBarbers] = useState<Barber[]>([])
@@ -101,6 +114,8 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           notes: appointment.notes || ''
         })
         setClientQuery(appointment.client?.name || '')
+        setIsVip(Boolean(appointment.isVip || appointment.client?.isVip))
+        setClientMode('registered')
         if (dateStr && appointment.barber?.id) {
           fetchAvailableSlots(dateStr, appointment.barber.id, appointment.service?.id)
         }
@@ -114,6 +129,11 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           notes: ''
         })
         setClientQuery('')
+        setIsVip(false)
+        setClientMode('registered')
+        setUnregisteredName('')
+        setUnregisteredPhone('')
+        setUnregisteredEmail('')
       }
       setShowClientResults(false)
     }
@@ -317,10 +337,58 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
     try {
       const selectedService = services.find(s => s.id === formData.serviceId) || appointment?.service
-      const selectedClient = clients.find(c => c.id === formData.clientId) || appointment?.client
       const selectedBarber = barbers.find(b => b.id === formData.barberId) || appointment?.barber
 
-      if (!formData.serviceId || (!formData.clientId && !isClient && !appointment?.client?.id) || !formData.barberId || !formData.startTime) {
+      let effectiveClientId = formData.clientId || (isClient ? user?.id : appointment?.client?.id)
+
+      // Se for criação e o atendente escolheu "Cliente Não Cadastrado", cria o cliente no ato
+      if (!isClient && clientMode === 'unregistered' && !appointment?.id) {
+        const trimmedName = unregisteredName.trim()
+        const phoneDigits = unregisteredPhone.replace(/\D/g, '')
+
+        if (!trimmedName || trimmedName.length < 3) {
+          alert('Por favor, informe o nome completo do cliente (mínimo 3 caracteres)')
+          setLoading(false)
+          return
+        }
+
+        if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+          alert('Por favor, informe um telefone válido com DDD (formato (00) 00000-0000)')
+          setLoading(false)
+          return
+        }
+
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+        const authHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+
+        const clientResponse = await fetch('/api/clients/public', {
+          method: 'POST',
+          headers: authHeaders,
+          credentials: 'include',
+          body: JSON.stringify({
+            name: trimmedName,
+            phone: unregisteredPhone,
+            email: unregisteredEmail.trim() || undefined,
+            isVip: isVip,
+            barbershopId: user?.barbershopId,
+          }),
+        })
+
+        if (!clientResponse.ok) {
+          const clientErr = await clientResponse.json()
+          alert(clientErr.error || 'Erro ao cadastrar cliente')
+          setLoading(false)
+          return
+        }
+
+        const createdClient = await clientResponse.json()
+        effectiveClientId = createdClient.id
+      }
+
+      if (!formData.serviceId || (!effectiveClientId && !isClient) || !formData.barberId || !formData.startTime) {
         alert('Por favor, preencha todos os campos obrigatórios')
         setLoading(false)
         return
@@ -329,13 +397,14 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
       const totalAmount = selectedService ? Number(selectedService.price) : Number(appointment?.totalAmount || 0)
 
       const appointmentData = {
-        clientId: formData.clientId || (isClient ? user?.id : appointment?.client?.id),
+        clientId: effectiveClientId,
         serviceId: formData.serviceId,
         barberId: formData.barberId,
         startTime: new Date(formData.startTime),
         endTime: new Date(formData.endTime),
         totalAmount,
-        notes: formData.notes
+        notes: formData.notes,
+        isVip: isVip,
       }
 
       console.log('Enviando dados do agendamento:', appointmentData)
@@ -435,74 +504,234 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-          {/* Client search - ADMIN/BARBER (not logged as CLIENT) */}
+          {/* Client Selection - ADMIN/BARBER/RECEPTIONIST */}
           {!isClient && (
-            <div ref={clientSearchRef} className="relative">
-              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
-                Cliente *
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
-                <input
-                  type="search"
-                  value={clientQuery}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    setClientQuery(value)
-                    setShowClientResults(true)
-
-                    const exactMatch = clients.find(
-                      (client) => client.name.toLowerCase() === value.trim().toLowerCase()
-                    )
-                    setFormData((prev) => ({
-                      ...prev,
-                      clientId: exactMatch?.id || ''
-                    }))
-                  }}
-                  onFocus={() => setShowClientResults(true)}
-                  className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
-                  placeholder="Buscar cliente por nome..."
-                  autoComplete="off"
-                />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-white/80 text-xs md:text-sm font-medium">
+                  Cliente *
+                </label>
+                {!appointment && (
+                  <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setClientMode('registered')}
+                      className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all ${
+                        clientMode === 'registered'
+                          ? 'bg-yellow-400 text-black shadow-sm font-semibold'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                    >
+                      Cadastrado
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setClientMode('unregistered')
+                        setFormData((prev) => ({ ...prev, clientId: '' }))
+                      }}
+                      className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all ${
+                        clientMode === 'unregistered'
+                          ? 'bg-yellow-400 text-black shadow-sm font-semibold'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                    >
+                      Não Cadastrado
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {showClientResults && (
-                <div className="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg md:rounded-xl border border-white/10 bg-gray-900 shadow-xl">
-                  {filteredClients.length > 0 ? (
-                    filteredClients.map((client) => (
-                      <button
-                        key={client.id}
-                        type="button"
-                        onClick={() => {
-                          setFormData((prev) => ({ ...prev, clientId: client.id }))
-                          setClientQuery(client.name)
-                          setShowClientResults(false)
-                        }}
-                        className={`w-full text-left px-3 py-2.5 hover:bg-white/10 transition-all ${
-                          formData.clientId === client.id ? 'bg-yellow-400/10' : ''
-                        }`}
-                      >
-                        <p className="text-white text-sm font-medium truncate">{client.name}</p>
-                        <p className="text-white/50 text-xs truncate">
-                          {client.phone}
-                          {client.email ? ` · ${client.email}` : ''}
-                        </p>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="px-3 py-3 text-white/50 text-sm">
-                      {clients.length === 0
-                        ? 'Nenhum cliente cadastrado'
-                        : 'Nenhum cliente encontrado'}
-                    </p>
+              {clientMode === 'registered' ? (
+                <div ref={clientSearchRef} className="relative">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
+                    <input
+                      type="search"
+                      value={clientQuery}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setClientQuery(value)
+                        setShowClientResults(true)
+
+                        const exactMatch = clients.find(
+                          (client) => client.name.toLowerCase() === value.trim().toLowerCase()
+                        )
+                        setFormData((prev) => ({
+                          ...prev,
+                          clientId: exactMatch?.id || ''
+                        }))
+                        if (exactMatch) {
+                          setIsVip(Boolean(exactMatch.isVip))
+                        }
+                      }}
+                      onFocus={() => setShowClientResults(true)}
+                      className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                      placeholder="Buscar cliente por nome..."
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  {showClientResults && (
+                    <div className="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg md:rounded-xl border border-white/10 bg-gray-900 shadow-xl">
+                      {filteredClients.length > 0 ? (
+                        filteredClients.map((client) => (
+                          <button
+                            key={client.id}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, clientId: client.id }))
+                              setClientQuery(client.name)
+                              setIsVip(Boolean(client.isVip))
+                              setShowClientResults(false)
+                            }}
+                            className={`w-full text-left px-3 py-2.5 hover:bg-white/10 transition-all ${
+                              formData.clientId === client.id ? 'bg-yellow-400/10' : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <p className="text-white text-sm font-medium truncate">{client.name}</p>
+                              {Boolean(client.isVip) && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
+                                  <Crown className="w-2.5 h-2.5 text-yellow-400" />
+                                  VIP
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-white/50 text-xs truncate">
+                              {client.phone}
+                              {client.email ? ` · ${client.email}` : ''}
+                            </p>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3 text-center">
+                          <p className="text-white/50 text-xs">
+                            {clients.length === 0
+                              ? 'Nenhum cliente cadastrado'
+                              : 'Nenhum cliente encontrado'}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowClientResults(false)
+                              setClientMode('unregistered')
+                              setUnregisteredName(clientQuery)
+                            }}
+                            className="mt-2 text-xs text-yellow-400 hover:underline inline-flex items-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            Cadastrar como cliente não cadastrado
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {selectedClientRecord && (
+                    <div className="mt-2.5 p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-white text-xs md:text-sm font-semibold truncate">
+                              {selectedClientRecord.name}
+                            </span>
+                            {Boolean(selectedClientRecord.isVip) && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
+                                <Crown className="w-2.5 h-2.5 text-yellow-400" />
+                                VIP
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-white/50 text-xs mt-0.5">{selectedClientRecord.phone}</p>
+                        </div>
+                        {/* Toggle VIP para cliente selecionado */}
+                        <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+                          <span className="text-xs text-white/70 flex items-center gap-1">
+                            <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                            VIP:
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isVip}
+                              onChange={(e) => setIsVip(e.target.checked)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-400"></div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-              )}
+              ) : (
+                /* Cliente Não Cadastrado */
+                <div className="space-y-3 p-3.5 bg-white/[0.03] border border-white/10 rounded-lg md:rounded-xl">
+                  <div>
+                    <label className="block text-white/70 text-xs font-medium mb-1">
+                      Nome Completo *
+                    </label>
+                    <input
+                      type="text"
+                      value={unregisteredName}
+                      onChange={(e) => setUnregisteredName(e.target.value)}
+                      placeholder="Nome do cliente"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-yellow-400/50"
+                      required
+                    />
+                  </div>
 
-              {selectedClientRecord && (
-                <p className="text-white/50 text-xs mt-1.5">
-                  Selecionado: {selectedClientRecord.name} — {selectedClientRecord.phone}
-                </p>
+                  <div>
+                    <label className="block text-white/70 text-xs font-medium mb-1">
+                      Telefone com DDD *
+                    </label>
+                    <input
+                      type="tel"
+                      value={unregisteredPhone}
+                      onChange={(e) => setUnregisteredPhone(maskPhone(e.target.value))}
+                      placeholder="(00) 00000-0000"
+                      maxLength={15}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-yellow-400/50"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-white/70 text-xs font-medium mb-1">
+                      E-mail (opcional)
+                    </label>
+                    <input
+                      type="email"
+                      value={unregisteredEmail}
+                      onChange={(e) => setUnregisteredEmail(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                      placeholder="cliente@email.com"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-yellow-400/50"
+                    />
+                  </div>
+
+                  {/* Toggle VIP para cliente não cadastrado */}
+                  <div className="flex items-center justify-between p-2.5 bg-yellow-400/10 border border-yellow-400/20 rounded-lg mt-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-md bg-yellow-400/20 flex items-center justify-center">
+                        <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                      </div>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Cliente VIP</p>
+                        <p className="text-white/50 text-[10px]">Marcar como cliente VIP prioritário</p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isVip}
+                        onChange={(e) => setIsVip(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-400"></div>
+                    </label>
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -553,10 +782,10 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
             </select>
           </div>
 
-          {/* Barber Selection */}
+          {/* Barber/Professional Selection */}
           <div>
             <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
-              Barbeiro *
+              Profissional *
             </label>
             <select
               name="barberId"
@@ -565,7 +794,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
               className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
               required
             >
-              <option value="" className="bg-gray-900">Selecione um barbeiro</option>
+              <option value="" className="bg-gray-900">Selecione um profissional</option>
               {barbers.map(barber => (
                 <option key={barber.id} value={barber.id} className="bg-gray-900">
                   {barber.name}

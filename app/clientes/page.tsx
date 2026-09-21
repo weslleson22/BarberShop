@@ -13,6 +13,7 @@ interface Client {
   name: string
   phone: string
   email?: string
+  isVip?: boolean
   createdAt: string
   lastAppointment?: {
     service: string

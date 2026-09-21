@@ -17,6 +17,7 @@ export interface CreateAppointmentData {
   startTime: Date
   notes?: string
   createdBy?: string
+  isVip?: boolean
 }
 
 /**
@@ -186,6 +187,7 @@ export async function criarAgendamento(data: CreateAppointmentData): Promise<any
         totalAmount: service.price,
         notes: data.notes,
         createdBy: data.createdBy,
+        isVip: data.isVip !== undefined ? Boolean(data.isVip) : Boolean(client.isVip),
       },
       include: {
         client: true,

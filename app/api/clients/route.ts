@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
         phone: true,
         notes: true,
         isActive: true,
+        isVip: true,
         createdAt: true,
         updatedAt: true,
         barbershopId: true,
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const { name, email, phone, notes, barbershopId: bodyShopId } = await request.json()
+    const { name, email, phone, notes, isVip, barbershopId: bodyShopId } = await request.json()
 
     if (!name || !phone) {
       return NextResponse.json(
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         notes,
+        isVip: Boolean(isVip),
         barbershopId: targetBarbershopId,
       },
     })

@@ -132,11 +132,11 @@ export default function Features() {
 
               <div className="pt-4">
                 <button
-                  onClick={() => router.push('/agendar')}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2 group"
+                  onClick={() => router.push('/login')}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2 group cursor-pointer"
                 >
                   <Calendar className="w-4 h-4" />
-                  <span>Experimentar Agendamento</span>
+                  <span>Acessar a Plataforma</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

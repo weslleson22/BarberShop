@@ -19,6 +19,7 @@ model Barbershop {
   logo        String?
   description String?
   isActive          Boolean   @default(true)
+  status            String    @default("APPROVED")
   contractExpiresAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -47,6 +48,7 @@ model User {
   address     String?
   birthDate   DateTime?
   bio         String?
+  specialties String[] @default([])
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -87,6 +89,7 @@ model Client {
   avatar      String?
   notes       String?
   isActive    Boolean  @default(true)
+  isVip       Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -132,6 +135,7 @@ model Appointment {
   status        AppointmentStatus @default(PENDING)
   notes         String?
   totalAmount   Decimal          @db.Decimal(10, 2)
+  isVip         Boolean          @default(false)
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 

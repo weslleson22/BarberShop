@@ -40,6 +40,7 @@ interface BarbershopData {
   phone: string | null
   address: string | null
   isActive: boolean
+  status?: string
   createdAt: string
   contractExpiresAt: string | null
   createdById: string | null
@@ -116,6 +117,23 @@ export default function DeveloperDashboardPage() {
   const [selectedShopForDetails, setSelectedShopForDetails] = useState<BarbershopData | null>(null)
   const [isUpdatingContract, setIsUpdatingContract] = useState(false)
   const [contractEditDate, setContractEditDate] = useState('')
+
+  // Abas de filtro de tenants
+  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('ALL')
+
+  // Modal "Análise e Aprovação de Cadastro"
+  const [selectedShopForApproval, setSelectedShopForApproval] = useState<BarbershopData | null>(null)
+  const [isProcessingApproval, setIsProcessingApproval] = useState(false)
+  const [approvalFormData, setApprovalFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    adminName: '',
+    adminEmail: '',
+    adminPhone: '',
+    contractExpiresAt: '',
+  })
 
   // Modal "+ Nova Barbearia"
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -438,7 +456,126 @@ export default function DeveloperDashboardPage() {
     }
   }
 
+  const handleOpenApprovalModal = (shop: BarbershopData) => {
+    setSelectedShopForApproval(shop)
+    const admin = shop.users?.[0]
+    setApprovalFormData({
+      name: shop.name || '',
+      email: shop.email || '',
+      phone: shop.phone || '',
+      address: shop.address || '',
+      adminName: admin?.name || '',
+      adminEmail: admin?.email || '',
+      adminPhone: admin?.phone || '',
+      contractExpiresAt: shop.contractExpiresAt
+        ? new Date(shop.contractExpiresAt).toISOString().split('T')[0]
+        : '',
+    })
+  }
+
+  const handleApprovalInputChange = (field: string, value: string) => {
+    let formatted = value
+    if (field === 'phone' || field === 'adminPhone') {
+      formatted = maskPhone(value)
+    } else if (field === 'email' || field === 'adminEmail') {
+      formatted = maskEmail(value)
+    } else if (field === 'adminName') {
+      formatted = maskName(value)
+    }
+    setApprovalFormData((prev) => ({ ...prev, [field]: formatted }))
+  }
+
+  const handleProcessApproval = async (status: 'APPROVED' | 'REJECTED' | 'SAVE') => {
+    if (!selectedShopForApproval) return
+    setIsProcessingApproval(true)
+    setMessage(null)
+
+    try {
+      const payload: any = {
+        id: selectedShopForApproval.id,
+        name: approvalFormData.name.trim(),
+        email: approvalFormData.email.trim(),
+        phone: approvalFormData.phone.trim() || null,
+        address: approvalFormData.address.trim() || null,
+        adminName: approvalFormData.adminName.trim() || undefined,
+        adminEmail: approvalFormData.adminEmail.trim() || undefined,
+        adminPhone: approvalFormData.adminPhone.trim() || undefined,
+        contractExpiresAt: approvalFormData.contractExpiresAt
+          ? new Date(approvalFormData.contractExpiresAt).toISOString()
+          : null,
+      }
+
+      if (status === 'APPROVED' || status === 'REJECTED') {
+        payload.status = status
+      }
+
+      const res = await fetch('/api/developer/barbershops', {
+        method: 'PATCH',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Erro ao processar estabelecimento')
+      }
+
+      const updated = await res.json()
+
+      setBarbershops((prev) =>
+        prev.map((s) => {
+          if (s.id === updated.id) {
+            return {
+              ...s,
+              ...updated,
+              users: updated.users || s.users,
+            }
+          }
+          return s
+        })
+      )
+
+      if (status === 'APPROVED') {
+        setMessage({
+          type: 'success',
+          text: `Estabelecimento "${updated.name}" foi APROVADO com sucesso! Acesso liberado para o administrador.`,
+        })
+      } else if (status === 'REJECTED') {
+        setMessage({
+          type: 'success',
+          text: `Cadastro do estabelecimento "${updated.name}" foi REJEITADO.`,
+        })
+      } else {
+        setMessage({
+          type: 'success',
+          text: `Dados do estabelecimento "${updated.name}" atualizados com sucesso!`,
+        })
+      }
+
+      setSelectedShopForApproval(null)
+    } catch (err: any) {
+      console.error('Erro ao processar aprovação:', err)
+      setMessage({
+        type: 'error',
+        text: err?.message || 'Erro ao processar solicitação',
+      })
+    } finally {
+      setIsProcessingApproval(false)
+    }
+  }
+
+  const pendingCount = barbershops.filter((s) => s.status === 'PENDING').length
+  const activeCount = barbershops.filter((s) => s.isActive && s.status !== 'PENDING').length
+  const inactiveCount = barbershops.filter(
+    (s) => (!s.isActive && s.status !== 'PENDING') || s.status === 'REJECTED'
+  ).length
+
   const filteredBarbershops = barbershops.filter((shop) => {
+    if (filterTab === 'PENDING' && shop.status !== 'PENDING') return false
+    if (filterTab === 'ACTIVE' && (!shop.isActive || shop.status === 'PENDING')) return false
+    if (filterTab === 'INACTIVE' && shop.isActive && shop.status !== 'REJECTED') return false
+
     const q = searchTerm.toLowerCase().trim()
     if (!q) return true
     return (
@@ -539,9 +676,9 @@ export default function DeveloperDashboardPage() {
             </div>
             <div className="text-xs text-gray-400 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-emerald-400 font-medium">{metrics?.tenants?.active ?? 0} ativas</span>
+                <span className="text-emerald-400 font-medium">{activeCount} ativas</span>
                 <span>•</span>
-                <span className="text-red-400 font-medium">{metrics?.tenants?.inactive ?? 0} inativas</span>
+                <span className="text-red-400 font-medium">{inactiveCount} inativas</span>
               </div>
               <button
                 type="button"
@@ -555,6 +692,16 @@ export default function DeveloperDashboardPage() {
                 Criar
               </button>
             </div>
+            {pendingCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setFilterTab('PENDING')}
+                className="mt-2 text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition cursor-pointer hover:underline"
+              >
+                <Clock className="w-3.5 h-3.5 animate-pulse" />
+                <span>{pendingCount} aguardando aprovação</span>
+              </button>
+            )}
           </div>
 
           <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl backdrop-blur-sm">
@@ -638,6 +785,94 @@ export default function DeveloperDashboardPage() {
                 Total: <strong className="text-white">{filteredBarbershops.length}</strong>
               </span>
             </div>
+          </div>
+
+          {/* Sub-menu / Abas de Filtro de Tenants */}
+          <div className="px-5 py-2.5 bg-gray-950/40 border-b border-gray-800/80 flex items-center gap-2 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setFilterTab('ALL')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                filterTab === 'ALL'
+                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <span>Todos</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  filterTab === 'ALL' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-gray-300'
+                }`}
+              >
+                {barbershops.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFilterTab('PENDING')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                filterTab === 'PENDING'
+                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                  : 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Aguardando Aprovação</span>
+              {pendingCount > 0 ? (
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-black animate-pulse">
+                  {pendingCount}
+                </span>
+              ) : (
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                    filterTab === 'PENDING' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-gray-300'
+                  }`}
+                >
+                  0
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFilterTab('ACTIVE')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                filterTab === 'ACTIVE'
+                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Ativos / Aprovados</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  filterTab === 'ACTIVE' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-gray-300'
+                }`}
+              >
+                {activeCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFilterTab('INACTIVE')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                filterTab === 'INACTIVE'
+                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <Power className="w-3.5 h-3.5" />
+              <span>Inativos / Rejeitados</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  filterTab === 'INACTIVE' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-gray-300'
+                }`}
+              >
+                {inactiveCount}
+              </span>
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -732,48 +967,75 @@ export default function DeveloperDashboardPage() {
                         {shop._count?.services ?? 0}
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            shop.isActive
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                          }`}
-                        >
+                        {shop.status === 'PENDING' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse">
+                            <Clock className="w-3.5 h-3.5" />
+                            Aguardando Aprovação
+                          </span>
+                        ) : shop.status === 'REJECTED' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+                            <X className="w-3.5 h-3.5" />
+                            Rejeitado
+                          </span>
+                        ) : (
                           <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              shop.isActive ? 'bg-emerald-400' : 'bg-red-400'
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              shop.isActive
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
                             }`}
-                          />
-                          {shop.isActive ? 'Ativa' : 'Desativada'}
-                        </span>
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                shop.isActive ? 'bg-emerald-400' : 'bg-red-400'
+                              }`}
+                            />
+                            {shop.isActive ? 'Ativa' : 'Desativada'}
+                          </span>
+                        )}
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDetails(shop)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-blue-800/80 bg-blue-950/20 text-blue-400 hover:bg-blue-900/30 transition cursor-pointer"
-                            title="Ver Detalhes da Barbearia"
-                          >
-                            <Info className="h-3.5 w-3.5" />
-                            Ver Detalhes
-                          </button>
-                          <button
-                            onClick={() => toggleBarbershopStatus(shop)}
-                            disabled={actionLoadingId === shop.id}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
-                              shop.isActive
-                                ? 'border-red-800/80 bg-red-950/20 text-red-400 hover:bg-red-900/30'
-                                : 'border-emerald-800/80 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-900/30'
-                            } disabled:opacity-50 cursor-pointer`}
-                          >
-                            <Power className="h-3.5 w-3.5" />
-                            {actionLoadingId === shop.id
-                              ? 'Alterando...'
-                              : shop.isActive
-                              ? 'Desativar'
-                              : 'Ativar'}
-                          </button>
+                          {shop.status === 'PENDING' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenApprovalModal(shop)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black shadow-md shadow-amber-500/20 transition hover:scale-[1.02] cursor-pointer"
+                              title="Analisar solicitação de cadastro e aprovar"
+                            >
+                              <ShieldCheck className="h-3.5 w-3.5 stroke-[2.5]" />
+                              Analisar / Aprovar
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDetails(shop)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-blue-800/80 bg-blue-950/20 text-blue-400 hover:bg-blue-900/30 transition cursor-pointer"
+                              title="Ver Detalhes da Barbearia"
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                              Ver Detalhes
+                            </button>
+                          )}
+
+                          {shop.status !== 'PENDING' && (
+                            <button
+                              onClick={() => toggleBarbershopStatus(shop)}
+                              disabled={actionLoadingId === shop.id}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
+                                shop.isActive
+                                  ? 'border-red-800/80 bg-red-950/20 text-red-400 hover:bg-red-900/30'
+                                  : 'border-emerald-800/80 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-900/30'
+                              } disabled:opacity-50 cursor-pointer`}
+                            >
+                              <Power className="h-3.5 w-3.5" />
+                              {actionLoadingId === shop.id
+                                ? 'Alterando...'
+                                : shop.isActive
+                                ? 'Desativar'
+                                : 'Ativar'}
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1381,6 +1643,285 @@ export default function DeveloperDashboardPage() {
               >
                 Fechar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal "Análise e Aprovação de Cadastro" */}
+      {selectedShopForApproval && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gray-900 border border-amber-500/40 rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl shadow-amber-500/10 relative my-8 animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                  <ShieldCheck className="w-6 h-6 text-amber-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-white">Análise e Aprovação de Cadastro</h3>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <Clock className="w-3 h-3" />
+                      {selectedShopForApproval.status === 'PENDING'
+                        ? 'Aguardando Aprovação'
+                        : selectedShopForApproval.status === 'REJECTED'
+                        ? 'Rejeitado'
+                        : 'Aprovado'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Solicitado em: {new Date(selectedShopForApproval.createdAt).toLocaleString('pt-BR')} &bull; ID: {selectedShopForApproval.id}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedShopForApproval(null)}
+                className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
+              {/* Card 1: Dados do Estabelecimento */}
+              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    1. Informações do Estabelecimento (Editáveis)
+                  </h4>
+                  <span className="text-[11px] text-gray-500">Revise ou complemente antes de aprovar</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-gray-400 mb-1 font-medium">Nome da Empresa / Barbearia:</label>
+                    <input
+                      type="text"
+                      value={approvalFormData.name}
+                      onChange={(e) => handleApprovalInputChange('name', e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 mb-1 font-medium">E-mail Comercial:</label>
+                    <input
+                      type="email"
+                      value={approvalFormData.email}
+                      onChange={(e) => handleApprovalInputChange('email', e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 mb-1 font-medium">Telefone Comercial / WhatsApp:</label>
+                    <input
+                      type="tel"
+                      value={approvalFormData.phone}
+                      onChange={(e) => handleApprovalInputChange('phone', e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 mb-1 font-medium">Endereço Completo:</label>
+                    <AddressAutocomplete
+                      id="approvalAddress"
+                      value={approvalFormData.address}
+                      onChange={(val) => handleApprovalInputChange('address', val)}
+                      placeholder="Rua, número, cidade - UF"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Administrador Solicitante */}
+              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+                    <UserCheck className="w-4 h-4" />
+                    2. Dados do Administrador Solicitante
+                  </h4>
+                  <span className="text-[11px] text-gray-500">Credenciais para acesso à conta de gestão</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <label className="block text-gray-400 mb-1 font-medium">Nome do Responsável:</label>
+                    <input
+                      type="text"
+                      value={approvalFormData.adminName}
+                      onChange={(e) => handleApprovalInputChange('adminName', e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 mb-1 font-medium">E-mail de Login:</label>
+                    <input
+                      type="email"
+                      value={approvalFormData.adminEmail}
+                      onChange={(e) => handleApprovalInputChange('adminEmail', e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 mb-1 font-medium">Telefone do Gestor:</label>
+                    <input
+                      type="tel"
+                      value={approvalFormData.adminPhone}
+                      onChange={(e) => handleApprovalInputChange('adminPhone', e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Vigência do Contrato Inicial */}
+              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <CalendarClock className="w-4 h-4" />
+                  3. Vigência Inicial do Contrato
+                </h4>
+                <p className="text-xs text-gray-400 mb-3">
+                  Selecione um prazo para a licença inicial da unidade. A barbearia e seu administrador serão ativados com essa validade.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date()
+                      d.setDate(d.getDate() + 30)
+                      setApprovalFormData((prev) => ({
+                        ...prev,
+                        contractExpiresAt: d.toISOString().split('T')[0],
+                      }))
+                    }}
+                    className="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                  >
+                    +30 dias (1 mês)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date()
+                      d.setDate(d.getDate() + 90)
+                      setApprovalFormData((prev) => ({
+                        ...prev,
+                        contractExpiresAt: d.toISOString().split('T')[0],
+                      }))
+                    }}
+                    className="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                  >
+                    +90 dias (3 meses)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date()
+                      d.setDate(d.getDate() + 180)
+                      setApprovalFormData((prev) => ({
+                        ...prev,
+                        contractExpiresAt: d.toISOString().split('T')[0],
+                      }))
+                    }}
+                    className="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                  >
+                    +180 dias (6 meses)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date()
+                      d.setDate(d.getDate() + 365)
+                      setApprovalFormData((prev) => ({
+                        ...prev,
+                        contractExpiresAt: d.toISOString().split('T')[0],
+                      }))
+                    }}
+                    className="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                  >
+                    +365 dias (1 ano)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setApprovalFormData((prev) => ({
+                        ...prev,
+                        contractExpiresAt: '',
+                      }))
+                    }
+                    className="px-2.5 py-1 text-xs rounded bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-800/60 transition cursor-pointer"
+                  >
+                    Vitalício
+                  </button>
+                </div>
+
+                <div className="relative max-w-xs">
+                  <Calendar className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="date"
+                    value={approvalFormData.contractExpiresAt}
+                    onChange={(e) =>
+                      setApprovalFormData((prev) => ({
+                        ...prev,
+                        contractExpiresAt: e.target.value,
+                      }))
+                    }
+                    className="w-full pl-9 pr-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer com botões de decisão */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-5 border-t border-gray-800 mt-6">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => handleProcessApproval('REJECTED')}
+                  disabled={isProcessingApproval}
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold border border-red-800/80 bg-red-950/30 text-red-400 hover:bg-red-900/40 transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <X className="w-4 h-4" />
+                  Rejeitar Solicitação
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleProcessApproval('SAVE')}
+                  disabled={isProcessingApproval}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                >
+                  Salvar Informações
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleProcessApproval('APPROVED')}
+                  disabled={isProcessingApproval}
+                  className="flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-lg text-xs shadow-lg shadow-emerald-600/20 transition hover:scale-[1.02] disabled:opacity-50 cursor-pointer"
+                >
+                  {isProcessingApproval ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                      Aprovar e Liberar Acesso
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

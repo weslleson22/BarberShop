@@ -35,9 +35,9 @@ export default function Footer() {
             <h4 className="text-sm font-bold text-white uppercase tracking-wider">Agendamento</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/agendar" className="text-slate-400 hover:text-blue-400 transition-colors flex items-center space-x-1.5">
+                <Link href="/login" className="text-slate-400 hover:text-blue-400 transition-colors flex items-center space-x-1.5">
                   <ArrowRight className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Agendar Horário Online</span>
+                  <span>Área do Cliente (Login)</span>
                 </Link>
               </li>
               <li>

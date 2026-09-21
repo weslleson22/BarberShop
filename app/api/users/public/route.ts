@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
         avatar: true,
         bio: true,
         phone: true,
+        specialties: true,
       },
       orderBy: {
         name: 'asc',

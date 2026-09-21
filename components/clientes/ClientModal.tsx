@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, User, Phone, Mail, Save, Plus } from 'lucide-react'
+import { X, User, Phone, Mail, Save, Plus, Crown } from 'lucide-react'
 
 const NAME_MIN = 3
 const NAME_MAX = 80
@@ -48,7 +48,8 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    email: ''
+    email: '',
+    isVip: false
   })
   const [loading, setLoading] = useState(false)
 
@@ -58,13 +59,15 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
         setFormData({
           name: client.name || '',
           phone: client.phone || '',
-          email: client.email || ''
+          email: client.email || '',
+          isVip: Boolean(client.isVip)
         })
       } else {
         setFormData({
           name: '',
           phone: '',
-          email: ''
+          email: '',
+          isVip: false
         })
       }
     }
@@ -128,7 +131,8 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
       const clientData = {
         name: trimmedName,
         phone: formData.phone,
-        email: formData.email
+        email: formData.email,
+        isVip: formData.isVip,
       }
 
       console.log('Enviando dados do cliente:', clientData)
@@ -293,6 +297,38 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
                 Máscara: minúsculas, um @ e formato nome@dominio.com
               </p>
             )}
+          </div>
+
+          {/* Cliente VIP Toggle */}
+          <div className="flex items-center justify-between p-3 md:p-3.5 bg-gradient-to-r from-yellow-400/10 via-amber-400/5 to-transparent border border-yellow-400/20 rounded-lg md:rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg bg-yellow-400/20 flex items-center justify-center flex-shrink-0">
+                <Crown className="w-4 h-4 text-yellow-400" />
+              </div>
+              <div>
+                <p className="text-white text-xs md:text-sm font-semibold flex items-center gap-1.5">
+                  Cliente VIP
+                  {formData.isVip && (
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
+                      Ativo
+                    </span>
+                  )}
+                </p>
+                <p className="text-white/50 text-[11px] md:text-xs">
+                  Destacar cliente com atendimento prioritário e badge VIP na agenda
+                </p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+              <input
+                type="checkbox"
+                name="isVip"
+                checked={formData.isVip}
+                onChange={(e) => setFormData((prev) => ({ ...prev, isVip: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-400"></div>
+            </label>
           </div>
 
           {/* Actions */}

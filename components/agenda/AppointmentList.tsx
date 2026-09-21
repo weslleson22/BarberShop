@@ -11,11 +11,13 @@ interface Appointment {
   status: string
   totalAmount: number
   notes: string
+  isVip?: boolean
   client: {
     id: string
     name: string
     phone: string
     email?: string
+    isVip?: boolean
   }
   barber: {
     id: string

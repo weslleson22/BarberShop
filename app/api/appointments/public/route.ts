@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { clientId, barberId, serviceId, startTime, notes, barbershopId: bodyShopId } = data
+    const { clientId, barberId, serviceId, startTime, notes, isVip, barbershopId: bodyShopId } = data
 
     let barbershopId = bodyShopId || null
     if (!barbershopId) {
@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
       serviceId,
       startTime: startTimeDate,
       notes: notes || '',
+      isVip: isVip !== undefined ? Boolean(isVip) : undefined,
       createdBy: authUser?.id,
     })
 
