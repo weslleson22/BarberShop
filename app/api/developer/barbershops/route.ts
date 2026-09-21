@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Developer barbershops GET error:', error)
     return NextResponse.json(
-      { error: 'Erro ao buscar barbearias' },
+      { error: 'Erro ao buscar empresas' },
       { status: 500 }
     )
   }
@@ -95,7 +95,7 @@ export async function PATCH(request: NextRequest) {
     } = body
 
     if (!id) {
-      return NextResponse.json({ error: 'ID da barbearia é obrigatório' }, { status: 400 })
+      return NextResponse.json({ error: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
     const barbershop = await prisma.barbershop.findUnique({
@@ -109,7 +109,7 @@ export async function PATCH(request: NextRequest) {
     })
 
     if (!barbershop) {
-      return NextResponse.json({ error: 'Barbearia não encontrada' }, { status: 404 })
+      return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 })
     }
 
     const updateData: any = {}
@@ -183,7 +183,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error('Developer barbershops PATCH error:', error)
     return NextResponse.json(
-      { error: 'Erro ao atualizar barbearia' },
+      { error: 'Erro ao atualizar empresa' },
       { status: 500 }
     )
   }
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
 
     if (!name || !email || !adminName || !adminEmail || !adminPassword) {
       return NextResponse.json(
-        { error: 'Nome e email da barbearia, e nome, email e senha do administrador são obrigatórios' },
+        { error: 'Nome e email da empresa, e nome, email e senha do administrador são obrigatórios' },
         { status: 400 }
       )
     }
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Developer create barbershop error:', error)
     return NextResponse.json(
-      { error: error?.message || 'Erro ao criar barbearia' },
+      { error: error?.message || 'Erro ao criar empresa' },
       { status: 400 }
     )
   }

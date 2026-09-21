@@ -136,7 +136,7 @@ export default function Hero() {
                     <Star key={i} className="w-4 h-4 fill-current" />
                   ))}
                 </div>
-                <span className="text-sm font-bold text-white ml-1">4.9/5</span>
+                <span className="text-sm font-bold text-white ml-1">5/5</span>
                 <span className="text-xs text-slate-400">avaliações</span>
               </div>
             </div>

@@ -18,7 +18,7 @@ import {
   CheckCircle2,
   Plus,
   X,
-  Scissors,
+  Briefcase,
   Mail,
   Phone,
   MapPin,
@@ -113,7 +113,7 @@ export default function DeveloperDashboardPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Modal "Detalhes da Barbearia"
+  // Modal "Detalhes da Empresa"
   const [selectedShopForDetails, setSelectedShopForDetails] = useState<BarbershopData | null>(null)
   const [isUpdatingContract, setIsUpdatingContract] = useState(false)
   const [contractEditDate, setContractEditDate] = useState('')
@@ -135,7 +135,7 @@ export default function DeveloperDashboardPage() {
     contractExpiresAt: '',
   })
 
-  // Modal "+ Nova Barbearia"
+  // Modal "+ Nova Empresa"
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isSubmittingShop, setIsSubmittingShop] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
@@ -248,18 +248,18 @@ export default function DeveloperDashboardPage() {
 
     // 2. Validação do nome da unidade
     if (trimmedShopName.length < 3) {
-      setFormError('O nome da barbearia deve ter pelo menos 3 caracteres.')
+      setFormError('O nome da empresa deve ter pelo menos 3 caracteres.')
       return
     }
 
-    // 3. Validação do email comercial da barbearia
+    // 3. Validação do email comercial da empresa
     const emailRegex = /^[a-z0-9._%+\-]+@[a-z0-9.-]+\.[a-z]{2,}$/i
     if (!emailRegex.test(trimmedShopEmail)) {
-      setFormError('O email comercial informado é inválido. Ex: contato@barbearia.com')
+      setFormError('O email comercial informado é inválido. Ex: contato@empresa.com')
       return
     }
 
-    // 4. Validação do telefone da barbearia (se preenchido)
+    // 4. Validação do telefone da empresa (se preenchido)
     if (formData.phone) {
       const phoneDigits = formData.phone.replace(/\D/g, '')
       if (phoneDigits.length < 10 || phoneDigits.length > 11) {
@@ -276,7 +276,7 @@ export default function DeveloperDashboardPage() {
 
     // 6. Validação do email do administrador
     if (!emailRegex.test(trimmedAdminEmail)) {
-      setFormError('O email de acesso do administrador é inválido. Ex: admin@barbearia.com')
+      setFormError('O email de acesso do administrador é inválido. Ex: admin@empresa.com')
       return
     }
 
@@ -306,12 +306,12 @@ export default function DeveloperDashboardPage() {
 
       const data = await res.json()
       if (!res.ok) {
-        throw new Error(data.error || 'Erro ao cadastrar nova barbearia')
+        throw new Error(data.error || 'Erro ao cadastrar nova empresa')
       }
 
       setMessage({
         type: 'success',
-        text: `Barbearia "${formData.name}" e administrador "${formData.adminName}" cadastrados com sucesso!`,
+        text: `Empresa "${formData.name}" e administrador "${formData.adminName}" cadastrados com sucesso!`,
       })
 
       setIsAddModalOpen(false)
@@ -329,7 +329,7 @@ export default function DeveloperDashboardPage() {
 
       await loadData()
     } catch (err: any) {
-      setFormError(err.message || 'Erro inesperado ao cadastrar barbearia.')
+      setFormError(err.message || 'Erro inesperado ao cadastrar empresa.')
     } finally {
       setIsSubmittingShop(false)
     }
@@ -437,7 +437,7 @@ export default function DeveloperDashboardPage() {
 
       if (!res.ok) {
         const errorData = await res.json()
-        throw new Error(errorData.error || 'Erro ao atualizar barbearia')
+        throw new Error(errorData.error || 'Erro ao atualizar empresa')
       }
 
       const updated = await res.json()
@@ -447,7 +447,7 @@ export default function DeveloperDashboardPage() {
 
       setMessage({
         type: 'success',
-        text: `Barbearia "${shop.name}" ${updated.isActive ? 'ativada' : 'desativada'} com sucesso.`,
+        text: `Empresa "${shop.name}" ${updated.isActive ? 'ativada' : 'desativada'} com sucesso.`,
       })
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Erro ao alterar status' })
@@ -623,7 +623,7 @@ export default function DeveloperDashboardPage() {
               className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02]"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
-              Nova Barbearia
+              Nova Empresa
             </button>
 
             <button
@@ -668,7 +668,7 @@ export default function DeveloperDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl backdrop-blur-sm">
             <div className="flex items-center justify-between text-gray-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Barbearias (Tenants)</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">Empresas (Tenants)</span>
               <Building2 className="h-5 w-5 text-amber-400" />
             </div>
             <div className="text-3xl font-bold text-white">
@@ -715,7 +715,7 @@ export default function DeveloperDashboardPage() {
             <div className="text-xs text-gray-400 mt-2 flex items-center gap-2">
               <span className="text-gray-300 font-medium">{metrics?.users?.byRole?.['ADMIN'] ?? 0} admins</span>
               <span>•</span>
-              <span className="text-gray-300 font-medium">{metrics?.users?.byRole?.['BARBER'] ?? 0} barbeiros</span>
+              <span className="text-gray-300 font-medium">{metrics?.users?.byRole?.['BARBER'] ?? 0} profissionais</span>
             </div>
           </div>
 
@@ -735,13 +735,13 @@ export default function DeveloperDashboardPage() {
           <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl backdrop-blur-sm">
             <div className="flex items-center justify-between text-gray-400 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Serviços no Catálogo</span>
-              <Scissors className="h-5 w-5 text-emerald-400" />
+              <Briefcase className="h-5 w-5 text-emerald-400" />
             </div>
             <div className="text-3xl font-bold text-white">
               {metrics?.services?.total ?? 0}
             </div>
             <div className="text-xs text-emerald-400 mt-2">
-              Serviços configurados pelas barbearias
+              Serviços configurados pelas empresas
             </div>
           </div>
         </div>
@@ -762,7 +762,7 @@ export default function DeveloperDashboardPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar barbearia..."
+                  placeholder="Buscar empresa..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 pr-3 py-2 bg-gray-950/80 border border-gray-700 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 w-44 sm:w-56"
@@ -778,7 +778,7 @@ export default function DeveloperDashboardPage() {
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] cursor-pointer"
               >
                 <Plus className="h-4 w-4 stroke-[2.5]" />
-                Cadastrar Barbearia
+                Cadastrar Empresa
               </button>
 
               <span className="text-xs text-gray-400 hidden lg:inline-block">
@@ -879,7 +879,7 @@ export default function DeveloperDashboardPage() {
             <table className="w-full text-left border-collapse text-sm">
               <thead>
                 <tr className="bg-gray-900/80 text-gray-400 border-b border-gray-800">
-                  <th className="py-3.5 px-4 font-semibold">Barbearia</th>
+                  <th className="py-3.5 px-4 font-semibold">Empresa</th>
                   <th className="py-3.5 px-4 font-semibold">Cadastrado em</th>
                   <th className="py-3.5 px-4 font-semibold">Contrato</th>
                   <th className="py-3.5 px-4 font-semibold">Contato</th>
@@ -900,8 +900,8 @@ export default function DeveloperDashboardPage() {
                         </div>
                         <p className="text-sm font-medium text-gray-300">
                           {searchTerm
-                            ? 'Nenhuma barbearia encontrada para o termo pesquisado.'
-                            : 'Nenhuma barbearia cadastrada no sistema.'}
+                            ? 'Nenhuma empresa encontrada para o termo pesquisado.'
+                            : 'Nenhuma empresa cadastrada no sistema.'}
                         </p>
                         <p className="text-xs text-gray-500">
                           {searchTerm
@@ -918,7 +918,7 @@ export default function DeveloperDashboardPage() {
                             className="mt-2 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-xs shadow-lg shadow-amber-500/20 transition hover:scale-105 cursor-pointer"
                           >
                             <Plus className="h-4 w-4 stroke-[2.5]" />
-                            Cadastrar Primeira Barbearia
+                            Cadastrar Primeira Empresa
                           </button>
                         )}
                       </div>
@@ -1011,7 +1011,7 @@ export default function DeveloperDashboardPage() {
                               type="button"
                               onClick={() => handleOpenDetails(shop)}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-blue-800/80 bg-blue-950/20 text-blue-400 hover:bg-blue-900/30 transition cursor-pointer"
-                              title="Ver Detalhes da Barbearia"
+                              title="Ver Detalhes da Empresa"
                             >
                               <Info className="h-3.5 w-3.5" />
                               Ver Detalhes
@@ -1069,7 +1069,7 @@ export default function DeveloperDashboardPage() {
         </div>
       </main>
 
-      {/* Modal "+ Nova Barbearia" */}
+      {/* Modal "+ Nova Empresa" */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-in fade-in duration-200">
@@ -1079,7 +1079,7 @@ export default function DeveloperDashboardPage() {
                   <Building2 className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Cadastrar Nova Barbearia</h3>
+                  <h3 className="text-lg font-bold text-white">Cadastrar Nova Empresa</h3>
                   <p className="text-xs text-gray-400">Criar um novo tenant com seu administrador inicial</p>
                 </div>
               </div>
@@ -1100,7 +1100,7 @@ export default function DeveloperDashboardPage() {
             )}
 
             <form onSubmit={handleCreateBarbershop} className="space-y-6">
-              {/* Seção 1: Dados da Barbearia */}
+              {/* Seção 1: Dados da Empresa */}
               <div>
                 <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Building2 className="w-4 h-4" />
@@ -1109,12 +1109,12 @@ export default function DeveloperDashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                      Nome da Barbearia *
+                      Nome da Empresa *
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="Ex: Barbearia Dom Pedro"
+                      placeholder="Ex: Minha Empresa Ltda"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
@@ -1130,7 +1130,7 @@ export default function DeveloperDashboardPage() {
                       <input
                         type="email"
                         required
-                        placeholder="contato@barbeariadompedro.com"
+                        placeholder="contato@empresa.com"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
@@ -1260,7 +1260,7 @@ export default function DeveloperDashboardPage() {
               <div className="border-t border-gray-800 pt-5">
                 <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <UserCheck className="w-4 h-4" />
-                  2. Administrador Inicial da Barbearia
+                  2. Administrador Inicial da Empresa
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -1286,7 +1286,7 @@ export default function DeveloperDashboardPage() {
                       <input
                         type="email"
                         required
-                        placeholder="pedro@barbeariadompedro.com"
+                        placeholder="admin@empresa.com"
                         value={formData.adminEmail}
                         onChange={(e) => handleInputChange('adminEmail', e.target.value)}
                         className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
@@ -1357,7 +1357,7 @@ export default function DeveloperDashboardPage() {
                   ) : (
                     <>
                       <Plus className="w-4 h-4 stroke-[2.5]" />
-                      Criar Barbearia
+                      Criar Empresa
                     </>
                   )}
                 </button>
@@ -1367,7 +1367,7 @@ export default function DeveloperDashboardPage() {
         </div>
       )}
 
-      {/* Modal "Detalhes da Barbearia" */}
+      {/* Modal "Detalhes da Empresa" */}
       {selectedShopForDetails && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-in fade-in duration-200">
@@ -1573,7 +1573,7 @@ export default function DeveloperDashboardPage() {
                   if (admins.length === 0) {
                     return (
                       <p className="text-xs text-gray-500 italic">
-                        Nenhum usuário com função de Administrador vinculado a esta barbearia.
+                        Nenhum usuário com função de Administrador vinculado a esta empresa.
                       </p>
                     )
                   }
@@ -1696,7 +1696,7 @@ export default function DeveloperDashboardPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block text-gray-400 mb-1 font-medium">Nome da Empresa / Barbearia:</label>
+                    <label className="block text-gray-400 mb-1 font-medium">Nome da Empresa:</label>
                     <input
                       type="text"
                       value={approvalFormData.name}
@@ -1788,7 +1788,7 @@ export default function DeveloperDashboardPage() {
                   3. Vigência Inicial do Contrato
                 </h4>
                 <p className="text-xs text-gray-400 mb-3">
-                  Selecione um prazo para a licença inicial da unidade. A barbearia e seu administrador serão ativados com essa validade.
+                  Selecione um prazo para a licença inicial da unidade. A empresa e seu administrador serão ativados com essa validade.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 mb-3">
