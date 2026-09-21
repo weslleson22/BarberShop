@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera, Building2, Crown, X, Sparkles, Check } from 'lucide-react'
+import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera, Building2, Crown, X, Sparkles, Check, AlertCircle, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
@@ -48,6 +48,8 @@ export default function UsuariosPage() {
   const [customSpecialtyInput, setCustomSpecialtyInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedShopFilter, setSelectedShopFilter] = useState<string>('all')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -70,19 +72,8 @@ export default function UsuariosPage() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (mounted) {
-      fetchUsers()
-    }
-  }, [mounted])
-
   // Verificar autenticação e permissão
   useEffect(() => {
-    console.log('=== USUÁRIOS - VERIFICANDO AUTENTICAÇÃO ===')
-    console.log('authLoading:', authLoading)
-    console.log('user:', user)
-    console.log('user.role:', user?.role)
-    
     if (!authLoading) {
       if (!user) {
         console.log('USUÁRIOS: Usuário não autenticado, redirecionando para login')
@@ -96,35 +87,51 @@ export default function UsuariosPage() {
         router.push(user.role === 'CLIENT' ? '/meus-agendamentos' : '/dashboard')
         return
       }
-      
-      console.log('USUÁRIOS: Usuário com permissão - Role:', user.role, '- Continuando na página')
     }
   }, [user, authLoading, router])
+
+  // Buscar usuários apenas quando a autenticação estiver concluída e usuário for válido
+  useEffect(() => {
+    if (mounted && !authLoading && user && (user.role === 'ADMIN' || user.role === 'DEVELOPER')) {
+      fetchUsers()
+    }
+  }, [mounted, authLoading, user?.id, user?.role, selectedShopFilter])
 
   // Aguardar autenticação
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400"></div>
       </div>
     )
   }
 
   const fetchUsers = async () => {
     try {
+      setLoading(true)
+      setErrorMessage(null)
       console.log('=== BUSCANDO USUÁRIOS DO PRISMA COM AUTH HEADERS ===')
+
+      let url = '/api/users'
+      if (user?.role === 'DEVELOPER' && selectedShopFilter && selectedShopFilter !== 'all') {
+        url += `?barbershopId=${encodeURIComponent(selectedShopFilter)}`
+      }
       
-      const response = await fetch('/api/users', {
+      const response = await fetch(url, {
         headers: getAuthHeaders(),
         credentials: 'include',
+        cache: 'no-store',
       })
       
       if (response.ok) {
         const data = await response.json()
         console.log('Usuários recebidos do Prisma:', data)
-        setUsers(data)
+        setUsers(Array.isArray(data) ? data : [])
       } else {
-        console.error('Erro ao buscar usuários do Prisma:', response.status, response.statusText)
+        const errData = await response.json().catch(() => ({}))
+        const msg = errData?.error || `Erro ${response.status}: ${response.statusText}`
+        console.error('Erro ao buscar usuários do Prisma:', response.status, msg)
+        setErrorMessage(msg)
         setUsers([])
       }
 
@@ -133,6 +140,7 @@ export default function UsuariosPage() {
         const srvRes = await fetch('/api/services', {
           headers: getAuthHeaders(),
           credentials: 'include',
+          cache: 'no-store',
         })
         if (srvRes.ok) {
           const srvData = await srvRes.json()
@@ -144,23 +152,25 @@ export default function UsuariosPage() {
         console.error('Erro ao buscar serviços para sugestões:', srvErr)
       }
 
-      // Se for DEVELOPER, buscar também lista de barbearias para poder vincular novos usuários
+      // Se for DEVELOPER, buscar lista de barbearias para filtro e vinculação
       if (user?.role === 'DEVELOPER') {
         try {
           const shopRes = await fetch('/api/developer/barbershops', {
             headers: getAuthHeaders(),
             credentials: 'include',
+            cache: 'no-store',
           })
           if (shopRes.ok) {
             const shops = await shopRes.json()
-            setBarbershops(shops)
+            setBarbershops(Array.isArray(shops) ? shops : [])
           }
         } catch (err) {
           console.error('Erro ao buscar barbearias para seleção:', err)
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error ao buscar usuários do Prisma:', error)
+      setErrorMessage(error?.message || 'Erro de conexão com o servidor')
       setUsers([])
     } finally {
       setLoading(false)
@@ -458,9 +468,9 @@ export default function UsuariosPage() {
         </div>
       </div>
 
-      {/* Busca */}
-      <div className="mb-4 md:mb-6">
-        <div className="relative">
+      {/* Barra de Filtros e Busca */}
+      <div className="mb-4 md:mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className={`relative ${user?.role === 'DEVELOPER' ? 'md:col-span-2' : 'md:col-span-3'}`}>
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4 md:w-5 md:h-5" />
           <input
             type="text"
@@ -470,7 +480,43 @@ export default function UsuariosPage() {
             className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/6 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
           />
         </div>
+
+        {/* Filtro por Empresa/Estabelecimento para DEVELOPER */}
+        {user?.role === 'DEVELOPER' && (
+          <div className="relative">
+            <select
+              value={selectedShopFilter}
+              onChange={(e) => setSelectedShopFilter(e.target.value)}
+              className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-gray-900 border border-white/10 rounded-lg md:rounded-xl text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base cursor-pointer"
+            >
+              <option value="all">🏢 Todas as Barbearias / Empresas</option>
+              {barbershops.map((shop) => (
+                <option key={shop.id} value={shop.id}>
+                  {shop.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
+      {/* Alerta de Erro com Botão de Tentar Novamente */}
+      {errorMessage && (
+        <div className="mb-4 p-4 rounded-xl bg-red-900/30 border border-red-500/30 flex items-center justify-between gap-4 text-red-300 animate-in fade-in">
+          <div className="flex items-center gap-2 text-sm">
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => fetchUsers()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-white text-xs font-semibold transition shrink-0 cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Tentar novamente
+          </button>
+        </div>
+      )}
 
       {/* Formulário de Adicionar/Editar */}
       {showAddForm && (

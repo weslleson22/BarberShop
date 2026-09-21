@@ -82,6 +82,48 @@ describe('GET /api/users — role e tenant', () => {
       })
     )
   })
+
+  it('DEVELOPER busca todos os usuários globais quando barbershopId não é informado', async () => {
+    mockedGetAuthUser.mockReturnValue(makeUser({ role: 'DEVELOPER', barbershopId: null }))
+    ;(prisma.user.findMany as any).mockResolvedValue([])
+    const { GET } = await import('@/app/api/users/route')
+
+    const res = await GET(makeRequest('http://localhost/api/users'))
+    expect(res.status).toBe(200)
+    expect(prisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {},
+      })
+    )
+  })
+
+  it('DEVELOPER busca todos os usuários globais quando barbershopId=all', async () => {
+    mockedGetAuthUser.mockReturnValue(makeUser({ role: 'DEVELOPER', barbershopId: null }))
+    ;(prisma.user.findMany as any).mockResolvedValue([])
+    const { GET } = await import('@/app/api/users/route')
+
+    const res = await GET(makeRequest('http://localhost/api/users?barbershopId=all'))
+    expect(res.status).toBe(200)
+    expect(prisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {},
+      })
+    )
+  })
+
+  it('DEVELOPER filtra por barbershopId específico quando fornecido', async () => {
+    mockedGetAuthUser.mockReturnValue(makeUser({ role: 'DEVELOPER', barbershopId: null }))
+    ;(prisma.user.findMany as any).mockResolvedValue([])
+    const { GET } = await import('@/app/api/users/route')
+
+    const res = await GET(makeRequest('http://localhost/api/users?barbershopId=shop_xyz'))
+    expect(res.status).toBe(200)
+    expect(prisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ barbershopId: 'shop_xyz' }),
+      })
+    )
+  })
 })
 
 describe('POST /api/users — só ADMIN cria', () => {

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // PUT - Atualizar serviço (completo ou apenas isActive)
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {

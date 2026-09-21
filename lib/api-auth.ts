@@ -5,25 +5,31 @@ import { verifyToken, JWTPayload } from './auth'
 // Único ponto de verdade para "quem está fazendo esta requisição" nas rotas de API —
 // nunca confiar em barbershopId/userId/role enviados no corpo/query da requisição.
 export function getAuthUser(request: NextRequest): JWTPayload | null {
-  let token = request.cookies.get('auth-token')?.value
+  // 1. Tentar ler e validar do cookie httpOnly 'auth-token'
+  const cookieToken = request.cookies.get('auth-token')?.value
+  if (cookieToken) {
+    try {
+      return verifyToken(cookieToken)
+    } catch {
+      // Cookie expirado, de deploy anterior ou corrompido:
+      // Continua para tentar o header Authorization como fallback
+    }
+  }
 
-  if (!token) {
-    const authHeader = request.headers.get('authorization')
-    if (authHeader) {
-      const match = authHeader.match(/^Bearer\s+(.+)$/i)
-      if (match) {
-        token = match[1]
+  // 2. Tentar ler e validar do header Authorization: Bearer <token>
+  const authHeader = request.headers.get('authorization')
+  if (authHeader) {
+    const match = authHeader.match(/^Bearer\s+(.+)$/i)
+    if (match && match[1]) {
+      try {
+        return verifyToken(match[1])
+      } catch {
+        // Token do header inválido
       }
     }
   }
 
-  if (!token) return null
-
-  try {
-    return verifyToken(token)
-  } catch {
-    return null
-  }
+  return null
 }
 
 export function requireRole(

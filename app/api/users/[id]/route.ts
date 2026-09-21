@@ -4,6 +4,9 @@ import { hashPassword } from '@/lib/auth'
 import { ensureClientForUser } from '@/lib/client-sync'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // PUT - Atualizar usuário (dados completos ou apenas um campo, ex: isActive)
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {

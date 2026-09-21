@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
 
     let barbershopId: string | null = null
     if (user.role === 'DEVELOPER') {
-      barbershopId = requestedShopId || user.barbershopId || null
+      if (requestedShopId && requestedShopId !== 'all' && requestedShopId.trim() !== '') {
+        barbershopId = requestedShopId
+      } else {
+        barbershopId = null
+      }
     } else {
       barbershopId = user.barbershopId || null
       if (!barbershopId) {
@@ -33,7 +37,7 @@ export async function GET(request: NextRequest) {
     if (barbershopId) {
       where.barbershopId = barbershopId
     }
-    if (role) {
+    if (role && role !== 'all') {
       where.role = role
     }
 
@@ -63,7 +67,11 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(users)
+    return NextResponse.json(users, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      },
+    })
   } catch (error) {
     console.error('Get users error:', error)
     return NextResponse.json(

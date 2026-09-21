@@ -4,6 +4,9 @@ import { getAuthUser, requireRole } from '@/lib/api-auth'
 
 const EMAIL_PATTERN = /^[a-z0-9._%+\-]+@[a-z0-9.-]+\.[a-z]{2,}$/
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // PUT - Atualizar cliente (ADMIN/RECEPTIONIST; BARBER só visualiza)
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
