@@ -33,10 +33,9 @@ export default defineConfig({
     hookTimeout: 30000,
     
     // Arquivos de teste
-    include: [
-      'tests/unit/**/*.test.ts',
-      'tests/integration/**/*.test.ts'
-    ],
+    include: process.env.DATABASE_URL_TEST
+      ? ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts']
+      : ['tests/unit/**/*.test.ts'],
     
     // Setup files
     setupFiles: ['tests/setup.ts']

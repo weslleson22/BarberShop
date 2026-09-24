@@ -1,19 +1,10 @@
 {
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install && npx prisma generate",
   "framework": "nextjs",
   "functions": {
-    "app/api/**/*.ts": {
+    "app/api/**": {
       "maxDuration": 30
-    }
-  },
-  "env": {
-    "PRISMA_GENERATE_DATAPROXY": "true"
-  },
-  "build": {
-    "env": {
-      "PRISMA_GENERATE_DATAPROXY": "true"
     }
   },
   "regions": ["iad1"]

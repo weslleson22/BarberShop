@@ -271,7 +271,7 @@ export default function ConfiguracoesPage() {
                           value={formData.name}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
-                          placeholder="Wesleson Souza"
+                          placeholder="Wesleson Souza Silva"
                         />
                       </div>
 

@@ -6,6 +6,9 @@ import { vi } from 'vitest'
 // sua própria trava de segurança (DATABASE_URL_TEST obrigatória e diferente
 // de DATABASE_URL) antes de rodar qualquer operação destrutiva.
 
+// Define fallback seguro exclusivo para o ambiente de testes (evita dependência de arquivo .env não comitado em CI)
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-key-32-chars-minimum-vitest'
+
 // Mocks globais
 vi.mock('next/navigation', () => ({
   useRouter: () => ({

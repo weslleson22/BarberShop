@@ -3,9 +3,6 @@ import type { NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { ALL_ROLES, type UserRole } from '@/lib/roles'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
-
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -72,8 +69,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      console.error('CRITICAL: JWT_SECRET environment variable is missing!')
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
     try {
-      const payload = jwt.verify(token, JWT_SECRET) as { role: string; exp?: number }
+      const payload = jwt.verify(token, jwtSecret) as { role: string; exp?: number }
 
       // Se o usuário é DEVELOPER tentando acessar dashboard ou agenda, redireciona para /developer
       if (payload.role === 'DEVELOPER' && (pathname.startsWith('/dashboard') || pathname.startsWith('/agenda') || pathname.startsWith('/clientes'))) {

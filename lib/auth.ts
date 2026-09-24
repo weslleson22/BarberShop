@@ -4,7 +4,13 @@ import { prisma } from './prisma'
 import { ensureClientForUser } from './client-sync'
 import type { UserRole } from './roles'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error('JWT_SECRET is required but not configured in environment variables')
+  }
+  return secret
+}
 
 export interface JWTPayload {
   id: string
@@ -23,11 +29,11 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' })
 }
 
 export function verifyToken(token: string): JWTPayload {
-  return jwt.verify(token, JWT_SECRET) as JWTPayload
+  return jwt.verify(token, getJwtSecret()) as JWTPayload
 }
 
 export async function authenticateUser(email: string, password: string) {
