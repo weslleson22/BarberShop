@@ -19,15 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!barbershopId) {
-      const activeShop = await prisma.barbershop.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      })
-      barbershopId = activeShop?.id || null
-    }
-
-    if (!barbershopId) {
-      return NextResponse.json([])
+      return NextResponse.json({ error: 'Barbearia não especificada' }, { status: 400 })
     }
     
     // Público só pode visualizar serviços que estejam ativos

@@ -55,3 +55,42 @@ export function getSafeTenantId(user: JWTPayload, overrideId?: string | null): s
 export function isDeveloper(user: JWTPayload | null): boolean {
   return !!user && user.role === 'DEVELOPER'
 }
+
+/**
+ * Resolução estrita do contexto de tenant:
+ * 1. Para usuários autenticados não-DEVELOPER:
+ *    - O tenant é SEMPRE user.barbershopId.
+ *    - Qualquer tenant enviado pelo frontend via query param ou body é DESCARTADO.
+ *    - Se o usuário não possui barbershopId, bloqueia imediatamente.
+ * 2. Para DEVELOPER:
+ *    - Pode acessar plataforma global (tenantId: null, isGlobal: true)
+ *    - Ou operar sobre um tenant específico explicitamente fornecido.
+ * 3. Para rotas públicas (usuário não autenticado):
+ *    - O tenantId DEVE ser informado explicitamente.
+ *    - NUNCA faz fallback para "primeira barbearia ativa".
+ */
+export function resolveTenantContext(
+  user: JWTPayload | null,
+  requestedTenantId?: string | null
+): { tenantId: string | null; isGlobalDeveloper: boolean; error?: string } {
+  if (!user) {
+    if (!requestedTenantId || requestedTenantId.trim() === '') {
+      return { tenantId: null, isGlobalDeveloper: false, error: 'Barbearia não especificada' }
+    }
+    return { tenantId: requestedTenantId.trim(), isGlobalDeveloper: false }
+  }
+
+  if (user.role === 'DEVELOPER') {
+    const target = requestedTenantId && requestedTenantId !== 'all' && requestedTenantId.trim() !== ''
+      ? requestedTenantId.trim()
+      : null
+    return { tenantId: target, isGlobalDeveloper: !target }
+  }
+
+  if (!user.barbershopId) {
+    return { tenantId: null, isGlobalDeveloper: false, error: 'Usuário não vinculado a uma barbearia' }
+  }
+
+  // Ignora qualquer spoofing enviado no request
+  return { tenantId: user.barbershopId, isGlobalDeveloper: false }
+}

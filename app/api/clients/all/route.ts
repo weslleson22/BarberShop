@@ -68,7 +68,8 @@ export async function GET(request: NextRequest) {
       clients.map(async (client) => {
         const lastAppointment = await prisma.appointment.findFirst({
           where: {
-            clientId: client.id
+            clientId: client.id,
+            barbershopId: client.barbershopId,
           },
           orderBy: {
             startTime: 'desc'

@@ -5,6 +5,43 @@ import { getAuthUser, requireRole } from '@/lib/api-auth'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+// GET - Obter serviço específico (restrito ao tenant)
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const user = getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const { id } = await context.params
+
+    const serviceWhere: any = { id }
+    if (user.role !== 'DEVELOPER') {
+      if (!user.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      serviceWhere.barbershopId = user.barbershopId
+      // CLIENT só visualiza serviços ativos
+      if (user.role === 'CLIENT') {
+        serviceWhere.isActive = true
+      }
+    }
+
+    const service = await prisma.service.findFirst({
+      where: serviceWhere,
+    })
+
+    if (!service) {
+      return NextResponse.json({ error: 'Serviço não encontrado' }, { status: 404 })
+    }
+
+    return NextResponse.json(service)
+  } catch (error) {
+    console.error('Get service error:', error)
+    return NextResponse.json({ error: 'Erro ao buscar serviço' }, { status: 500 })
+  }
+}
+
 // PUT - Atualizar serviço (completo ou apenas isActive)
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {

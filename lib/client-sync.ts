@@ -27,7 +27,9 @@ export async function ensureClientForUser({
   phone,
   barbershopId,
 }: SyncClientParams) {
-  const alreadyLinked = await prisma.client.findUnique({ where: { userId } })
+  const alreadyLinked = await prisma.client.findFirst({
+    where: { userId, barbershopId },
+  })
   if (alreadyLinked) {
     return alreadyLinked
   }

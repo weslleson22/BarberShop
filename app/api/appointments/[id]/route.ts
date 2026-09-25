@@ -113,6 +113,20 @@ export async function PUT(
 
     const body = await request.json()
     const { serviceId, barberId, startTime, endTime, totalAmount, notes, status, isVip } = body
+
+    // Bloqueio de manipulação indevida: CLIENT não pode alterar status, preço ou VIP
+    if (user.role === 'CLIENT') {
+      if (status !== undefined && status !== existingAppointment.status) {
+        return NextResponse.json({ error: 'Clientes não têm permissão para alterar o status' }, { status: 403 })
+      }
+      if (totalAmount !== undefined && Number(totalAmount) !== Number(existingAppointment.totalAmount)) {
+        return NextResponse.json({ error: 'Clientes não têm permissão para alterar o valor' }, { status: 403 })
+      }
+      if (isVip !== undefined && Boolean(isVip) !== existingAppointment.isVip) {
+        return NextResponse.json({ error: 'Clientes não têm permissão para alterar condição VIP' }, { status: 403 })
+      }
+    }
+
     // clientId nunca vem do corpo: mantém o dono original do agendamento
     // (evita que alguém "transfira" um agendamento pra outro cliente)
     const clientId = existingAppointment.clientId
@@ -133,6 +147,19 @@ export async function PUT(
 
     if (!service) {
       return NextResponse.json({ error: 'Serviço não encontrado nesta barbearia' }, { status: 404 })
+    }
+
+    const barber = await prisma.user.findFirst({
+      where: {
+        id: barberId,
+        barbershopId: existingAppointment.barbershopId,
+        role: 'BARBER',
+        isActive: true,
+      },
+    })
+
+    if (!barber) {
+      return NextResponse.json({ error: 'Barbeiro não encontrado nesta barbearia' }, { status: 404 })
     }
 
     const conflictingAppointment = await prisma.appointment.findFirst({

@@ -113,7 +113,7 @@ export async function verificarDisponibilidade(
 export async function criarAgendamento(data: CreateAppointmentData): Promise<any> {
   try {
     // Buscar informações do serviço para calcular endTime
-    const service = await prisma.service.findUnique({
+    const service = await prisma.service.findFirst({
       where: {
         id: data.serviceId,
         barbershopId: data.barbershopId,

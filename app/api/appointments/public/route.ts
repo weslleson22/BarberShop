@@ -26,15 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!barbershopId) {
-      const activeShop = await prisma.barbershop.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      })
-      barbershopId = activeShop?.id || null
-    }
-
-    if (!barbershopId) {
-      return NextResponse.json([])
+      return NextResponse.json({ error: 'Barbearia não especificada' }, { status: 400 })
     }
 
     const where: any = {
@@ -85,33 +77,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!barbershopId && serviceId) {
-      const svc = await prisma.service.findUnique({
-        where: { id: serviceId },
-        select: { barbershopId: true },
-      })
-      if (svc?.barbershopId) {
-        barbershopId = svc.barbershopId
-      }
-    }
-
-    if (!barbershopId) {
-      const barbershop = await prisma.barbershop.findFirst({
-        where: { isActive: true },
-        select: { id: true }
-      })
-      barbershopId = barbershop?.id || null
-    }
-
     if (!barbershopId) {
       return NextResponse.json(
-        { error: 'Nenhuma barbearia ativa disponível' },
+        { error: 'Barbearia não especificada' },
         { status: 400 }
       )
     }
 
-    // Serviço e barbeiro precisam pertencer a essa mesma barbearia — não
-    // confiar que o serviceId/barberId enviados já são consistentes entre si
+    // Cliente, serviço e barbeiro precisam pertencer a essa mesma barbearia — não
+    // confiar que IDs enviados de tenants diferentes sejam aceitos
+    const client = await prisma.client.findFirst({
+      where: { id: clientId, barbershopId },
+      select: { id: true },
+    })
+
+    if (!client) {
+      return NextResponse.json(
+        { error: 'Cliente não encontrado nesta barbearia' },
+        { status: 404 }
+      )
+    }
+
     const service = await prisma.service.findFirst({
       where: { id: serviceId, barbershopId },
       select: { id: true },

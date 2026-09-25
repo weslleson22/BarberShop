@@ -83,12 +83,19 @@ export async function PUT(request: NextRequest) {
     if (data.birthDate !== undefined) updateData.birthDate = data.birthDate ? new Date(data.birthDate) : null
     if (data.bio !== undefined) updateData.bio = data.bio
 
+    // Verificar se o usuário existe
+    const existing = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, barbershopId: true },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
+    }
+
     // Atualizar usuário no banco apenas com campos alterados
     const updatedUser = await prisma.user.update({
-      where: {
-        id: decoded.id,
-        barbershopId: decoded.barbershopId
-      },
+      where: { id: decoded.id },
       data: updateData,
       select: {
         id: true,

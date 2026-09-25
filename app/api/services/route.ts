@@ -129,23 +129,23 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Verificar se serviço existe
-    const existingService = await prisma.service.findUnique({
-      where: { id: id }
+    const serviceWhere: any = { id }
+    if (decoded.role !== 'DEVELOPER') {
+      if (!decoded.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      serviceWhere.barbershopId = decoded.barbershopId
+    }
+
+    // Verificar se serviço existe e pertence à barbearia do usuário
+    const existingService = await prisma.service.findFirst({
+      where: serviceWhere,
     })
 
     if (!existingService) {
       return NextResponse.json(
         { error: 'Serviço não encontrado' },
         { status: 404 }
-      )
-    }
-
-    // Verificar se serviço pertence à barbearia do usuário (DEVELOPER tem permissão global)
-    if (decoded.role !== 'DEVELOPER' && existingService.barbershopId !== decoded.barbershopId) {
-      return NextResponse.json(
-        { error: 'Você não pode atualizar este serviço' },
-        { status: 403 }
       )
     }
 

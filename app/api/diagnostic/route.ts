@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser, requireRole } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export async function GET(request: NextRequest) {
+  const user = getAuthUser(request)
+  if (!user || !requireRole(user, ['DEVELOPER'])) {
+    return NextResponse.json({ error: 'Acesso restrito ao desenvolvedor' }, { status: 403 })
+  }
+
   const diagnostic = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,

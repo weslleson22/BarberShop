@@ -7,6 +7,52 @@ import { getAuthUser, requireRole } from '@/lib/api-auth'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+// GET - Obter usuário específico (restrito ao tenant)
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const admin = getAuthUser(request)
+    if (!requireRole(admin, ['DEVELOPER', 'ADMIN'])) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const { id } = await context.params
+
+    const userWhere: any = { id }
+    if (admin.role !== 'DEVELOPER') {
+      if (!admin.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      userWhere.barbershopId = admin.barbershopId
+    }
+
+    const user = await prisma.user.findFirst({
+      where: userWhere,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        barbershopId: true,
+        avatar: true,
+        phone: true,
+        bio: true,
+        specialties: true,
+      },
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
+    }
+
+    return NextResponse.json(user)
+  } catch (error) {
+    console.error('Get user error:', error)
+    return NextResponse.json({ error: 'Erro ao buscar usuário' }, { status: 500 })
+  }
+}
+
 // PUT - Atualizar usuário (dados completos ou apenas um campo, ex: isActive)
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {

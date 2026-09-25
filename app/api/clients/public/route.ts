@@ -18,14 +18,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (!barbershopId) {
-      const activeShop = await prisma.barbershop.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      })
-      barbershopId = activeShop?.id || null
-    }
-
-    if (!barbershopId) {
       return NextResponse.json({ error: 'Barbearia não especificada' }, { status: 400 })
     }
 
@@ -66,9 +58,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { name, phone, email, userId, isVip } = data
+    const { name, phone, email, isVip } = data
     const authUser = getAuthUser(request)
-    const finalUserId = userId || authUser?.id
+    // NUNCA aceitar userId enviado no corpo por chamadas não autenticadas!
+    // Apenas a sessão autenticada pode vincular um usuário.
+    const finalUserId = authUser?.id || null
 
     console.log('Dados recebidos para criar cliente:', { name, phone, email, isVip })
 
@@ -81,21 +75,13 @@ export async function POST(request: NextRequest) {
 
     let barbershopId = data.barbershopId || authUser?.barbershopId || null
     if (!barbershopId) {
-      const activeShop = await prisma.barbershop.findFirst({
-        where: { isActive: true },
-        select: { id: true }
-      })
-      barbershopId = activeShop?.id || null
-    }
-
-    if (!barbershopId) {
       return NextResponse.json({ error: 'Barbearia obrigatória' }, { status: 400 })
     }
 
-    // 1. Se o usuário estiver autenticado, priorizar o Client já vinculado ao seu ID
+    // 1. Se o usuário estiver autenticado, priorizar o Client já vinculado ao seu ID NESTA barbearia
     if (finalUserId) {
-      const userLinkedClient = await prisma.client.findUnique({
-        where: { userId: finalUserId }
+      const userLinkedClient = await prisma.client.findFirst({
+        where: { userId: finalUserId, barbershopId }
       })
       if (userLinkedClient) {
         // Atualiza telefone e nome se foram preenchidos

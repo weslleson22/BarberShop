@@ -22,18 +22,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'ID da notificação não fornecido' }, { status: 400 })
     }
 
-    // Busca a notificação pelo ID
-    const notification = await prisma.notification.findUnique({
-      where: { id },
+    // Busca a notificação pelo ID garantindo isolamento por usuário (exceto DEVELOPER)
+    const notificationWhere: any = { id }
+    if (user.role !== 'DEVELOPER') {
+      notificationWhere.userId = user.id
+    }
+
+    const notification = await prisma.notification.findFirst({
+      where: notificationWhere,
     })
 
     if (!notification) {
       return NextResponse.json({ error: 'Notificação não encontrada' }, { status: 404 })
-    }
-
-    // Garante que o usuário tem acesso (próprio dono ou ADMIN da barbearia)
-    if (notification.userId !== user.id && user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
     }
 
     let readState = true
@@ -75,16 +75,17 @@ export async function DELETE(
       return NextResponse.json({ error: 'ID da notificação não fornecido' }, { status: 400 })
     }
 
-    const notification = await prisma.notification.findUnique({
-      where: { id },
+    const notificationWhere: any = { id }
+    if (user.role !== 'DEVELOPER') {
+      notificationWhere.userId = user.id
+    }
+
+    const notification = await prisma.notification.findFirst({
+      where: notificationWhere,
     })
 
     if (!notification) {
       return NextResponse.json({ error: 'Notificação não encontrada' }, { status: 404 })
-    }
-
-    if (notification.userId !== user.id && user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
     }
 
     await prisma.notification.delete({
