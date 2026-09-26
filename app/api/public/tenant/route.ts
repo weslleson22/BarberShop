@@ -16,6 +16,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { tenant } = result
+
+    const shopIdParam = searchParams.get('barbershopId')
+    if (shopIdParam && shopIdParam !== tenant.id) {
+      return NextResponse.json(
+        { error: 'barbershopId conflitante com o tenant especificado' },
+        { status: 400 }
+      )
+    }
     return NextResponse.json({
       id: tenant.id,
       name: tenant.name,

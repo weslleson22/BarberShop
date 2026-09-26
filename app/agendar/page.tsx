@@ -54,6 +54,8 @@ export default function AgendarPage() {
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [selectedTime, setSelectedTime] = useState<TimeSlot | null>(null)
+  const [tenantInfo, setTenantInfo] = useState<{ id: string; name: string; slug: string | null; address: string | null; phone: string | null } | null>(null)
+  const [tenantError, setTenantError] = useState<string | null>(null)
   const [clientData, setClientData] = useState({
     name: '',
     phone: '',
@@ -76,6 +78,27 @@ export default function AgendarPage() {
 
   useEffect(() => {
     if (mounted) {
+      const fetchTenant = async () => {
+        const tenantParam = getTenantParam()
+        if (!tenantParam) {
+          setTenantError('Nenhuma barbearia especificada. Acesse o catálogo oficial da sua unidade (ex: /b/slug-da-barbearia).')
+          return
+        }
+        try {
+          const res = await fetch(`/api/public/tenant?${tenantParam}`)
+          if (res.ok) {
+            const data = await res.json()
+            setTenantInfo(data)
+            setTenantError(null)
+          } else {
+            const err = await res.json()
+            setTenantError(err.error || 'Barbearia não encontrada ou inativa.')
+          }
+        } catch {
+          setTenantError('Erro ao carregar dados da barbearia.')
+        }
+      }
+      fetchTenant()
       fetchServices()
       fetchBarbers()
     }
@@ -281,8 +304,8 @@ export default function AgendarPage() {
           ...clientData, 
           name: clientData.name.trim(),
           userId: user?.id,
-          slug,
-          barbershopId: shopId,
+          slug: slug || undefined,
+          barbershopId: slug ? undefined : (shopId || undefined),
         }),
       })
 
@@ -313,7 +336,7 @@ export default function AgendarPage() {
         barberId: selectedBarber.id,
         serviceId: selectedService.id,
         startTime: selectedTime.startTime,
-        barbershopId: shopId || undefined,
+        barbershopId: slug ? undefined : (shopId || undefined),
         slug: slug || undefined,
         notes: `Agendamento via site - Cliente: ${clientData.name}`,
       }
@@ -472,6 +495,22 @@ export default function AgendarPage() {
       {/* Conteúdo principal */}
       <div className="w-full px-4 md:px-6">
         <div className="max-w-4xl mx-auto">
+        {/* Tenant feedback banner */}
+        {tenantError && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm text-center">
+            <p className="font-semibold">{tenantError}</p>
+            <p className="text-xs text-amber-200/70 mt-1">Requisições públicas devem identificar explicitamente a unidade através do link /b/slug.</p>
+          </div>
+        )}
+        {tenantInfo && (
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Unidade: {tenantInfo.name} {tenantInfo.address ? `• ${tenantInfo.address}` : ''}
+            </div>
+          </div>
+        )}
+
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
@@ -502,29 +541,35 @@ export default function AgendarPage() {
         {step === 1 && (
           <div>
             <h2 className="text-2xl font-bold text-center mb-8 text-white">Escolha o Serviço</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {services.map((service) => (
-                <div
-                  key={service.id}
-                  onClick={() => handleServiceSelect(service)}
-                  className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6 cursor-pointer hover:bg-white/10 transition-all border-2 border-transparent hover:border-yellow-400/50"
-                >
-                  <h3 className="text-lg font-semibold mb-2 text-white">{service.name}</h3>
-                  {service.description && (
-                    <p className="text-white/60 mb-4">{service.description}</p>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-yellow-400">
-                      {formatCurrency(service.price)}
-                    </span>
-                    <div className="flex items-center text-white/60">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {service.duration}min
+            {services.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-gray-900/60 border border-gray-800 text-center text-gray-400">
+                Nenhum serviço disponível no momento para esta barbearia. Certifique-se de acessar o link oficial da unidade (ex: /b/barbearia-slug).
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {services.map((service) => (
+                  <div
+                    key={service.id}
+                    onClick={() => handleServiceSelect(service)}
+                    className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6 cursor-pointer hover:bg-white/10 transition-all border-2 border-transparent hover:border-yellow-400/50"
+                  >
+                    <h3 className="text-lg font-semibold mb-2 text-white">{service.name}</h3>
+                    {service.description && (
+                      <p className="text-white/60 mb-4">{service.description}</p>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-yellow-400">
+                        {formatCurrency(service.price)}
+                      </span>
+                      <div className="flex items-center text-white/60">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {service.duration}min
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

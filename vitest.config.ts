@@ -1,11 +1,34 @@
 import { defineConfig } from 'vitest/config'
 import { resolve } from 'path'
+import ts from 'typescript'
 
 export default defineConfig({
+  plugins: [
+    {
+      name: 'transform-tsx-jsx',
+      enforce: 'pre',
+      transform(code, id) {
+        if (id.endsWith('.tsx') || id.endsWith('.jsx')) {
+          const result = ts.transpileModule(code, {
+            fileName: id,
+            compilerOptions: {
+              jsx: ts.JsxEmit.ReactJSX,
+              module: ts.ModuleKind.ESNext,
+              target: ts.ScriptTarget.ESNext,
+            },
+          })
+          return {
+            code: result.outputText,
+          }
+        }
+      },
+    },
+  ],
   test: {
     // Configurações gerais
     globals: true,
     environment: 'node',
+    fileParallelism: false,
     
     // Configurações de cobertura
     coverage: {

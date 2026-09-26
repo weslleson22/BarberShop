@@ -34,6 +34,14 @@ export async function GET(request: NextRequest) {
 
     const barbershopId = tenantResult.tenant.id
 
+    const shopIdParam = searchParams.get('barbershopId')
+    if (shopIdParam && shopIdParam !== barbershopId) {
+      return NextResponse.json(
+        { error: 'barbershopId conflitante com o tenant especificado' },
+        { status: 400 }
+      )
+    }
+
     const where: any = {
       barbershopId,
       status: { not: 'CANCELLED' },
@@ -88,6 +96,14 @@ export async function POST(request: NextRequest) {
     }
 
     const barbershopId = tenantResult.tenant.id
+
+    // Anti-spoofing: se barbershopId foi enviado no corpo, DEVE ser idêntico ao resolvido
+    if (bodyShopId && bodyShopId !== barbershopId) {
+      return NextResponse.json(
+        { error: 'barbershopId conflitante com o tenant especificado' },
+        { status: 400 }
+      )
+    }
 
     // Cliente, serviço e barbeiro precisam pertencer a essa mesma barbearia — não
     // confiar que IDs enviados de tenants diferentes sejam aceitos

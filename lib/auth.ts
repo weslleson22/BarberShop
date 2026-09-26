@@ -231,10 +231,14 @@ export async function createBarbershop(data: {
   const isAdminActive = data.adminUser.isActive !== undefined ? data.adminUser.isActive : isShopActive
   const shopStatus = data.status || 'APPROVED'
 
+  const { generateUniqueSlug } = await import('./tenant')
+  const shopSlug = await generateUniqueSlug(data.slug || data.name)
+
   return await prisma.$transaction(async (tx) => {
     const barbershop = await tx.barbershop.create({
       data: {
         name: data.name,
+        slug: shopSlug,
         email: data.email,
         phone: data.phone,
         address: data.address,

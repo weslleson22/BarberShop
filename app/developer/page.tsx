@@ -31,11 +31,16 @@ import {
   CalendarClock,
   Shield,
   Crown,
+  ExternalLink,
+  Globe,
+  Copy,
+  Link2,
 } from 'lucide-react'
 
 interface BarbershopData {
   id: string
   name: string
+  slug?: string | null
   email: string
   phone: string | null
   address: string | null
@@ -117,6 +122,11 @@ export default function DeveloperDashboardPage() {
   const [selectedShopForDetails, setSelectedShopForDetails] = useState<BarbershopData | null>(null)
   const [isUpdatingContract, setIsUpdatingContract] = useState(false)
   const [contractEditDate, setContractEditDate] = useState('')
+  const [slugEditValue, setSlugEditValue] = useState('')
+  const [isUpdatingSlug, setIsUpdatingSlug] = useState(false)
+
+  // Sincronização em massa de slugs
+  const [isSyncingSlugs, setIsSyncingSlugs] = useState(false)
 
   // Abas de filtro de tenants
   const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('ALL')
@@ -126,6 +136,7 @@ export default function DeveloperDashboardPage() {
   const [isProcessingApproval, setIsProcessingApproval] = useState(false)
   const [approvalFormData, setApprovalFormData] = useState({
     name: '',
+    slug: '',
     email: '',
     phone: '',
     address: '',
@@ -141,6 +152,7 @@ export default function DeveloperDashboardPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
+    slug: '',
     email: '',
     phone: '',
     address: '',
@@ -317,6 +329,7 @@ export default function DeveloperDashboardPage() {
       setIsAddModalOpen(false)
       setFormData({
         name: '',
+        slug: '',
         email: '',
         phone: '',
         address: '',
@@ -376,11 +389,74 @@ export default function DeveloperDashboardPage() {
 
   const handleOpenDetails = (shop: BarbershopData) => {
     setSelectedShopForDetails(shop)
+    setSlugEditValue(shop.slug || '')
     if (shop.contractExpiresAt) {
       const d = new Date(shop.contractExpiresAt)
       setContractEditDate(d.toISOString().split('T')[0])
     } else {
       setContractEditDate('')
+    }
+  }
+
+  const handleUpdateSlug = async () => {
+    if (!selectedShopForDetails) return
+    setIsUpdatingSlug(true)
+    try {
+      const res = await fetch('/api/developer/barbershops', {
+        method: 'PATCH',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'include',
+        body: JSON.stringify({
+          id: selectedShopForDetails.id,
+          slug: slugEditValue.trim(),
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao atualizar slug')
+      }
+
+      setBarbershops((prev) =>
+        prev.map((s) => (s.id === data.id ? { ...s, slug: data.slug } : s))
+      )
+      setSelectedShopForDetails((prev) => (prev ? { ...prev, slug: data.slug } : null))
+      setMessage({
+        type: 'success',
+        text: `Slug da empresa "${data.name}" atualizado para "/b/${data.slug}" com sucesso!`,
+      })
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Erro ao atualizar slug' })
+    } finally {
+      setIsUpdatingSlug(false)
+    }
+  }
+
+  const handleBackfillSlugs = async () => {
+    setIsSyncingSlugs(true)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/developer/slugs/backfill', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao sincronizar slugs')
+      }
+
+      setMessage({
+        type: 'success',
+        text: data.message || `Rotina de slugs concluída! ${data.updatedCount || 0} estabelecimentos atualizados.`,
+      })
+
+      await loadData()
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Erro ao executar rotina de slugs' })
+    } finally {
+      setIsSyncingSlugs(false)
     }
   }
 
@@ -461,6 +537,7 @@ export default function DeveloperDashboardPage() {
     const admin = shop.users?.[0]
     setApprovalFormData({
       name: shop.name || '',
+      slug: shop.slug || '',
       email: shop.email || '',
       phone: shop.phone || '',
       address: shop.address || '',
@@ -494,6 +571,7 @@ export default function DeveloperDashboardPage() {
       const payload: any = {
         id: selectedShopForApproval.id,
         name: approvalFormData.name.trim(),
+        slug: approvalFormData.slug.trim() || undefined,
         email: approvalFormData.email.trim(),
         phone: approvalFormData.phone.trim() || null,
         address: approvalFormData.address.trim() || null,
@@ -781,6 +859,17 @@ export default function DeveloperDashboardPage() {
                 Cadastrar Empresa
               </button>
 
+              <button
+                type="button"
+                onClick={handleBackfillSlugs}
+                disabled={isSyncingSlugs}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 font-semibold rounded-lg text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+                title="Gera automaticamente slugs únicos para clientes e barbearias antigas sem slug"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isSyncingSlugs ? 'animate-spin text-amber-400' : 'text-gray-400'}`} />
+                <span>{isSyncingSlugs ? 'Sincronizando...' : 'Sincronizar Slugs'}</span>
+              </button>
+
               <span className="text-xs text-gray-400 hidden lg:inline-block">
                 Total: <strong className="text-white">{filteredBarbershops.length}</strong>
               </span>
@@ -930,6 +1019,24 @@ export default function DeveloperDashboardPage() {
                       <td className="py-4 px-4">
                         <div className="font-semibold text-white">{shop.name}</div>
                         <div className="text-xs text-gray-500 font-mono">ID: {shop.id}</div>
+                        {shop.slug ? (
+                          <div className="mt-1">
+                            <a
+                              href={`/b/${shop.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 font-mono bg-amber-400/10 hover:bg-amber-400/20 px-2 py-0.5 rounded border border-amber-400/20 transition"
+                              title="Abrir página pública de agendamento em nova aba"
+                            >
+                              <span>/b/{shop.slug}</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="mt-1 text-[11px] text-gray-500 italic">
+                            Sem slug público
+                          </div>
+                        )}
                         {shop.creator && (
                           <div className="text-[11px] text-amber-400/80 mt-0.5 flex items-center gap-1">
                             <Crown className="w-3 h-3 text-amber-400" /> Por: {shop.creator.name}
@@ -1119,6 +1226,29 @@ export default function DeveloperDashboardPage() {
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
                     />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-medium text-gray-300">
+                        Slug Personalizado (/b/slug)
+                      </label>
+                      <span className="text-[10px] text-gray-400">
+                        Opcional (Deixe em branco para gerar a partir do nome)
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="px-3 py-2.5 bg-gray-900 border border-r-0 border-gray-700 rounded-l-lg text-xs text-gray-500 font-mono select-none">
+                        /b/
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="ex: minha-empresa"
+                        value={formData.slug}
+                        onChange={(e) => handleInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                        className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-r-lg text-sm text-amber-400 placeholder-gray-600 focus:outline-none focus:border-amber-500 transition font-mono"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -1445,6 +1575,86 @@ export default function DeveloperDashboardPage() {
                 </div>
               </div>
 
+              {/* Card: Link Público & Identificador (Slug) */}
+              <div className="bg-gray-950/60 border border-amber-500/30 rounded-xl p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                  <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                    <Globe className="w-4 h-4" />
+                    Link Público & Identificador (Slug)
+                  </h4>
+                  {selectedShopForDetails.slug && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-amber-400/10 text-amber-300 border border-amber-400/20">
+                      <Link2 className="w-3 h-3" />
+                      /b/{selectedShopForDetails.slug}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
+                    <div className="text-[11px] text-gray-400 mb-1">Endereço público do catálogo:</div>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <div className="flex-1 font-mono text-xs text-amber-300 truncate bg-black/40 px-3 py-1.5 rounded border border-gray-800">
+                        {typeof window !== 'undefined' ? `${window.location.origin}/b/${selectedShopForDetails.slug || ''}` : `/b/${selectedShopForDetails.slug}`}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                              navigator.clipboard.writeText(`${window.location.origin}/b/${selectedShopForDetails.slug || ''}`)
+                              alert('Link copiado com sucesso!')
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded text-xs flex items-center gap-1 cursor-pointer transition"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copiar</span>
+                        </button>
+                        {selectedShopForDetails.slug && (
+                          <a
+                            href={`/b/${selectedShopForDetails.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded text-xs flex items-center gap-1 cursor-pointer transition"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Visualizar</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Edição rápida de slug */}
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
+                    <label className="block text-[11px] text-gray-400 mb-1 font-medium">
+                      Alterar Slug desta Unidade:
+                    </label>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <div className="flex items-center px-2.5 py-1.5 bg-black/50 border border-gray-800 rounded text-xs text-gray-500 font-mono select-none">
+                        /b/
+                      </div>
+                      <input
+                        type="text"
+                        value={slugEditValue}
+                        onChange={(e) => setSlugEditValue(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                        placeholder="ex: nova-unidade-vip"
+                        className="flex-1 px-3 py-1.5 bg-gray-950 border border-gray-700 rounded text-xs text-amber-400 font-mono focus:outline-none focus:border-amber-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleUpdateSlug}
+                        disabled={isUpdatingSlug || !slugEditValue.trim() || slugEditValue.trim() === selectedShopForDetails.slug}
+                        className="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded text-xs transition cursor-pointer disabled:opacity-50"
+                      >
+                        {isUpdatingSlug ? 'Salvando...' : 'Salvar Slug'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Card 2: Contrato & Vigência */}
               <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
@@ -1722,6 +1932,17 @@ export default function DeveloperDashboardPage() {
                       value={approvalFormData.phone}
                       onChange={(e) => handleApprovalInputChange('phone', e.target.value)}
                       className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 mb-1 font-medium">Slug do Link Público (/b/slug):</label>
+                    <input
+                      type="text"
+                      value={approvalFormData.slug}
+                      onChange={(e) => handleApprovalInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      placeholder="ex: barbearia-central"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-amber-400 focus:outline-none focus:border-amber-500 font-mono"
                     />
                   </div>
 

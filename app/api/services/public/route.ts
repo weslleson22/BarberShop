@@ -27,6 +27,14 @@ export async function GET(request: NextRequest) {
 
     const barbershopId = tenantResult.tenant.id
     
+    const shopIdParam = searchParams.get('barbershopId')
+    if (shopIdParam && shopIdParam !== barbershopId) {
+      return NextResponse.json(
+        { error: 'barbershopId conflitante com o tenant especificado' },
+        { status: 400 }
+      )
+    }
+    
     // Público só pode visualizar serviços que estejam ativos
     const where: any = {
       barbershopId,

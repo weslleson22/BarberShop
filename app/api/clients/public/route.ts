@@ -25,6 +25,14 @@ export async function GET(request: NextRequest) {
 
     const barbershopId = tenantResult.tenant.id
 
+    const shopIdParam = searchParams.get('barbershopId')
+    if (shopIdParam && shopIdParam !== barbershopId) {
+      return NextResponse.json(
+        { error: 'barbershopId conflitante com o tenant especificado' },
+        { status: 400 }
+      )
+    }
+
     // Bloqueio de segurança: NUNCA listar todos os clientes de forma pública
     if (!phone) {
       return NextResponse.json(
@@ -88,6 +96,13 @@ export async function POST(request: NextRequest) {
     }
 
     const barbershopId = tenantResult.tenant.id
+
+    if (bodyShopId && bodyShopId !== barbershopId) {
+      return NextResponse.json(
+        { error: 'barbershopId conflitante com o tenant especificado' },
+        { status: 400 }
+      )
+    }
 
     // 1. Se o usuário estiver autenticado, priorizar o Client já vinculado ao seu ID NESTA barbearia
     if (finalUserId) {

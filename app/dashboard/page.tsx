@@ -11,6 +11,7 @@ import TodayAppointments from '@/components/dashboard/TodayAppointments'
 import PopularServices from '@/components/dashboard/PopularServices'
 import FinanceSummary from '@/components/dashboard/FinanceSummary'
 import RecentClients from '@/components/dashboard/RecentClients'
+import PublicLinkCard from '@/components/dashboard/PublicLinkCard'
 import { getAuthHeaders } from '@/lib/utils'
 
 interface ClientAppointment {
@@ -120,6 +121,8 @@ function StaffDashboard() {
       <DropdownHeader />
 
       <div className="w-full px-4 md:px-6">
+        <PublicLinkCard />
+
         <div className="mb-6 md:mb-8">
           <StatsCards />
         </div>

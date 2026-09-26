@@ -1,6 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
+const mockNotFound = vi.fn().mockImplementation(() => {
+  throw new Error('NEXT_NOT_FOUND')
+})
+const mockRedirect = vi.fn().mockImplementation((url: string) => {
+  throw new Error(`NEXT_REDIRECT:${url}`)
+})
+
+vi.mock('next/navigation', () => ({
+  notFound: () => mockNotFound(),
+  redirect: (url: string) => mockRedirect(url),
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}))
+
 // Mocks
 vi.mock('@/lib/api-auth', () => ({
   getAuthUser: vi.fn(),
@@ -439,6 +453,172 @@ describe('PROVA DE CONCEITO E SEGURANÇA: Resolução de Tenant Público por Slu
       const data = await res.json()
       expect(data.id).toBe('created_apt_public_id')
       expect(data.barbershopId).toBe('shop_A')
+    })
+  })
+
+  describe('6. Páginas Públicas de Tenant (/b/[slug] e /b/[slug]/agendamento)', () => {
+    it('/b/barbearia-a: carrega e renderiza serviços e profissionais estritamente da Barbearia A', async () => {
+      ;(prisma.service.findMany as any).mockResolvedValue([
+        { id: 'srv_a1', name: 'Corte Alfa', price: 50, duration: 30, barbershopId: 'shop_A', isActive: true },
+      ])
+      ;(prisma.user.findMany as any).mockResolvedValue([
+        { id: 'barber_a1', name: 'Barbeiro Alfa', barbershopId: 'shop_A', role: 'BARBER', isActive: true },
+      ])
+
+      const { default: TenantPublicPage } = await import('@/app/b/[slug]/page')
+      const pageResult = await TenantPublicPage({ params: Promise.resolve({ slug: 'barbearia-a' }) })
+
+      expect(pageResult).toBeDefined()
+      expect(prisma.service.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ barbershopId: 'shop_A', isActive: true }),
+        })
+      )
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ barbershopId: 'shop_A', role: 'BARBER', isActive: true }),
+        })
+      )
+    })
+
+    it('/b/barbearia-b: carrega e renderiza serviços e profissionais estritamente da Barbearia B', async () => {
+      ;(prisma.service.findMany as any).mockResolvedValue([
+        { id: 'srv_b1', name: 'Corte Beta', price: 60, duration: 45, barbershopId: 'shop_B', isActive: true },
+      ])
+      ;(prisma.user.findMany as any).mockResolvedValue([
+        { id: 'barber_b1', name: 'Barbeiro Beta', barbershopId: 'shop_B', role: 'BARBER', isActive: true },
+      ])
+
+      const { default: TenantPublicPage } = await import('@/app/b/[slug]/page')
+      const pageResult = await TenantPublicPage({ params: Promise.resolve({ slug: 'barbearia-b' }) })
+
+      expect(pageResult).toBeDefined()
+      expect(prisma.service.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ barbershopId: 'shop_B', isActive: true }),
+        })
+      )
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ barbershopId: 'shop_B', role: 'BARBER', isActive: true }),
+        })
+      )
+    })
+
+    it('/b/slug-inexistente: dispara notFound (404) e nunca escolhe fallback', async () => {
+      const { default: TenantPublicPage } = await import('@/app/b/[slug]/page')
+      await expect(TenantPublicPage({ params: Promise.resolve({ slug: 'slug-inexistente' }) })).rejects.toThrow('NEXT_NOT_FOUND')
+      expect(mockNotFound).toHaveBeenCalled()
+    })
+
+    it('/b/barbearia-inativa: dispara notFound (404) quando a barbearia estiver inativa', async () => {
+      const { default: TenantPublicPage } = await import('@/app/b/[slug]/page')
+      await expect(TenantPublicPage({ params: Promise.resolve({ slug: 'barbearia-inativa' }) })).rejects.toThrow('NEXT_NOT_FOUND')
+      expect(mockNotFound).toHaveBeenCalled()
+    })
+
+    it('/b/barbearia-a/agendamento: valida tenant A e redireciona com slug explícito', async () => {
+      const { default: AgendamentoRedirectPage } = await import('@/app/b/[slug]/agendamento/page')
+      await expect(AgendamentoRedirectPage({ params: Promise.resolve({ slug: 'barbearia-a' }) })).rejects.toThrow('NEXT_REDIRECT:/agendar?slug=barbearia-a')
+      expect(mockRedirect).toHaveBeenCalledWith('/agendar?slug=barbearia-a')
+    })
+
+    it('/b/barbearia-b/agendamento: valida tenant B e redireciona com slug explícito', async () => {
+      const { default: AgendamentoRedirectPage } = await import('@/app/b/[slug]/agendamento/page')
+      await expect(AgendamentoRedirectPage({ params: Promise.resolve({ slug: 'barbearia-b' }) })).rejects.toThrow('NEXT_REDIRECT:/agendar?slug=barbearia-b')
+      expect(mockRedirect).toHaveBeenCalledWith('/agendar?slug=barbearia-b')
+    })
+
+    it('/b/slug-inexistente/agendamento: dispara notFound (404)', async () => {
+      const { default: AgendamentoRedirectPage } = await import('@/app/b/[slug]/agendamento/page')
+      await expect(AgendamentoRedirectPage({ params: Promise.resolve({ slug: 'slug-inexistente' }) })).rejects.toThrow('NEXT_NOT_FOUND')
+      expect(mockNotFound).toHaveBeenCalled()
+    })
+
+    it('/b/barbearia-inativa/agendamento: dispara notFound (404)', async () => {
+      const { default: AgendamentoRedirectPage } = await import('@/app/b/[slug]/agendamento/page')
+      await expect(AgendamentoRedirectPage({ params: Promise.resolve({ slug: 'barbearia-inativa' }) })).rejects.toThrow('NEXT_NOT_FOUND')
+      expect(mockNotFound).toHaveBeenCalled()
+    })
+  })
+
+  describe('7. Anti-Spoofing e Bloqueio de barbershopId Conflitante / Inconsistente', () => {
+    it('POST /api/appointments/public: rejeita com 400 se barbershopId no corpo conflitar com o slug', async () => {
+      const { POST } = await import('@/app/api/appointments/public/route')
+      const req = new NextRequest('http://localhost/api/appointments/public', {
+        method: 'POST',
+        body: JSON.stringify({
+          slug: 'barbearia-a',
+          barbershopId: 'shop_B', // Conflitante com slug 'barbearia-a' (que resolve para shop_A)
+          clientId: 'client_a',
+          barberId: 'barber_a1',
+          serviceId: 'srv_a1',
+          startTime: '2026-10-10T14:00:00Z',
+        }),
+      })
+
+      const res = await POST(req)
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain('barbershopId conflitante')
+    })
+
+    it('GET /api/appointments/public: rejeita com 400 se barbershopId na query conflitar com o slug', async () => {
+      const { GET } = await import('@/app/api/appointments/public/route')
+      const req = new NextRequest('http://localhost/api/appointments/public?slug=barbearia-a&barbershopId=shop_B')
+      const res = await GET(req)
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain('barbershopId conflitante')
+    })
+
+    it('GET /api/services/public: rejeita com 400 se barbershopId na query conflitar com o slug', async () => {
+      const { GET } = await import('@/app/api/services/public/route')
+      const req = new NextRequest('http://localhost/api/services/public?slug=barbearia-a&barbershopId=shop_B')
+      const res = await GET(req)
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain('barbershopId conflitante')
+    })
+
+    it('GET /api/users/public: rejeita com 400 se barbershopId na query conflitar com o slug', async () => {
+      const { GET } = await import('@/app/api/users/public/route')
+      const req = new NextRequest('http://localhost/api/users/public?role=BARBER&slug=barbearia-a&barbershopId=shop_B')
+      const res = await GET(req)
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain('barbershopId conflitante')
+    })
+
+    it('POST /api/clients/public: rejeita com 400 se barbershopId no corpo conflitar com o slug', async () => {
+      const { POST } = await import('@/app/api/clients/public/route')
+      const req = new NextRequest('http://localhost/api/clients/public', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Cliente Teste',
+          phone: '11988880000',
+          slug: 'barbearia-a',
+          barbershopId: 'shop_B',
+        }),
+      })
+
+      const res = await POST(req)
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain('barbershopId conflitante')
+    })
+
+    it('GET /api/public/tenant: rejeita com 400 se barbershopId na query conflitar com o slug', async () => {
+      const { GET } = await import('@/app/api/public/tenant/route')
+      const req = new NextRequest('http://localhost/api/public/tenant?slug=barbearia-a&barbershopId=shop_B')
+      const res = await GET(req)
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain('barbershopId conflitante')
     })
   })
 })

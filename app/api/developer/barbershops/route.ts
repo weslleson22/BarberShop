@@ -13,10 +13,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso restrito ao desenvolvedor da plataforma' }, { status: 403 })
     }
 
-    const barbershops = await prisma.barbershop.findMany({
+    let barbershops = await prisma.barbershop.findMany({
       select: {
         id: true,
         name: true,
+        slug: true,
         email: true,
         phone: true,
         address: true,
@@ -61,6 +62,46 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    // Auto-backfill: Se houver barbearia antiga cadastrada sem slug, gera automaticamente
+    const hasMissingSlugs = barbershops.some(b => !b.slug || !b.slug.trim())
+    if (hasMissingSlugs) {
+      const { backfillMissingSlugs } = await import('@/lib/tenant')
+      await backfillMissingSlugs()
+      // Atualiza os registros para entrega ao frontend
+      barbershops = await prisma.barbershop.findMany({
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          email: true,
+          phone: true,
+          address: true,
+          logo: true,
+          description: true,
+          isActive: true,
+          status: true,
+          contractExpiresAt: true,
+          createdAt: true,
+          updatedAt: true,
+          createdById: true,
+          creator: {
+            select: { id: true, name: true, email: true },
+          },
+          users: {
+            where: { role: 'ADMIN' },
+            select: { id: true, name: true, email: true, phone: true, role: true, isActive: true, createdAt: true },
+            take: 1,
+          },
+          _count: {
+            select: { users: true, clients: true, services: true },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      })
+    }
+
     return NextResponse.json(barbershops)
   } catch (error) {
     console.error('Developer barbershops GET error:', error)
@@ -85,6 +126,7 @@ export async function PATCH(request: NextRequest) {
       status,
       isActive,
       name,
+      slug,
       email,
       phone,
       address,
@@ -157,6 +199,25 @@ export async function PATCH(request: NextRequest) {
     if (address !== undefined) updateData.address = address ? address.trim() : null
     if (contractExpiresAt !== undefined) {
       updateData.contractExpiresAt = contractExpiresAt ? new Date(contractExpiresAt) : null
+    }
+
+    // Validação e atualização de slug pelo desenvolvedor
+    if (slug !== undefined) {
+      const { slugify } = await import('@/lib/tenant')
+      const cleanSlug = slugify(slug)
+      if (cleanSlug) {
+        const existingSlug = await prisma.barbershop.findFirst({
+          where: { slug: cleanSlug, id: { not: id } },
+          select: { id: true },
+        })
+        if (existingSlug) {
+          return NextResponse.json(
+            { error: `O slug "${cleanSlug}" já está em uso por outro estabelecimento.` },
+            { status: 400 }
+          )
+        }
+        updateData.slug = cleanSlug
+      }
     }
 
     // Se o desenvolvedor editar dados do administrador responsável
