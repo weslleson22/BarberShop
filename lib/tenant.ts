@@ -80,13 +80,13 @@ export async function resolvePublicTenant(
       }
     }
 
-    if (!shop.slug) {
-      const generated = await generateUniqueSlug(shop.name, shop.id)
+    if (!shopRecord.slug) {
+      const generated = await generateUniqueSlug(String(shopRecord.name || ''), String(shopRecord.id || ''))
       await prisma.barbershop.update({
-        where: { id: shop.id },
+        where: { id: String(shopRecord.id) },
         data: { slug: generated },
       }).catch(() => {})
-      ;(shop as any).slug = generated
+      shopRecord.slug = generated
     }
 
     return {

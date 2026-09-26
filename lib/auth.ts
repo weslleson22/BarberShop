@@ -195,6 +195,7 @@ export async function createUser(data: {
 
 export async function createBarbershop(data: {
   name: string
+  slug?: string
   email: string
   phone?: string
   address?: string
