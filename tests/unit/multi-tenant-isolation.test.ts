@@ -86,6 +86,16 @@ const mockAuth = getAuthUser as unknown as ReturnType<typeof vi.fn>
 describe('Isolamento Multi-Tenant e RBAC — Auditoria de Segurança', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    ;(prisma.barbershop.findFirst as any).mockImplementation((args: any) => {
+      const id = args?.where?.id || args?.where?.OR?.[0]?.id || 'shop_A'
+      return Promise.resolve({
+        id,
+        name: 'Mock Barbershop',
+        slug: 'mock-barbershop',
+        isActive: true,
+        status: 'APPROVED',
+      })
+    })
   })
 
   describe('1. Isolamento de Agendamentos (/api/appointments)', () => {

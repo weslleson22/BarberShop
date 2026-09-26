@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { criarAgendamento } from '@/lib/appointment-scheduler'
 import { getAuthUser } from '@/lib/api-auth'
 
+import { resolvePublicTenant } from '@/lib/tenant'
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -15,19 +17,22 @@ export const revalidate = 0
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    let barbershopId = searchParams.get('barbershopId')
+    let identifier = searchParams.get('slug') || searchParams.get('barbershopId')
     const barberId = searchParams.get('barberId')
 
-    if (!barbershopId) {
+    if (!identifier) {
       const authUser = getAuthUser(request)
       if (authUser?.barbershopId) {
-        barbershopId = authUser.barbershopId
+        identifier = authUser.barbershopId
       }
     }
 
-    if (!barbershopId) {
-      return NextResponse.json({ error: 'Barbearia não especificada' }, { status: 400 })
+    const tenantResult = await resolvePublicTenant(identifier)
+    if (!tenantResult.success) {
+      return NextResponse.json({ error: tenantResult.error }, { status: tenantResult.status })
     }
+
+    const barbershopId = tenantResult.tenant.id
 
     const where: any = {
       barbershopId,
@@ -67,22 +72,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { clientId, barberId, serviceId, startTime, notes, isVip, barbershopId: bodyShopId } = data
+    const { clientId, barberId, serviceId, startTime, notes, isVip, barbershopId: bodyShopId, slug: bodySlug } = data
 
-    let barbershopId = bodyShopId || null
-    if (!barbershopId) {
+    let identifier = bodySlug || bodyShopId || null
+    if (!identifier) {
       const authUser = getAuthUser(request)
       if (authUser?.barbershopId) {
-        barbershopId = authUser.barbershopId
+        identifier = authUser.barbershopId
       }
     }
 
-    if (!barbershopId) {
-      return NextResponse.json(
-        { error: 'Barbearia não especificada' },
-        { status: 400 }
-      )
+    const tenantResult = await resolvePublicTenant(identifier)
+    if (!tenantResult.success) {
+      return NextResponse.json({ error: tenantResult.error }, { status: tenantResult.status })
     }
+
+    const barbershopId = tenantResult.tenant.id
 
     // Cliente, serviço e barbeiro precisam pertencer a essa mesma barbearia — não
     // confiar que IDs enviados de tenants diferentes sejam aceitos

@@ -3,8 +3,18 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
+  allowedDevOrigins: ['192.168.*', 'localhost', '127.0.0.1'],
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   async headers() {
     return [

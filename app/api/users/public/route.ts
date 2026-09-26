@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/api-auth'
 
+import { resolvePublicTenant } from '@/lib/tenant'
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -12,7 +14,7 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
-    let barbershopId = searchParams.get('barbershopId')
+    let identifier = searchParams.get('slug') || searchParams.get('barbershopId')
     
     // Apenas permitir BARBER para uso público
     if (role && role !== 'BARBER') {
@@ -22,16 +24,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    if (!barbershopId) {
+    if (!identifier) {
       const authUser = getAuthUser(request)
       if (authUser?.barbershopId) {
-        barbershopId = authUser.barbershopId
+        identifier = authUser.barbershopId
       }
     }
 
-    if (!barbershopId) {
-      return NextResponse.json({ error: 'Barbearia não especificada' }, { status: 400 })
+    const tenantResult = await resolvePublicTenant(identifier)
+    if (!tenantResult.success) {
+      return NextResponse.json({ error: tenantResult.error }, { status: tenantResult.status })
     }
+
+    const barbershopId = tenantResult.tenant.id
     
     const where: any = {
       role: 'BARBER',

@@ -81,6 +81,15 @@ export default function AgendarPage() {
     }
   }, [mounted, user?.barbershopId])
 
+  const getTenantParam = () => {
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+    const slug = searchParams?.get('slug')
+    const shopId = user?.barbershopId || searchParams?.get('barbershopId')
+    if (slug) return `slug=${encodeURIComponent(slug)}`
+    if (shopId) return `barbershopId=${encodeURIComponent(shopId)}`
+    return null
+  }
+
   const fetchServices = async () => {
     try {
       console.log('=== BUSCANDO SERVIÇOS DO PRISMA PARA AGENDAMENTO ===')
@@ -88,9 +97,8 @@ export default function AgendarPage() {
       const authHeaders: Record<string, string> = {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       }
-      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
-      const url = shopId ? `/api/services/public?barbershopId=${encodeURIComponent(shopId)}` : '/api/services/public'
+      const tenantParam = getTenantParam()
+      const url = tenantParam ? `/api/services/public?${tenantParam}` : '/api/services/public'
 
       // Apenas serviços reais do Prisma via API pública filtrada por barbearia
       const response = await fetch(url, {
@@ -120,10 +128,9 @@ export default function AgendarPage() {
       const authHeaders: Record<string, string> = {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       }
-      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
-      const url = shopId
-        ? `/api/users/public?role=BARBER&barbershopId=${encodeURIComponent(shopId)}`
+      const tenantParam = getTenantParam()
+      const url = tenantParam
+        ? `/api/users/public?role=BARBER&${tenantParam}`
         : '/api/users/public?role=BARBER'
 
       const response = await fetch(url, {
@@ -155,9 +162,8 @@ export default function AgendarPage() {
       console.log('Data:', date)
       console.log('Serviço:', selectedService.name)
       
-      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
-      const aptUrl = `/api/appointments/public?barberId=${selectedBarber.id}&date=${date}${shopId ? `&barbershopId=${encodeURIComponent(shopId)}` : ''}`
+      const tenantParam = getTenantParam()
+      const aptUrl = `/api/appointments/public?barberId=${selectedBarber.id}&date=${date}${tenantParam ? `&${tenantParam}` : ''}`
 
       const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
       const authHeaders: Record<string, string> = {
@@ -262,6 +268,10 @@ export default function AgendarPage() {
         authHeaders['Authorization'] = `Bearer ${token}`
       }
 
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const slug = searchParams?.get('slug')
+      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
+
       // Criar ou buscar cliente
       const clientResponse = await fetch('/api/clients/public', {
         method: 'POST',
@@ -271,6 +281,8 @@ export default function AgendarPage() {
           ...clientData, 
           name: clientData.name.trim(),
           userId: user?.id,
+          slug,
+          barbershopId: shopId,
         }),
       })
 
@@ -278,8 +290,10 @@ export default function AgendarPage() {
       if (clientResponse.ok) {
         client = await clientResponse.json()
       } else {
-        // Se já existir, buscar por telefone
-        const searchResponse = await fetch(`/api/clients/public?phone=${encodeURIComponent(clientData.phone)}`, {
+        // Se já existir, buscar por telefone com o tenant correspondente
+        const tenantParam = getTenantParam()
+        const searchUrl = `/api/clients/public?phone=${encodeURIComponent(clientData.phone)}${tenantParam ? `&${tenantParam}` : ''}`
+        const searchResponse = await fetch(searchUrl, {
           headers: authHeaders,
           credentials: 'include',
         })
@@ -293,16 +307,14 @@ export default function AgendarPage() {
         throw new Error('Não foi possível criar/encontrar o cliente')
       }
 
-      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-      const shopId = user?.barbershopId || searchParams?.get('barbershopId')
-
       // Criar o agendamento usando a API pública com vinculação correta da barbearia
       const appointmentData = {
         clientId: client.id,
         barberId: selectedBarber.id,
         serviceId: selectedService.id,
         startTime: selectedTime.startTime,
-        barbershopId: shopId,
+        barbershopId: shopId || undefined,
+        slug: slug || undefined,
         notes: `Agendamento via site - Cliente: ${clientData.name}`,
       }
 

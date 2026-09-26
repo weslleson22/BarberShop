@@ -34,8 +34,8 @@ export default defineConfig({
     
     // Arquivos de teste
     include: process.env.DATABASE_URL_TEST
-      ? ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts']
-      : ['tests/unit/**/*.test.ts'],
+      ? ['tests/unit/**/*.{test.ts,test.tsx}', 'tests/integration/**/*.{test.ts,test.tsx}']
+      : ['tests/unit/**/*.{test.ts,test.tsx}'],
     
     // Setup files
     setupFiles: ['tests/setup.ts']

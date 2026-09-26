@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   // antes desta reestruturação; a única coisa protegendo as páginas até aqui
   // eram os redirects client-side dentro de cada página, que são
   // contornáveis e ainda deixam o conteúdo real piscar na tela.)
-  const publicPrefixes = ['/login', '/register', '/agendar', '/servicos']
+  const publicPrefixes = ['/login', '/register', '/agendar', '/servicos', '/b']
 
   // Rotas que precisam de autenticação (mas não necessariamente bloqueio por role)
   const authRequiredPaths = [

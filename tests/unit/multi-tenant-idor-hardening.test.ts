@@ -117,6 +117,16 @@ const devUser = { id: 'dev_user_id', name: 'Global Dev', email: 'dev@platform.co
 describe('AUDITORIA DE SEGURANÇA E ENDURECIMENTO MULTI-TENANT (IDOR & RBAC)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    ;(prisma.barbershop.findFirst as any).mockImplementation((args: any) => {
+      const id = args?.where?.id || args?.where?.OR?.[0]?.id || 'shop_A'
+      return Promise.resolve({
+        id,
+        name: 'Mock Barbershop',
+        slug: 'mock-barbershop',
+        isActive: true,
+        status: 'APPROVED',
+      })
+    })
   })
 
   describe('1. Defesa IDOR em Clientes (/api/clients/[id] e /api/clients)', () => {
