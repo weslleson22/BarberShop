@@ -39,6 +39,7 @@ model Barbershop {
   slugRedirects BarbershopSlugRedirect[]
   privacyRequests PrivacyRequest[]
   feedbacks     TenantFeedback[]
+  auditLogs     AuditLog[]
 
   @@map("barbershops")
 }
@@ -71,6 +72,7 @@ model User {
   notifications Notification[]
   privacyRequests PrivacyRequest[]
   feedbacks     TenantFeedback[]
+  auditLogs     AuditLog[]
 
   @@map("users")
 }
@@ -437,3 +439,133 @@ model TenantFeedback {
   @@map("tenant_feedbacks")
 }
 
+// ==========================================
+// DOMÍNIO DE AUDITORIA
+// Rastreamento de ações relevantes dos usuários
+// NUNCA registrar: senha, token, JWT, secrets
+// ==========================================
+
+model AuditLog {
+  id           String      @id @default(cuid())
+
+  // Quem realizou a ação (null = sistema/automatizado)
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Contexto Multi-Tenant (null = ação global, ex: DEVELOPER)
+  barbershopId String?
+  barbershop   Barbershop? @relation(fields: [barbershopId], references: [id], onDelete: SetNull)
+
+  // O que foi feito
+  action       AuditAction
+
+  // Em qual entidade
+  entity       AuditEntity
+  entityId     String?     // ID do registro afetado
+
+  // Contexto da requisição (nunca armazenar dados sensíveis)
+  ipAddress    String?     // IP do cliente (anonimizado se necessário)
+  userAgent    String?     // Browser/client info
+
+  // Dados adicionais relevantes (sanitizados — sem senha, token, JWT)
+  metadata     Json        @default("{}")
+
+  // Status da operação
+  success      Boolean     @default(true)
+  errorMessage String?     // Mensagem de erro, se houver
+
+  createdAt    DateTime    @default(now())
+
+  // Índices para consultas frequentes
+  @@index([userId, createdAt])
+  @@index([barbershopId, createdAt])
+  @@index([entity, entityId])
+  @@index([action, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+enum AuditAction {
+  // Autenticação
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  PASSWORD_CHANGED
+  PASSWORD_RESET_REQUESTED
+
+  // CRUD genérico
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+
+  // Agendamentos
+  APPOINTMENT_CREATED
+  APPOINTMENT_UPDATED
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_COMPLETED
+  APPOINTMENT_NO_SHOW
+
+  // Usuários e equipe
+  USER_INVITED
+  USER_ACTIVATED
+  USER_DEACTIVATED
+  USER_ROLE_CHANGED
+
+  // Clientes
+  CLIENT_CREATED
+  CLIENT_UPDATED
+  CLIENT_DELETED
+
+  // Serviços
+  SERVICE_CREATED
+  SERVICE_UPDATED
+  SERVICE_DELETED
+
+  // Assinatura/Billing
+  SUBSCRIPTION_CREATED
+  SUBSCRIPTION_ACTIVATED
+  SUBSCRIPTION_CANCELED
+  SUBSCRIPTION_SUSPENDED
+  TRIAL_STARTED
+  TRIAL_EXPIRED
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+
+  // LGPD
+  PRIVACY_REQUEST_CREATED
+  PRIVACY_REQUEST_PROCESSED
+  DATA_EXPORTED
+  DATA_DELETED
+
+  // Administração (DEVELOPER)
+  BARBERSHOP_APPROVED
+  BARBERSHOP_SUSPENDED
+  BARBERSHOP_CREATED
+  PLAN_CREATED
+  PLAN_UPDATED
+
+  // Webhooks
+  WEBHOOK_RECEIVED
+  WEBHOOK_PROCESSED
+  WEBHOOK_FAILED
+}
+
+enum AuditEntity {
+  USER
+  BARBERSHOP
+  CLIENT
+  SERVICE
+  APPOINTMENT
+  PAYMENT
+  SUBSCRIPTION
+  INVOICE
+  SUBSCRIPTION_EVENT
+  PLAN
+  NOTIFICATION
+  PRIVACY_REQUEST
+  TENANT_FEEDBACK
+  WEBHOOK
+  SYSTEM
+}

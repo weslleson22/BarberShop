@@ -115,6 +115,7 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             icon: Activity,
             items: [
               { title: "System Health & Métricas", url: "/developer/monitoring" },
+              { title: "Audit Logs", url: "/developer/audit-logs" },
             ],
           },
           {
@@ -129,6 +130,7 @@ export function getSidebarSections(role: UserRole): NavSection[] {
           },
         ],
       },
+
     ]
   }
 
