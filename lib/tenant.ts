@@ -6,6 +6,8 @@ export interface TenantInfo {
   slug: string | null
   isActive: boolean
   status: string
+  trialEndsAt?: Date | string | null
+  createdAt?: Date | string | null
   phone: string | null
   address: string | null
   logo: string | null
@@ -253,13 +255,71 @@ export async function updateBarbershopSlug(
 }
 
 /**
+ * Valida se um tenant está ativo e autorizado para atendimento/agendamento público.
+ * 
+ * Regra de Negócio:
+ * - A barbearia DEVE estar com isActive = true.
+ * - Se o status for 'APPROVED' ou 'ACTIVE', o acesso público é irrestrito.
+ * - Se o status for 'PENDING', 'AGUARDANDO_APROVACAO', 'TRIAL' ou 'LEAD',
+ *   a barbearia possui acesso garantido durante o período de testes (7 dias de trial).
+ *   Após a expiração dos 7 dias sem aprovação manual, o acesso é suspenso (404).
+ * - Se o status for 'REJECTED', 'SUSPENDED' ou 'CANCELED', o acesso público é bloqueado.
+ */
+export function isTenantPubliclyAccessible(shop: {
+  isActive: boolean
+  status?: string | null
+  trialEndsAt?: Date | string | null
+  createdAt?: Date | string | null
+}): boolean {
+  if (!shop.isActive) {
+    return false
+  }
+
+  const status = (shop.status || '').toUpperCase()
+
+  // Se não tiver status informado no banco legado, presume ativo se isActive = true
+  if (!status) {
+    return true
+  }
+
+  // Status liberados em produção
+  if (status === 'APPROVED' || status === 'ACTIVE') {
+    return true
+  }
+
+  // Status explicitamente bloqueados
+  if (['REJECTED', 'SUSPENDED', 'CANCELED'].includes(status)) {
+    return false
+  }
+
+  // Período de testes (Trial de 7 dias) para barbearias em processo de homologação / aguardando aprovação
+  if (['PENDING', 'AGUARDANDO_APROVACAO', 'TRIAL', 'LEAD'].includes(status)) {
+    const trialEndTime = shop.trialEndsAt
+      ? new Date(shop.trialEndsAt).getTime()
+      : shop.createdAt
+      ? new Date(shop.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000
+      : 0
+
+    // Se possui trial e ainda não expirou, permite acesso público normalmente
+    if (trialEndTime > 0 && Date.now() < trialEndTime) {
+      return true
+    }
+
+    // Trial expirado e continua pendente de aprovação manual
+    return false
+  }
+
+  return false
+}
+
+/**
  * Resolução e validação estrita de tenant público por slug ou id.
  * 
  * Regras Arquiteturais:
  * - O identificador (slug ou ID) DEVE ser explicitamente fornecido.
  * - NUNCA faz fallback para "primeira barbearia ativa" (findFirst({ isActive: true })).
  * - Suporta Redirect Controlado (HTTP 308) se o slug for antigo e pertencer a um redirect registrado.
- * - Valida se a barbearia existe, se está ativa (isActive = true) e aprovada (status = APPROVED).
+ * - Valida se a barbearia existe, se está ativa (isActive = true) e autorizada (status = APPROVED ou em trial ativo).
  * - Se inexistente ou inativa -> HTTP 404 (para não expor dados nem status interno).
  */
 export async function resolvePublicTenant(
@@ -292,6 +352,8 @@ export async function resolvePublicTenant(
         slug: true,
         isActive: true,
         status: true,
+        trialEndsAt: true,
+        createdAt: true,
         phone: true,
         address: true,
         logo: true,
@@ -300,8 +362,8 @@ export async function resolvePublicTenant(
     })
 
     if (shop) {
-      // Validar atividade do tenant
-      if (!shop.isActive || (shop.status && shop.status !== 'APPROVED')) {
+      // Validar atividade do tenant (incluindo contas em período de testes de 7 dias aguardando aprovação)
+      if (!isTenantPubliclyAccessible(shop)) {
         return {
           success: false,
           status: 404,
@@ -338,6 +400,8 @@ export async function resolvePublicTenant(
                 slug: true,
                 isActive: true,
                 status: true,
+                trialEndsAt: true,
+                createdAt: true,
                 phone: true,
                 address: true,
                 logo: true,
@@ -350,7 +414,7 @@ export async function resolvePublicTenant(
 
     if (redirectRecord?.barbershop) {
       const destinationShop = redirectRecord.barbershop
-      if (!destinationShop.isActive || (destinationShop.status && destinationShop.status !== 'APPROVED')) {
+      if (!isTenantPubliclyAccessible(destinationShop)) {
         return {
           success: false,
           status: 404,

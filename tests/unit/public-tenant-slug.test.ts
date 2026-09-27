@@ -104,6 +104,34 @@ const shopInactive = {
   description: 'Unidade desativada',
 }
 
+const shopPendingTrial = {
+  id: 'shop_Pending',
+  name: 'Barbearia Aguardando Aprovacao',
+  slug: 'barbearia-pending',
+  isActive: true,
+  status: 'PENDING',
+  trialEndsAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 dias de teste restantes
+  createdAt: new Date(),
+  phone: '11999990004',
+  address: 'Rua do Teste, 400',
+  logo: null,
+  description: 'Unidade em período de testes de 7 dias',
+}
+
+const shopTrialExpired = {
+  id: 'shop_Expired',
+  name: 'Barbearia Trial Expirado',
+  slug: 'barbearia-expirada',
+  isActive: true,
+  status: 'AGUARDANDO_APROVACAO',
+  trialEndsAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Expirado há 2 dias
+  createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+  phone: '11999990005',
+  address: 'Rua Expirada, 500',
+  logo: null,
+  description: 'Unidade com período de testes encerrado',
+}
+
 describe('PROVA DE CONCEITO E SEGURANÇA: Resolução de Tenant Público por Slug', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -129,12 +157,37 @@ describe('PROVA DE CONCEITO E SEGURANÇA: Resolução de Tenant Público por Slu
       if (identifier === 'barbearia-inativa' || identifier === 'shop_Inactive') {
         return Promise.resolve(shopInactive)
       }
+      if (identifier === 'barbearia-pending' || identifier === 'shop_Pending') {
+        return Promise.resolve(shopPendingTrial)
+      }
+      if (identifier === 'barbearia-expirada' || identifier === 'shop_Expired') {
+        return Promise.resolve(shopTrialExpired)
+      }
 
       return Promise.resolve(null)
     })
   })
 
   describe('1. Serviço Core resolvePublicTenant (lib/tenant.ts)', () => {
+    it('permite acesso público de barbearia com status PENDING dentro dos 7 dias de trial', async () => {
+      const result = await resolvePublicTenant('barbearia-pending')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.tenant.id).toBe('shop_Pending')
+        expect(result.tenant.slug).toBe('barbearia-pending')
+        expect(result.tenant.status).toBe('PENDING')
+      }
+    })
+
+    it('bloqueia com 404 barbearia que permaneceu em AGUARDANDO_APROVACAO após término dos 7 dias', async () => {
+      const result = await resolvePublicTenant('barbearia-expirada')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.status).toBe(404)
+        expect(result.error).toContain('temporariamente inativa ou suspensa')
+      }
+    })
+
     it('retorna os dados da Barbearia A quando consultado pelo slug "barbearia-a"', async () => {
       const result = await resolvePublicTenant('barbearia-a')
       expect(result.success).toBe(true)
