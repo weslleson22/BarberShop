@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, createBarbershop } from '@/lib/auth'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -66,6 +68,23 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      const ctx = extractRequestContext(request)
+      await createAuditLog({
+        userId: null,
+        barbershopId: result.barbershop.id,
+        action: AuditAction.BARBERSHOP_CREATED,
+        entity: AuditEntity.BARBERSHOP,
+        entityId: result.barbershop.id,
+        metadata: {
+          barbershopName: result.barbershop.name,
+          email: result.barbershop.email,
+          status: 'PENDING',
+          source: 'public_registration',
+        },
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      })
+
       // NÃO define cookie de autenticação, pois a conta está aguardando aprovação
       return NextResponse.json({
         success: true,
@@ -93,6 +112,22 @@ export async function POST(request: NextRequest) {
         phone: data.phone,
         barbershopId: data.barbershopId || null,
         role: 'CLIENT',
+      })
+
+      const ctx = extractRequestContext(request)
+      await createAuditLog({
+        userId: result.user.id,
+        barbershopId: result.user.barbershopId,
+        action: AuditAction.CLIENT_CREATED,
+        entity: AuditEntity.CLIENT,
+        entityId: result.user.id,
+        metadata: {
+          name: result.user.name,
+          email: result.user.email,
+          source: 'public_registration',
+        },
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
       })
 
       const response = NextResponse.json(result)

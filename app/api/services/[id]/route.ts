@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -77,6 +79,23 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         where: { id },
         data: { isActive: body.isActive },
       })
+
+      const ctx = extractRequestContext(request)
+      await createAuditLog({
+        userId: user.id,
+        barbershopId: existingService.barbershopId,
+        action: AuditAction.SERVICE_UPDATED,
+        entity: AuditEntity.SERVICE,
+        entityId: updatedService.id,
+        metadata: {
+          name: updatedService.name,
+          isActive: updatedService.isActive,
+          field: 'isActive',
+        },
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      })
+
       return NextResponse.json(updatedService)
     }
     
@@ -91,6 +110,23 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         duration: duration !== undefined ? parseInt(duration) : existingService.duration,
         isActive: isActive !== undefined ? isActive : existingService.isActive,
       },
+    })
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: user.id,
+      barbershopId: existingService.barbershopId,
+      action: AuditAction.SERVICE_UPDATED,
+      entity: AuditEntity.SERVICE,
+      entityId: updatedService.id,
+      metadata: {
+        name: updatedService.name,
+        price: updatedService.price,
+        duration: updatedService.duration,
+        isActive: updatedService.isActive,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
     })
 
     return NextResponse.json(updatedService)
@@ -147,6 +183,21 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
 
     await prisma.service.delete({
       where: { id },
+    })
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: user.id,
+      barbershopId: existingService.barbershopId,
+      action: AuditAction.SERVICE_DELETED,
+      entity: AuditEntity.SERVICE,
+      entityId: existingService.id,
+      metadata: {
+        name: existingService.name,
+        price: existingService.price,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
     })
 
     return NextResponse.json({ message: 'Serviço excluído com sucesso' })

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 const EMAIL_PATTERN = /^[a-z0-9._%+\-]+@[a-z0-9.-]+\.[a-z]{2,}$/
 
@@ -87,6 +89,18 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
       where: { id },
     })
 
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: decoded.id,
+      barbershopId: client.barbershopId,
+      action: AuditAction.CLIENT_DELETED,
+      entity: AuditEntity.CLIENT,
+      entityId: client.id,
+      metadata: { name: client.name, email: client.email },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
+
     return NextResponse.json({ message: 'Cliente excluído com sucesso' })
   } catch (error) {
     console.error('Delete client error:', error)
@@ -171,6 +185,18 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const client = await prisma.client.update({
       where: { id },
       data: updateData,
+    })
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: decoded.id,
+      barbershopId: client.barbershopId,
+      action: AuditAction.CLIENT_UPDATED,
+      entity: AuditEntity.CLIENT,
+      entityId: client.id,
+      metadata: { name: client.name, email: client.email, isVip: client.isVip, isActive: client.isActive },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
     })
 
     return NextResponse.json(client)

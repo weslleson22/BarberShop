@@ -202,6 +202,13 @@ export default function AuditLogsPage() {
   const sseRef = useRef<EventSource | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const seenIds = useRef<Set<string>>(new Set());
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isUnmountedRef = useRef(false);
+  const activeTabRef = useRef(activeTab);
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
 
   // Auth guard
   useEffect(() => {
@@ -241,18 +248,25 @@ export default function AuditLogsPage() {
 
   // ── Conexão SSE (Feed em tempo real) ───────────────────────
   const connectSSE = useCallback(() => {
+    if (isUnmountedRef.current) return;
     if (sseRef.current) {
       sseRef.current.close();
       sseRef.current = null;
     }
 
     setSseStatus("connecting");
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth-token") ?? "" : "";
+    // Suporte tanto para auth_token (padrão) quanto auth-token (legado)
+    const token = typeof window !== "undefined"
+      ? (localStorage.getItem("auth_token") || localStorage.getItem("auth-token") || "")
+      : "";
     const url = `/api/developer/audit-logs/stream${token ? `?token=${encodeURIComponent(token)}` : ""}`;
-    const es = new EventSource(url);
+    const es = new EventSource(url, { withCredentials: true });
     sseRef.current = es;
 
-    es.addEventListener("connected", () => setSseStatus("live"));
+    es.addEventListener("connected", () => {
+      setSseStatus("live");
+    });
+
     es.addEventListener("heartbeat", () => { /* keepalive — nada a fazer */ });
 
     es.addEventListener("logs", (e) => {
@@ -270,7 +284,7 @@ export default function AuditLogsPage() {
         });
 
         // Incrementar contador de novos se o feed não estiver visível
-        if (activeTab !== "feed" || document.hidden) {
+        if (activeTabRef.current !== "feed" || document.hidden) {
           setNewCount(c => c + incoming.length);
         }
       } catch { /* JSON parse error */ }
@@ -278,23 +292,64 @@ export default function AuditLogsPage() {
 
     es.addEventListener("reconnect", () => {
       es.close();
-      setTimeout(connectSSE, 2000);
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (!isUnmountedRef.current) connectSSE();
+      }, 500);
     });
 
     es.onerror = () => {
-      setSseStatus("error");
+      setSseStatus("connecting");
       es.close();
-      // Reconectar após 5s
-      setTimeout(connectSSE, 5000);
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      // Tenta reconectar após 3s
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (!isUnmountedRef.current) connectSSE();
+      }, 3000);
     };
-  }, [activeTab]);
+  }, []);
+
+  // ── Sincronização em segundo plano (Fallback & Garantia Real-Time) ──
+  const syncLatestLogs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/developer/audit-logs?limit=30&page=1", {
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data?.logs) && data.logs.length > 0) {
+        setFeed(prev => {
+          const map = new Map<string, AuditLogEntry>();
+          prev.forEach(item => map.set(item.id, item));
+          let hasNew = false;
+          data.logs.forEach((item: AuditLogEntry) => {
+            if (!map.has(item.id)) hasNew = true;
+            map.set(item.id, item);
+          });
+          if (!hasNew && prev.length > 0) return prev;
+          return Array.from(map.values())
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 250);
+        });
+      }
+    } catch { /* silencioso */ }
+  }, []);
 
   useEffect(() => {
+    isUnmountedRef.current = false;
     if (user?.role === "DEVELOPER") {
       connectSSE();
+      // Polling de redundância a cada 4 segundos garante dados frescos mesmo se o SSE oscilar
+      const interval = setInterval(syncLatestLogs, 4000);
+      return () => {
+        isUnmountedRef.current = true;
+        clearInterval(interval);
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+        sseRef.current?.close();
+      };
     }
-    return () => { sseRef.current?.close(); };
-  }, [user]);
+  }, [user, connectSSE, syncLatestLogs]);
 
   // Zerar contador ao ver o feed
   useEffect(() => {

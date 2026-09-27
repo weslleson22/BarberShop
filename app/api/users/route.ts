@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { ensureClientForUser } from '@/lib/client-sync'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -176,6 +178,23 @@ export async function POST(request: NextRequest) {
         console.error('Erro ao vincular Client ao usuário criado:', syncError)
       }
     }
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: admin.id,
+      barbershopId: user.barbershopId,
+      action: AuditAction.CREATE,
+      entity: AuditEntity.USER,
+      entityId: user.id,
+      metadata: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
 
     return NextResponse.json(user, { status: 201 })
   } catch (error) {

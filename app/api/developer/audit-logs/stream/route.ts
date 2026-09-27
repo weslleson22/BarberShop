@@ -4,18 +4,16 @@ import { getAuthUser, requireRole } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+export const maxDuration = 30 // Limite de 30s da função serverless Vercel
 
 /**
  * GET /api/developer/audit-logs/stream
  *
  * Server-Sent Events (SSE) endpoint para streaming em tempo real.
- * Compatível com Vercel serverless — usa polling curto no banco
- * com keepalive e reconexão automática pelo cliente.
+ * Compatível com Vercel serverless — ciclo de vida controlado (< 25s)
+ * com keepalive e reconexão graciosa sem timeouts 504.
  *
- * Protocolo:
- *   event: connected   → confirmação de conexão
- *   event: logs        → array de novos logs (JSON)
- *   event: heartbeat   → keepalive a cada 15s
+ * Headers anti-buffering para garantir push imediato no edge.
  */
 export async function GET(request: NextRequest) {
   const user = getAuthUser(request)
@@ -25,8 +23,8 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url)
   const sinceParam = searchParams.get('since')
-  // cursor = ID do log mais recente que o cliente já tem
-  let cursorId = sinceParam ?? null
+  let sinceDate: Date | null = sinceParam ? new Date(sinceParam) : null
+  if (sinceDate && isNaN(sinceDate.getTime())) sinceDate = null
 
   const encoder = new TextEncoder()
 
@@ -34,19 +32,26 @@ export async function GET(request: NextRequest) {
     return encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
   }
 
+  let isClosed = false
+
   const stream = new ReadableStream({
     async start(controller) {
-      // 1. Confirmação de conexão
+      // 1. Confirmação imediata de conexão
       controller.enqueue(encode('connected', { ok: true, ts: new Date().toISOString() }))
 
       const sentIds = new Set<string>()
-      let lastCreatedAt: Date | null = null
+      let lastCreatedAt: Date | null = sinceDate
 
-      // 2. Enviar logs recentes imediatamente (últimos 40 logs)
+      // 2. Enviar logs iniciais
       try {
+        const whereClause = sinceDate
+          ? { createdAt: { gt: sinceDate } }
+          : {}
+
         const initial = await prisma.auditLog.findMany({
+          where: whereClause,
           orderBy: { createdAt: 'desc' },
-          take: 40,
+          take: sinceDate ? 50 : 40,
           select: {
             id: true, action: true, entity: true, entityId: true,
             success: true, errorMessage: true, ipAddress: true,
@@ -56,8 +61,11 @@ export async function GET(request: NextRequest) {
             barbershop: { select: { id: true, name: true, slug: true } },
           },
         })
+
         if (initial.length > 0) {
           initial.forEach(l => sentIds.add(l.id))
+          // Ordena em ordem decrescente (mais recente primeiro)
+          initial.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           lastCreatedAt = initial[0].createdAt
           controller.enqueue(encode('logs', initial))
         }
@@ -65,32 +73,46 @@ export async function GET(request: NextRequest) {
         console.error('[SSE] initial fetch error:', err)
       }
 
-      // 3. Polling a cada 2.5s para novos registros
+      // 3. Polling a cada 2s para novos registros
+      // Vercel serverless maxDuration = 30s.
+      // Fechamos graciosamente aos ~20s para o cliente reconectar sem estourar 504.
       let pollCount = 0
-      const maxPolls = 70 // ~3min — limite de timeout serverless
+      const maxPolls = 10 // 10 * 2000ms = 20 segundos
 
       const poll = async () => {
+        if (isClosed) return
+
         if (pollCount >= maxPolls) {
-          controller.enqueue(encode('reconnect', { reason: 'timeout' }))
-          controller.close()
+          try {
+            controller.enqueue(encode('reconnect', { reason: 'refresh', lastTimestamp: lastCreatedAt?.toISOString() }))
+            controller.close()
+          } catch {
+            // Stream já encerrada
+          }
+          isClosed = true
           return
         }
         pollCount++
 
-        // Heartbeat a cada 15s (a cada 6 polls de 2.5s)
-        if (pollCount % 6 === 0) {
-          controller.enqueue(encode('heartbeat', { ts: new Date().toISOString() }))
+        // Heartbeat keepalive a cada 8s
+        if (pollCount % 4 === 0) {
+          try {
+            controller.enqueue(encode('heartbeat', { ts: new Date().toISOString() }))
+          } catch {
+            isClosed = true
+            return
+          }
         }
 
         try {
           const whereClause = lastCreatedAt
-            ? { createdAt: { gte: lastCreatedAt } }
+            ? { createdAt: { gt: lastCreatedAt } }
             : {}
 
-          const candidates = await prisma.auditLog.findMany({
+          const fresh = await prisma.auditLog.findMany({
             where: whereClause,
-            orderBy: { createdAt: 'asc' },
-            take: 50,
+            orderBy: { createdAt: 'desc' },
+            take: 30,
             select: {
               id: true, action: true, entity: true, entityId: true,
               success: true, errorMessage: true, ipAddress: true,
@@ -101,39 +123,44 @@ export async function GET(request: NextRequest) {
             },
           })
 
-          const fresh = candidates.filter(l => !sentIds.has(l.id))
-          if (fresh.length > 0) {
-            fresh.forEach(l => {
+          const unseen = fresh.filter(l => !sentIds.has(l.id))
+          if (unseen.length > 0) {
+            unseen.forEach(l => {
               sentIds.add(l.id)
               if (sentIds.size > 1000) {
                 const first = sentIds.values().next().value
                 if (first) sentIds.delete(first)
               }
             })
-            lastCreatedAt = fresh[fresh.length - 1].createdAt
-            controller.enqueue(encode('logs', fresh))
+            // O mais recente
+            lastCreatedAt = unseen[0].createdAt
+            controller.enqueue(encode('logs', unseen))
           }
         } catch (err) {
           console.error('[SSE] poll error:', err)
         }
 
-        setTimeout(poll, 2500)
+        if (!isClosed) {
+          setTimeout(poll, 2000)
+        }
       }
 
-      setTimeout(poll, 2500)
+      setTimeout(poll, 2000)
     },
     cancel() {
-      // Cliente desconectou — nada a fazer (sem state externo)
+      isClosed = true
     },
   })
 
   return new Response(stream, {
     headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform, no-store, must-revalidate',
       'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no', // Desabilita buffering no nginx/Vercel
+      'Content-Encoding': 'none',
+      'X-Accel-Buffering': 'no',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': 'true',
     },
   })
 }

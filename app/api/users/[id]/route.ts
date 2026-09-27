@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { ensureClientForUser } from '@/lib/client-sync'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -166,6 +168,29 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       }
     }
 
+    const ctx = extractRequestContext(request)
+    const action = (existingUser.role !== user.role)
+      ? AuditAction.USER_ROLE_CHANGED
+      : (existingUser.isActive !== user.isActive)
+      ? (user.isActive ? AuditAction.USER_ACTIVATED : AuditAction.USER_DEACTIVATED)
+      : AuditAction.UPDATE
+
+    await createAuditLog({
+      userId: admin.id,
+      barbershopId: user.barbershopId,
+      action,
+      entity: AuditEntity.USER,
+      entityId: user.id,
+      metadata: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
+
     return NextResponse.json(user)
   } catch (error) {
     console.error('Update user error:', error)
@@ -221,6 +246,22 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     }
 
     await prisma.user.delete({ where: { id } })
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: admin.id,
+      barbershopId: existingUser.barbershopId,
+      action: AuditAction.DELETE,
+      entity: AuditEntity.USER,
+      entityId: existingUser.id,
+      metadata: {
+        name: existingUser.name,
+        email: existingUser.email,
+        role: existingUser.role,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
 
     return NextResponse.json({
       message: 'Usuário excluído com sucesso',
