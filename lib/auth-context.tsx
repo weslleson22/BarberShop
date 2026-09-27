@@ -20,6 +20,15 @@ interface User {
   bio?: string
   createdAt?: string
   updatedAt?: string
+  barbershop?: {
+    id?: string
+    name?: string
+    slug?: string | null
+    logo?: string | null
+    isActive?: boolean
+    status?: string
+    trialEndsAt?: string | null
+  } | null
 }
 
 interface AuthContextType {

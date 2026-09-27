@@ -24,6 +24,8 @@ import {
   CheckCircle2,
   RefreshCw,
   Sparkles,
+  ImageIcon,
+  Trash2,
 } from 'lucide-react'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 
@@ -56,17 +58,19 @@ export default function ConfiguracoesPage() {
   const [avatarPreview, setAvatarPreview] = useState('')
   const [originalAvatar, setOriginalAvatar] = useState('')
 
-  // Dados da Barbearia & Slug
+  // Dados da Barbearia & Slug & Logo
   const [isShopFetching, setIsShopFetching] = useState(false)
   const [isShopSaving, setIsShopSaving] = useState(false)
   const [shopFeedback, setShopFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [copiedType, setCopiedType] = useState<'main' | 'booking' | null>(null)
   const [origin, setOrigin] = useState('')
+  const [logoPreview, setLogoPreview] = useState('')
 
   const [shopData, setShopData] = useState({
     id: '',
     name: '',
     slug: '',
+    logo: '',
     email: '',
     phone: '',
     address: '',
@@ -75,6 +79,7 @@ export default function ConfiguracoesPage() {
   const [originalShopData, setOriginalShopData] = useState({
     name: '',
     slug: '',
+    logo: '',
     phone: '',
     address: '',
     description: '',
@@ -144,6 +149,7 @@ export default function ConfiguracoesPage() {
           id: data.id || '',
           name: data.name || '',
           slug: data.slug || '',
+          logo: data.logo || '',
           email: data.email || '',
           phone: data.phone || '',
           address: data.address || '',
@@ -152,16 +158,41 @@ export default function ConfiguracoesPage() {
         setOriginalShopData({
           name: data.name || '',
           slug: data.slug || '',
+          logo: data.logo || '',
           phone: data.phone || '',
           address: data.address || '',
           description: data.description || '',
         })
+        setLogoPreview(data.logo || '')
       }
     } catch (error) {
       console.error('Erro ao carregar dados da barbearia:', error)
     } finally {
       setIsShopFetching(false)
     }
+  }
+
+  // Upload e manipulação da logo da barbearia
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('A imagem da logo deve ter no máximo 5MB.')
+        return
+      }
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64 = reader.result as string
+        setLogoPreview(base64)
+        setShopData((prev) => ({ ...prev, logo: base64 }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveLogo = () => {
+    setLogoPreview('')
+    setShopData((prev) => ({ ...prev, logo: '' }))
   }
 
   useEffect(() => {
@@ -298,6 +329,8 @@ export default function ConfiguracoesPage() {
       if (shopData.address !== originalShopData.address) payload.address = shopData.address.trim()
       if (shopData.description !== originalShopData.description)
         payload.description = shopData.description.trim()
+      if (shopData.logo !== originalShopData.logo)
+        payload.logo = shopData.logo ? shopData.logo.trim() : null
 
       if (Object.keys(payload).length === 0) {
         setShopFeedback({ type: 'success', text: 'Nenhuma alteração detectada.' })
@@ -321,6 +354,7 @@ export default function ConfiguracoesPage() {
         ...prev,
         name: data.name || prev.name,
         slug: data.slug || prev.slug,
+        logo: data.logo || '',
         phone: data.phone || '',
         address: data.address || '',
         description: data.description || '',
@@ -329,14 +363,28 @@ export default function ConfiguracoesPage() {
       setOriginalShopData({
         name: data.name || '',
         slug: data.slug || '',
+        logo: data.logo || '',
         phone: data.phone || '',
         address: data.address || '',
         description: data.description || '',
       })
+      setLogoPreview(data.logo || '')
+
+      if (user && updateUser) {
+        updateUser({
+          barbershop: {
+            ...(user.barbershop || { id: data.id, name: data.name }),
+            id: data.id,
+            name: data.name,
+            slug: data.slug,
+            logo: data.logo,
+          },
+        })
+      }
 
       setShopFeedback({
         type: 'success',
-        text: 'Informações da barbearia e link público salvos com sucesso!',
+        text: 'Informações da barbearia, logo e link público salvos com sucesso!',
       })
     } catch (err: any) {
       setShopFeedback({
@@ -740,6 +788,83 @@ export default function ConfiguracoesPage() {
                               destes links é gravado exclusivamente na sua barbearia. Seus clientes nunca veem dados ou
                               serviços de outros estabelecimentos.
                             </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Seção: Logo da Barbearia & Identidade Visual */}
+                      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-xl p-6 sm:p-8">
+                        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                              <ImageIcon className="w-5 h-5 text-yellow-400" />
+                              Logo da Barbearia & Identidade Visual
+                            </h3>
+                            <p className="text-xs text-white/60 mt-0.5">
+                              Esta logo é exibida na sua página pública de clientes (/b/{shopData.slug || 'sua-barbearia'}), na barra lateral do painel e no onboarding.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-6">
+                          <div className="relative group">
+                            <div className="w-28 h-28 rounded-2xl bg-black/60 border-2 border-dashed border-yellow-500/40 flex items-center justify-center overflow-hidden shadow-xl shadow-black/60 group-hover:border-yellow-400 transition-all">
+                              {logoPreview ? (
+                                <img
+                                  src={logoPreview}
+                                  alt="Logo da Barbearia"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex flex-col items-center justify-center text-white/40 gap-1.5 p-2 text-center">
+                                  <Building2 className="w-8 h-8 text-yellow-400/60" />
+                                  <span className="text-[10px] font-medium text-white/50">Sem logo cadastrada</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <label className="absolute bottom-1 right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl p-2 cursor-pointer hover:from-yellow-500 hover:to-yellow-700 transition-all shadow-md shadow-black/50 text-black">
+                              <Camera className="w-4 h-4" />
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                onChange={handleLogoChange}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="flex-1 text-center sm:text-left space-y-3">
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-white">Upload da Marca</h4>
+                              <p className="text-xs text-white/60">
+                                Formatos aceitos: PNG, JPG, WebP ou SVG (máx. 5MB). Recomendamos imagens quadradas com fundo transparente ou escuro.
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                              <label className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-2 shadow-md shadow-yellow-500/20">
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>{logoPreview ? 'Alterar Logo' : 'Enviar Nova Logo'}</span>
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                  onChange={handleLogoChange}
+                                />
+                              </label>
+
+                              {logoPreview && (
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveLogo}
+                                  className="px-3.5 py-2 bg-white/5 hover:bg-red-500/20 text-white/70 hover:text-red-300 border border-white/10 hover:border-red-500/30 font-medium rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                  <span>Remover Logo</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

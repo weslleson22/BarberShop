@@ -46,6 +46,8 @@ export async function authenticateUser(email: string, password: string) {
         select: {
           id: true,
           name: true,
+          slug: true,
+          logo: true,
           isActive: true,
           status: true,
           trialEndsAt: true,

@@ -22,7 +22,12 @@ import {
   Copy,
   Check,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Upload,
+  Camera,
+  Trash2,
+  X,
+  AlertCircle
 } from 'lucide-react'
 
 interface OnboardingStep {
@@ -32,11 +37,12 @@ interface OnboardingStep {
   completed: boolean
   actionText: string
   actionUrl: string
+  onClick?: () => void
   icon: any
 }
 
 export default function OnboardingPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, updateUser, loading: authLoading } = useAuth()
   const router = useRouter()
 
   const [loading, setLoading] = useState(true)
@@ -45,6 +51,13 @@ export default function OnboardingPage() {
   const [servicesCount, setServicesCount] = useState(0)
   const [barbersCount, setBarbersCount] = useState(0)
   const [appointmentsCount, setAppointmentsCount] = useState(0)
+
+  // Estados do Modal de Upload de Logo
+  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false)
+  const [logoPreview, setLogoPreview] = useState('')
+  const [isSavingLogo, setIsSavingLogo] = useState(false)
+  const [logoError, setLogoError] = useState('')
+  const [logoSuccess, setLogoSuccess] = useState('')
 
   useEffect(() => {
     if (!authLoading && user?.role === 'DEVELOPER') {
@@ -104,6 +117,143 @@ export default function OnboardingPage() {
     setTimeout(() => setCopied(false), 2500)
   }
 
+  const handleOpenLogoModal = () => {
+    setLogoPreview(barbershop?.logo || '')
+    setLogoError('')
+    setLogoSuccess('')
+    setIsLogoModalOpen(true)
+  }
+
+  const handleLogoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setLogoError('')
+    setLogoSuccess('')
+
+    if (!file.type.startsWith('image/')) {
+      setLogoError('Por favor, selecione um arquivo de imagem válido (PNG, JPG, WebP ou SVG).')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setLogoError('O tamanho da imagem não pode ultrapassar 5MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleSaveLogo = async () => {
+    if (!logoPreview) {
+      setLogoError('Por favor, selecione uma imagem para a logo.')
+      return
+    }
+
+    setIsSavingLogo(true)
+    setLogoError('')
+    setLogoSuccess('')
+
+    try {
+      const response = await fetch('/api/barbershop', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({
+          logo: logoPreview,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao enviar a logo.')
+      }
+
+      setBarbershop((prev: any) => ({
+        ...prev,
+        logo: data.logo,
+      }))
+
+      if (user && updateUser) {
+        updateUser({
+          barbershop: {
+            ...(user.barbershop || { id: data.id, name: data.name }),
+            id: data.id,
+            name: data.name,
+            slug: data.slug,
+            logo: data.logo,
+          },
+        })
+      }
+
+      setLogoSuccess('Logo enviada e apresentada no sistema com sucesso!')
+      setTimeout(() => {
+        setIsLogoModalOpen(false)
+        setLogoSuccess('')
+      }, 1000)
+    } catch (err: any) {
+      setLogoError(err.message || 'Erro ao salvar a logo da barbearia.')
+    } finally {
+      setIsSavingLogo(false)
+    }
+  }
+
+  const handleRemoveLogo = async () => {
+    setIsSavingLogo(true)
+    setLogoError('')
+    setLogoSuccess('')
+
+    try {
+      const response = await fetch('/api/barbershop', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({
+          logo: null,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Erro ao remover a logo.')
+      }
+
+      setLogoPreview('')
+      setBarbershop((prev: any) => ({
+        ...prev,
+        logo: null,
+      }))
+
+      if (user && updateUser) {
+        updateUser({
+          barbershop: {
+            ...(user.barbershop || {}),
+            logo: null,
+          },
+        })
+      }
+
+      setLogoSuccess('Logo removida com sucesso.')
+      setTimeout(() => {
+        setIsLogoModalOpen(false)
+        setLogoSuccess('')
+      }, 1000)
+    } catch (err: any) {
+      setLogoError(err.message || 'Erro ao remover a logo.')
+    } finally {
+      setIsSavingLogo(false)
+    }
+  }
+
   // Evaluate 8 core setup steps
   const hasBasicInfo = Boolean(barbershop?.name && barbershop?.phone)
   const hasLogo = Boolean(barbershop?.logo)
@@ -130,7 +280,8 @@ export default function OnboardingPage() {
       description: 'Adicione a identidade visual da sua marca na página pública e no painel.',
       completed: hasLogo,
       actionText: hasLogo ? 'Alterar logo' : 'Enviar logo',
-      actionUrl: '/configuracoes',
+      actionUrl: '#',
+      onClick: handleOpenLogoModal,
       icon: ImageIcon,
     },
     {
@@ -200,15 +351,26 @@ export default function OnboardingPage() {
       <main className="w-full px-4 md:px-8 max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase mb-1">
-              <Sparkles className="w-4 h-4" />
-              <span>Guia de Implantação</span>
+          <div className="flex items-center gap-4">
+            {barbershop?.logo && (
+              <div className="w-14 h-14 rounded-2xl overflow-hidden border border-primary/30 shadow-md shrink-0 bg-muted/40 hidden sm:block">
+                <img
+                  src={barbershop.logo}
+                  alt={barbershop.name || 'Logo'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase mb-1">
+                <Sparkles className="w-4 h-4" />
+                <span>{barbershop?.name ? `Guia de Implantação • ${barbershop.name}` : 'Guia de Implantação'}</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Onboarding da Sua Barbearia</h1>
+              <p className="text-muted-foreground text-sm md:text-base mt-1">
+                Complete as etapas essenciais para começar a receber agendamentos online hoje mesmo.
+              </p>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Onboarding da Sua Barbearia</h1>
-            <p className="text-muted-foreground text-sm md:text-base mt-1">
-              Complete as etapas essenciais para começar a receber agendamentos online hoje mesmo.
-            </p>
           </div>
 
           <button
@@ -314,23 +476,177 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
+                {/* Thumbnail da logo no step 2 se cadastrada */}
+                {step.id === 2 && barbershop?.logo && (
+                  <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-primary/40 shadow-sm shrink-0 hidden sm:block bg-muted">
+                    <img
+                      src={barbershop.logo}
+                      alt="Logo da barbearia"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
                 <div className="flex items-center justify-end shrink-0 sm:pl-4">
-                  <Link
-                    href={step.actionUrl}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all shadow-sm ${
-                      step.completed
-                        ? 'border border-border bg-muted/40 hover:bg-muted text-foreground'
-                        : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-                    }`}
-                  >
-                    <span>{step.actionText}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
+                  {step.onClick ? (
+                    <button
+                      type="button"
+                      onClick={step.onClick}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all shadow-sm cursor-pointer ${
+                        step.completed
+                          ? 'border border-border bg-muted/40 hover:bg-muted text-foreground'
+                          : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                      }`}
+                    >
+                      <span>{step.actionText}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <Link
+                      href={step.actionUrl}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all shadow-sm ${
+                        step.completed
+                          ? 'border border-border bg-muted/40 hover:bg-muted text-foreground'
+                          : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                      }`}
+                    >
+                      <span>{step.actionText}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  )}
                 </div>
               </div>
             )
           })}
         </div>
+
+        {/* Modal de Upload de Logo da Barbearia */}
+        {isLogoModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+              {/* Header do Modal */}
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-foreground">Logo da Barbearia</h3>
+                    <p className="text-xs text-muted-foreground">Identidade visual do seu estabelecimento</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsLogoModalOpen(false)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Mensagens de Feedback */}
+              {logoError && (
+                <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-red-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                  <span>{logoError}</span>
+                </div>
+              )}
+              {logoSuccess && (
+                <div className="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{logoSuccess}</span>
+                </div>
+              )}
+
+              {/* Área de Preview e Upload */}
+              <div className="flex flex-col items-center justify-center gap-4 py-2">
+                <div className="relative group w-32 h-32 rounded-2xl bg-muted/40 border-2 border-dashed border-border group-hover:border-primary flex items-center justify-center overflow-hidden shadow-lg transition-all">
+                  {logoPreview ? (
+                    <img
+                      src={logoPreview}
+                      alt="Preview da Logo"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground text-center p-3">
+                      <Upload className="w-7 h-7 text-muted-foreground/60" />
+                      <span className="text-[11px]">Nenhuma logo selecionada</span>
+                    </div>
+                  )}
+
+                  <label className="absolute bottom-2 right-2 p-2 rounded-xl bg-primary text-primary-foreground shadow-md hover:opacity-90 transition cursor-pointer">
+                    <Camera className="w-4 h-4" />
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={handleLogoFileSelect}
+                    />
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-border bg-muted/50 hover:bg-muted text-foreground text-xs font-medium cursor-pointer transition">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Selecionar imagem</span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={handleLogoFileSelect}
+                    />
+                  </label>
+
+                  {logoPreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      disabled={isSavingLogo}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-destructive/30 hover:bg-destructive/10 text-destructive text-xs font-medium transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remover</span>
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-muted-foreground text-center max-w-xs">
+                  Formatos aceitos: PNG, JPG, WebP ou SVG (máx. 5MB). Aparecerá no seu link público /b/{barbershop?.slug || 'slug'}, na barra lateral e em todo o sistema.
+                </p>
+              </div>
+
+              {/* Rodapé do Modal */}
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setIsLogoModalOpen(false)}
+                  disabled={isSavingLogo}
+                  className="px-4 py-2 rounded-xl border border-border text-xs font-medium hover:bg-muted transition text-foreground cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveLogo}
+                  disabled={isSavingLogo || !logoPreview}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition shadow-sm disabled:opacity-50 cursor-pointer"
+                >
+                  {isSavingLogo ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Salvando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Salvar Logo</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

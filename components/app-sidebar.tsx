@@ -86,7 +86,7 @@ export {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -103,6 +103,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Contexto da Barbearia para o Header
   const organizationContext = React.useMemo(() => getOrganizationContext(role), [role])
   const OrgIcon = organizationContext.icon
+  const shopName = (role !== 'DEVELOPER' && user?.barbershop?.name) ? user.barbershop.name : organizationContext.name
+  const shopLogo = (role !== 'DEVELOPER' && user?.barbershop?.logo) ? user.barbershop.logo : null
+
+  // Sincronização suave de dados da barbearia se usuário possuir barbershopId
+  React.useEffect(() => {
+    if (user?.barbershopId && !user.barbershop?.logo && user.role !== 'DEVELOPER') {
+      fetch('/api/barbershop')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((shop) => {
+          if (shop && (shop.logo || shop.name)) {
+            updateUser({
+              barbershop: {
+                ...(user.barbershop || {}),
+                id: shop.id,
+                name: shop.name,
+                slug: shop.slug,
+                logo: shop.logo,
+              },
+            })
+          }
+        })
+        .catch(() => {})
+    }
+  }, [user?.barbershopId, user?.barbershop?.logo, user?.role, updateUser])
 
   // Função para verificar se a rota está ativa
   const isRouteActive = (url?: string) => {
@@ -133,12 +157,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:!p-0"
                 >
-                  <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 text-black shadow-md shadow-amber-500/20">
-                    <OrgIcon className="size-5 font-bold" />
-                  </div>
+                  {shopLogo ? (
+                    <div className="flex aspect-square size-9 items-center justify-center rounded-lg overflow-hidden border border-amber-500/30 bg-black/50 shadow-md shadow-amber-500/10">
+                      <img src={shopLogo} alt={shopName} className="size-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 text-black shadow-md shadow-amber-500/20">
+                      <OrgIcon className="size-5 font-bold" />
+                    </div>
+                  )}
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold text-sidebar-foreground">
-                      {organizationContext.name}
+                      {shopName}
                     </span>
                     <span className="truncate text-xs text-sidebar-foreground/70">
                       {organizationContext.subtitle}
@@ -157,11 +187,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   Contexto Ativo
                 </DropdownMenuLabel>
                 <DropdownMenuItem className="gap-2 p-2 focus:bg-accent focus:text-accent-foreground">
-                  <div className="flex size-6 items-center justify-center rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-400">
-                    <OrgIcon className="size-3.5" />
-                  </div>
-                  <div className="font-medium text-xs">
-                    {organizationContext.name}
+                  {shopLogo ? (
+                    <div className="flex size-6 items-center justify-center rounded-md border border-amber-500/40 overflow-hidden bg-black/40">
+                      <img src={shopLogo} alt={shopName} className="size-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="flex size-6 items-center justify-center rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-400">
+                      <OrgIcon className="size-3.5" />
+                    </div>
+                  )}
+                  <div className="font-medium text-xs truncate">
+                    {shopName}
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
