@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser, requireRole } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== "DEVELOPER") {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    const user = getAuthUser(request);
+    if (!requireRole(user, ["DEVELOPER"])) {
+      return NextResponse.json({ error: "Acesso restrito ao desenvolvedor da plataforma" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
