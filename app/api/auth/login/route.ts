@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateUser } from '@/lib/auth'
 import { ensureClientForUser } from '@/lib/client-sync'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -19,6 +21,16 @@ export async function POST(request: NextRequest) {
     const result = await authenticateUser(email, password)
 
     if (!result) {
+      const ctx = extractRequestContext(request)
+      await createAuditLog({
+        action: AuditAction.LOGIN_FAILED,
+        entity: AuditEntity.USER,
+        success: false,
+        errorMessage: 'Email ou senha incorretos',
+        metadata: { email },
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      })
       return NextResponse.json(
         { error: 'Email ou senha incorretos' },
         { status: 401 }
@@ -39,6 +51,19 @@ export async function POST(request: NextRequest) {
         console.error('Erro ao sincronizar Client no login:', syncErr)
       }
     }
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: result.user.id,
+      barbershopId: result.user.barbershopId ?? null,
+      action: AuditAction.LOGIN,
+      entity: AuditEntity.USER,
+      entityId: result.user.id,
+      success: true,
+      metadata: { role: result.user.role, email: result.user.email },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
 
     const response = NextResponse.json(result)
     response.cookies.set('auth-token', result.token, {

@@ -27,6 +27,12 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/configuracoes': { title: 'Configurações', subtitle: 'Preferências da Conta' },
   '/perfil': { title: 'Meu Perfil', subtitle: 'Dados Pessoais & Unidade' },
   '/developer': { title: 'Painel SaaS', subtitle: 'Gestão Global de Barbearias' },
+  '/developer/audit-logs': { title: 'Audit Logs', subtitle: 'Rastreamento de Ações do Sistema' },
+  '/developer/monitoring': { title: 'Monitoramento', subtitle: 'System Health & Telemetria' },
+  '/developer/backup': { title: 'Backup & Restore', subtitle: 'Gestão de Dados' },
+  '/developer/billing': { title: 'Faturamento', subtitle: 'Assinaturas & Receita' },
+  '/developer/plans': { title: 'Planos', subtitle: 'Tiers & Configuração' },
+  '/developer/onboarding': { title: 'Cockpit Onboarding', subtitle: 'Gestão de Novos Tenants' },
   '/meus-agendamentos': { title: 'Meus Agendamentos', subtitle: 'Histórico & Próximos Atendimentos' },
   '/agendar': { title: 'Novo Agendamento', subtitle: 'Reserva de Horários' },
 }

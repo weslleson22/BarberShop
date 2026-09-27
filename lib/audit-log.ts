@@ -138,7 +138,7 @@ export async function createAuditLog(
         userAgent: input.userAgent
           ? input.userAgent.substring(0, 500)
           : null,
-        metadata: sanitizedMetadata,
+        metadata: sanitizedMetadata as import("@prisma/client").Prisma.InputJsonValue,
         success: input.success ?? true,
         errorMessage: input.errorMessage ?? null,
       },
