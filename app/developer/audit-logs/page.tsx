@@ -152,6 +152,144 @@ function UserAvatar({ user, size = "sm" }: { user: AuditLogEntry["user"]; size?:
   );
 }
 
+// ── Helpers de Formatação estilo Vercel (Request & Messages) ──────
+
+function getLogRequest(log: AuditLogEntry): { method: string; path: string; full: string } {
+  const meta = (log.metadata as Record<string, unknown>) || {};
+  let method = typeof meta.method === "string" ? meta.method.toUpperCase() : "";
+  let path = typeof meta.path === "string" ? meta.path : "";
+
+  if (!path && typeof meta.route === "string") {
+    path = meta.route;
+  }
+
+  // Fallback inteligente para registros sem path explícito
+  if (!method || !path) {
+    switch (log.action) {
+      case "LOGIN":
+      case "LOGIN_FAILED":
+        method = "POST";
+        path = "/api/auth/login";
+        break;
+      case "LOGOUT":
+        method = "POST";
+        path = "/api/auth/logout";
+        break;
+      case "CLIENT_CREATED":
+        method = "POST";
+        path = "/api/clients";
+        break;
+      case "CLIENT_UPDATED":
+        method = "PUT";
+        path = log.entityId ? `/api/clients/${log.entityId.slice(0, 8)}` : "/api/clients";
+        break;
+      case "CLIENT_DELETED":
+        method = "DELETE";
+        path = log.entityId ? `/api/clients/${log.entityId.slice(0, 8)}` : "/api/clients";
+        break;
+      case "SERVICE_CREATED":
+        method = "POST";
+        path = "/api/services";
+        break;
+      case "SERVICE_UPDATED":
+        method = "PUT";
+        path = log.entityId ? `/api/services/${log.entityId.slice(0, 8)}` : "/api/services";
+        break;
+      case "SERVICE_DELETED":
+        method = "DELETE";
+        path = log.entityId ? `/api/services/${log.entityId.slice(0, 8)}` : "/api/services";
+        break;
+      case "APPOINTMENT_CREATED":
+        method = "POST";
+        path = "/api/appointments";
+        break;
+      case "APPOINTMENT_UPDATED":
+        method = "PUT";
+        path = log.entityId ? `/api/appointments/${log.entityId.slice(0, 8)}` : "/api/appointments";
+        break;
+      case "APPOINTMENT_CANCELLED":
+        method = "DELETE";
+        path = log.entityId ? `/api/appointments/${log.entityId.slice(0, 8)}` : "/api/appointments";
+        break;
+      case "BARBERSHOP_CREATED":
+        method = "POST";
+        path = "/api/auth/register";
+        break;
+      case "BARBERSHOP_APPROVED":
+      case "BARBERSHOP_SUSPENDED":
+        method = "PATCH";
+        path = "/api/developer/barbershops";
+        break;
+      case "CREATE":
+        method = "POST";
+        path = log.entity === "SYSTEM" ? "/api/developer/backup" : `/api/${log.entity.toLowerCase()}`;
+        break;
+      case "VIEW":
+        method = "GET";
+        path = path || (log.entity === "SYSTEM" ? "/dashboard" : `/${log.entity.toLowerCase()}`);
+        break;
+      default:
+        method = log.action.includes("CREATE") ? "POST" : log.action.includes("DELETE") ? "DELETE" : log.action.includes("UPDATE") ? "PUT" : "GET";
+        path = `/api/${log.entity.toLowerCase()}${log.entityId ? `/${log.entityId.slice(0, 8)}` : ""}`;
+    }
+  }
+
+  return { method, path, full: `${method} ${path}` };
+}
+
+function getMethodBadge(method: string) {
+  switch (method) {
+    case "GET":
+      return "bg-sky-500/10 text-sky-400 border-sky-500/30";
+    case "POST":
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+    case "PUT":
+      return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+    case "PATCH":
+      return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+    case "DELETE":
+      return "bg-rose-500/10 text-rose-400 border-rose-500/30";
+    default:
+      return "bg-card text-muted-foreground border-border";
+  }
+}
+
+function getLogStatus(log: AuditLogEntry): { code: number; text: string; color: string; bg: string; border: string } {
+  const meta = (log.metadata as Record<string, unknown>) || {};
+  let code = typeof meta.statusCode === "number" ? meta.statusCode : (log.success ? 200 : 500);
+
+  if (!log.success) {
+    if (log.errorMessage?.includes("401") || log.errorMessage?.toLowerCase().includes("não autorizado")) code = 401;
+    else if (log.errorMessage?.includes("403") || log.errorMessage?.toLowerCase().includes("restrito")) code = 403;
+    else if (log.errorMessage?.includes("404") || log.errorMessage?.toLowerCase().includes("não encontrad")) code = 404;
+    else if (code === 200) code = 400;
+  }
+
+  if (code >= 200 && code < 300) {
+    return { code, text: `${code}`, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" };
+  } else if (code >= 300 && code < 400) {
+    return { code, text: `${code}`, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" };
+  } else if (code >= 400 && code < 500) {
+    return { code, text: `${code}`, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" };
+  } else {
+    return { code, text: `${code}`, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" };
+  }
+}
+
+function getLogMessage(log: AuditLogEntry): { text: string; isError: boolean } {
+  if (log.errorMessage) {
+    return { text: log.errorMessage, isError: true };
+  }
+  const meta = (log.metadata as Record<string, unknown>) || {};
+  if (typeof meta.message === "string" && meta.message.trim()) {
+    return { text: meta.message, isError: !log.success };
+  }
+  if (meta.type === "navigation") {
+    return { text: `Navegação para ${meta.path || meta.title || "página"}`, isError: false };
+  }
+  return { text: buildFeedDescription(log), isError: !log.success };
+}
+
 // ── Listas de filtro ───────────────────────────────────────────
 
 const AUDIT_ACTIONS = [
@@ -205,10 +343,18 @@ export default function AuditLogsPage() {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isUnmountedRef = useRef(false);
   const activeTabRef = useRef(activeTab);
+  const searchRef = useRef(search);
+  const filterActionRef = useRef(filterAction);
+  const filterEntityRef = useRef(filterEntity);
+  const filterSuccessRef = useRef(filterSuccess);
 
   useEffect(() => {
     activeTabRef.current = activeTab;
-  }, [activeTab]);
+    searchRef.current = search;
+    filterActionRef.current = filterAction;
+    filterEntityRef.current = filterEntity;
+    filterSuccessRef.current = filterSuccess;
+  }, [activeTab, search, filterAction, filterEntity, filterSuccess]);
 
   // Auth guard
   useEffect(() => {
@@ -227,17 +373,23 @@ export default function AuditLogsPage() {
       if (filterEntity !== "all") params.set("entity", filterEntity);
       if (filterSuccess !== "all") params.set("success", filterSuccess);
 
+      const token = typeof window !== "undefined"
+        ? (localStorage.getItem("auth_token") || localStorage.getItem("auth-token") || "")
+        : "";
+      if (token) params.set("token", token);
+
       const res = await fetch(`/api/developer/audit-logs?${params}`, {
         headers: getAuthHeaders(), credentials: "include",
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setLogs(data.logs);
-      setPagination(data.pagination);
+      const loadedLogs = Array.isArray(data.logs) ? data.logs : [];
+      setLogs(loadedLogs);
+      setPagination(data.pagination || { total: loadedLogs.length, page, limit: 50, totalPages: Math.ceil(loadedLogs.length / 50) || 1 });
       // Preenche o feed com os registros já existentes caso o feed esteja vazio
       setFeed(prev => {
         if (prev.length > 0) return prev;
-        return data.logs;
+        return loadedLogs;
       });
     } catch { /* silencioso */ } finally { setLoading(false); }
   }, [search, filterAction, filterEntity, filterSuccess]);
@@ -245,6 +397,13 @@ export default function AuditLogsPage() {
   useEffect(() => {
     if (user?.role === "DEVELOPER") fetchLogs(1);
   }, [fetchLogs, user]);
+
+  // Ao alternar para a aba "logs", dispara busca imediata
+  useEffect(() => {
+    if (activeTab === "logs" && user?.role === "DEVELOPER") {
+      fetchLogs(pagination.page || 1);
+    }
+  }, [activeTab, fetchLogs, user?.role]);
 
   // ── Conexão SSE (Feed em tempo real) ───────────────────────
   const connectSSE = useCallback(() => {
@@ -274,6 +433,7 @@ export default function AuditLogsPage() {
         const incoming: AuditLogEntry[] = JSON.parse(e.data);
         if (!incoming.length) return;
 
+        // Atualiza feed de atividades
         setFeed(prev => {
           const map = new Map<string, AuditLogEntry>();
           prev.forEach(item => map.set(item.id, item));
@@ -282,6 +442,24 @@ export default function AuditLogsPage() {
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 200);
         });
+
+        // Atualiza logs do sistema em tempo real se não houver filtro ativo
+        setLogs(prev => {
+          if (searchRef.current || filterActionRef.current !== "all" || filterEntityRef.current !== "all" || filterSuccessRef.current !== "all") {
+            return prev;
+          }
+          const map = new Map<string, AuditLogEntry>();
+          prev.forEach(item => map.set(item.id, item));
+          incoming.forEach(item => map.set(item.id, item));
+          return Array.from(map.values())
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 50);
+        });
+
+        setPagination(prev => ({
+          ...prev,
+          total: prev.total + incoming.length,
+        }));
 
         // Incrementar contador de novos se o feed não estiver visível
         if (activeTabRef.current !== "feed" || document.hidden) {
@@ -312,13 +490,17 @@ export default function AuditLogsPage() {
   // ── Sincronização em segundo plano (Fallback & Garantia Real-Time) ──
   const syncLatestLogs = useCallback(async () => {
     try {
-      const res = await fetch("/api/developer/audit-logs?limit=30&page=1", {
+      const token = typeof window !== "undefined"
+        ? (localStorage.getItem("auth_token") || localStorage.getItem("auth-token") || "")
+        : "";
+      const res = await fetch(`/api/developer/audit-logs?limit=40&page=1${token ? `&token=${encodeURIComponent(token)}` : ""}`, {
         headers: getAuthHeaders(),
         credentials: "include",
       });
       if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data?.logs) && data.logs.length > 0) {
+        // Atualiza feed
         setFeed(prev => {
           const map = new Map<string, AuditLogEntry>();
           prev.forEach(item => map.set(item.id, item));
@@ -332,6 +514,27 @@ export default function AuditLogsPage() {
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 250);
         });
+
+        // Sincroniza logs do sistema em tempo real se sem filtros na página 1
+        setLogs(prev => {
+          if (searchRef.current || filterActionRef.current !== "all" || filterEntityRef.current !== "all" || filterSuccessRef.current !== "all") {
+            return prev;
+          }
+          const map = new Map<string, AuditLogEntry>();
+          prev.forEach(item => map.set(item.id, item));
+          data.logs.forEach((item: AuditLogEntry) => map.set(item.id, item));
+          return Array.from(map.values())
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 50);
+        });
+
+        if (data.pagination?.total) {
+          setPagination(prev => ({
+            ...prev,
+            total: Math.max(prev.total, data.pagination.total),
+            totalPages: Math.max(prev.totalPages, data.pagination.totalPages),
+          }));
+        }
       }
     } catch { /* silencioso */ }
   }, []);
@@ -365,6 +568,8 @@ export default function AuditLogsPage() {
   }
 
   const activeFiltersCount = [filterAction !== "all", filterEntity !== "all", filterSuccess !== "all"].filter(Boolean).length;
+  // Se logs ainda não carregou mas o feed já tem dados, exibe os dados do feed como fallback imediato
+  const displayLogs = logs.length > 0 ? logs : (activeFiltersCount === 0 && !search ? feed : []);
 
   // ── Render ─────────────────────────────────────────────────
   return (
@@ -448,7 +653,7 @@ export default function AuditLogsPage() {
             <ClipboardList className="h-4 w-4" />
             Logs do Sistema
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-mono">
-              {pagination.total.toLocaleString("pt-BR")}
+              {Math.max(pagination.total, displayLogs.length).toLocaleString("pt-BR")}
             </span>
           </button>
         </div>
@@ -666,62 +871,107 @@ export default function AuditLogsPage() {
             <div className="flex gap-3 items-start">
               {/* Tabela terminal */}
               <div className={`flex-1 min-w-0 rounded-xl border border-border bg-[#0a0a0a] overflow-hidden flex flex-col ${selected ? "hidden md:flex" : ""}`}>
-                <div className="grid grid-cols-[140px_90px_1fr_140px_80px_120px] gap-2 px-4 py-2 border-b border-border/50 bg-card/20">
-                  {["Hora","Status","Evento","Usuário","Origem","IP"].map(h => (
-                    <span key={h} className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
-                      {h === "Hora" && <Clock className="h-3 w-3" />}{h}
-                    </span>
-                  ))}
-                </div>
-                <div className="divide-y divide-border/20">
-                  {loading ? (
-                    Array.from({ length: 12 }).map((_, i) => (
-                      <div key={i} className="grid grid-cols-[140px_90px_1fr_140px_80px_120px] gap-2 px-4 py-2.5">
-                        {Array.from({ length: 6 }).map((__, j) => (
-                          <div key={j} className="h-3 rounded bg-muted/20 animate-pulse" />
-                        ))}
-                      </div>
-                    ))
-                  ) : logs.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-center">
-                      <Activity className="h-10 w-10 text-muted-foreground/20 mb-3" />
-                      <p className="text-sm font-medium text-muted-foreground">Nenhum log encontrado</p>
-                    </div>
-                  ) : (
-                    logs.map(log => {
-                      const cfg = getActionConfig(log.action);
-                      const isSelected = selected?.id === log.id;
-                      const isCurrentUser = log.userId === user?.id;
-                      return (
-                        <div
-                          key={log.id}
-                          onClick={() => setSelected(isSelected ? null : log)}
-                          className={`grid grid-cols-[140px_90px_1fr_140px_80px_120px] gap-2 px-4 py-2 cursor-pointer transition-colors text-[11px] font-mono ${
-                            isSelected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-white/[0.02] border-l-2 border-l-transparent"
-                          }`}
-                        >
-                          <span className="text-muted-foreground whitespace-nowrap truncate">{formatTimestamp(log.createdAt)}</span>
-                          <span className="flex items-center gap-1.5">
-                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${cfg.dot}`} />
-                            {log.success ? <CheckCircle2 className="h-3 w-3 text-emerald-500" /> : <XCircle className="h-3 w-3 text-red-500" />}
-                            <span className={`text-[10px] ${log.success ? "text-emerald-400" : "text-red-400"}`}>{log.success ? "200" : "ERR"}</span>
-                          </span>
-                          <span className="flex items-center gap-2 min-w-0">
-                            <span className={`font-semibold ${cfg.text} whitespace-nowrap`}>{log.action}</span>
-                            <span className="text-muted-foreground truncate">{log.entity}{log.entityId ? `:${log.entityId.substring(0, 8)}` : ""}</span>
-                          </span>
-                          <span className="text-muted-foreground truncate flex items-center gap-1">
-                            {log.user?.name ?? "sistema"}
-                            {isCurrentUser && <span className="text-[8px] px-1 py-0.5 rounded bg-primary/20 text-primary font-bold">Você</span>}
-                          </span>
-                          <span className="text-muted-foreground truncate">{log.barbershop?.slug ?? (log.user?.role ?? "—")}</span>
-                          <span className="text-muted-foreground flex items-center gap-1 truncate">
-                            {log.ipAddress ? <><Globe className="h-3 w-3 shrink-0 opacity-50" /><span className="truncate">{log.ipAddress}</span></> : "—"}
-                          </span>
+                <div className="overflow-x-auto">
+                  <div className="grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-2.5 border-b border-border/50 bg-card/20">
+                    {[
+                      { name: "Hora", icon: <Clock className="h-3 w-3" /> },
+                      { name: "Status" },
+                      { name: "Request" },
+                      { name: "Messages" },
+                      { name: "Usuário" },
+                      { name: "Origem / IP" },
+                    ].map(h => (
+                      <span key={h.name} className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                        {h.icon}
+                        {h.name}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="divide-y divide-border/20">
+                    {loading && displayLogs.length === 0 ? (
+                      Array.from({ length: 10 }).map((_, i) => (
+                        <div key={i} className="grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-2.5">
+                          {Array.from({ length: 6 }).map((__, j) => (
+                            <div key={j} className="h-3 rounded bg-muted/20 animate-pulse" />
+                          ))}
                         </div>
-                      );
-                    })
-                  )}
+                      ))
+                    ) : displayLogs.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-24 text-center">
+                        <Activity className="h-10 w-10 text-muted-foreground/20 mb-3" />
+                        <p className="text-sm font-medium text-muted-foreground">Nenhum log encontrado</p>
+                        <p className="text-xs text-muted-foreground/50 mt-1 max-w-sm">
+                          Navegue pelo sistema ou limpe os filtros para visualizar as requisições em tempo real.
+                        </p>
+                      </div>
+                    ) : (
+                      displayLogs.map(log => {
+                        const req = getLogRequest(log);
+                        const status = getLogStatus(log);
+                        const msg = getLogMessage(log);
+                        const isSelected = selected?.id === log.id;
+                        const isCurrentUser = log.userId === user?.id;
+
+                        return (
+                          <div
+                            key={log.id}
+                            onClick={() => setSelected(isSelected ? null : log)}
+                            className={`grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-2.5 cursor-pointer transition-colors text-[11px] font-mono items-center ${
+                              isSelected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-white/[0.02] border-l-2 border-l-transparent"
+                            }`}
+                          >
+                            {/* Hora */}
+                            <span className="text-muted-foreground whitespace-nowrap truncate">{formatTimestamp(log.createdAt)}</span>
+
+                            {/* Status */}
+                            <span className="flex items-center gap-1">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${status.bg} ${status.color} ${status.border}`}>
+                                {status.text}
+                              </span>
+                            </span>
+
+                            {/* Request (Method + Path) */}
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold border shrink-0 ${getMethodBadge(req.method)}`}>
+                                {req.method}
+                              </span>
+                              <span className="text-foreground font-medium truncate text-[11px]" title={req.path}>
+                                {req.path}
+                              </span>
+                            </div>
+
+                            {/* Messages */}
+                            <div className="min-w-0 pr-2">
+                              <span className={`truncate block text-[11px] ${msg.isError ? "text-red-400 font-medium" : "text-muted-foreground"}`} title={msg.text}>
+                                {msg.isError && <span className="text-red-500 mr-1">⚠</span>}
+                                {msg.text}
+                              </span>
+                            </div>
+
+                            {/* Usuário */}
+                            <span className="text-muted-foreground truncate flex items-center gap-1">
+                              <span className="truncate">{log.user?.name ?? "sistema"}</span>
+                              {isCurrentUser && <span className="text-[8px] px-1 py-0.2 rounded bg-primary/20 text-primary font-bold shrink-0">Você</span>}
+                            </span>
+
+                            {/* Origem / IP */}
+                            <span className="text-muted-foreground flex items-center gap-1 truncate text-[10px]">
+                              {log.ipAddress ? (
+                                <>
+                                  <Globe className="h-3 w-3 shrink-0 opacity-50" />
+                                  <span className="truncate">{log.ipAddress}</span>
+                                </>
+                              ) : log.barbershop?.slug ? (
+                                <span className="truncate">/{log.barbershop.slug}</span>
+                              ) : (
+                                "—"
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -811,8 +1061,39 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
             }`}
           >
             {log.success ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-            {log.success ? "200 Sucesso" : "Erro"}
+            {getLogStatus(log).text}
           </span>
+        </div>
+
+        {/* Requisição HTTP */}
+        <div>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
+            Requisição (Request)
+          </span>
+          <div className="p-2.5 rounded-lg bg-card/40 border border-border/40 space-y-1.5 text-xs font-mono">
+            <div className="flex items-center gap-2">
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold border ${getMethodBadge(getLogRequest(log).method)}`}>
+                {getLogRequest(log).method}
+              </span>
+              <span className="text-foreground truncate select-all">{getLogRequest(log).path}</span>
+            </div>
+            <div className="text-[11px] text-muted-foreground pt-1.5 border-t border-border/20 flex justify-between items-center">
+              <span>Status HTTP</span>
+              <span className={`font-bold ${getLogStatus(log).color}`}>{getLogStatus(log).code}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mensagem / Detalhes */}
+        <div>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
+            Mensagem (Messages)
+          </span>
+          <div className={`p-2.5 rounded-lg border text-xs leading-relaxed ${
+            getLogMessage(log).isError ? "bg-red-500/10 border-red-500/30 text-red-300 font-mono" : "bg-card/40 border-border/40 text-foreground"
+          }`}>
+            {getLogMessage(log).text}
+          </div>
         </div>
 
         {/* Usuário executor */}

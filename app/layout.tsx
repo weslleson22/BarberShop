@@ -1,8 +1,10 @@
 import './globals.css'
+import { Suspense } from 'react'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth-context'
 import { DatabaseProvider } from '@/components/database-validation/DatabaseValidator'
 import { ServiceWorkerUpdater } from '@/components/ServiceWorkerUpdater'
+import { NavigationTracker } from '@/components/shared/NavigationTracker'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -65,6 +67,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <DatabaseProvider>
           <AuthProvider>
+            <Suspense fallback={null}>
+              <NavigationTracker />
+            </Suspense>
             {children}
           </AuthProvider>
         </DatabaseProvider>

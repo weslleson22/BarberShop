@@ -264,6 +264,10 @@ export async function POST(request: NextRequest) {
       entityId: appointment.id,
       success: true,
       metadata: {
+        method: 'POST',
+        path: '/api/appointments',
+        statusCode: 201,
+        message: `Agendamento criado para ${appointment.client?.name ?? 'cliente'} com ${appointment.barber?.name ?? 'barbeiro'}`,
         startTime: appointment.startTime,
         serviceName: appointment.service?.name,
         barberName: appointment.barber?.name,
@@ -275,15 +279,38 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(appointment, { status: 201 })
   } catch (error) {
-    if (
+    const isConflict =
       (typeof ConcurrencyConflictError === 'function' && error instanceof ConcurrencyConflictError) ||
       (error as any)?.statusCode === 409 ||
       (error as any)?.code === 'CONCURRENCY_CONFLICT' ||
       (error instanceof Error && error.message.includes('reservado por outro cliente'))
-    ) {
+
+    const errStatus = isConflict ? 409 : 400
+    const errMessage = isConflict
+      ? 'O horário acabou de ser reservado por outro cliente. Escolha outro horário.'
+      : (error instanceof Error ? error.message : 'Erro ao criar agendamento')
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: null,
+      action: AuditAction.APPOINTMENT_CREATED,
+      entity: AuditEntity.APPOINTMENT,
+      success: false,
+      errorMessage: errMessage,
+      metadata: {
+        method: 'POST',
+        path: '/api/appointments',
+        statusCode: errStatus,
+        message: errMessage,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
+
+    if (isConflict) {
       return NextResponse.json(
         {
-          error: 'O horário acabou de ser reservado por outro cliente. Escolha outro horário.',
+          error: errMessage,
           code: 'SLOT_CONFLICT',
         },
         { status: 409 }
@@ -292,7 +319,7 @@ export async function POST(request: NextRequest) {
 
     console.error('Create appointment error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erro ao criar agendamento' },
+      { error: errMessage },
       { status: 400 }
     )
   }

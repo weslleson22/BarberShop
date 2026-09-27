@@ -104,7 +104,15 @@ export async function POST(request: NextRequest) {
       entity: AuditEntity.SERVICE,
       entityId: service.id,
       success: true,
-      metadata: { serviceName: service.name, price: service.price, duration: service.duration },
+      metadata: {
+        method: 'POST',
+        path: '/api/services',
+        statusCode: 201,
+        message: `Serviço "${service.name}" criado (R$ ${service.price})`,
+        serviceName: service.name,
+        price: service.price,
+        duration: service.duration,
+      },
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
     })
@@ -184,7 +192,14 @@ export async function PUT(request: NextRequest) {
       entity: AuditEntity.SERVICE,
       entityId: service.id,
       success: true,
-      metadata: { serviceName: service.name, isActive: service.isActive },
+      metadata: {
+        method: 'PUT',
+        path: '/api/services',
+        statusCode: 200,
+        message: `Serviço "${service.name}" atualizado (R$ ${service.price})`,
+        serviceName: service.name,
+        isActive: service.isActive,
+      },
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
     })
