@@ -80,8 +80,15 @@ export default function ConfiguracoesPage() {
     description: '',
   })
 
-  const canManageShop =
-    user?.role === 'ADMIN' || user?.role === 'DEVELOPER' || Boolean(user?.barbershopId)
+  // Apenas usuários com papel ADMIN possuem permissão para visualizar e gerenciar as configurações da Barbearia e Link Público
+  const canManageShop = user?.role === 'ADMIN'
+
+  // Redireciona para perfil caso usuário sem permissão tente alternar para barbershop
+  useEffect(() => {
+    if (!canManageShop && activeTab === 'barbershop') {
+      setActiveTab('profile')
+    }
+  }, [canManageShop, activeTab])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -357,7 +364,11 @@ export default function ConfiguracoesPage() {
               {/* Header */}
               <div className="mb-6">
                 <h1 className="text-3xl font-bold text-white mb-2">Configurações</h1>
-                <p className="text-white/60">Gerencie seu perfil, preferências e link público da sua barbearia</p>
+                <p className="text-white/60">
+                  {canManageShop
+                    ? 'Gerencie seu perfil, preferências e link público da sua barbearia'
+                    : 'Gerencie seu perfil e preferências da sua conta'}
+                </p>
               </div>
 
               {/* Abas de Navegação */}

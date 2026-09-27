@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   // antes desta reestruturação; a única coisa protegendo as páginas até aqui
   // eram os redirects client-side dentro de cada página, que são
   // contornáveis e ainda deixam o conteúdo real piscar na tela.)
-  const publicPrefixes = ['/login', '/register', '/agendar', '/servicos', '/b']
+  const publicPrefixes = ['/login', '/register', '/agendar', '/servicos', '/b', '/trial-expired', '/termos', '/privacidade']
 
   // Rotas que precisam de autenticação (mas não necessariamente bloqueio por role)
   const authRequiredPaths = [
@@ -24,6 +24,7 @@ export async function middleware(request: NextRequest) {
     '/configuracoes',
     '/perfil',
     '/meus-agendamentos',
+    '/onboarding',
   ]
 
   // Definir rotas por role
@@ -36,6 +37,7 @@ export async function middleware(request: NextRequest) {
     '/configuracoes': ALL_ROLES,
     '/perfil': ALL_ROLES,
     '/meus-agendamentos': ['CLIENT'],
+    '/onboarding': ALL_ROLES,
   }
 
   // Verificar se é uma rota pública
@@ -78,7 +80,29 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const payload = jwt.verify(token, jwtSecret) as { role: string; exp?: number }
+      const payload = jwt.verify(token, jwtSecret) as {
+        role: string
+        exp?: number
+        barbershopId?: string | null
+        barbershopStatus?: string
+        trialEndsAt?: string | null
+      }
+
+      // Verificação do Período de Testes (Trial de 7 dias) para empresas aguardando homologação
+      if (
+        payload.role !== 'DEVELOPER' &&
+        (payload.barbershopStatus === 'PENDING' || payload.barbershopStatus === 'AGUARDANDO_APROVACAO')
+      ) {
+        if (payload.trialEndsAt) {
+          const trialEndTime = new Date(payload.trialEndsAt).getTime()
+          if (!isNaN(trialEndTime) && Date.now() >= trialEndTime) {
+            // Período de 7 dias expirou e empresa continua aguardando aprovação
+            if (pathname !== '/trial-expired') {
+              return NextResponse.redirect(new URL('/trial-expired', request.url))
+            }
+          }
+        }
+      }
 
       // Se o usuário é DEVELOPER tentando acessar dashboard ou agenda, redireciona para /developer
       if (payload.role === 'DEVELOPER' && (pathname.startsWith('/dashboard') || pathname.startsWith('/agenda') || pathname.startsWith('/clientes'))) {

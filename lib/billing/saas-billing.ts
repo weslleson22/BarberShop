@@ -651,18 +651,20 @@ export interface SubscriptionAccess {
 }
 
 /**
- * Cria ou garante o Trial Gratuito de 30 dias para uma nova barbearia comercial
+ * Cria ou garante o Trial Gratuito de 7 dias para uma nova barbearia comercial
  */
 export async function createTrialSubscriptionForBarbershop(
   barbershopId: string,
-  txClient: any = prisma
+  txClient: any = prisma,
+  trialDays: number = DEFAULT_TRIAL_DAYS
 ): Promise<Subscription> {
   const now = new Date()
-  const trialEnd = new Date(now.getTime() + DEFAULT_TRIAL_DAYS * 24 * 60 * 60 * 1000)
+  const trialEnd = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000)
+  const planSlug = `trial-${trialDays}-days`
 
   // 1. Localiza ou cria o plano base de Trial gratuito
   let trialPlan = await txClient.plan.findFirst({
-    where: { slug: 'trial-30-days' },
+    where: { slug: planSlug },
   })
 
   if (!trialPlan) {
@@ -675,13 +677,13 @@ export async function createTrialSubscriptionForBarbershop(
   if (!trialPlan) {
     trialPlan = await txClient.plan.create({
       data: {
-        name: 'Plano Trial Gratuito (30 dias)',
-        slug: 'trial-30-days',
-        description: 'Período de avaliação completa de 30 dias para novas barbearias',
+        name: `Plano Trial Gratuito (${trialDays} dias)`,
+        slug: planSlug,
+        description: `Período de avaliação completa de ${trialDays} dias para novas barbearias`,
         price: new Prisma.Decimal('0.00'),
         currency: 'BRL',
         billingInterval: 'MONTHLY',
-        trialDays: DEFAULT_TRIAL_DAYS,
+        trialDays: trialDays,
         isActive: true,
         features: {
           maxBarbers: 5,

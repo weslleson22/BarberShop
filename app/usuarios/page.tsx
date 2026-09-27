@@ -416,14 +416,6 @@ export default function UsuariosPage() {
     )
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400"></div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
       {/* Header Fixo no Topo */}
@@ -882,7 +874,25 @@ export default function UsuariosPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/6">
-                {filteredUsers.map((u) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400" />
+                        <span className="text-white/60 text-sm">Carregando usuários da plataforma...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-white/50 text-sm">
+                      {errorMessage
+                        ? 'Nenhum usuário pôde ser listado no momento.'
+                        : 'Nenhum usuário encontrado com os filtros aplicados.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-white/5">
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -976,7 +986,7 @@ export default function UsuariosPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>

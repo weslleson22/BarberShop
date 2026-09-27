@@ -9,7 +9,7 @@ import { AuditAction, AuditEntity } from '@prisma/client'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// GET - Listar usuários da própria barbearia
+// GET - Listar usuários (da própria barbearia para administradores ou global para DEVELOPER)
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
@@ -18,15 +18,15 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const role = searchParams.get('role')
+    const roleParam = searchParams.get('role')
     const requestedShopId = searchParams.get('barbershopId')
 
     let barbershopId: string | null = null
     if (user.role === 'DEVELOPER') {
       if (requestedShopId && requestedShopId !== 'all' && requestedShopId.trim() !== '') {
-        barbershopId = requestedShopId
+        barbershopId = requestedShopId.trim()
       } else {
-        barbershopId = null
+        barbershopId = null // DEVELOPER sem filtro específico lista todos os usuários da plataforma
       }
     } else {
       barbershopId = user.barbershopId || null
@@ -39,8 +39,11 @@ export async function GET(request: NextRequest) {
     if (barbershopId) {
       where.barbershopId = barbershopId
     }
-    if (role && role !== 'all') {
-      where.role = role
+
+    // Valida enum de UserRole para evitar exceções do Prisma
+    const VALID_ROLES = ['DEVELOPER', 'ADMIN', 'BARBER', 'RECEPTIONIST', 'CLIENT']
+    if (roleParam && roleParam !== 'all' && VALID_ROLES.includes(roleParam)) {
+      where.role = roleParam
     }
 
     const users = await prisma.user.findMany({
@@ -55,6 +58,7 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
+            slug: true,
           },
         },
         isActive: true,
@@ -64,20 +68,47 @@ export async function GET(request: NextRequest) {
         bio: true,
         specialties: true,
       },
-      orderBy: {
-        name: 'asc',
-      },
+      orderBy: [
+        { name: 'asc' },
+        { createdAt: 'desc' },
+      ],
     })
 
-    return NextResponse.json(users, {
+    // Sanitização para garantir serialização JSON uniforme sem dados corrompidos
+    const serializedUsers = users.map((u) => ({
+      id: u.id,
+      name: u.name || 'Sem Nome',
+      email: u.email,
+      role: u.role,
+      barbershopId: u.barbershopId,
+      barbershop: u.barbershop
+        ? {
+            id: u.barbershop.id,
+            name: u.barbershop.name,
+            slug: u.barbershop.slug,
+          }
+        : null,
+      isActive: Boolean(u.isActive),
+      createdAt: u.createdAt ? u.createdAt.toISOString() : new Date().toISOString(),
+      avatar: u.avatar || null,
+      phone: u.phone || null,
+      bio: u.bio || null,
+      specialties: Array.isArray(u.specialties) ? u.specialties : [],
+    }))
+
+    return NextResponse.json(serializedUsers, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       },
     })
   } catch (error) {
-    console.error('Get users error:', error)
+    const errorDetails = error instanceof Error ? error.message : String(error)
+    console.error('[API /api/users GET] Erro ao buscar usuários no banco de dados:', error)
     return NextResponse.json(
-      { error: 'Erro ao buscar usuários' },
+      {
+        error: 'Erro ao buscar usuários',
+        details: errorDetails,
+      },
       { status: 500 }
     )
   }

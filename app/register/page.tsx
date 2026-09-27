@@ -130,6 +130,11 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Erro ao realizar cadastro.')
       }
 
+      if (data.token && data.user) {
+        localStorage.setItem('auth_token', data.token)
+        localStorage.setItem('user_data', JSON.stringify(data.user))
+      }
+
       setRegisteredData({
         establishmentName: formData.establishmentName.trim(),
         establishmentEmail: formData.establishmentEmail.trim(),
@@ -145,13 +150,13 @@ export default function RegisterPage() {
     }
   }
 
-  // TELA DE SUCESSO / CONFIRMAÇÃO DE AGUARDANDO APROVAÇÃO
+  // TELA DE SUCESSO: ACESSO TOTAL IMEDIATO COM TRIAL DE 7 DIAS
   if (isSuccess && registeredData) {
     return (
       <div className="min-h-screen bg-[#090D16] text-white flex flex-col justify-between relative overflow-hidden font-sans selection:bg-amber-500 selection:text-black">
         {/* Luzes de ambientação de fundo */}
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-amber-600/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
 
         <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
@@ -164,28 +169,29 @@ export default function RegisterPage() {
               <span>Início</span>
             </Link>
           </div>
-          <div className="flex items-center space-x-2 text-xs text-amber-400 font-medium px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
-            <Clock className="w-3.5 h-3.5 animate-pulse" />
-            <span>Solicitação em Análise</span>
+          <div className="flex items-center space-x-2 text-xs text-emerald-400 font-medium px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Trial de 7 Dias Ativo</span>
           </div>
         </header>
 
         <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
           <div className="w-full max-w-xl bg-slate-900/70 border border-amber-500/30 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl shadow-amber-500/10 text-center">
-            <div className="w-16 h-16 bg-gradient-to-tr from-amber-500/20 to-amber-400/10 border border-amber-500/30 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-inner">
-              <Clock className="w-8 h-8 text-amber-400" />
+            <div className="w-16 h-16 bg-gradient-to-tr from-amber-500/20 to-emerald-400/20 border border-amber-500/30 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-inner">
+              <CheckCircle2 className="w-8 h-8 text-amber-400" />
             </div>
 
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
-              Cadastro Aguardando Aprovação
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              Acesso Imediato Liberado (7 Dias)
             </span>
 
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">
-              Solicitação Enviada com Sucesso!
+              Empresa Cadastrada com Sucesso!
             </h1>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 max-w-md mx-auto">
-              Sua solicitação de cadastro foi registrada e está aguardando liberação pelo time técnico da plataforma.
+              Sua barbearia foi registrada e você já possui <strong>acesso total imediato por 7 dias</strong> para configurar seus serviços, equipe e agenda.
             </p>
 
             <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 text-left mb-6 space-y-2.5 text-xs sm:text-sm">
@@ -201,33 +207,40 @@ export default function RegisterPage() {
                 <span className="text-slate-400">Responsável:</span>
                 <span className="text-white font-semibold">{registeredData.adminName}</span>
               </div>
+              <div className="flex justify-between items-center py-1 border-b border-slate-800/80">
+                <span className="text-slate-400">Validade do Teste:</span>
+                <span className="text-emerald-400 font-semibold">7 dias de avaliação gratuita</span>
+              </div>
               <div className="flex justify-between items-center py-1">
-                <span className="text-slate-400">E-mail de Acesso:</span>
-                <span className="text-amber-400 font-mono font-medium">{registeredData.adminEmail}</span>
+                <span className="text-slate-400">Status de Homologação:</span>
+                <span className="text-amber-400 font-medium">AGUARDANDO_APROVACAO</span>
               </div>
             </div>
 
             <div className="p-3.5 bg-amber-950/30 border border-amber-500/20 rounded-xl text-amber-300 text-xs text-left mb-6 flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div>
-                <strong>Atenção:</strong> Por motivos de governança e segurança, seu login será liberado assim que o desenvolvedor aprovar o contrato e os acessos da sua empresa.
+                <strong>Período de Homologação:</strong> Utilize todos os recursos normalmente durante os primeiros 7 dias. Ao término deste período, o administrador homologará o contrato definitivo da sua empresa.
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/login"
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-xl text-sm transition-all shadow-lg shadow-amber-500/20 hover:scale-[1.02]"
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = '/dashboard'
+                }}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-xl text-sm transition-all shadow-lg shadow-amber-500/20 hover:scale-[1.02] cursor-pointer"
               >
-                <span>Ir para a Página de Login</span>
+                <span>Acessar Painel da Barbearia</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-              </Link>
+              </button>
               <Link
-                href="/"
+                href="/onboarding"
                 className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 hover:text-white font-medium rounded-xl text-sm border border-slate-700 transition-all"
               >
-                <Home className="w-4 h-4" />
-                <span>Página Inicial</span>
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Guia de Onboarding</span>
               </Link>
             </div>
           </div>

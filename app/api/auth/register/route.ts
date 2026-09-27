@@ -51,26 +51,31 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Criar nova barbearia com status PENDING e isActive: false
+      // Criar nova barbearia com acesso total imediato e período de trial de 7 dias
+      const trialDays = 7
+      const trialEndsAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
+
       const result = await createBarbershop({
         name: shopName,
         email: shopEmail,
         phone: shopPhone,
         address: shopAddress,
-        status: 'PENDING',
-        isActive: false,
+        status: 'PENDING', // Marcado como homologação/aguardando aprovação
+        isActive: true, // Ativo durante os 7 dias de trial
+        trialDays,
+        trialEndsAt,
         adminUser: {
           name: adminName,
           email: adminEmail,
           password: adminPassword,
           phone: adminPhone,
-          isActive: false,
+          isActive: true, // Administrador com acesso imediato
         },
       })
 
       const ctx = extractRequestContext(request)
       await createAuditLog({
-        userId: null,
+        userId: result.adminUser.user.id,
         barbershopId: result.barbershop.id,
         action: AuditAction.BARBERSHOP_CREATED,
         entity: AuditEntity.BARBERSHOP,
@@ -79,23 +84,40 @@ export async function POST(request: NextRequest) {
           barbershopName: result.barbershop.name,
           email: result.barbershop.email,
           status: 'PENDING',
+          trialEndsAt: trialEndsAt.toISOString(),
+          trialDays: 7,
           source: 'public_registration',
         },
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       })
 
-      // NÃO define cookie de autenticação, pois a conta está aguardando aprovação
-      return NextResponse.json({
+      // Concede acesso total imediato e define cookie de autenticação
+      const response = NextResponse.json({
         success: true,
         status: 'PENDING',
-        message: 'Cadastro realizado com sucesso! Sua solicitação de acesso está aguardando aprovação pelo desenvolvedor.',
+        message: 'Cadastro realizado com sucesso! Você recebeu 7 dias de acesso completo para testar a plataforma.',
+        token: result.adminUser.token,
+        user: result.adminUser.user,
         barbershop: {
           id: result.barbershop.id,
           name: result.barbershop.name,
           email: result.barbershop.email,
+          status: result.barbershop.status,
+          trialEndsAt: result.barbershop.trialEndsAt,
         },
+        redirectTo: '/dashboard',
       })
+
+      response.cookies.set('auth-token', result.adminUser.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60,
+        path: '/',
+      })
+
+      return response
     } else {
       // Criar cliente regular — NUNCA permitir escalada de privilégios via payload público
       if (!data.name || !data.email || !data.password) {

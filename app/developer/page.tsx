@@ -821,8 +821,11 @@ export default function DeveloperDashboardPage() {
             )}
           </div>
 
-          <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl backdrop-blur-sm">
-            <div className="flex items-center justify-between text-gray-400 mb-2">
+          <Link
+            href="/usuarios"
+            className="block bg-gray-900/60 border border-gray-800 hover:border-blue-500/50 p-5 rounded-xl backdrop-blur-sm transition group"
+          >
+            <div className="flex items-center justify-between text-gray-400 group-hover:text-blue-400 mb-2 transition">
               <span className="text-xs font-semibold uppercase tracking-wider">Usuários da Plataforma</span>
               <Users className="h-5 w-5 text-blue-400" />
             </div>
@@ -834,7 +837,7 @@ export default function DeveloperDashboardPage() {
               <span>•</span>
               <span className="text-gray-300 font-medium">{metrics?.users?.byRole?.['BARBER'] ?? 0} profissionais</span>
             </div>
-          </div>
+          </Link>
 
           <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl backdrop-blur-sm">
             <div className="flex items-center justify-between text-gray-400 mb-2">

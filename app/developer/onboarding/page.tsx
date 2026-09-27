@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { getAuthHeaders } from '@/lib/utils'
+import DropdownHeader from '@/components/shared/DropdownHeader'
 import TenantFeedbackModal from '@/components/feedback/TenantFeedbackModal'
 import {
   Users,
@@ -218,8 +219,10 @@ export default function DeveloperOnboardingCockpitPage() {
     : tenants.filter((t) => t.lifecycleStatus === statusFilter)
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-8 space-y-8 font-sans">
-      {/* Top Header */}
+    <div className="min-h-screen bg-slate-950 text-slate-100 pt-20 pb-12 font-sans">
+      <DropdownHeader />
+      <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+        {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-500 mb-1">
@@ -820,6 +823,7 @@ export default function DeveloperOnboardingCockpitPage() {
           onFeedbackSubmitted={loadData}
         />
       )}
+      </div>
     </div>
   )
 }

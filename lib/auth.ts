@@ -18,6 +18,8 @@ export interface JWTPayload {
   email: string
   role: UserRole
   barbershopId?: string | null
+  barbershopStatus?: string
+  trialEndsAt?: string | null
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -46,6 +48,8 @@ export async function authenticateUser(email: string, password: string) {
           name: true,
           isActive: true,
           status: true,
+          trialEndsAt: true,
+          createdAt: true,
         },
       },
     },
@@ -55,11 +59,22 @@ export async function authenticateUser(email: string, password: string) {
     return null
   }
 
-  // Se a barbearia associada estiver com status PENDING ou REJECTED (exceto DEVELOPER)
+  // Regra de Negócio: Empresa com status PENDING / AGUARDANDO_APROVACAO possui 7 dias de trial
   if (user.barbershop && user.role !== 'DEVELOPER') {
-    if (user.barbershop.status === 'PENDING') {
-      throw new Error('Cadastro em análise: sua conta está aguardando aprovação pelo desenvolvedor.')
+    const isAwaiting = user.barbershop.status === 'PENDING' || user.barbershop.status === 'AGUARDANDO_APROVACAO'
+    if (isAwaiting) {
+      const trialEndTime = user.barbershop.trialEndsAt
+        ? new Date(user.barbershop.trialEndsAt).getTime()
+        : user.barbershop.createdAt
+        ? new Date(user.barbershop.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000
+        : 0
+
+      // Se já transcorreram os 7 dias e continua aguardando aprovação, bloqueia acesso
+      if (Date.now() >= trialEndTime) {
+        throw new Error('Seu período de testes de 7 dias expirou. Sua conta aguarda aprovação manual do desenvolvedor.')
+      }
     }
+
     if (user.barbershop.status === 'REJECTED') {
       throw new Error('Solicitação de cadastro não aprovada.')
     }
@@ -80,12 +95,20 @@ export async function authenticateUser(email: string, password: string) {
     return null
   }
 
+  const trialEndsAtFormatted = user.barbershop?.trialEndsAt
+    ? user.barbershop.trialEndsAt.toISOString()
+    : user.barbershop?.createdAt
+    ? new Date(new Date(user.barbershop.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    : null
+
   const token = generateToken({
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
     barbershopId: user.barbershopId,
+    barbershopStatus: user.barbershop?.status,
+    trialEndsAt: trialEndsAtFormatted,
   })
 
   return {
@@ -201,6 +224,8 @@ export async function createBarbershop(data: {
   address?: string
   status?: string
   isActive?: boolean
+  trialDays?: number
+  trialEndsAt?: Date | string | null
   contractExpiresAt?: Date | string | null
   createdById?: string | null
   adminUser: {
@@ -230,7 +255,11 @@ export async function createBarbershop(data: {
   const hashedPassword = await hashPassword(data.adminUser.password)
   const isShopActive = data.isActive !== undefined ? data.isActive : true
   const isAdminActive = data.adminUser.isActive !== undefined ? data.adminUser.isActive : isShopActive
-  const shopStatus = data.status || 'APPROVED'
+  const shopStatus = data.status || 'PENDING'
+  const trialDays = data.trialDays ?? 7
+  const trialEndsAtDate = data.trialEndsAt
+    ? new Date(data.trialEndsAt)
+    : new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
 
   const { generateUniqueSlug } = await import('./tenant')
   const shopSlug = await generateUniqueSlug(data.slug || data.name)
@@ -245,16 +274,17 @@ export async function createBarbershop(data: {
         address: data.address,
         status: shopStatus,
         isActive: isShopActive,
+        trialEndsAt: trialEndsAtDate,
         contractExpiresAt: data.contractExpiresAt
           ? new Date(data.contractExpiresAt)
-          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          : trialEndsAtDate,
         createdById: data.createdById || null,
       },
     })
 
-    // Inicialização automática do Trial gratuito de 30 dias para a barbearia comercial
+    // Inicialização automática do Trial gratuito de 7 dias para a nova barbearia comercial
     const { createTrialSubscriptionForBarbershop } = await import('./billing/saas-billing')
-    await createTrialSubscriptionForBarbershop(barbershop.id, tx)
+    await createTrialSubscriptionForBarbershop(barbershop.id, tx, trialDays)
 
     const user = await tx.user.create({
       data: {
@@ -273,6 +303,7 @@ export async function createBarbershop(data: {
             name: true,
             isActive: true,
             status: true,
+            trialEndsAt: true,
           },
         },
       },
@@ -284,6 +315,8 @@ export async function createBarbershop(data: {
       email: user.email,
       role: user.role,
       barbershopId: user.barbershopId,
+      barbershopStatus: barbershop.status,
+      trialEndsAt: trialEndsAtDate.toISOString(),
     })
 
     return {

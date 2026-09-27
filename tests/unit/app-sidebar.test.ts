@@ -177,7 +177,9 @@ describe('AppSidebar — Regras Estruturais e RBAC da Navegação Lateral shadcn
         '/developer/billing',
         '/developer/plans',
         '/developer/monitoring',
+        '/developer/audit-logs',
         '/developer/backup',
+        '/onboarding',
         '/termos',
         '/privacidade',
       ]

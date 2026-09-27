@@ -33,6 +33,8 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/developer/billing': { title: 'Faturamento', subtitle: 'Assinaturas & Receita' },
   '/developer/plans': { title: 'Planos', subtitle: 'Tiers & Configuração' },
   '/developer/onboarding': { title: 'Cockpit Onboarding', subtitle: 'Gestão de Novos Tenants' },
+  '/onboarding': { title: 'Onboarding', subtitle: 'Guia de Configuração da Barbearia' },
+  '/dashboard/onboarding': { title: 'Onboarding', subtitle: 'Guia de Configuração da Barbearia' },
   '/meus-agendamentos': { title: 'Meus Agendamentos', subtitle: 'Histórico & Próximos Atendimentos' },
   '/agendar': { title: 'Novo Agendamento', subtitle: 'Reserva de Horários' },
 }
