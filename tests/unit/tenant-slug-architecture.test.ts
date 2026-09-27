@@ -43,6 +43,9 @@ vi.mock('@/lib/prisma', () => {
       user: {
         findMany: vi.fn(),
       },
+      appointment: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
       $transaction: vi.fn(async (cb) => {
         const { prisma } = await import('@/lib/prisma')
         return cb(prisma)

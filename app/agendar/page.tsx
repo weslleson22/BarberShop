@@ -105,6 +105,25 @@ export default function AgendarPage() {
     }
   }, [mounted, user?.barbershopId])
 
+  // Pré-selecionar barbeiro e data quando vindos do BarberTeamScheduler (/b/[slug])
+  useEffect(() => {
+    if (barbers.length > 0 && typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search)
+      const qBarberId = searchParams.get('barberId')
+      const qDate = searchParams.get('date')
+
+      if (qBarberId) {
+        const found = barbers.find((b) => b.id === qBarberId)
+        if (found) {
+          setSelectedBarber(found)
+        }
+      }
+      if (qDate) {
+        setSelectedDate(qDate)
+      }
+    }
+  }, [barbers])
+
   const getTenantParam = () => {
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
     const slug = searchParams?.get('slug')
@@ -244,7 +263,14 @@ export default function AgendarPage() {
 
   const handleServiceSelect = (service: Service) => {
     setSelectedService(service)
-    setStep(2)
+    if (selectedBarber) {
+      if (selectedDate) {
+        fetchAvailableSlots(selectedDate)
+      }
+      setStep(3)
+    } else {
+      setStep(2)
+    }
   }
 
   const handleBarberSelect = (barber: Barber) => {

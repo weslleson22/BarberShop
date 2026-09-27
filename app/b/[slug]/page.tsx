@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { resolvePublicTenant } from '@/lib/tenant'
+import BarberTeamScheduler from '@/components/public/BarberTeamScheduler'
 import { 
   Scissors, 
   Clock, 
@@ -128,6 +129,50 @@ export default async function TenantPublicPage({ params }: Props) {
       name: 'asc',
     },
   })
+
+  // 5. Buscar agendamentos existentes dos próximos 15 dias para cálculo de horários livres
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+  const fifteenDaysLater = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000)
+  const appointments = prisma.appointment
+    ? await prisma.appointment.findMany({
+        where: {
+          barbershopId: tenant.id,
+          status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+          startTime: { gte: startOfToday, lte: fifteenDaysLater },
+        },
+        select: {
+          id: true,
+          barberId: true,
+          startTime: true,
+          service: {
+            select: {
+              duration: true,
+            },
+          },
+        },
+        orderBy: {
+          startTime: 'asc',
+        },
+      })
+    : []
+
+  // Serialização segura para o Client Component
+  const serializedServices = services.map((s) => ({
+    id: s.id,
+    name: s.name,
+    price: Number(s.price),
+    duration: s.duration,
+    description: s.description,
+    isActive: s.isActive,
+  }))
+
+  const serializedAppointments = appointments.map((apt) => ({
+    id: apt.id,
+    barberId: apt.barberId,
+    startTime: apt.startTime.toISOString(),
+    service: apt.service ? { duration: apt.service.duration } : null,
+  }))
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -271,69 +316,34 @@ export default async function TenantPublicPage({ params }: Props) {
 
         {/* Barbers / Professionals Section */}
         <section>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold tracking-wide uppercase">
-                <Star className="w-4 h-4" />
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 Nossos Especialistas
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">
                 Equipe de Barbeiros
               </h2>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1 max-w-2xl">
+                Consulte em tempo real a agenda completa no estilo Google Calendar: selecione o dia e o horário livre desejado para agendar diretamente com seu profissional favorito.
+              </p>
             </div>
-            <span className="text-xs text-gray-400 bg-gray-800/80 px-3 py-1.5 rounded-lg border border-gray-700">
-              {barbers.length} profissionais
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 inline-flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {barbers.length} Especialistas Disponíveis
+              </span>
+            </div>
           </div>
 
-          {barbers.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-gray-900/60 border border-gray-800 text-center text-gray-400">
-              Nenhum barbeiro listado no momento para esta unidade.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {barbers.map((barber) => (
-                <div
-                  key={barber.id}
-                  className="p-6 rounded-2xl bg-gray-900/70 border border-gray-800/80 text-center backdrop-blur-md flex flex-col items-center hover:border-amber-500/30 transition-all"
-                >
-                  {barber.avatar ? (
-                    <img
-                      src={barber.avatar}
-                      alt={barber.name}
-                      className="w-20 h-20 rounded-full object-cover border-2 border-amber-500/30 mb-4 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-500/20 to-yellow-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-xl mb-4 shadow-lg">
-                      {barber.name.slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
-
-                  <h3 className="font-bold text-base text-white">{barber.name}</h3>
-                  <span className="text-xs text-amber-400/90 font-medium mb-2">Barbeiro Especialista</span>
-
-                  {barber.bio && (
-                    <p className="text-xs text-gray-400 line-clamp-2 mb-3">
-                      {barber.bio}
-                    </p>
-                  )}
-
-                  {Array.isArray(barber.specialties) && barber.specialties.length > 0 && (
-                    <div className="flex flex-wrap justify-center gap-1 mt-auto pt-2">
-                      {barber.specialties.slice(0, 3).map((spec, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-0.5 rounded-full text-[10px] bg-gray-800 text-gray-300 border border-gray-700"
-                        >
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <BarberTeamScheduler
+            barbers={barbers}
+            services={serializedServices}
+            slug={activeSlug}
+            tenantName={tenant.name}
+            initialAppointments={serializedAppointments}
+          />
         </section>
 
         {/* Agenda & Horários de Funcionamento */}
