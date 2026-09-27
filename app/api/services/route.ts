@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/api-auth'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -94,6 +96,19 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: decoded.id,
+      barbershopId: targetBarbershopId,
+      action: AuditAction.SERVICE_CREATED,
+      entity: AuditEntity.SERVICE,
+      entityId: service.id,
+      success: true,
+      metadata: { serviceName: service.name, price: service.price, duration: service.duration },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
+
     return NextResponse.json(service, { status: 201 })
   } catch (error) {
     console.error('Create service error:', error)
@@ -159,6 +174,19 @@ export async function PUT(request: NextRequest) {
         duration: parseInt(duration),
         isActive: isActive !== undefined ? isActive : existingService.isActive,
       },
+    })
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: decoded.id,
+      barbershopId: service.barbershopId,
+      action: AuditAction.SERVICE_UPDATED,
+      entity: AuditEntity.SERVICE,
+      entityId: service.id,
+      success: true,
+      metadata: { serviceName: service.name, isActive: service.isActive },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
     })
 
     return NextResponse.json(service)

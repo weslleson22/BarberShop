@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { criarAgendamento, getHorariosDisponiveis, ConcurrencyConflictError } from '@/lib/appointment-scheduler'
-
 import { getAuthUser } from '@/lib/api-auth'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -252,6 +253,24 @@ export async function POST(request: NextRequest) {
       clientId,
       barbershopId: targetBarbershopId,
       createdBy: decoded.id,
+    })
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: decoded.id,
+      barbershopId: targetBarbershopId,
+      action: AuditAction.APPOINTMENT_CREATED,
+      entity: AuditEntity.APPOINTMENT,
+      entityId: appointment.id,
+      success: true,
+      metadata: {
+        startTime: appointment.startTime,
+        serviceName: appointment.service?.name,
+        barberName: appointment.barber?.name,
+        clientName: appointment.client?.name,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
     })
 
     return NextResponse.json(appointment, { status: 201 })

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/api-auth'
 import { notifyClientStatusChange, notifyAdminsLastMinuteCancellation } from '@/lib/notifications'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 // Dispara as notificações de mudança de status — nunca deixa uma falha aqui
 // derrubar a resposta da API, por isso é sempre chamado dentro de try/catch.
@@ -205,6 +207,30 @@ export async function PUT(
 
     await handleStatusChangeNotifications(updatedAppointment, existingAppointment.status)
 
+    const ctx = extractRequestContext(request)
+    const action = updatedAppointment.status === 'CANCELLED'
+      ? AuditAction.APPOINTMENT_CANCELLED
+      : updatedAppointment.status === 'COMPLETED'
+      ? AuditAction.APPOINTMENT_COMPLETED
+      : AuditAction.APPOINTMENT_UPDATED
+
+    await createAuditLog({
+      userId: user.id,
+      barbershopId: updatedAppointment.barbershopId,
+      action,
+      entity: AuditEntity.APPOINTMENT,
+      entityId: updatedAppointment.id,
+      metadata: {
+        clientName: updatedAppointment.client?.name,
+        serviceName: updatedAppointment.service?.name,
+        barberName: updatedAppointment.barber?.name,
+        previousStatus: existingAppointment.status,
+        newStatus: updatedAppointment.status,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
+
     return NextResponse.json(updatedAppointment)
   } catch (error) {
     console.error('Update appointment error:', error)
@@ -240,6 +266,22 @@ export async function DELETE(
     })
 
     await handleStatusChangeNotifications(cancelledAppointment, existingAppointment.status)
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: user.id,
+      barbershopId: cancelledAppointment.barbershopId,
+      action: AuditAction.APPOINTMENT_CANCELLED,
+      entity: AuditEntity.APPOINTMENT,
+      entityId: cancelledAppointment.id,
+      metadata: {
+        clientName: cancelledAppointment.client?.name,
+        serviceName: cancelledAppointment.service?.name,
+        barberName: cancelledAppointment.barber?.name,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
 
     return NextResponse.json({
       message: 'Agendamento cancelado com sucesso',
@@ -292,6 +334,34 @@ export async function PATCH(
     })
 
     await handleStatusChangeNotifications(updatedAppointment, existingAppointment.status)
+
+    const ctx = extractRequestContext(request)
+    const action = updatedAppointment.status === 'CANCELLED'
+      ? AuditAction.APPOINTMENT_CANCELLED
+      : updatedAppointment.status === 'COMPLETED'
+      ? AuditAction.APPOINTMENT_COMPLETED
+      : updatedAppointment.status === 'CONFIRMED'
+      ? AuditAction.APPOINTMENT_CONFIRMED
+      : updatedAppointment.status === 'NO_SHOW'
+      ? AuditAction.APPOINTMENT_NO_SHOW
+      : AuditAction.APPOINTMENT_UPDATED
+
+    await createAuditLog({
+      userId: user.id,
+      barbershopId: updatedAppointment.barbershopId,
+      action,
+      entity: AuditEntity.APPOINTMENT,
+      entityId: updatedAppointment.id,
+      metadata: {
+        clientName: updatedAppointment.client?.name,
+        serviceName: updatedAppointment.service?.name,
+        barberName: updatedAppointment.barber?.name,
+        previousStatus: existingAppointment.status,
+        newStatus: updatedAppointment.status,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
 
     return NextResponse.json(updatedAppointment)
   } catch (error) {

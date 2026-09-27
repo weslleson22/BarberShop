@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 import { notifyAdminsNewClient } from '@/lib/notifications'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -127,6 +129,19 @@ export async function POST(request: NextRequest) {
       console.error('Erro ao notificar admins sobre novo cliente:', notificationError)
     }
 
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: decoded.id,
+      barbershopId: targetBarbershopId,
+      action: AuditAction.CLIENT_CREATED,
+      entity: AuditEntity.CLIENT,
+      entityId: client.id,
+      success: true,
+      metadata: { clientName: client.name, clientEmail: client.email },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
+
     return NextResponse.json(client, { status: 201 })
   } catch (error) {
     console.error('Create client error:', error)
@@ -170,8 +185,19 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Excluir o cliente
-    await prisma.client.delete({
-      where: { id: clientId },
+    await prisma.client.delete({ where: { id: clientId } })
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: decoded.id,
+      barbershopId: client.barbershopId,
+      action: AuditAction.CLIENT_DELETED,
+      entity: AuditEntity.CLIENT,
+      entityId: clientId,
+      success: true,
+      metadata: { clientName: client.name },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
     })
 
     return NextResponse.json({ message: 'Cliente excluído com sucesso' })

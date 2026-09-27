@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
           userId: true,
           barbershopId: true,
           user: {
-            select: { id: true, name: true, email: true, role: true },
+            select: { id: true, name: true, email: true, role: true, avatar: true },
           },
           barbershop: {
             select: { id: true, name: true, slug: true },

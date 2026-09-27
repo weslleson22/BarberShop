@@ -12,6 +12,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
+    "backup:r2": "tsx scripts/backup-r2.ts",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
@@ -28,6 +29,7 @@
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1141.0",
     "@hookform/resolvers": "^3.10.0",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-avatar": "^1.1.11",
@@ -46,6 +48,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.294.0",
     "next": "^15.5.15",
+    "node-cron": "^4.6.0",
     "postcss": "^8.4.32",
     "prisma": "^5.22.0",
     "react": "^18",
@@ -62,6 +65,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20",
+    "@types/node-cron": "^3.0.11",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitest/coverage-v8": "^4.1.4",
@@ -70,6 +74,7 @@
     "eslint-config-next": "14.0.4",
     "jsdom": "^29.0.2",
     "playwright": "^1.59.1",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^4.1.4"
   }

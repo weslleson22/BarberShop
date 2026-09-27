@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
-import { executeBackup } from '@/scripts/dr/backup'
+import { executeDatabaseBackup } from '@/lib/backup/generator'
+import { listR2Backups, downloadR2Backup, getR2BucketName } from '@/lib/r2'
 import { loadAndVerifyBackup, restoreToIsolatedSchema } from '@/scripts/dr/restore'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// GET - Listar histórico de backups realizados
+// GET - Listar histórico de backups ou baixar arquivo específico
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
@@ -16,38 +17,112 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso restrito a DEVELOPER' }, { status: 403 })
     }
 
-    const backupDir = path.join(process.cwd(), 'backups')
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir, { recursive: true })
+    const { searchParams } = new URL(request.url)
+    const downloadKey = searchParams.get('download')
+
+    // Download direto de arquivo de backup
+    if (downloadKey) {
+      const sanitizedKey = downloadKey.replace(/^\/+/, '')
+      const filename = path.basename(sanitizedKey)
+
+      // 1. Tenta baixar do Cloudflare R2
+      try {
+        const fullKey = sanitizedKey.startsWith('backups/') ? sanitizedKey : `backups/${sanitizedKey}`
+        const r2File = await downloadR2Backup(fullKey)
+        return new NextResponse(new Uint8Array(r2File.buffer), {
+          headers: {
+            'Content-Type': r2File.contentType || 'application/gzip',
+            'Content-Disposition': `attachment; filename="${filename}"`,
+            'Content-Length': String(r2File.buffer.length),
+          },
+        })
+      } catch (r2Err) {
+        // Fallback: se não estiver no R2, verifica disco local
+        const localPath = path.join(process.cwd(), 'backups', filename)
+        if (fs.existsSync(localPath)) {
+          const buffer = fs.readFileSync(localPath)
+          return new NextResponse(new Uint8Array(buffer), {
+            headers: {
+              'Content-Type': 'application/gzip',
+              'Content-Disposition': `attachment; filename="${filename}"`,
+              'Content-Length': String(buffer.length),
+            },
+          })
+        }
+        return NextResponse.json({ error: 'Arquivo de backup não encontrado no Cloudflare R2 nem localmente' }, { status: 404 })
+      }
     }
 
-    const files = fs.readdirSync(backupDir)
-    const backupFiles = files
-      .filter((file) => file.startsWith('barbershop-backup-') && (file.endsWith('.enc') || file.endsWith('.json.gz')))
-      .map((file) => {
-        const filePath = path.join(backupDir, file)
-        const stats = fs.statSync(filePath)
-        const isEncrypted = file.endsWith('.enc')
+    // Listagem de backups do Cloudflare R2
+    let r2Backups: any[] = []
+    let r2Error: string | null = null
+    const bucket = getR2BucketName()
 
-        return {
-          filename: file,
-          sizeBytes: stats.size,
-          createdAt: stats.birthtime || stats.mtime,
-          isEncrypted,
-          status: 'SUCCESS',
-        }
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    try {
+      const items = await listR2Backups('backups/')
+      r2Backups = items.map((item) => ({
+        filename: item.filename,
+        key: item.key,
+        sizeBytes: item.sizeBytes,
+        createdAt: item.lastModified,
+        isEncrypted: item.filename.endsWith('.enc'),
+        storage: 'Cloudflare R2',
+        status: 'SUCCESS',
+      }))
+    } catch (err: any) {
+      console.warn('[Developer Backup GET] Aviso ao listar R2:', err?.message)
+      r2Error = err?.message
+    }
 
-    const lastBackup = backupFiles.length > 0 ? backupFiles[0] : null
+    // Listagem de backups locais (se existirem)
+    const localBackups: any[] = []
+    const backupDir = path.join(process.cwd(), 'backups')
+    if (fs.existsSync(backupDir)) {
+      const files = fs.readdirSync(backupDir)
+      files
+        .filter((file) => file.endsWith('.sql.gz') || file.endsWith('.json.gz') || file.endsWith('.enc'))
+        .forEach((file) => {
+          const filePath = path.join(backupDir, file)
+          const stats = fs.statSync(filePath)
+          // Se já está listado pelo R2, apenas marca redundância
+          const alreadyInR2 = r2Backups.some((r) => r.filename === file)
+          if (!alreadyInR2) {
+            localBackups.push({
+              filename: file,
+              key: `backups/${file}`,
+              sizeBytes: stats.size,
+              createdAt: (stats.birthtime || stats.mtime).toISOString(),
+              isEncrypted: file.endsWith('.enc'),
+              storage: 'Local Disk',
+              status: 'SUCCESS',
+            })
+          }
+        })
+    }
+
+    // Unifica ordenando pelo mais recente
+    const allBackups = [...r2Backups, ...localBackups].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+
+    const lastBackup = allBackups.length > 0 ? allBackups[0] : null
+
+    // Próximo agendado (00:00 UTC)
+    const nextCron = new Date()
+    nextCron.setUTCHours(24, 0, 0, 0)
 
     return NextResponse.json({
-      backups: backupFiles,
+      backups: allBackups,
       lastBackup,
-      nextScheduledBackup: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      encryption: 'AES-256-GCM',
+      nextScheduledBackup: nextCron.toISOString(),
+      scheduleDescription: 'Diariamente às 00:00 UTC',
+      encryption: 'Gzip (.sql.gz)',
+      storageDestination: `Cloudflare R2 (${bucket})`,
       targetRpoHours: 24,
-      targetRtoMinutes: 30,
+      targetRtoMinutes: 15,
+      r2Status: r2Error ? 'DEGRADED' : 'ONLINE',
+      r2Error,
+      bucket,
     })
   } catch (error: any) {
     console.error('Erro ao listar backups:', error)
@@ -55,7 +130,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Executar backup manual ou restaurar em ambiente isolado
+// POST - Executar backup manual no Cloudflare R2 ou restaurar
 export async function POST(request: NextRequest) {
   try {
     const user = getAuthUser(request)
@@ -67,16 +142,24 @@ export async function POST(request: NextRequest) {
     const { action, filename, confirmationCode } = body
 
     if (action === 'create') {
-      const result = await executeBackup({
-        encrypt: true,
+      const result = await executeDatabaseBackup({
+        trigger: 'MANUAL',
+        userId: user.id,
+        saveLocalCopy: true,
       })
 
       return NextResponse.json({
         success: true,
-        message: 'Backup consistente e criptografado gerado com sucesso.',
-        manifest: result.manifest,
-        finalSizeBytes: result.finalSizeBytes,
-        filePath: path.basename(result.filePath),
+        message: 'Backup do banco de dados gerado e enviado para o Cloudflare R2 com sucesso.',
+        finalSizeBytes: result.sizeBytes,
+        rawSizeBytes: result.rawSizeBytes,
+        filePath: result.filename,
+        key: result.key,
+        bucket: result.bucket,
+        tablesCount: result.tablesCount,
+        recordsCount: result.recordsCount,
+        sha256: result.sha256,
+        durationMs: result.durationMs,
       })
     }
 
@@ -93,16 +176,24 @@ export async function POST(request: NextRequest) {
       }
 
       const backupDir = path.join(process.cwd(), 'backups')
-      const targetFilePath = path.join(backupDir, path.basename(filename))
+      let targetFilePath = path.join(backupDir, path.basename(filename))
 
+      // Se não existir localmente, tenta baixar do Cloudflare R2 para restaurar
       if (!fs.existsSync(targetFilePath)) {
-        return NextResponse.json({ error: 'Arquivo de backup não encontrado no servidor' }, { status: 404 })
+        try {
+          const r2Key = filename.startsWith('backups/') ? filename : `backups/${filename}`
+          const r2Data = await downloadR2Backup(r2Key)
+          if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true })
+          fs.writeFileSync(targetFilePath, r2Data.buffer)
+        } catch {
+          return NextResponse.json({ error: 'Arquivo de backup não encontrado no servidor nem no Cloudflare R2' }, { status: 404 })
+        }
       }
 
       // Validação estrita de integridade
       const verifiedData = loadAndVerifyBackup(targetFilePath)
 
-      // Restauração segura em schema isolado de validação (Disaster Recovery Verification)
+      // Restauração segura em schema isolado de validação
       const testSchema = `dr_test_${Date.now()}`
       const restoreResult = await restoreToIsolatedSchema(verifiedData, testSchema)
 
@@ -113,7 +204,7 @@ export async function POST(request: NextRequest) {
           schema: restoreResult.schemaName,
           restoredTables: restoreResult.restoredTables,
           durationMs: restoreResult.durationMs,
-          totalRecords: Object.values(restoreResult.restoredTables).reduce((acc, curr) => acc + curr, 0),
+          totalRecords: Object.values(restoreResult.restoredTables).reduce((acc: number, curr: any) => acc + (typeof curr === 'number' ? curr : 0), 0),
         },
       })
     }

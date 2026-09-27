@@ -17,14 +17,17 @@ import {
   RefreshCw,
   Lock,
   FileArchive,
-  Layers
+  Layers,
+  Cloud,
 } from 'lucide-react'
 
 interface BackupItem {
   filename: string
+  key?: string
   sizeBytes: number
   createdAt: string
   isEncrypted: boolean
+  storage?: string
   status: string
 }
 
@@ -32,9 +35,13 @@ interface BackupResponse {
   backups: BackupItem[]
   lastBackup: BackupItem | null
   nextScheduledBackup: string
+  scheduleDescription?: string
   encryption: string
+  storageDestination?: string
   targetRpoHours: number
   targetRtoMinutes: number
+  r2Status?: string
+  bucket?: string
 }
 
 export default function DeveloperBackupPage() {
@@ -270,22 +277,24 @@ export default function DeveloperBackupPage() {
 
           <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between text-muted-foreground mb-2">
-              <span className="text-xs font-medium">Próximo Agendado</span>
+              <span className="text-xs font-medium">Backup Automático</span>
               <RotateCcw className="w-4 h-4 text-primary" />
             </div>
-            <div className="text-lg font-bold text-foreground">Diário às 03:00</div>
+            <div className="text-lg font-bold text-foreground">Diário às 00:00</div>
             <span className="text-xs text-muted-foreground mt-2 block">
-              Próximo ciclo: {data?.nextScheduledBackup ? formatDate(data.nextScheduledBackup) : '-'}
+              Vercel Cron & node-cron ativo
             </span>
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between text-muted-foreground mb-2">
-              <span className="text-xs font-medium">Criptografia em Repouso</span>
-              <Lock className="w-4 h-4 text-primary" />
+              <span className="text-xs font-medium">Destino Cloud</span>
+              <Cloud className="w-4 h-4 text-primary" />
             </div>
-            <div className="text-lg font-bold text-foreground">{data?.encryption || 'AES-256-GCM'}</div>
-            <span className="text-xs text-emerald-400 font-medium mt-2 block">Cifragem Ativa</span>
+            <div className="text-lg font-bold text-foreground">Cloudflare R2</div>
+            <span className="text-xs text-emerald-400 font-medium mt-2 block truncate" title={data?.bucket || 'barbershop-backups-prod'}>
+              Bucket: {data?.bucket || 'barbershop-backups-prod'}
+            </span>
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
@@ -295,7 +304,7 @@ export default function DeveloperBackupPage() {
             </div>
             <div className="text-lg font-bold text-foreground">RPO: {data?.targetRpoHours || 24}h</div>
             <span className="text-xs text-muted-foreground mt-2 block">
-              RTO Alvo: &lt; {data?.targetRtoMinutes || 30} minutos
+              RTO Alvo: &lt; {data?.targetRtoMinutes || 15} min (.sql.gz)
             </span>
           </div>
         </div>
@@ -305,7 +314,7 @@ export default function DeveloperBackupPage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-foreground">Histórico de Snapshots</h2>
-              <p className="text-sm text-muted-foreground">Arquivos versionados armazenados com redundância e checksum.</p>
+              <p className="text-sm text-muted-foreground">Arquivos versionados armazenados no Cloudflare R2 com redundância e integridade.</p>
             </div>
             <FileArchive className="w-5 h-5 text-muted-foreground" />
           </div>
@@ -320,7 +329,7 @@ export default function DeveloperBackupPage() {
             <div className="text-center py-12 border border-dashed border-border rounded-xl">
               <Database className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
               <p className="text-sm font-medium text-foreground">Nenhum backup encontrado.</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Clique em &quot;Executar Backup Agora&quot; para criar o primeiro snapshot.</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Clique em &quot;Executar Backup Agora&quot; para criar o primeiro snapshot no Cloudflare R2.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -330,9 +339,9 @@ export default function DeveloperBackupPage() {
                     <th className="pb-3 font-medium">Arquivo</th>
                     <th className="pb-3 font-medium">Data / Hora</th>
                     <th className="pb-3 font-medium">Tamanho</th>
-                    <th className="pb-3 font-medium">Segurança</th>
+                    <th className="pb-3 font-medium">Destino</th>
                     <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium text-right">Ação de DR</th>
+                    <th className="pb-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -344,9 +353,9 @@ export default function DeveloperBackupPage() {
                       <td className="py-3.5 text-muted-foreground text-xs">{formatDate(item.createdAt)}</td>
                       <td className="py-3.5 font-mono text-xs text-foreground">{formatBytes(item.sizeBytes)}</td>
                       <td className="py-3.5">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary border border-primary/20">
-                          <Lock className="w-3 h-3" />
-                          AES-256
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                          <Cloud className="w-3 h-3" />
+                          {item.storage || 'Cloudflare R2'}
                         </span>
                       </td>
                       <td className="py-3.5">
@@ -354,7 +363,16 @@ export default function DeveloperBackupPage() {
                           ● Válido
                         </span>
                       </td>
-                      <td className="py-3.5 text-right">
+                      <td className="py-3.5 text-right flex items-center justify-end gap-2">
+                        <a
+                          href={`/api/developer/backup?download=${encodeURIComponent(item.filename)}`}
+                          download
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-border bg-card hover:bg-accent text-foreground transition-all"
+                          title="Baixar arquivo de backup"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Baixar
+                        </a>
                         <button
                           onClick={() => {
                             setSelectedBackup(item)
@@ -364,7 +382,7 @@ export default function DeveloperBackupPage() {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 transition-all"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          Testar Restauração
+                          Testar
                         </button>
                       </td>
                     </tr>

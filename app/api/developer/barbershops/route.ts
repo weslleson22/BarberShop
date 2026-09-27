@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -436,6 +438,30 @@ export async function PATCH(request: NextRequest) {
       data: updateData,
     })
 
+    const ctx = extractRequestContext(request)
+    const upperStatus = status ? String(status).toUpperCase() : undefined
+    const action = upperStatus === 'APPROVED'
+      ? AuditAction.BARBERSHOP_APPROVED
+      : upperStatus === 'SUSPENDED' || upperStatus === 'REJECTED'
+      ? AuditAction.BARBERSHOP_SUSPENDED
+      : AuditAction.UPDATE
+
+    await createAuditLog({
+      userId: user.id,
+      barbershopId: updated.id,
+      action,
+      entity: AuditEntity.BARBERSHOP,
+      entityId: updated.id,
+      metadata: {
+        barbershopName: updated.name,
+        slug: updated.slug,
+        status: updated.status,
+        isActive: updated.isActive,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
+
     return NextResponse.json(updated)
   } catch (error) {
     console.error('Developer barbershops PATCH error:', error)
@@ -481,6 +507,22 @@ export async function POST(request: NextRequest) {
         phone: adminPhone || phone,
         isActive: true,
       },
+    })
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: user.id,
+      barbershopId: result.barbershop.id,
+      action: AuditAction.BARBERSHOP_CREATED,
+      entity: AuditEntity.BARBERSHOP,
+      entityId: result.barbershop.id,
+      metadata: {
+        barbershopName: result.barbershop.name,
+        slug: result.barbershop.slug,
+        adminEmail,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
     })
 
     return NextResponse.json(result, { status: 201 })

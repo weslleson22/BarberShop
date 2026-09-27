@@ -29,6 +29,16 @@ export function getAuthUser(request: NextRequest): JWTPayload | null {
     }
   }
 
+  // 3. Tentar ler e validar do query param 'token' (essencial para EventSource / SSE / WebSockets)
+  try {
+    const queryToken = request.nextUrl.searchParams.get('token')
+    if (queryToken) {
+      return verifyToken(queryToken)
+    }
+  } catch {
+    // Token da query inválido ou expirado
+  }
+
   return null
 }
 
