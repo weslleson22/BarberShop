@@ -34,6 +34,11 @@ model Barbershop {
   services  Service[]
   appointments Appointment[]
   payments  Payment[]
+  subscriptions Subscription[]
+  invoices      Invoice[]
+  slugRedirects BarbershopSlugRedirect[]
+  privacyRequests PrivacyRequest[]
+  feedbacks     TenantFeedback[]
 
   @@map("barbershops")
 }
@@ -64,6 +69,8 @@ model User {
   createdBarbershops  Barbershop[]  @relation("BarbershopCreator")
   client       Client?
   notifications Notification[]
+  privacyRequests PrivacyRequest[]
+  feedbacks     TenantFeedback[]
 
   @@map("users")
 }
@@ -159,6 +166,8 @@ model Appointment {
 
   payments Payment[]
 
+  @@index([barbershopId, barberId, startTime, endTime])
+  @@index([barbershopId, startTime, status])
   @@map("appointments")
 }
 
@@ -212,3 +221,219 @@ enum PaymentStatus {
   CANCELLED
   REFUNDED
 }
+
+// ==========================================
+// DOMÍNIO DE ASSINATURAS DO SAAS (B2B BILLING)
+// Não confundir com Payment (atendimento operacional)
+// ==========================================
+
+model Plan {
+  id              String          @id @default(cuid())
+  name            String
+  slug            String          @unique
+  description     String?
+  price           Decimal         @db.Decimal(10, 2)
+  currency        String          @default("BRL")
+  billingInterval BillingInterval @default(MONTHLY)
+  trialDays       Int             @default(0)
+  isActive        Boolean         @default(true)
+  features        Json            @default("{}")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  subscriptions   Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  barbershopId           String
+  barbershop             Barbershop         @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  planId                 String
+  plan                   Plan               @relation(fields: [planId], references: [id])
+  status                 SubscriptionStatus @default(TRIALING)
+  trialStart             DateTime?
+  trialEnd               DateTime?
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  cancelAtPeriodEnd      Boolean            @default(false)
+  canceledAt             DateTime?
+  provider               String?
+  providerSubscriptionId String?
+  providerCustomerId     String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  invoices               Invoice[]
+  events                 SubscriptionEvent[]
+
+  @@index([barbershopId, status])
+  @@index([status])
+  @@index([providerSubscriptionId])
+  @@index([providerCustomerId])
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id                String        @id @default(cuid())
+  subscriptionId    String
+  subscription      Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  barbershopId      String
+  barbershop        Barbershop    @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("BRL")
+  status            InvoiceStatus @default(OPEN)
+  dueDate           DateTime
+  paidAt            DateTime?
+  provider          String?
+  providerInvoiceId String?       @unique
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([barbershopId, status])
+  @@index([subscriptionId, status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+model SubscriptionEvent {
+  id             String                @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription          @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  type           SubscriptionEventType
+  payload        Json                  @default("{}")
+  createdAt      DateTime              @default(now())
+
+  @@index([subscriptionId, createdAt])
+  @@map("subscription_events")
+}
+
+model ProcessedWebhook {
+  id          String   @id @default(cuid())
+  provider    String
+  eventId     String   @unique
+  eventType   String
+  payload     Json     @default("{}")
+  processedAt DateTime @default(now())
+  status      String   @default("PROCESSED")
+
+  @@index([provider, eventId])
+  @@map("processed_webhooks")
+}
+
+enum BillingInterval {
+  MONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  OPEN
+  PAID
+  FAILED
+  VOID
+  CANCELED
+}
+
+enum SubscriptionEventType {
+  TRIAL_STARTED
+  TRIAL_7_DAYS_REMAINING
+  TRIAL_3_DAYS_REMAINING
+  TRIAL_1_DAY_REMAINING
+  TRIAL_EXPIRED
+  SUBSCRIPTION_CREATED
+  SUBSCRIPTION_ACTIVATED
+  PAYMENT_SUCCEEDED
+  PAYMENT_FAILED
+  SUBSCRIPTION_SUSPENDED
+  SUBSCRIPTION_CANCELED
+  SUBSCRIPTION_RENEWED
+  PLAN_CHANGED
+}
+
+model BarbershopSlugRedirect {
+  id           String      @id @default(cuid())
+  barbershopId String
+  oldSlug      String      @unique
+  createdAt    DateTime    @default(now())
+
+  barbershop   Barbershop  @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  @@index([barbershopId])
+  @@map("barbershop_slug_redirects")
+}
+
+model PrivacyRequest {
+  id              String               @id @default(cuid())
+  userId          String?
+  barbershopId    String?
+  type            PrivacyRequestType
+  status          PrivacyRequestStatus @default(PENDING)
+  applicantEmail  String
+  applicantName   String
+  details         String?
+  rejectionReason String?
+  processedAt     DateTime?
+  processedById   String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  user            User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  barbershop      Barbershop?          @relation(fields: [barbershopId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([barbershopId])
+  @@index([applicantEmail])
+  @@map("privacy_requests")
+}
+
+enum PrivacyRequestType {
+  ACCESS
+  EXPORT
+  RECTIFICATION
+  ANONYMIZATION
+  DELETION
+  REVOCATION
+}
+
+enum PrivacyRequestStatus {
+  PENDING
+  IN_REVIEW
+  COMPLETED
+  REJECTED
+}
+
+model TenantFeedback {
+  id                String      @id @default(cuid())
+  barbershopId      String?
+  barbershop        Barbershop? @relation(fields: [barbershopId], references: [id], onDelete: SetNull)
+  userId            String?
+  user              User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userName          String?
+  userEmail         String?
+  easeScore         Int         // 1-5 (Facilidade de uso)
+  satisfactionScore Int         // 1-5 (Satisfação geral / CSAT)
+  mostUsedFeature   String?     // Funcionalidade mais utilizada
+  missingFeature    String?     // Funcionalidade que faz falta
+  problems          String?     // Problemas enfrentados
+  bugsReported      String?     // Bugs reportados
+  continueIntent    String      // "YES", "NO", "MAYBE"
+  notes             String?
+  createdAt         DateTime    @default(now())
+
+  @@index([barbershopId])
+  @@index([createdAt])
+  @@map("tenant_feedbacks")
+}
+

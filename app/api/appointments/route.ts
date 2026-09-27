@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { criarAgendamento, getHorariosDisponiveis } from '@/lib/appointment-scheduler'
+import { criarAgendamento, getHorariosDisponiveis, ConcurrencyConflictError } from '@/lib/appointment-scheduler'
 
 import { getAuthUser } from '@/lib/api-auth'
 
@@ -232,6 +232,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Barbearia obrigatória' }, { status: 400 })
     }
 
+    // Validação centralizada do status de assinatura/trial da barbearia
+    const { getSubscriptionAccess } = await import('@/lib/billing/saas-billing')
+    const saasAccess = await getSubscriptionAccess(targetBarbershopId)
+    if (!saasAccess.canAccessOperations) {
+      return NextResponse.json(
+        {
+          error: saasAccess.message,
+          code: 'SUBSCRIPTION_EXPIRED',
+          status: saasAccess.status,
+          canAccessBillingOnly: true,
+        },
+        { status: 402 }
+      )
+    }
+
     const appointment = await criarAgendamento({
       ...data,
       clientId,
@@ -241,6 +256,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(appointment, { status: 201 })
   } catch (error) {
+    if (
+      (typeof ConcurrencyConflictError === 'function' && error instanceof ConcurrencyConflictError) ||
+      (error as any)?.statusCode === 409 ||
+      (error as any)?.code === 'CONCURRENCY_CONFLICT' ||
+      (error instanceof Error && error.message.includes('reservado por outro cliente'))
+    ) {
+      return NextResponse.json(
+        {
+          error: 'O horário acabou de ser reservado por outro cliente. Escolha outro horário.',
+          code: 'SLOT_CONFLICT',
+        },
+        { status: 409 }
+      )
+    }
+
     console.error('Create appointment error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erro ao criar agendamento' },

@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
       id: tenant.id,
       name: tenant.name,
       slug: tenant.slug,
+      redirect: result.redirect || false,
+      targetSlug: result.redirect ? result.targetSlug : undefined,
       phone: tenant.phone,
       address: tenant.address,
       logo: tenant.logo,

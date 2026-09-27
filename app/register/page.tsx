@@ -42,6 +42,8 @@ export default function RegisterPage() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
@@ -93,6 +95,11 @@ export default function RegisterPage() {
 
     if (formData.password !== formData.confirmPassword) {
       setError('A confirmação de senha não coincide com a senha digitada.')
+      return
+    }
+
+    if (!acceptedTerms || !acceptedPrivacy) {
+      setError('Você deve aceitar os Termos de Uso e a Política de Privacidade para prosseguir com o cadastro.')
       return
     }
 
@@ -509,6 +516,43 @@ export default function RegisterPage() {
               <div>
                 <strong className="text-amber-400">Processo de Aprovação:</strong> Ao enviar seu cadastro, seus dados serão encaminhados para validação técnica pelo desenvolvedor. Assim que aprovado, seu login será liberado imediatamente.
               </div>
+            </div>
+
+            {/* CONSENTIMENTO LGPD & TERMOS */}
+            <div className="space-y-3 p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/20 cursor-pointer"
+                />
+                <span>
+                  Li e aceito os{' '}
+                  <Link href="/termos" target="_blank" className="text-amber-400 hover:underline font-semibold">
+                    Termos de Uso
+                  </Link>{' '}
+                  da plataforma BarberShop. <span className="text-amber-400">*</span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  checked={acceptedPrivacy}
+                  onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/20 cursor-pointer"
+                />
+                <span>
+                  Li e concordo com a{' '}
+                  <Link href="/privacidade" target="_blank" className="text-amber-400 hover:underline font-semibold">
+                    Política de Privacidade
+                  </Link>{' '}
+                  e tratamento de dados pessoais conforme a LGPD. <span className="text-amber-400">*</span>
+                </span>
+              </label>
             </div>
 
             {/* BOTÃO DE SUBMIT */}

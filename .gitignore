@@ -7,3 +7,12 @@ dist/
 build/
 node_modules/.prisma/client
 .vercel
+
+# Backups and Database Snapshots
+backups/
+dr-snapshots/
+*.dump
+*.sql
+*.sql.gz
+*.enc
+*.tar.gz

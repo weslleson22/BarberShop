@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { getAuthHeaders, maskPhone, maskEmail, maskName } from '@/lib/utils'
@@ -49,6 +50,15 @@ interface BarbershopData {
   createdAt: string
   contractExpiresAt: string | null
   createdById: string | null
+  trial?: {
+    isTrial: boolean
+    trialStart: string | null
+    trialEnd: string | null
+    daysRemaining: number
+    planName: string
+    status: string
+  } | null
+  subscriptionStatus?: string
   creator?: {
     id: string
     name: string
@@ -63,10 +73,14 @@ interface BarbershopData {
     isActive: boolean
     createdAt: string
   }>
+  lifecycleStatus?: string
+  lastAccess?: string
+  lastActivity?: string
   _count?: {
     users?: number
     clients?: number
     services?: number
+    appointments?: number
   }
 }
 
@@ -125,11 +139,20 @@ export default function DeveloperDashboardPage() {
   const [slugEditValue, setSlugEditValue] = useState('')
   const [isUpdatingSlug, setIsUpdatingSlug] = useState(false)
 
-  // Sincronização em massa de slugs
+  // Sincronização em massa de slugs e cópia de URLs
   const [isSyncingSlugs, setIsSyncingSlugs] = useState(false)
+  const [copiedShopId, setCopiedShopId] = useState<string | null>(null)
+
+  const handleCopyPublicUrl = (slug: string, shopId: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const url = `${origin}/b/${slug}`
+    navigator.clipboard.writeText(url)
+    setCopiedShopId(shopId)
+    setTimeout(() => setCopiedShopId(null), 2500)
+  }
 
   // Abas de filtro de tenants
-  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('ALL')
+  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'TRIALING' | 'EXPIRED'>('ALL')
 
   // Modal "Análise e Aprovação de Cadastro"
   const [selectedShopForApproval, setSelectedShopForApproval] = useState<BarbershopData | null>(null)
@@ -644,15 +667,23 @@ export default function DeveloperDashboardPage() {
   }
 
   const pendingCount = barbershops.filter((s) => s.status === 'PENDING').length
-  const activeCount = barbershops.filter((s) => s.isActive && s.status !== 'PENDING').length
+  const activeCount = barbershops.filter((s) => (s.subscriptionStatus === 'ACTIVE' || (s.isActive && s.status !== 'PENDING'))).length
   const inactiveCount = barbershops.filter(
     (s) => (!s.isActive && s.status !== 'PENDING') || s.status === 'REJECTED'
   ).length
+  const trialingCount = barbershops.filter((s) => s.trial?.status === 'TRIALING').length
+  const expiredCount = barbershops.filter((s) => s.trial?.status === 'EXPIRED').length
 
   const filteredBarbershops = barbershops.filter((shop) => {
     if (filterTab === 'PENDING' && shop.status !== 'PENDING') return false
-    if (filterTab === 'ACTIVE' && (!shop.isActive || shop.status === 'PENDING')) return false
+    if (filterTab === 'ACTIVE') {
+      const isSubActive = shop.subscriptionStatus === 'ACTIVE' || shop.trial?.status === 'ACTIVE'
+      const isLegacyActive = shop.isActive && shop.status !== 'PENDING' && shop.trial?.status !== 'EXPIRED'
+      if (!isSubActive && !isLegacyActive) return false
+    }
     if (filterTab === 'INACTIVE' && shop.isActive && shop.status !== 'REJECTED') return false
+    if (filterTab === 'TRIALING' && shop.trial?.status !== 'TRIALING') return false
+    if (filterTab === 'EXPIRED' && shop.trial?.status !== 'EXPIRED') return false
 
     const q = searchTerm.toLowerCase().trim()
     if (!q) return true
@@ -693,6 +724,14 @@ export default function DeveloperDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/developer/onboarding"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-lg text-sm shadow-lg shadow-purple-600/20 transition-all hover:scale-[1.02]"
+            >
+              <Users className="h-4 w-4" />
+              Cockpit Onboarding (5–10 Clientes)
+            </Link>
+
             <button
               onClick={() => {
                 setFormError(null)
@@ -945,6 +984,46 @@ export default function DeveloperDashboardPage() {
 
             <button
               type="button"
+              onClick={() => setFilterTab('TRIALING')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                filterTab === 'TRIALING'
+                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                  : 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
+              }`}
+            >
+              <CalendarClock className="w-3.5 h-3.5" />
+              <span>Em Trial (30 dias)</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  filterTab === 'TRIALING' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-amber-300'
+                }`}
+              >
+                {trialingCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFilterTab('EXPIRED')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                filterTab === 'EXPIRED'
+                  ? 'bg-red-500 text-white font-semibold shadow-sm'
+                  : 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Trial Expirado</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  filterTab === 'EXPIRED' ? 'bg-black/20 text-white font-bold' : 'bg-gray-800 text-red-300'
+                }`}
+              >
+                {expiredCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setFilterTab('INACTIVE')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                 filterTab === 'INACTIVE'
@@ -970,11 +1049,12 @@ export default function DeveloperDashboardPage() {
                 <tr className="bg-gray-900/80 text-gray-400 border-b border-gray-800">
                   <th className="py-3.5 px-4 font-semibold">Empresa</th>
                   <th className="py-3.5 px-4 font-semibold">Cadastrado em</th>
-                  <th className="py-3.5 px-4 font-semibold">Contrato</th>
+                  <th className="py-3.5 px-4 font-semibold">Trial / Assinatura</th>
                   <th className="py-3.5 px-4 font-semibold">Contato</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Equipe</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Clientes</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Serviços</th>
+                  <th className="py-3.5 px-4 font-semibold text-center">Agendamentos</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Status</th>
                   <th className="py-3.5 px-4 font-semibold text-right">Ações</th>
                 </tr>
@@ -982,7 +1062,7 @@ export default function DeveloperDashboardPage() {
               <tbody className="divide-y divide-gray-800/60">
                 {filteredBarbershops.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-gray-500">
+                    <td colSpan={10} className="py-12 text-center text-gray-500">
                       <div className="flex flex-col items-center justify-center gap-3 max-w-sm mx-auto">
                         <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                           <Building2 className="w-6 h-6 text-amber-400" />
@@ -1020,7 +1100,7 @@ export default function DeveloperDashboardPage() {
                         <div className="font-semibold text-white">{shop.name}</div>
                         <div className="text-xs text-gray-500 font-mono">ID: {shop.id}</div>
                         {shop.slug ? (
-                          <div className="mt-1">
+                          <div className="mt-1 flex items-center gap-1.5">
                             <a
                               href={`/b/${shop.slug}`}
                               target="_blank"
@@ -1031,6 +1111,18 @@ export default function DeveloperDashboardPage() {
                               <span>/b/{shop.slug}</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyPublicUrl(shop.slug!, shop.id)}
+                              className="p-1 rounded hover:bg-gray-800 text-gray-400 hover:text-amber-400 transition cursor-pointer"
+                              title="Copiar URL pública da barbearia"
+                            >
+                              {copiedShopId === shop.id ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
                           </div>
                         ) : (
                           <div className="mt-1 text-[11px] text-gray-500 italic">
@@ -1050,15 +1142,52 @@ export default function DeveloperDashboardPage() {
                         </div>
                       </td>
                       <td className="py-4 px-4 whitespace-nowrap">
-                        {(() => {
-                          const status = getContractStatus(shop.contractExpiresAt)
-                          return (
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${status.color}`}>
-                              <CalendarClock className="w-3.5 h-3.5" />
-                              {status.label}
-                            </span>
-                          )
-                        })()}
+                        {shop.trial ? (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                                  shop.trial.status === 'TRIALING'
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                    : shop.trial.status === 'ACTIVE'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    : shop.trial.status === 'EXPIRED'
+                                    ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                                    : 'bg-gray-800 text-gray-300 border-gray-700'
+                                }`}
+                              >
+                                <CalendarClock className="w-3 h-3" />
+                                {shop.trial.status === 'TRIALING'
+                                  ? `Trial: ${shop.trial.daysRemaining}d restantes`
+                                  : shop.trial.status === 'ACTIVE'
+                                  ? 'Ativo (Assinatura)'
+                                  : shop.trial.status === 'EXPIRED'
+                                  ? 'Trial Expirado'
+                                  : shop.trial.status}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-gray-300 flex items-center gap-1">
+                              <span className="text-gray-500">Plano:</span>
+                              <span className="font-medium text-amber-300">{shop.trial.planName}</span>
+                            </div>
+                            {shop.trial.trialStart && shop.trial.trialEnd && (
+                              <div className="text-[10px] text-gray-400 font-mono">
+                                {new Date(shop.trial.trialStart).toLocaleDateString('pt-BR')} até{' '}
+                                {new Date(shop.trial.trialEnd).toLocaleDateString('pt-BR')}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          (() => {
+                            const status = getContractStatus(shop.contractExpiresAt)
+                            return (
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${status.color}`}>
+                                <CalendarClock className="w-3.5 h-3.5" />
+                                {status.label}
+                              </span>
+                            )
+                          })()
+                        )}
                       </td>
                       <td className="py-4 px-4">
                         <div className="text-gray-300 text-xs">{shop.email}</div>
@@ -1072,6 +1201,9 @@ export default function DeveloperDashboardPage() {
                       </td>
                       <td className="py-4 px-4 text-center font-medium text-gray-200">
                         {shop._count?.services ?? 0}
+                      </td>
+                      <td className="py-4 px-4 text-center font-bold text-amber-400">
+                        {shop._count?.appointments ?? 0}
                       </td>
                       <td className="py-4 px-4 text-center">
                         {shop.status === 'PENDING' ? (

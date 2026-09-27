@@ -55,6 +55,10 @@ vi.mock('@/lib/appointment-scheduler', () => ({
     id: 'created_apt_public_id',
     ...data,
   })),
+  ConcurrencyConflictError: class ConcurrencyConflictError extends Error {
+    statusCode = 409
+    code = 'CONCURRENCY_CONFLICT'
+  },
 }))
 
 import { prisma } from '@/lib/prisma'

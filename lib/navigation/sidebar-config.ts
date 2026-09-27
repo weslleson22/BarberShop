@@ -16,6 +16,10 @@ import {
   Store,
   Layers,
   Activity,
+  HardDrive,
+  Rocket,
+  Shield,
+  FileText,
   type LucideIcon,
 } from "lucide-react"
 import { ROLE_LABELS, type UserRole } from "@/lib/roles"
@@ -59,9 +63,14 @@ export function getSidebarSections(role: UserRole): NavSection[] {
               { title: "Todas as Unidades", url: "/developer" },
               { title: "Unidades Ativas", url: "/developer?status=APPROVED" },
               { title: "Em Avaliação", url: "/developer?status=PENDING" },
-              { title: "Suspensas", url: "/developer?status=SUSPENDED", badge: "Em breve" },
-              { title: "Canceladas", url: "/developer?status=CANCELLED", badge: "Em breve" },
+              { title: "Suspensas", url: "/developer?status=SUSPENDED", badge: "Em breve", disabled: true },
+              { title: "Canceladas", url: "/developer?status=CANCELLED", badge: "Em breve", disabled: true },
             ],
+          },
+          {
+            title: "Cockpit Onboarding",
+            url: "/developer/onboarding",
+            icon: Rocket,
           },
           {
             title: "Usuários da Plataforma",
@@ -79,24 +88,21 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             items: [
               { title: "Ativas", url: "#", badge: "Em breve", disabled: true },
               { title: "Vencidas", url: "#", badge: "Em breve", disabled: true },
-              { title: "Período Trial", url: "#", badge: "Em breve", disabled: true },
+              { title: "Gestão Completa", url: "/developer/billing" },
             ],
           },
           {
             title: "Financeiro Global",
             icon: CreditCard,
             items: [
-              { title: "Receita Recorrente", url: "#", badge: "Em breve", disabled: true },
-              { title: "Cobranças", url: "#", badge: "Em breve", disabled: true },
-              { title: "Faturas & Invoices", url: "#", badge: "Em breve", disabled: true },
+              { title: "Receita Recorrente & Invoices", url: "/developer/billing" },
             ],
           },
           {
             title: "Planos & Tiers",
             icon: Layers,
             items: [
-              { title: "Planos do SaaS", url: "#", badge: "Em breve", disabled: true },
-              { title: "Benefícios & Limites", url: "#", badge: "Em breve", disabled: true },
+              { title: "Planos do SaaS", url: "/developer/plans" },
             ],
           },
         ],
@@ -108,9 +114,13 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             title: "Monitoramento",
             icon: Activity,
             items: [
-              { title: "Métricas de Servidor", url: "#", badge: "Em breve", disabled: true },
-              { title: "Logs de Auditoria", url: "#", badge: "Em breve", disabled: true },
+              { title: "System Health & Métricas", url: "/developer/monitoring" },
             ],
+          },
+          {
+            title: "Backup & Restore",
+            url: "/developer/backup",
+            icon: HardDrive,
           },
           {
             title: "Configurações Globais",
@@ -183,8 +193,8 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             title: "Meu Plano",
             icon: ShieldCheck,
             items: [
-              { title: "Assinatura Ativa", url: "#", badge: "Em breve", disabled: true },
-              { title: "Faturas & Recibos", url: "#", badge: "Em breve", disabled: true },
+              { title: "Assinatura & Planos", url: "/dashboard/assinatura" },
+              { title: "Guia de Onboarding", url: "/dashboard/onboarding" },
             ],
           },
         ],
@@ -201,6 +211,16 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             title: "Perfil do Estabelecimento",
             url: "/perfil",
             icon: Store,
+          },
+          {
+            title: "Termos de Uso",
+            url: "/termos",
+            icon: FileText,
+          },
+          {
+            title: "Privacidade & LGPD",
+            url: "/privacidade",
+            icon: Shield,
           },
         ],
       },
@@ -258,6 +278,11 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             url: "/configuracoes",
             icon: Settings,
           },
+          {
+            title: "Privacidade & LGPD",
+            url: "/privacidade",
+            icon: Shield,
+          },
         ],
       },
     ]
@@ -314,6 +339,11 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             url: "/configuracoes",
             icon: Settings,
           },
+          {
+            title: "Privacidade & LGPD",
+            url: "/privacidade",
+            icon: Shield,
+          },
         ],
       },
     ]
@@ -353,6 +383,11 @@ export function getSidebarSections(role: UserRole): NavSection[] {
           title: "Configurações",
           url: "/configuracoes",
           icon: Settings,
+        },
+        {
+          title: "Termos & Privacidade",
+          url: "/privacidade",
+          icon: Shield,
         },
       ],
     },

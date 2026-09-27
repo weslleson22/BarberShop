@@ -1,5 +1,6 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { resolvePublicTenant } from '@/lib/tenant'
 import { 
@@ -9,27 +10,74 @@ import {
   Phone, 
   Calendar, 
   Star, 
-  CheckCircle2, 
   ArrowRight,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  CalendarCheck,
+  CheckCircle2,
+  Building2,
+  CalendarDays
 } from 'lucide-react'
 
 interface Props {
   params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: Props) {
+// SEO & OpenGraph Dinâmico Seguro (Sem expor dados sensíveis)
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const result = await resolvePublicTenant(slug)
+
   if (!result.success) {
     return {
       title: 'Barbearia não encontrada | BarberShop',
+      description: 'A barbearia solicitada não existe ou não está ativa no momento.',
+      robots: { index: false, follow: false },
     }
   }
+
+  const { tenant } = result
+  const canonicalSlug = result.redirect ? result.targetSlug : (tenant.slug || slug)
+  const canonicalUrl = `https://barbershop.com.br/b/${encodeURIComponent(canonicalSlug)}`
+  const title = `${tenant.name} | Agendamento Online & Serviços`
+  const description = tenant.description
+    ? `${tenant.name} - ${tenant.description}`
+    : `Agende seu horário na ${tenant.name}. Confira serviços exclusivos, equipe de barbeiros e disponibilidade em tempo real.`
+
   return {
-    title: `${result.tenant.name} | Agendamento Online`,
-    description: result.tenant.description || `Agende seu horário na ${result.tenant.name}. Serviços profissionais e atendimento de excelência.`,
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: 'BarberShop Multi-Tenant',
+      images: tenant.logo
+        ? [
+            {
+              url: tenant.logo,
+              width: 800,
+              height: 600,
+              alt: `Logo da ${tenant.name}`,
+            },
+          ]
+        : [],
+      locale: 'pt_BR',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: tenant.logo ? [tenant.logo] : [],
+    },
+    robots: {
+      index: tenant.isActive,
+      follow: tenant.isActive,
+    },
   }
 }
 
@@ -42,9 +90,14 @@ export default async function TenantPublicPage({ params }: Props) {
     notFound()
   }
 
+  // 2. Comportamento definido para slug alterado: Redirecionamento permanente controlado (HTTP 308)
+  if (tenantResult.redirect && tenantResult.targetSlug) {
+    redirect(`/b/${encodeURIComponent(tenantResult.targetSlug)}`)
+  }
+
   const tenant = tenantResult.tenant
 
-  // 2. Buscar serviços estritamente deste tenant
+  // 3. Buscar serviços estritamente deste tenant
   const services = await prisma.service.findMany({
     where: {
       barbershopId: tenant.id,
@@ -55,7 +108,7 @@ export default async function TenantPublicPage({ params }: Props) {
     },
   })
 
-  // 3. Buscar barbeiros estritamente deste tenant
+  // 4. Buscar barbeiros estritamente deste tenant
   const barbers = await prisma.user.findMany({
     where: {
       barbershopId: tenant.id,
@@ -82,6 +135,9 @@ export default async function TenantPublicPage({ params }: Props) {
       currency: 'BRL',
     }).format(value)
   }
+
+  const activeSlug = tenant.slug || slug
+  const bookingUrl = `/agendar?slug=${encodeURIComponent(activeSlug)}`
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-black text-white">
@@ -118,7 +174,7 @@ export default async function TenantPublicPage({ params }: Props) {
 
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
             <Link
-              href={`/agendar?slug=${encodeURIComponent(tenant.slug || slug)}`}
+              href={bookingUrl}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-black shadow-lg shadow-amber-500/25 transition-all transform hover:-translate-y-0.5"
             >
               <Calendar className="w-4 h-4" />
@@ -128,7 +184,7 @@ export default async function TenantPublicPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Contact info bar */}
+        {/* Contact & Location Info Bar */}
         {(tenant.address || tenant.phone) && (
           <div className="border-t border-gray-800/80 bg-black/40">
             <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-6 text-xs text-gray-400">
@@ -201,7 +257,7 @@ export default async function TenantPublicPage({ params }: Props) {
                       {service.duration} minutos
                     </span>
                     <Link
-                      href={`/agendar?slug=${encodeURIComponent(tenant.slug || slug)}`}
+                      href={bookingUrl}
                       className="inline-flex items-center gap-1 font-semibold text-amber-400 hover:text-amber-300"
                     >
                       Escolher <ArrowRight className="w-3.5 h-3.5" />
@@ -280,7 +336,59 @@ export default async function TenantPublicPage({ params }: Props) {
           )}
         </section>
 
-        {/* CTA Section */}
+        {/* Agenda & Horários de Funcionamento */}
+        <section className="p-8 rounded-3xl bg-gray-900/60 border border-gray-800/90 backdrop-blur-md">
+          <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold tracking-wide uppercase mb-2">
+            <CalendarDays className="w-4 h-4" />
+            Agenda & Funcionamento
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-6">
+            Horários de Atendimento da Unidade
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-5 rounded-2xl bg-gray-800/50 border border-gray-700/60 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-white text-sm">Segunda a Sexta</h4>
+                <p className="text-xs text-gray-400 mt-1">08:00 às 20:00</p>
+                <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  <CheckCircle2 className="w-3 h-3" /> Aberto
+                </span>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-gray-800/50 border border-gray-700/60 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-white text-sm">Sábados</h4>
+                <p className="text-xs text-gray-400 mt-1">08:00 às 18:00</p>
+                <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  <CheckCircle2 className="w-3 h-3" /> Aberto
+                </span>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-gray-800/50 border border-gray-700/60 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                <CalendarCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-white text-sm">Domingos e Feriados</h4>
+                <p className="text-xs text-gray-400 mt-1">Consulte disponibilidade especial</p>
+                <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full border border-gray-700">
+                  Sob agendamento
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Call to Action Final */}
         <section className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-amber-900/40 via-yellow-900/20 to-gray-900/80 border border-amber-500/30 text-center flex flex-col items-center justify-center gap-6 shadow-2xl">
           <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-xl">
             <Calendar className="w-8 h-8" />
@@ -290,11 +398,11 @@ export default async function TenantPublicPage({ params }: Props) {
               Pronto para renovar seu visual na {tenant.name}?
             </h2>
             <p className="mt-2 text-sm text-gray-300">
-              Escolha o profissional da sua preferência, confira os horários em tempo real e garanta sua reserva.
+              Escolha o profissional da sua preferência, confira os horários em tempo real e garanta sua reserva em instantes.
             </p>
           </div>
           <Link
-            href={`/agendar?slug=${encodeURIComponent(tenant.slug || slug)}`}
+            href={bookingUrl}
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-black shadow-xl shadow-amber-500/30 transition-all transform hover:-translate-y-0.5"
           >
             <span>Iniciar Agendamento Online</span>

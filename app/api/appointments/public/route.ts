@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { criarAgendamento } from '@/lib/appointment-scheduler'
+import { criarAgendamento, ConcurrencyConflictError } from '@/lib/appointment-scheduler'
 import { getAuthUser } from '@/lib/api-auth'
 
 import { resolvePublicTenant } from '@/lib/tenant'
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const where: any = {
       barbershopId,
-      status: { not: 'CANCELLED' },
+      status: { notIn: ['CANCELLED', 'NO_SHOW'] },
     }
     if (barberId) {
       where.barberId = barberId
@@ -102,6 +102,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'barbershopId conflitante com o tenant especificado' },
         { status: 400 }
+      )
+    }
+
+    // Validação centralizada do status de assinatura/trial da barbearia
+    const { getSubscriptionAccess } = await import('@/lib/billing/saas-billing')
+    const saasAccess = await getSubscriptionAccess(barbershopId)
+    if (!saasAccess.canAccessOperations) {
+      return NextResponse.json(
+        {
+          error: saasAccess.message || 'Esta barbearia não está aceitando novos agendamentos no momento.',
+          code: 'SUBSCRIPTION_EXPIRED',
+          status: saasAccess.status,
+        },
+        { status: 402 }
       )
     }
 
@@ -169,6 +183,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(appointment, { status: 201 })
   } catch (error) {
+    if (
+      (typeof ConcurrencyConflictError === 'function' && error instanceof ConcurrencyConflictError) ||
+      (error as any)?.statusCode === 409 ||
+      (error as any)?.code === 'CONCURRENCY_CONFLICT' ||
+      (error instanceof Error && error.message.includes('reservado por outro cliente'))
+    ) {
+      return NextResponse.json(
+        {
+          error: 'O horário acabou de ser reservado por outro cliente. Escolha outro horário.',
+          code: 'SLOT_CONFLICT',
+        },
+        { status: 409 }
+      )
+    }
+
     console.error('Create appointment error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erro ao criar agendamento' },

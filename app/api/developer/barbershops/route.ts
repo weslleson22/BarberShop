@@ -13,54 +13,93 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso restrito ao desenvolvedor da plataforma' }, { status: 403 })
     }
 
-    let barbershops = await prisma.barbershop.findMany({
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        email: true,
-        phone: true,
-        address: true,
-        logo: true,
-        description: true,
-        isActive: true,
-        status: true,
-        contractExpiresAt: true,
-        createdAt: true,
-        updatedAt: true,
-        createdById: true,
-        creator: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        users: {
-          where: { role: 'ADMIN' },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            role: true,
-            isActive: true,
-            createdAt: true,
-          },
-          take: 1,
-        },
-        _count: {
-          select: {
-            users: true,
-            clients: true,
-            services: true,
-          },
+    const baseSelect = {
+      id: true,
+      name: true,
+      slug: true,
+      email: true,
+      phone: true,
+      address: true,
+      logo: true,
+      description: true,
+      isActive: true,
+      status: true,
+      contractExpiresAt: true,
+      createdAt: true,
+      updatedAt: true,
+      createdById: true,
+      creator: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
         },
       },
-      orderBy: {
-        createdAt: 'desc',
+      users: {
+        where: { role: 'ADMIN' as const },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        take: 1,
       },
-    })
+      appointments: {
+        orderBy: { createdAt: 'asc' as const },
+        select: {
+          id: true,
+          createdAt: true,
+          startTime: true,
+          status: true,
+        },
+        take: 20,
+      },
+      _count: {
+        select: {
+          users: true,
+          clients: true,
+          services: true,
+          appointments: true,
+        },
+      },
+    }
+
+    let barbershops: any[] = []
+    let hasSubscriptions = true
+
+    try {
+      barbershops = await prisma.barbershop.findMany({
+        select: {
+          ...baseSelect,
+          subscriptions: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: { plan: true },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      })
+    } catch (err: any) {
+      if (err?.code === 'P2021' || err?.message?.includes('does not exist') || err?.message?.includes('subscriptions')) {
+        console.warn('Tabela subscriptions indisponível no banco. Executando fallback sem relação subscriptions:', err?.message)
+        hasSubscriptions = false
+        barbershops = await prisma.barbershop.findMany({
+          select: baseSelect,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        })
+      } else {
+        throw err
+      }
+    }
 
     // Auto-backfill: Se houver barbearia antiga cadastrada sem slug, gera automaticamente
     const hasMissingSlugs = barbershops.some(b => !b.slug || !b.slug.trim())
@@ -68,41 +107,184 @@ export async function GET(request: NextRequest) {
       const { backfillMissingSlugs } = await import('@/lib/tenant')
       await backfillMissingSlugs()
       // Atualiza os registros para entrega ao frontend
-      barbershops = await prisma.barbershop.findMany({
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          email: true,
-          phone: true,
-          address: true,
-          logo: true,
-          description: true,
-          isActive: true,
-          status: true,
-          contractExpiresAt: true,
-          createdAt: true,
-          updatedAt: true,
-          createdById: true,
-          creator: {
-            select: { id: true, name: true, email: true },
+      if (hasSubscriptions) {
+        try {
+          barbershops = await prisma.barbershop.findMany({
+            select: {
+              ...baseSelect,
+              subscriptions: {
+                orderBy: { createdAt: 'desc' },
+                take: 1,
+                include: { plan: true },
+              },
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+          })
+        } catch {
+          barbershops = await prisma.barbershop.findMany({
+            select: baseSelect,
+            orderBy: {
+              createdAt: 'desc',
+            },
+          })
+        }
+      } else {
+        barbershops = await prisma.barbershop.findMany({
+          select: baseSelect,
+          orderBy: {
+            createdAt: 'desc',
           },
-          users: {
-            where: { role: 'ADMIN' },
-            select: { id: true, name: true, email: true, phone: true, role: true, isActive: true, createdAt: true },
-            take: 1,
-          },
-          _count: {
-            select: { users: true, clients: true, services: true },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      })
+        })
+      }
     }
 
-    return NextResponse.json(barbershops)
+    const { searchParams } = new URL(request.url)
+    const statusFilter = searchParams.get('status')
+
+    const { resolveTenantLifecycleStatus, evaluateOnboardingSteps, calculateCompletionPercentage } = await import('@/lib/onboarding')
+
+    const now = new Date()
+    const mapped = barbershops.map((shop: any) => {
+      const latestSub = shop.subscriptions?.[0] || null
+
+      let trial = {
+        isTrial: false,
+        trialStart: null as string | null,
+        trialEnd: null as string | null,
+        daysRemaining: 0,
+        planName: 'Sem plano',
+        status: shop.isActive ? 'ACTIVE' : 'SUSPENDED',
+      }
+
+      if (latestSub) {
+        const isTrialing = latestSub.status === 'TRIALING'
+        const isTrialExpired = isTrialing && latestSub.trialEnd && now > new Date(latestSub.trialEnd)
+        const effectiveStatus = isTrialExpired ? 'EXPIRED' : latestSub.status
+
+        const targetDate = isTrialing ? latestSub.trialEnd : latestSub.currentPeriodEnd
+        const daysRemaining = targetDate
+          ? Math.max(0, Math.ceil((new Date(targetDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+          : 0
+
+        trial = {
+          isTrial: isTrialing && !isTrialExpired,
+          trialStart: latestSub.trialStart ? new Date(latestSub.trialStart).toISOString() : null,
+          trialEnd: latestSub.trialEnd ? new Date(latestSub.trialEnd).toISOString() : null,
+          daysRemaining: isTrialExpired ? 0 : daysRemaining,
+          planName: latestSub.plan?.name || 'Trial Gratuito (30 dias)',
+          status: effectiveStatus,
+        }
+      } else if (shop.contractExpiresAt) {
+        const expDate = new Date(shop.contractExpiresAt)
+        const isExpired = now > expDate
+        const daysRemaining = Math.max(0, Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+        trial = {
+          isTrial: !isExpired,
+          trialStart: shop.createdAt ? new Date(shop.createdAt).toISOString() : null,
+          trialEnd: expDate.toISOString(),
+          daysRemaining: isExpired ? 0 : daysRemaining,
+          planName: 'Trial Gratuito (30 dias)',
+          status: isExpired ? 'EXPIRED' : 'TRIALING',
+        }
+      } else if (shop.createdAt) {
+        const createdDate = new Date(shop.createdAt)
+        const calculatedEnd = new Date(createdDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+        const isExpired = now > calculatedEnd
+        const daysRemaining = Math.max(0, Math.ceil((calculatedEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+        trial = {
+          isTrial: !isExpired && shop.isActive,
+          trialStart: createdDate.toISOString(),
+          trialEnd: calculatedEnd.toISOString(),
+          daysRemaining: isExpired ? 0 : daysRemaining,
+          planName: 'Trial Gratuito (30 dias)',
+          status: isExpired ? 'EXPIRED' : (shop.isActive ? 'TRIALING' : 'SUSPENDED'),
+        }
+      }
+
+      // Lifecycle status unificado (LEAD, PENDING, TRIAL, ACTIVE, PAST_DUE, SUSPENDED, CANCELED)
+      const lifecycleStatus = resolveTenantLifecycleStatus(shop)
+
+      // Cálculo de First Appointment e Time to First Appointment (TTFA)
+      // Helper para data segura
+      const safeIso = (d: any): string | null => {
+        if (!d) return null
+        const dateObj = new Date(d)
+        return isNaN(dateObj.getTime()) ? null : dateObj.toISOString()
+      }
+
+      // Cálculo de First Appointment e Time to First Appointment (TTFA)
+      const apptsList = shop.appointments || []
+      const firstAppt = apptsList[0] || null
+      const latestAppt = apptsList[apptsList.length - 1] || null
+      const firstAppointmentAt = firstAppt ? safeIso(firstAppt.createdAt) : null
+
+      let timeToFirstAppointmentHours: number | null = null
+      if (firstAppt?.createdAt && shop.createdAt) {
+        const t1 = new Date(firstAppt.createdAt).getTime()
+        const t0 = new Date(shop.createdAt).getTime()
+        if (!isNaN(t1) && !isNaN(t0)) {
+          timeToFirstAppointmentHours = Math.max(0, Math.round(((t1 - t0) / (1000 * 60 * 60)) * 10) / 10)
+        }
+      }
+
+      // Último Acesso e Última Atividade
+      const adminUser = shop.users?.[0] || null
+      const lastAccess = safeIso(adminUser?.updatedAt) || safeIso(shop.updatedAt) || safeIso(shop.createdAt) || new Date().toISOString()
+
+      const lastActivityCandidates: number[] = []
+      if (shop.createdAt && !isNaN(new Date(shop.createdAt).getTime())) {
+        lastActivityCandidates.push(new Date(shop.createdAt).getTime())
+      }
+      if (shop.updatedAt && !isNaN(new Date(shop.updatedAt).getTime())) {
+        lastActivityCandidates.push(new Date(shop.updatedAt).getTime())
+      }
+      if (adminUser?.updatedAt && !isNaN(new Date(adminUser.updatedAt).getTime())) {
+        lastActivityCandidates.push(new Date(adminUser.updatedAt).getTime())
+      }
+      if (latestAppt?.createdAt && !isNaN(new Date(latestAppt.createdAt).getTime())) {
+        lastActivityCandidates.push(new Date(latestAppt.createdAt).getTime())
+      }
+      const maxActivityMs = lastActivityCandidates.length > 0 ? Math.max(...lastActivityCandidates) : Date.now()
+      const lastActivity = new Date(maxActivityMs).toISOString()
+
+      // Checklist de Onboarding dos 12 passos da sessão assistida (15-30m)
+      const onboardingSteps = evaluateOnboardingSteps({
+        hasBarbershop: true,
+        hasAdminUser: !!adminUser,
+        hasProfileConfigured: !!(shop.phone && shop.address),
+        servicesCount: shop._count?.services || 0,
+        barbersCount: shop._count?.users || 0,
+        slug: shop.slug,
+        clientsCount: shop._count?.clients || 0,
+        appointmentsCount: shop._count?.appointments || 0,
+      })
+      const onboardingCompletionPercentage = calculateCompletionPercentage(onboardingSteps)
+
+      return {
+        ...shop,
+        trial,
+        subscriptionStatus: trial.status,
+        lifecycleStatus,
+        lastAccess,
+        lastActivity,
+        firstAppointmentAt,
+        timeToFirstAppointmentHours,
+        isActivated: (shop._count?.appointments || 0) > 0,
+        onboardingSteps,
+        onboardingCompletionPercentage,
+      }
+    })
+
+    const filtered = statusFilter
+      ? mapped.filter(b => 
+          b.subscriptionStatus?.toUpperCase() === statusFilter.toUpperCase() ||
+          b.lifecycleStatus?.toUpperCase() === statusFilter.toUpperCase()
+        )
+      : mapped
+
+    return NextResponse.json(filtered)
   } catch (error) {
     console.error('Developer barbershops GET error:', error)
     return NextResponse.json(
@@ -156,10 +338,12 @@ export async function PATCH(request: NextRequest) {
 
     const updateData: any = {}
 
-    // Tratamento de Status (Aprovação / Rejeição)
+    // Tratamento de Status (Aprovação / Rejeição / Ciclo de vida SaaS)
     if (status) {
-      updateData.status = status
-      if (status === 'APPROVED') {
+      const upperStatus = String(status).toUpperCase()
+      updateData.status = upperStatus
+
+      if (['APPROVED', 'ACTIVE', 'TRIAL', 'PENDING', 'LEAD'].includes(upperStatus)) {
         updateData.isActive = true
         // Ativar o administrador da barbearia
         if (typeof (prisma.user as any)?.updateMany === 'function') {
@@ -168,7 +352,7 @@ export async function PATCH(request: NextRequest) {
             data: { isActive: true },
           })
         }
-      } else if (status === 'REJECTED') {
+      } else if (['REJECTED', 'SUSPENDED', 'CANCELED'].includes(upperStatus)) {
         updateData.isActive = false
         // Desativar o administrador da barbearia
         if (typeof (prisma.user as any)?.updateMany === 'function') {
@@ -177,6 +361,31 @@ export async function PATCH(request: NextRequest) {
             data: { isActive: false },
           })
         }
+      }
+
+      // Sincroniza Subscription do SaaS se existir
+      try {
+        const sub = await prisma.subscription.findFirst({
+          where: { barbershopId: id },
+          orderBy: { createdAt: 'desc' },
+        })
+        if (sub) {
+          let targetSubStatus: any = null
+          if (upperStatus === 'TRIAL') targetSubStatus = 'TRIALING'
+          else if (upperStatus === 'ACTIVE') targetSubStatus = 'ACTIVE'
+          else if (upperStatus === 'PAST_DUE') targetSubStatus = 'PAST_DUE'
+          else if (upperStatus === 'SUSPENDED') targetSubStatus = 'SUSPENDED'
+          else if (upperStatus === 'CANCELED') targetSubStatus = 'CANCELED'
+
+          if (targetSubStatus) {
+            await prisma.subscription.update({
+              where: { id: sub.id },
+              data: { status: targetSubStatus },
+            })
+          }
+        }
+      } catch (subErr) {
+        console.warn('Subscription status sync ignored:', subErr)
       }
     }
 
@@ -201,23 +410,10 @@ export async function PATCH(request: NextRequest) {
       updateData.contractExpiresAt = contractExpiresAt ? new Date(contractExpiresAt) : null
     }
 
-    // Validação e atualização de slug pelo desenvolvedor
-    if (slug !== undefined) {
-      const { slugify } = await import('@/lib/tenant')
-      const cleanSlug = slugify(slug)
-      if (cleanSlug) {
-        const existingSlug = await prisma.barbershop.findFirst({
-          where: { slug: cleanSlug, id: { not: id } },
-          select: { id: true },
-        })
-        if (existingSlug) {
-          return NextResponse.json(
-            { error: `O slug "${cleanSlug}" já está em uso por outro estabelecimento.` },
-            { status: 400 }
-          )
-        }
-        updateData.slug = cleanSlug
-      }
+    // Validação e atualização de slug pelo desenvolvedor com redirect controlado
+    if (slug !== undefined && slug.trim()) {
+      const { updateBarbershopSlug } = await import('@/lib/tenant')
+      await updateBarbershopSlug(id, slug)
     }
 
     // Se o desenvolvedor editar dados do administrador responsável

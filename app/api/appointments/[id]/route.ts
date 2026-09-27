@@ -168,14 +168,17 @@ export async function PUT(
         barberId,
         startTime: { lt: endDateTime },
         endTime: { gt: startDateTime },
-        status: { not: 'CANCELLED' },
+        status: { notIn: ['CANCELLED', 'NO_SHOW'] },
         id: { not: params.id },
       },
     })
 
     if (conflictingAppointment) {
       return NextResponse.json(
-        { error: 'Horário não disponível. Conflito com outro agendamento.' },
+        {
+          error: 'O horário acabou de ser reservado por outro cliente. Escolha outro horário.',
+          code: 'SLOT_CONFLICT',
+        },
         { status: 409 }
       )
     }

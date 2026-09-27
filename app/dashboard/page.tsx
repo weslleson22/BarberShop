@@ -12,6 +12,7 @@ import PopularServices from '@/components/dashboard/PopularServices'
 import FinanceSummary from '@/components/dashboard/FinanceSummary'
 import RecentClients from '@/components/dashboard/RecentClients'
 import PublicLinkCard from '@/components/dashboard/PublicLinkCard'
+import TrialBanner from '@/components/dashboard/TrialBanner'
 import { getAuthHeaders } from '@/lib/utils'
 
 interface ClientAppointment {
@@ -121,6 +122,7 @@ function StaffDashboard() {
       <DropdownHeader />
 
       <div className="w-full px-4 md:px-6">
+        <TrialBanner />
         <PublicLinkCard />
 
         <div className="mb-6 md:mb-8">

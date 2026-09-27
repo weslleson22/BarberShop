@@ -245,10 +245,16 @@ export async function createBarbershop(data: {
         address: data.address,
         status: shopStatus,
         isActive: isShopActive,
-        contractExpiresAt: data.contractExpiresAt ? new Date(data.contractExpiresAt) : null,
+        contractExpiresAt: data.contractExpiresAt
+          ? new Date(data.contractExpiresAt)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         createdById: data.createdById || null,
       },
     })
+
+    // Inicialização automática do Trial gratuito de 30 dias para a barbearia comercial
+    const { createTrialSubscriptionForBarbershop } = await import('./billing/saas-billing')
+    await createTrialSubscriptionForBarbershop(barbershop.id, tx)
 
     const user = await tx.user.create({
       data: {

@@ -107,41 +107,10 @@ export async function PATCH(request: NextRequest) {
     if (description !== undefined) updateData.description = description ? description.trim() : null
     if (logo !== undefined) updateData.logo = logo ? logo.trim() : null
 
-    // Atualização e validação estrita de Slug
+    // Atualização e validação estrita de Slug com registro de redirect controlado
     if (slug !== undefined) {
-      const cleanSlug = slugify(slug)
-
-      if (!cleanSlug || cleanSlug.length < 2) {
-        return NextResponse.json(
-          { error: 'O slug deve conter no mínimo 2 caracteres alfanuméricos válidos.' },
-          { status: 400 }
-        )
-      }
-
-      if (cleanSlug.length > 50) {
-        return NextResponse.json(
-          { error: 'O slug deve conter no máximo 50 caracteres.' },
-          { status: 400 }
-        )
-      }
-
-      // Verificar unicidade do slug no banco de dados
-      const existing = await prisma.barbershop.findFirst({
-        where: {
-          slug: cleanSlug,
-          id: { not: targetShopId },
-        },
-        select: { id: true, name: true },
-      })
-
-      if (existing) {
-        return NextResponse.json(
-          { error: `O slug "${cleanSlug}" já está em uso por outro estabelecimento. Por favor, escolha outro.` },
-          { status: 400 }
-        )
-      }
-
-      updateData.slug = cleanSlug
+      const { updateBarbershopSlug } = await import('@/lib/tenant')
+      await updateBarbershopSlug(targetShopId, slug)
     }
 
     const updated = await prisma.barbershop.update({

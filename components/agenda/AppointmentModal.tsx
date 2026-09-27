@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { X, Calendar, Clock, User, DollarSign, Save, Plus, Search, Crown, Phone, Mail, Users } from 'lucide-react'
+import { X, Calendar, Clock, User, DollarSign, Save, Plus, Search, Crown, Phone, Mail, Users, AlertTriangle, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { calculateAvailableSlots } from '@/lib/appointment-utils'
 
@@ -63,6 +63,8 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
   const [selectedDate, setSelectedDate] = useState('')
   const [clientQuery, setClientQuery] = useState('')
   const [showClientResults, setShowClientResults] = useState(false)
+  const [conflictError, setConflictError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
   const clientSearchRef = useRef<HTMLDivElement>(null)
 
   // Check if user is CLIENT
@@ -136,6 +138,8 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
         setUnregisteredEmail('')
       }
       setShowClientResults(false)
+      setConflictError(null)
+      setFormError(null)
     }
   }, [isOpen, appointment, isClient, user?.id, user?.barbershopId])
 
@@ -378,8 +382,8 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
         })
 
         if (!clientResponse.ok) {
-          const clientErr = await clientResponse.json()
-          alert(clientErr.error || 'Erro ao cadastrar cliente')
+          const clientErr = await clientResponse.json().catch(() => ({}))
+          setFormError(clientErr.error || 'Erro ao cadastrar cliente')
           setLoading(false)
           return
         }
@@ -389,7 +393,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
       }
 
       if (!formData.serviceId || (!effectiveClientId && !isClient) || !formData.barberId || !formData.startTime) {
-        alert('Por favor, preencha todos os campos obrigatórios')
+        setFormError('Por favor, preencha todos os campos obrigatórios (Serviço, Barbeiro, Horário).')
         setLoading(false)
         return
       }
@@ -437,9 +441,17 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           onSave(result)
           onClose()
         } else {
-          const error = await response.json()
+          const error = await response.json().catch(() => ({}))
           console.error('Erro ao atualizar:', error)
-          alert(error.error || 'Erro ao atualizar agendamento')
+          if (response.status === 409 || error.code === 'CONFLICT') {
+            setConflictError('Este horário acabou de ser reservado por outro cliente. Por favor, escolha outro horário.')
+            setFormData(prev => ({ ...prev, startTime: '', endTime: '' }))
+            if (selectedDate && formData.barberId) {
+              fetchAvailableSlots(selectedDate, formData.barberId, formData.serviceId)
+            }
+          } else {
+            setFormError(error.error || 'Erro ao atualizar agendamento')
+          }
         }
       } else {
         // Create new appointment
@@ -470,14 +482,22 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           onSave(result)
           onClose()
         } else {
-          const error = await response.json()
+          const error = await response.json().catch(() => ({}))
           console.error('Erro ao criar:', error)
-          alert(error.error || 'Erro ao criar agendamento')
+          if (response.status === 409 || error.code === 'CONFLICT') {
+            setConflictError('Este horário acabou de ser reservado por outro cliente. Por favor, selecione outro horário disponível.')
+            setFormData(prev => ({ ...prev, startTime: '', endTime: '' }))
+            if (selectedDate && formData.barberId) {
+              fetchAvailableSlots(selectedDate, formData.barberId, formData.serviceId)
+            }
+          } else {
+            setFormError(error.error || 'Erro ao criar agendamento')
+          }
         }
       }
     } catch (error) {
       console.error('Error saving appointment:', error)
-      alert('Erro ao salvar agendamento')
+      setFormError('Erro de conexão ao salvar agendamento. Verifique sua rede e tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -504,6 +524,47 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+          {/* Conflict Alert (HTTP 409) */}
+          {conflictError && (
+            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3 text-amber-200">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex-1 text-sm">
+                <p className="font-semibold text-amber-300">Conflito de Horário</p>
+                <p className="text-amber-200/90 text-xs mt-0.5">{conflictError}</p>
+                {selectedDate && formData.barberId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fetchAvailableSlots(selectedDate, formData.barberId, formData.serviceId)
+                      setConflictError(null)
+                    }}
+                    className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 transition-colors"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Atualizar horários disponíveis
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* General Form Error */}
+          {formError && !conflictError && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-between text-red-200 text-sm">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                <span className="text-xs">{formError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-200 text-xs ml-2"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* Client Selection - ADMIN/BARBER/RECEPTIONIST */}
           {!isClient && (
             <div className="space-y-3">

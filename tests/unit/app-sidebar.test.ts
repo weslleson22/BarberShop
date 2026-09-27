@@ -171,6 +171,15 @@ describe('AppSidebar — Regras Estruturais e RBAC da Navegação Lateral shadcn
         '/developer',
         '/meus-agendamentos',
         '/agendar',
+        '/dashboard/assinatura',
+        '/dashboard/onboarding',
+        '/developer/onboarding',
+        '/developer/billing',
+        '/developer/plans',
+        '/developer/monitoring',
+        '/developer/backup',
+        '/termos',
+        '/privacidade',
       ]
 
       const roles = ['DEVELOPER', 'ADMIN', 'BARBER', 'RECEPTIONIST', 'CLIENT'] as const

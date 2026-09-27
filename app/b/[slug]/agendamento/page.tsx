@@ -8,12 +8,18 @@ interface Props {
 export default async function AgendamentoRedirectPage({ params }: Props) {
   const { slug } = await params
 
-  // Validar se o slug é um tenant real e ativo
+  // 1. Validar se o slug é um tenant real e ativo
   const tenantResult = await resolvePublicTenant(slug)
   if (!tenantResult.success) {
     notFound()
   }
 
-  // Redireciona com o slug explicitamente vinculado
-  redirect(`/agendar?slug=${encodeURIComponent(tenantResult.tenant.slug || slug)}`)
+  // 2. Se o slug mudou, redireciona para a nova URL pública oficial
+  if (tenantResult.redirect && tenantResult.targetSlug) {
+    redirect(`/b/${encodeURIComponent(tenantResult.targetSlug)}/agendamento`)
+  }
+
+  // 3. Redireciona para o fluxo de agendamento com o slug explicitamente vinculado
+  const activeSlug = tenantResult.tenant.slug || slug
+  redirect(`/agendar?slug=${encodeURIComponent(activeSlug)}`)
 }

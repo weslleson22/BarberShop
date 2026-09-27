@@ -89,6 +89,10 @@ vi.mock('@/lib/appointment-scheduler', () => ({
     id: 'created_apt_id',
     ...data,
   })),
+  ConcurrencyConflictError: class ConcurrencyConflictError extends Error {
+    statusCode = 409
+    code = 'CONCURRENCY_CONFLICT'
+  },
   getHorariosDisponiveis: vi.fn(),
 }))
 

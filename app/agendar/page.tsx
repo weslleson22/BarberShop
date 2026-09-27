@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home, Star, Award, CheckCircle2, Scissors, Sparkles, Shield } from 'lucide-react'
+import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home, Star, Award, CheckCircle2, Scissors, Sparkles, Shield, AlertTriangle, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { maskPhone, maskName as maskNameShared, maskEmail as maskEmailShared } from '@/lib/utils'
@@ -61,6 +61,7 @@ export default function AgendarPage() {
     phone: '',
     email: '',
   })
+  const [conflictState, setConflictState] = useState<{ isOpen: boolean; message: string } | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -379,7 +380,20 @@ export default function AgendarPage() {
         }
       } else {
         const error = await appointmentResponse.json()
-        alert(error.error || 'Erro ao realizar agendamento')
+        if (appointmentResponse.status === 409) {
+          const msg = error.error || 'Este horário acabou de ser reservado por outro cliente. Por favor, escolha outro horário disponível.'
+          setSelectedTime(null)
+          if (selectedDate) {
+            fetchAvailableSlots(selectedDate)
+          }
+          setConflictState({
+            isOpen: true,
+            message: msg,
+          })
+          setStep(3)
+        } else {
+          alert(error.error || 'Erro ao realizar agendamento')
+        }
       }
     } catch (error) {
       console.error('Error creating appointment:', error)
@@ -859,6 +873,39 @@ export default function AgendarPage() {
         )}
         </div>
       </div>
+
+      {/* MODAL DE CONFLITO / CONCORRÊNCIA (HTTP 409) */}
+      {conflictState?.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-md bg-slate-900 border border-amber-500/40 rounded-2xl p-6 text-slate-100 shadow-2xl space-y-4">
+            <div className="w-14 h-14 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-7 h-7" />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-lg font-bold text-white">Horário Indisponível (Conflito)</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {conflictState.message}
+              </p>
+            </div>
+
+            <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>A grade de horários da barbearia foi atualizada automaticamente para você.</span>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setConflictState(null)}
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer"
+              >
+                Escolher outro horário
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
