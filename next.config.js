@@ -1,9 +1,43 @@
 const path = require('path');
+const os = require('os');
+
+// Detecta dinamicamente todos os IPs locais da máquina (Wi-Fi, Ethernet, VMs, loopback)
+// e adiciona padrões de sub-rede válidos para o Next.js 15 dev server (sem afetar produção).
+function getLocalDevOrigins() {
+  const origins = new Set([
+    'localhost',
+    '127.0.0.1',
+    '*.local',
+    '192.168.*.*',
+    '10.*.*.*',
+    '172.16.*.*',
+  ]);
+
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name] || []) {
+        if (iface.family === 'IPv4' || iface.family === 4) {
+          origins.add(iface.address);
+          const parts = iface.address.split('.');
+          if (parts.length === 4) {
+            origins.add(`${parts[0]}.${parts[1]}.*.*`);
+            origins.add(`${parts[0]}.${parts[1]}.${parts[2]}.*`);
+          }
+        }
+      }
+    }
+  } catch {
+    // Continua com valores padrão se interfaces de rede não puderem ser lidas
+  }
+
+  return Array.from(origins);
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
-  allowedDevOrigins: ['192.168.*', 'localhost', '127.0.0.1'],
+  allowedDevOrigins: getLocalDevOrigins(),
   images: {
     remotePatterns: [
       {

@@ -41,6 +41,9 @@ interface Subscription {
   trialStart?: string
   trialEnd?: string
   cancelAtPeriodEnd?: boolean
+  price?: number
+  durationDays?: number
+  planName?: string
   plan?: Plan
   invoices?: Invoice[]
 }
@@ -254,9 +257,14 @@ function AssinaturaContent() {
               <div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <h2 className="text-xl font-bold text-foreground">
-                    {subscription?.plan?.name || (subscription?.status === 'TRIALING' ? 'Período de Avaliação (Trial)' : 'Sem plano ativo')}
+                    {subscription?.planName || subscription?.plan?.name || (subscription?.status === 'TRIALING' ? 'Período de Avaliação (Trial)' : 'Sem plano ativo')}
                   </h2>
                   {getStatusBadge(subscription?.status)}
+                  {subscription?.plan && (subscription.plan as any).status === 'INACTIVE' && (
+                    <span className="px-2.5 py-1 text-xs rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-medium">
+                      Plano Descontinuado (Acesso garantido até o término)
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
                   {subscription?.plan?.description || 'Acesso a todas as ferramentas essenciais para sua barbearia.'}
@@ -264,11 +272,13 @@ function AssinaturaContent() {
               </div>
             </div>
 
-            {subscription?.plan && (
+            {(subscription?.price !== undefined || subscription?.plan) && (
               <div className="text-left md:text-right">
                 <div className="text-2xl font-black text-foreground">
-                  {formatPrice(Number(subscription.plan.price))}
-                  <span className="text-xs font-normal text-muted-foreground">/{subscription.plan.billingInterval === 'YEARLY' ? 'ano' : 'mês'}</span>
+                  {formatPrice(Number(subscription.price ?? subscription.plan?.price ?? 0))}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    /{subscription.plan?.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
+                  </span>
                 </div>
               </div>
             )}

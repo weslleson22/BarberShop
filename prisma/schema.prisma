@@ -225,24 +225,47 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum PlanType {
+  PAID
+  COURTESY
+}
+
+enum CycleType {
+  MONTHLY
+  YEARLY
+  CUSTOM
+}
+
+enum PlanStatus {
+  ACTIVE
+  INACTIVE
+}
+
 // ==========================================
 // DOMÍNIO DE ASSINATURAS DO SAAS (B2B BILLING)
 // Não confundir com Payment (atendimento operacional)
 // ==========================================
 
 model Plan {
-  id              String          @id @default(cuid())
-  name            String
-  slug            String          @unique
-  description     String?
-  price           Decimal         @db.Decimal(10, 2)
-  currency        String          @default("BRL")
-  billingInterval BillingInterval @default(MONTHLY)
-  trialDays       Int             @default(0)
-  isActive        Boolean         @default(true)
-  features        Json            @default("{}")
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id                String          @id @default(cuid())
+  name              String
+  slug              String          @unique
+  description       String?
+  planType          PlanType        @default(PAID)
+  cycleType         CycleType       @default(MONTHLY)
+  durationDays      Int             @default(30)
+  price             Decimal         @db.Decimal(10, 2)
+  currency          String          @default("BRL")
+  billingInterval   BillingInterval @default(MONTHLY)
+  trialDays         Int             @default(0)
+  status            PlanStatus      @default(ACTIVE)
+  isActive          Boolean         @default(true)
+  deletedAt         DateTime?
+  provider          String?         @default("ABACATEPAY")
+  providerProductId String?
+  features          Json            @default("{}")
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   subscriptions   Subscription[]
 
@@ -262,6 +285,13 @@ model Subscription {
   currentPeriodEnd       DateTime
   cancelAtPeriodEnd      Boolean            @default(false)
   canceledAt             DateTime?
+  price                  Decimal?           @db.Decimal(10, 2)
+  durationDays           Int?
+  planName               String?
+  cycleType              String?
+  planType               String?
+  notes                  String?
+  grantedBy              String?
   provider               String?
   providerSubscriptionId String?
   providerCustomerId     String?
@@ -546,6 +576,12 @@ enum AuditAction {
   BARBERSHOP_CREATED
   PLAN_CREATED
   PLAN_UPDATED
+  PLAN_DEACTIVATED
+  PLAN_DELETED
+  COURTESY_GRANTED
+  COURTESY_CANCELLED
+  COURTESY_REACTIVATED
+  SUBSCRIPTION_EXPIRED
 
   // Webhooks
   WEBHOOK_RECEIVED

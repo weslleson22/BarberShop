@@ -50,10 +50,17 @@ export async function POST(request: NextRequest) {
       where: { id: planId },
     })
 
-    if (!plan || !plan.isActive) {
+    if (!plan || plan.status === 'INACTIVE' || !plan.isActive) {
       return NextResponse.json(
         { error: 'Plano não encontrado ou inativo para novas contratações' },
         { status: 404 }
+      )
+    }
+
+    if (plan.planType === 'COURTESY') {
+      return NextResponse.json(
+        { error: 'Planos de cortesia não possuem cobrança ou checkout financeiro' },
+        { status: 400 }
       )
     }
 

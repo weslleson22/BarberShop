@@ -81,6 +81,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso restrito à gestão administrativa' }, { status: 403 })
     }
 
+    // Valida se o plano é cortesia: somente DEVELOPER pode atribuir
+    const planToSubscribe = await prisma.plan.findUnique({
+      where: { id: planId },
+    })
+
+    if (!planToSubscribe) {
+      return NextResponse.json({ error: 'Plano não encontrado' }, { status: 404 })
+    }
+
+    if (planToSubscribe.status === 'INACTIVE' || !planToSubscribe.isActive) {
+      return NextResponse.json(
+        { error: 'Não é possível assinar um plano inativo ou descontinuado' },
+        { status: 400 }
+      )
+    }
+
+    if (planToSubscribe.planType === 'COURTESY' && user.role !== 'DEVELOPER') {
+      return NextResponse.json(
+        { error: 'Planos de cortesia só podem ser concedidos exclusivamente pelo DEVELOPER' },
+        { status: 403 }
+      )
+    }
+
     if (!targetShopId) {
       return NextResponse.json({ error: 'barbershopId é obrigatório' }, { status: 400 })
     }
@@ -88,8 +111,10 @@ export async function POST(request: NextRequest) {
     const subscription = await createSubscription({
       barbershopId: targetShopId,
       planId,
-      provider,
+      provider: planToSubscribe.planType === 'COURTESY' ? 'NONE' : provider,
       providerSubscriptionId,
+      grantedBy: user.id,
+      notes: body.notes,
     })
 
     return NextResponse.json(subscription, { status: 201 })

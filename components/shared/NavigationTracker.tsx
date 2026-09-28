@@ -2,7 +2,17 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { getAuthHeaders } from '@/lib/utils'
+function getLocalAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    return {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...extraHeaders,
+    }
+  } catch {
+    return extraHeaders
+  }
+}
 
 /**
  * Componente silencioso de telemetria e rastreamento de navegação.
@@ -35,7 +45,7 @@ export function NavigationTracker() {
       try {
         fetch('/api/audit/navigation', {
           method: 'POST',
-          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+          headers: getLocalAuthHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             path: fullPath,
             title: typeof document !== 'undefined' ? document.title : '',
@@ -67,7 +77,7 @@ export function NavigationTracker() {
       try {
         fetch('/api/audit/error', {
           method: 'POST',
-          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+          headers: getLocalAuthHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             path: window.location.pathname,
             message: event.message || 'Erro de execução do cliente',
@@ -86,7 +96,7 @@ export function NavigationTracker() {
         const message = reason instanceof Error ? reason.message : String(reason || 'Promise rejeitada')
         fetch('/api/audit/error', {
           method: 'POST',
-          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+          headers: getLocalAuthHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             path: window.location.pathname,
             message: `Unhandled Rejection: ${message}`,
@@ -110,3 +120,5 @@ export function NavigationTracker() {
 
   return null
 }
+
+export default NavigationTracker

@@ -32,7 +32,10 @@ self.addEventListener('fetch', (event) => {
     request.url.includes('hot-update') ||
     request.url.startsWith('chrome-extension') ||
     self.location.hostname === 'localhost' ||
-    self.location.hostname === '127.0.0.1'
+    self.location.hostname === '127.0.0.1' ||
+    self.location.hostname.startsWith('192.168.') ||
+    self.location.hostname.startsWith('10.') ||
+    self.location.hostname.endsWith('.local')
   ) {
     return
   }

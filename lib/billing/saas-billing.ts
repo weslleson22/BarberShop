@@ -9,18 +9,45 @@ import {
   Invoice,
   SubscriptionEvent,
   Prisma,
+  PlanType,
+  CycleType,
+  PlanStatus,
 } from '@prisma/client'
 
 export interface CreatePlanInput {
   name: string
   slug: string
   description?: string
+  planType?: PlanType
+  cycleType?: CycleType
+  durationDays?: number
   price: number | string | Prisma.Decimal
   currency?: string
   billingInterval?: BillingInterval
   trialDays?: number
   features?: Record<string, any>
+  status?: PlanStatus
   isActive?: boolean
+  provider?: string
+  providerProductId?: string
+}
+
+export interface UpdatePlanInput {
+  name?: string
+  slug?: string
+  description?: string
+  planType?: PlanType
+  cycleType?: CycleType
+  durationDays?: number
+  price?: number | string | Prisma.Decimal
+  currency?: string
+  billingInterval?: BillingInterval
+  trialDays?: number
+  features?: Record<string, any>
+  status?: PlanStatus
+  isActive?: boolean
+  provider?: string
+  providerProductId?: string
 }
 
 export interface CreateSubscriptionInput {
@@ -28,6 +55,18 @@ export interface CreateSubscriptionInput {
   planId: string
   provider?: string
   providerSubscriptionId?: string
+  notes?: string
+  grantedBy?: string
+}
+
+export interface GrantCourtesyInput {
+  barbershopId: string
+  planId?: string
+  durationDays?: number
+  name?: string
+  notes?: string
+  grantedByUserId: string
+  grantedByRole: string
 }
 
 export interface CreateInvoiceInput {
@@ -44,7 +83,7 @@ export interface CreateInvoiceInput {
  * Máquina de Estados Finita para Assinaturas SaaS
  * Transições estritas permitidas:
  * TRIALING -> ACTIVE, EXPIRED, CANCELED
- * ACTIVE -> PAST_DUE, CANCELED, SUSPENDED
+ * ACTIVE -> PAST_DUE, CANCELED, SUSPENDED, EXPIRED
  * PAST_DUE -> ACTIVE, SUSPENDED, CANCELED
  * SUSPENDED -> ACTIVE, CANCELED
  * EXPIRED -> ACTIVE
@@ -52,7 +91,7 @@ export interface CreateInvoiceInput {
  */
 export const ALLOWED_STATUS_TRANSITIONS: Record<SubscriptionStatus, SubscriptionStatus[]> = {
   TRIALING: ['ACTIVE', 'EXPIRED', 'CANCELED'],
-  ACTIVE: ['PAST_DUE', 'CANCELED', 'SUSPENDED'],
+  ACTIVE: ['PAST_DUE', 'CANCELED', 'SUSPENDED', 'EXPIRED'],
   PAST_DUE: ['ACTIVE', 'SUSPENDED', 'CANCELED'],
   SUSPENDED: ['ACTIVE', 'CANCELED'],
   EXPIRED: ['ACTIVE'],
@@ -134,25 +173,48 @@ export async function transitionSubscriptionStatus(
 }
 
 /**
- * Calcula o fim do período baseado no intervalo de cobrança
+ * Calcula o fim do período baseado no ciclo de cobrança ou duração em dias
  */
-export function calculatePeriodEnd(startDate: Date, interval: BillingInterval): Date {
+export function calculatePeriodEnd(
+  startDate: Date,
+  interval: BillingInterval = 'MONTHLY',
+  cycleType?: CycleType,
+  durationDays?: number
+): Date {
   const endDate = new Date(startDate)
+
+  // 1. Ciclo Personalizado (CUSTOM) com duração em dias explícita
+  if (cycleType === 'CUSTOM' && durationDays && durationDays > 0) {
+    endDate.setDate(endDate.getDate() + durationDays)
+    return endDate
+  }
+
+  // 2. Anual
+  if (cycleType === 'YEARLY' || interval === 'YEARLY') {
+    endDate.setFullYear(endDate.getFullYear() + 1)
+    return endDate
+  }
+
+  // 3. Mensal
+  if (cycleType === 'MONTHLY' || interval === 'MONTHLY') {
+    endDate.setMonth(endDate.getMonth() + 1)
+    return endDate
+  }
+
+  // 4. Outros intervalos legados
   switch (interval) {
-    case 'MONTHLY':
-      endDate.setMonth(endDate.getMonth() + 1)
-      break
     case 'QUARTERLY':
       endDate.setMonth(endDate.getMonth() + 3)
       break
     case 'SEMIANNUAL':
       endDate.setMonth(endDate.getMonth() + 6)
       break
-    case 'YEARLY':
-      endDate.setFullYear(endDate.getFullYear() + 1)
-      break
     default:
-      endDate.setMonth(endDate.getMonth() + 1)
+      if (durationDays && durationDays > 0) {
+        endDate.setDate(endDate.getDate() + durationDays)
+      } else {
+        endDate.setMonth(endDate.getMonth() + 1)
+      }
   }
   return endDate
 }
@@ -161,32 +223,230 @@ export function calculatePeriodEnd(startDate: Date, interval: BillingInterval): 
  * Criação de um novo Plano de Assinatura do SaaS
  */
 export async function createPlan(data: CreatePlanInput): Promise<Plan> {
-  const priceDecimal = new Prisma.Decimal(data.price)
-  if (priceDecimal.isNegative()) {
-    throw new Error('O preço do plano não pode ser negativo')
+  const planType: PlanType = data.planType || 'PAID'
+  const cycleType: CycleType = data.cycleType || (data.billingInterval === 'YEARLY' ? 'YEARLY' : 'MONTHLY')
+  const durationDays: number = data.durationDays ?? (cycleType === 'YEARLY' ? 365 : 30)
+
+  // Validação: ciclo personalizado exige durationDays > 0
+  if (cycleType === 'CUSTOM') {
+    if (!durationDays || durationDays <= 0) {
+      throw new Error('Planos com ciclo personalizado devem possuir durationDays maior que zero')
+    }
   }
+
+  let priceDecimal = new Prisma.Decimal(data.price ?? 0)
+
+  // Validação: Plano cortesia deve ter price = 0
+  if (planType === 'COURTESY') {
+    priceDecimal = new Prisma.Decimal(0)
+    if (!durationDays || durationDays <= 0) {
+      throw new Error('Plano cortesia deve possuir duração definida maior que zero')
+    }
+  } else {
+    // Plano pago: price > 0
+    if (priceDecimal.isNegative()) {
+      throw new Error('O preço do plano não pode ser negativo')
+    }
+    if (priceDecimal.isZero()) {
+      throw new Error('Planos pagos devem possuir valor maior que zero')
+    }
+  }
+
+  // Sincroniza status e isActive
+  const status: PlanStatus = data.status || (data.isActive === false ? 'INACTIVE' : 'ACTIVE')
+  const isActive = status === 'ACTIVE' && (data.isActive ?? true)
+
+  const billingInterval: BillingInterval =
+    data.billingInterval || (cycleType === 'YEARLY' ? 'YEARLY' : 'MONTHLY')
 
   return await prisma.plan.create({
     data: {
       name: data.name,
       slug: data.slug.toLowerCase().trim(),
       description: data.description,
+      planType,
+      cycleType,
+      durationDays,
       price: priceDecimal,
       currency: data.currency || 'BRL',
-      billingInterval: data.billingInterval || 'MONTHLY',
+      billingInterval,
       trialDays: data.trialDays ?? 0,
-      isActive: data.isActive ?? true,
+      status,
+      isActive,
+      provider: planType === 'COURTESY' ? 'NONE' : (data.provider || 'ABACATEPAY'),
+      providerProductId: data.providerProductId,
       features: (data.features as Prisma.InputJsonValue) || {},
     },
   })
 }
 
 /**
- * Lista todos os planos disponíveis
+ * Atualiza um plano existente (sem alterar dados de assinaturas antigas já contratadas)
  */
-export async function getPlans(onlyActive = true): Promise<Plan[]> {
+export async function updatePlan(planId: string, data: UpdatePlanInput): Promise<Plan> {
+  const existing = await prisma.plan.findUnique({
+    where: { id: planId },
+  })
+
+  if (!existing) {
+    throw new Error('Plano não encontrado')
+  }
+
+  const updateData: Prisma.PlanUpdateInput = {}
+
+  if (data.name !== undefined) updateData.name = data.name
+  if (data.slug !== undefined) updateData.slug = data.slug.toLowerCase().trim()
+  if (data.description !== undefined) updateData.description = data.description
+  if (data.features !== undefined) updateData.features = data.features as Prisma.InputJsonValue
+
+  const planType: PlanType = data.planType || existing.planType
+  if (data.planType !== undefined) updateData.planType = data.planType
+
+  const cycleType: CycleType = data.cycleType || existing.cycleType
+  if (data.cycleType !== undefined) updateData.cycleType = data.cycleType
+
+  let durationDays = data.durationDays ?? existing.durationDays
+  if (cycleType === 'CUSTOM' && durationDays <= 0) {
+    throw new Error('Planos com ciclo personalizado devem possuir durationDays maior que zero')
+  }
+  if (data.durationDays !== undefined) updateData.durationDays = data.durationDays
+
+  if (data.price !== undefined) {
+    const priceDecimal = new Prisma.Decimal(data.price)
+    if (planType === 'COURTESY') {
+      updateData.price = new Prisma.Decimal(0)
+    } else {
+      if (priceDecimal.isNegative()) {
+        throw new Error('O preço do plano não pode ser negativo')
+      }
+      if (priceDecimal.isZero()) {
+        throw new Error('Planos pagos devem possuir valor maior que zero')
+      }
+      updateData.price = priceDecimal
+    }
+  }
+
+  if (data.status !== undefined) {
+    updateData.status = data.status
+    updateData.isActive = data.status === 'ACTIVE'
+  } else if (data.isActive !== undefined) {
+    updateData.isActive = data.isActive
+    updateData.status = data.isActive ? 'ACTIVE' : 'INACTIVE'
+  }
+
+  if (data.provider !== undefined) updateData.provider = data.provider
+  if (data.providerProductId !== undefined) updateData.providerProductId = data.providerProductId
+  if (data.billingInterval !== undefined) updateData.billingInterval = data.billingInterval
+
+  return await prisma.plan.update({
+    where: { id: planId },
+    data: updateData,
+  })
+}
+
+/**
+ * Exclusão / Descontinuação inteligente de Plano (Regras 7, 8, 9)
+ * - Se sem assinaturas: remoção física segura
+ * - Se possui assinaturas: descontinuação segura (status = INACTIVE, isActive = false)
+ * - NUNCA cancela assinaturas existentes!
+ */
+export async function deleteOrDeactivatePlan(
+  planId: string,
+  userId?: string
+): Promise<{
+  action: 'DELETED' | 'DEACTIVATED'
+  activeSubscriptionsCount: number
+  totalSubscriptionsCount: number
+  plan: Plan
+}> {
+  const plan = await prisma.plan.findUnique({
+    where: { id: planId },
+    include: {
+      subscriptions: true,
+    },
+  })
+
+  if (!plan) {
+    throw new Error('Plano não encontrado')
+  }
+
+  const totalSubscriptionsCount = plan.subscriptions.length
+  const activeSubscriptionsCount = plan.subscriptions.filter(
+    (s) => s.status === 'ACTIVE' || s.status === 'TRIALING'
+  ).length
+
+  // Cenário 1: Plano sem assinaturas ou histórico -> Remoção física
+  if (totalSubscriptionsCount === 0) {
+    const deletedPlan = await prisma.plan.delete({
+      where: { id: planId },
+    })
+    return {
+      action: 'DELETED',
+      activeSubscriptionsCount: 0,
+      totalSubscriptionsCount: 0,
+      plan: deletedPlan,
+    }
+  }
+
+  // Cenário 2: Plano possui assinaturas -> Soft-delete / Descontinuação segura
+  // Assinaturas ativas NÃO são canceladas e mantêm vigência até o endDate
+  const deactivatedPlan = await prisma.plan.update({
+    where: { id: planId },
+    data: {
+      status: 'INACTIVE',
+      isActive: false,
+      deletedAt: new Date(),
+    },
+  })
+
+  return {
+    action: 'DEACTIVATED',
+    activeSubscriptionsCount,
+    totalSubscriptionsCount,
+    plan: deactivatedPlan,
+  }
+}
+
+export interface GetPlansFilters {
+  onlyActive?: boolean
+  planType?: PlanType
+  cycleType?: CycleType
+  status?: PlanStatus
+}
+
+/**
+ * Lista planos do SaaS com suporte a filtros
+ */
+export async function getPlans(options: boolean | GetPlansFilters = true): Promise<Plan[]> {
+  const where: Prisma.PlanWhereInput = {}
+
+  if (typeof options === 'boolean') {
+    if (options) {
+      where.status = 'ACTIVE'
+      where.isActive = true
+    }
+  } else if (options) {
+    if (options.onlyActive) {
+      where.status = 'ACTIVE'
+      where.isActive = true
+    } else if (options.status) {
+      where.status = options.status
+    }
+    if (options.planType) {
+      where.planType = options.planType
+    }
+    if (options.cycleType) {
+      where.cycleType = options.cycleType
+    }
+  }
+
   return await prisma.plan.findMany({
-    where: onlyActive ? { isActive: true } : {},
+    where,
+    include: {
+      _count: {
+        select: { subscriptions: true },
+      },
+    },
     orderBy: { price: 'asc' },
   })
 }
@@ -207,14 +467,20 @@ export async function createSubscription(data: CreateSubscriptionInput): Promise
   const plan = await prisma.plan.findUnique({
     where: { id: data.planId },
   })
-  if (!plan || !plan.isActive) {
-    throw new Error('Plano não encontrado ou inativo')
+  if (!plan) {
+    throw new Error('Plano não encontrado')
+  }
+
+  // Regra 10: Bloqueio estrito de novas assinaturas em planos descontinuados
+  if (plan.status === 'INACTIVE' || !plan.isActive) {
+    throw new Error('Não é possível criar nova assinatura em um plano descontinuado ou inativo')
   }
 
   const now = new Date()
-  const hasTrial = plan.trialDays > 0
+  const isCourtesy = plan.planType === 'COURTESY'
+  const hasTrial = !isCourtesy && plan.trialDays > 0
 
-  let status: SubscriptionStatus = 'TRIALING'
+  let status: SubscriptionStatus = 'ACTIVE'
   let trialStart: Date | null = null
   let trialEnd: Date | null = null
   let currentPeriodStart: Date = now
@@ -226,11 +492,11 @@ export async function createSubscription(data: CreateSubscriptionInput): Promise
     currentPeriodEnd = trialEnd
     status = 'TRIALING'
   } else {
-    currentPeriodEnd = calculatePeriodEnd(now, plan.billingInterval)
+    currentPeriodEnd = calculatePeriodEnd(now, plan.billingInterval, plan.cycleType, plan.durationDays)
     status = 'ACTIVE'
   }
 
-  // Executa criação da assinatura, fatura inicial (se não for trial) e eventos de auditoria
+  // Executa criação da assinatura com SNAPSHOT contratual (Regra 18)
   return await prisma.$transaction(async (tx) => {
     const subscription = await tx.subscription.create({
       data: {
@@ -241,8 +507,16 @@ export async function createSubscription(data: CreateSubscriptionInput): Promise
         trialEnd,
         currentPeriodStart,
         currentPeriodEnd,
-        provider: data.provider,
-        providerSubscriptionId: data.providerSubscriptionId,
+        // Snapshot imutável contratado
+        price: plan.price,
+        durationDays: plan.durationDays,
+        planName: plan.name,
+        cycleType: plan.cycleType,
+        planType: plan.planType,
+        notes: data.notes,
+        grantedBy: data.grantedBy,
+        provider: isCourtesy ? 'NONE' : (data.provider || plan.provider || 'ABACATEPAY'),
+        providerSubscriptionId: isCourtesy ? null : data.providerSubscriptionId,
       },
       include: {
         plan: true,
@@ -257,6 +531,10 @@ export async function createSubscription(data: CreateSubscriptionInput): Promise
         payload: {
           planId: plan.id,
           planSlug: plan.slug,
+          planName: plan.name,
+          planType: plan.planType,
+          cycleType: plan.cycleType,
+          durationDays: plan.durationDays,
           price: plan.price.toString(),
           billingInterval: plan.billingInterval,
           trialDays: plan.trialDays,
@@ -278,8 +556,8 @@ export async function createSubscription(data: CreateSubscriptionInput): Promise
           } as Prisma.InputJsonValue,
         },
       })
-    } else {
-      // Cria fatura inicial em aberto
+    } else if (!isCourtesy) {
+      // Cria fatura inicial em aberto apenas para planos comerciais pagos
       await tx.invoice.create({
         data: {
           subscriptionId: subscription.id,
@@ -288,12 +566,220 @@ export async function createSubscription(data: CreateSubscriptionInput): Promise
           currency: plan.currency,
           status: 'OPEN',
           dueDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000), // 3 dias de vencimento padrão
-          provider: data.provider,
+          provider: data.provider || plan.provider,
         },
       })
     }
 
     return subscription
+  })
+}
+
+/**
+ * Concessão de Plano Cortesia exclusiva para perfil DEVELOPER (Regras 2 e 3)
+ */
+export async function grantCourtesySubscription(data: GrantCourtesyInput): Promise<Subscription> {
+  if (data.grantedByRole !== 'DEVELOPER') {
+    throw new Error('Apenas usuários com papel DEVELOPER podem conceder planos cortesia')
+  }
+
+  const barbershop = await prisma.barbershop.findUnique({
+    where: { id: data.barbershopId },
+  })
+  if (!barbershop) {
+    throw new Error('Barbearia não encontrada')
+  }
+
+  let plan: Plan | null = null
+
+  if (data.planId) {
+    plan = await prisma.plan.findUnique({
+      where: { id: data.planId },
+    })
+    if (!plan) {
+      throw new Error('Plano cortesia não encontrado')
+    }
+    if (plan.planType !== 'COURTESY') {
+      throw new Error('O plano selecionado não é do tipo cortesia')
+    }
+    if (plan.status === 'INACTIVE' || !plan.isActive) {
+      throw new Error('O plano cortesia selecionado está inativo ou descontinuado')
+    }
+  } else {
+    const durationDays = data.durationDays || 30
+    plan = await prisma.plan.findFirst({
+      where: {
+        planType: 'COURTESY',
+        durationDays,
+        status: 'ACTIVE',
+      },
+    })
+
+    if (!plan) {
+      const slug = `cortesia-${durationDays}d-${Date.now().toString(36)}`
+      plan = await createPlan({
+        name: data.name || `Cortesia ${durationDays} Dias`,
+        slug,
+        description: `Plano cortesia concedido pelo desenvolvedor (${durationDays} dias)`,
+        planType: 'COURTESY',
+        cycleType: 'CUSTOM',
+        durationDays,
+        price: 0,
+        provider: 'NONE',
+        status: 'ACTIVE',
+        isActive: true,
+      })
+    }
+  }
+
+  const duration = data.durationDays || plan.durationDays || 30
+  const now = new Date()
+  const currentPeriodEnd = new Date(now.getTime() + duration * 24 * 60 * 60 * 1000)
+
+  return await prisma.$transaction(async (tx) => {
+    const subscription = await tx.subscription.create({
+      data: {
+        barbershopId: data.barbershopId,
+        planId: plan!.id,
+        status: 'ACTIVE',
+        currentPeriodStart: now,
+        currentPeriodEnd,
+        price: new Prisma.Decimal('0.00'),
+        durationDays: duration,
+        planName: plan!.name,
+        cycleType: plan!.cycleType,
+        planType: 'COURTESY',
+        provider: 'NONE',
+        grantedBy: data.grantedByUserId,
+        notes: data.notes || 'Cortesia concedida pelo DEVELOPER',
+      },
+      include: {
+        plan: true,
+      },
+    })
+
+    await tx.subscriptionEvent.create({
+      data: {
+        subscriptionId: subscription.id,
+        type: 'SUBSCRIPTION_CREATED',
+        payload: {
+          planId: plan!.id,
+          planName: plan!.name,
+          planType: 'COURTESY',
+          durationDays: duration,
+          grantedBy: data.grantedByUserId,
+          reason: data.notes || 'Cortesia concedida por DEVELOPER',
+        } as Prisma.InputJsonValue,
+      },
+    })
+
+    return subscription
+  })
+}
+
+/**
+ * Cancelamento de Cortesia exclusivo para DEVELOPER
+ */
+export async function cancelCourtesySubscription(
+  subscriptionId: string,
+  callerRole: string,
+  reason?: string
+): Promise<Subscription> {
+  if (callerRole !== 'DEVELOPER') {
+    throw new Error('Apenas DEVELOPER pode cancelar uma cortesia')
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    const sub = await tx.subscription.findUnique({
+      where: { id: subscriptionId },
+    })
+
+    if (!sub) {
+      throw new Error('Assinatura não encontrada')
+    }
+
+    if (sub.planType !== 'COURTESY') {
+      throw new Error('A assinatura indicada não é uma cortesia')
+    }
+
+    const updated = await tx.subscription.update({
+      where: { id: subscriptionId },
+      data: {
+        status: 'CANCELED',
+        canceledAt: new Date(),
+        notes: reason ? `${sub.notes || ''} | Cancelada: ${reason}` : sub.notes,
+      },
+    })
+
+    await tx.subscriptionEvent.create({
+      data: {
+        subscriptionId,
+        type: 'SUBSCRIPTION_CANCELED',
+        payload: {
+          reason: reason || 'Cortesia cancelada pelo DEVELOPER',
+          canceledAt: new Date().toISOString(),
+        } as Prisma.InputJsonValue,
+      },
+    })
+
+    return updated
+  })
+}
+
+/**
+ * Reativação de Cortesia exclusivo para DEVELOPER
+ */
+export async function reactivateCourtesySubscription(
+  subscriptionId: string,
+  callerRole: string,
+  durationDays?: number
+): Promise<Subscription> {
+  if (callerRole !== 'DEVELOPER') {
+    throw new Error('Apenas DEVELOPER pode reativar uma cortesia')
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    const sub = await tx.subscription.findUnique({
+      where: { id: subscriptionId },
+      include: { plan: true },
+    })
+
+    if (!sub) {
+      throw new Error('Assinatura não encontrada')
+    }
+
+    if (sub.planType !== 'COURTESY') {
+      throw new Error('A assinatura indicada não é uma cortesia')
+    }
+
+    const duration = durationDays || sub.durationDays || sub.plan.durationDays || 30
+    const now = new Date()
+    const currentPeriodEnd = new Date(now.getTime() + duration * 24 * 60 * 60 * 1000)
+
+    const updated = await tx.subscription.update({
+      where: { id: subscriptionId },
+      data: {
+        status: 'ACTIVE',
+        canceledAt: null,
+        currentPeriodStart: now,
+        currentPeriodEnd,
+        durationDays: duration,
+      },
+    })
+
+    await tx.subscriptionEvent.create({
+      data: {
+        subscriptionId,
+        type: 'SUBSCRIPTION_ACTIVATED',
+        payload: {
+          reason: 'Cortesia reativada pelo DEVELOPER',
+          reactivatedAt: now.toISOString(),
+          durationDays: duration,
+        } as Prisma.InputJsonValue,
+      },
+    })
+
+    return updated
   })
 }
 
@@ -535,8 +1021,18 @@ export async function renewSubscription(subscriptionId: string): Promise<{ subsc
       throw new Error('Assinaturas canceladas ou expiradas não podem ser renovadas automaticamente')
     }
 
+    // Regra 13: Bloquear renovação se o plano estiver descontinuado ou inativo
+    if (subscription.plan.status === 'INACTIVE' || !subscription.plan.isActive) {
+      throw new Error('O plano desta assinatura foi descontinuado e não permite renovação. Escolha um novo plano ativo.')
+    }
+
     const nextPeriodStart = new Date(subscription.currentPeriodEnd)
-    const nextPeriodEnd = calculatePeriodEnd(nextPeriodStart, subscription.plan.billingInterval)
+    const nextPeriodEnd = calculatePeriodEnd(
+      nextPeriodStart,
+      subscription.plan.billingInterval,
+      subscription.plan.cycleType,
+      subscription.durationDays || subscription.plan.durationDays
+    )
 
     const updatedSubscription = await tx.subscription.update({
       where: { id: subscriptionId },
@@ -551,7 +1047,7 @@ export async function renewSubscription(subscriptionId: string): Promise<{ subsc
       data: {
         subscriptionId: subscription.id,
         barbershopId: subscription.barbershopId,
-        amount: subscription.plan.price,
+        amount: subscription.price ?? subscription.plan.price,
         currency: subscription.plan.currency,
         status: 'OPEN',
         dueDate: new Date(nextPeriodStart.getTime() + 3 * 24 * 60 * 60 * 1000),
@@ -899,6 +1395,45 @@ export async function getSubscriptionAccess(
 
   // 2. ACTIVE
   if (status === 'ACTIVE') {
+    if (currentPeriodEnd && currentDate > currentPeriodEnd) {
+      // Regra 24: Expiração automática ao atingir término (endDate)
+      try {
+        await txClient.subscription.update({
+          where: { id: subscription.id },
+          data: { status: 'EXPIRED' },
+        })
+
+        await txClient.subscriptionEvent.create({
+          data: {
+            subscriptionId: subscription.id,
+            type: 'TRIAL_EXPIRED',
+            payload: {
+              previousStatus: 'ACTIVE',
+              newStatus: 'EXPIRED',
+              expiredAt: currentDate.toISOString(),
+              currentPeriodEnd: currentPeriodEnd.toISOString(),
+              reason: 'Período contratado atingiu o término (endDate)',
+            } as Prisma.InputJsonValue,
+          },
+        })
+      } catch {}
+
+      return {
+        allowed: false,
+        canAccessOperations: false,
+        canAccessBillingOnly: true,
+        status: 'EXPIRED',
+        reason: 'TRIAL_EXPIRED',
+        isTrial: false,
+        daysRemaining: 0,
+        currentPeriodStart,
+        currentPeriodEnd,
+        message: 'Sua assinatura expirou. Escolha um novo plano ativo para continuar utilizando o sistema.',
+        plan: planInfo,
+      }
+    }
+
+    // Regra 8, 9, 27: Mesmo que o plano esteja INACTIVE, enquanto currentDate <= currentPeriodEnd a barbearia continua com acesso normal!
     const daysRemaining = currentPeriodEnd
       ? Math.max(0, Math.ceil((currentPeriodEnd.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)))
       : 0

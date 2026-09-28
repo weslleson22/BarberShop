@@ -15,8 +15,8 @@ foreach ($port in $ports) {
                 $processObj = Get-Process -Id $procId -ErrorAction SilentlyContinue
                 if ($processObj) {
                     Write-Host "Porta $port ocupada pelo processo $($processObj.ProcessName) (PID: $procId)" -ForegroundColor Red
-                    if ($processObj.ProcessName -eq "node") {
-                        Write-Host "Matando processo Node.js na porta $port..." -ForegroundColor Yellow
+                    if ($processObj.ProcessName -match "node") {
+                        Write-Host "Matando processo Node.js na porta $port (PID: $procId)..." -ForegroundColor Yellow
                         Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
                         Write-Host "Processo morto com sucesso!" -ForegroundColor Green
                     }
