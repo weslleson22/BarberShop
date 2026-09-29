@@ -47,13 +47,13 @@ function ClientDashboard() {
     new Date(iso).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
 
-      <div className="w-full px-4 md:px-6 max-w-3xl mx-auto">
+      <main className="w-full px-4 md:px-6 max-w-3xl mx-auto space-y-6">
         <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Início</h1>
-          <p className="text-white/60 text-sm md:text-base">Seus próximos atendimentos</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Início</h1>
+          <p className="text-muted-foreground text-sm md:text-base">Seus próximos atendimentos</p>
         </div>
 
         {loading ? (
@@ -62,12 +62,12 @@ function ClientDashboard() {
           </div>
         ) : (
           <>
-            <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6 mb-6">
+            <div className="bg-card border border-border text-card-foreground rounded-2xl p-6 mb-6 shadow-sm">
               {upcoming ? (
                 <>
-                  <p className="text-white/60 text-sm mb-2">Próximo agendamento</p>
-                  <p className="text-xl font-bold text-white mb-1">{upcoming.service.name}</p>
-                  <div className="flex items-center gap-2 text-white/70 text-sm mb-1">
+                  <p className="text-muted-foreground text-sm mb-2">Próximo agendamento</p>
+                  <p className="text-xl font-bold mb-1">{upcoming.service.name}</p>
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                     <Clock className="w-4 h-4" />
                     {formatDate(upcoming.startTime)}
                   </div>
@@ -85,23 +85,23 @@ function ClientDashboard() {
                         </span>
                       )}
                     </div>
-                    <p className="text-white/80 text-sm">com <span className="text-white font-medium">{upcoming.barber.name}</span></p>
+                    <p className="text-sm">com <span className="font-medium text-foreground">{upcoming.barber.name}</span></p>
                   </div>
                 </>
               ) : (
-                <p className="text-white/60">Você não tem nenhum agendamento futuro.</p>
+                <p className="text-muted-foreground">Você não tem nenhum agendamento futuro.</p>
               )}
               <div className="flex flex-wrap gap-3 mt-4">
                 <Link
                   href="/agendar"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all shadow-sm"
                 >
                   <Plus className="w-4 h-4" />
                   Agendar
                 </Link>
                 <Link
                   href="/meus-agendamentos"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 text-white font-medium rounded-xl hover:bg-white/10 transition-all"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-muted/60 border border-border text-foreground font-medium rounded-xl hover:bg-muted transition-all"
                 >
                   <Calendar className="w-4 h-4" />
                   Meus Agendamentos
@@ -111,17 +111,17 @@ function ClientDashboard() {
             </div>
           </>
         )}
-      </div>
+      </main>
     </div>
   )
 }
 
 function StaffDashboard() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
 
-      <div className="w-full px-4 md:px-6">
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
         <TrialBanner />
         <PublicLinkCard />
 
@@ -146,7 +146,7 @@ function StaffDashboard() {
             <FinanceSummary />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

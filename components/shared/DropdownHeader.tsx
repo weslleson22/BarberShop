@@ -169,15 +169,29 @@ export default function DropdownHeader() {
     router.push('/login')
   }
 
-  // Identificar título da página atual
+  // Identificar título da página atual de forma sensível ao papel (RBAC)
   const currentPageInfo = React.useMemo(() => {
+    const isDev = user?.role === 'DEVELOPER'
+
+    if (pathname === '/usuarios' || pathname.startsWith('/usuarios/')) {
+      return isDev
+        ? { title: 'Usuários da Plataforma', subtitle: 'Gestão Global de Acessos & Usuários' }
+        : { title: 'Equipe & Usuários', subtitle: 'Membros da Barbearia' }
+    }
+
+    if (pathname === '/configuracoes' || pathname.startsWith('/configuracoes/')) {
+      return isDev
+        ? { title: 'Configurações Globais', subtitle: 'Preferências do Desenvolvedor & Sistema' }
+        : { title: 'Configurações', subtitle: 'Preferências da Conta' }
+    }
+
     for (const [route, info] of Object.entries(PAGE_TITLES)) {
       if (pathname === route || pathname.startsWith(route + '/')) {
         return info
       }
     }
     return { title: 'BarberShop', subtitle: 'Plataforma SaaS' }
-  }, [pathname])
+  }, [pathname, user?.role])
 
   return (
     <SidebarProvider defaultOpen={true} className="!min-h-0 !h-0 overflow-visible">

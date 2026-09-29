@@ -100,8 +100,8 @@ export default function UsuariosPage() {
   // Aguardar autenticação
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400"></div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
       </div>
     )
   }
@@ -417,80 +417,98 @@ export default function UsuariosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
       
-      {/* Conteúdo Principal */}
-      <div className="w-full px-4 md:px-6">
-        {/* Conteúdo com scroll */}
-        <div className="flex-1 min-w-0">
-          <div className="container-responsive py-6 px-4 md:px-6">
-      <div className="mb-6 md:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Conteúdo Principal Padrão */}
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
+        {/* Top Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white">Usuários</h1>
-            <p className="text-white/60 mt-1 md:mt-2 text-sm md:text-base">Gerencie os usuários com acesso à plataforma</p>
+            {user?.role === 'DEVELOPER' ? (
+              <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  DEVELOPER ADMIN
+                </span>
+                <span className="text-muted-foreground">/</span>
+                <span className="text-muted-foreground">Gestão Global de Acessos</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+                <Shield className="w-4 h-4" />
+                <span>Gestão da Equipe</span>
+              </div>
+            )}
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+              {user?.role === 'DEVELOPER' ? 'Usuários da Plataforma' : 'Equipe & Usuários'}
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base mt-1">
+              {user?.role === 'DEVELOPER'
+                ? 'Gerencie desenvolvedores, administradores e profissionais de todas as unidades da plataforma.'
+                : 'Gerencie os usuários e profissionais com acesso à sua barbearia.'}
+            </p>
           </div>
-          <button
-            onClick={() => {
-              setShowAddForm(true)
-              setEditingUser(null)
-              setFormData({ 
-                name: '', 
-                email: '', 
-                phone: '', 
-                role: user?.role === 'DEVELOPER' ? 'DEVELOPER' : 'BARBER', 
-                barbershopId: '', 
-                password: '', 
-                isActive: true, 
-                avatar: '',
-                bio: '',
-                specialties: [],
-              })
-              setCustomSpecialtyInput('')
-              setAvatarPreview('')
-              setAvatarFile(null)
-            }}
-            className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium text-sm md:text-base"
-          >
-            <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-            Novo Usuário
-          </button>
-        </div>
-      </div>
-
-      {/* Barra de Filtros e Busca */}
-      <div className="mb-4 md:mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className={`relative ${user?.role === 'DEVELOPER' ? 'md:col-span-2' : 'md:col-span-3'}`}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4 md:w-5 md:h-5" />
-          <input
-            type="text"
-            placeholder="Buscar por nome, email ou telefone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/6 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-          />
-        </div>
-
-        {/* Filtro por Empresa/Estabelecimento para DEVELOPER */}
-        {user?.role === 'DEVELOPER' && (
-          <div className="relative">
-            <select
-              value={selectedShopFilter}
-              onChange={(e) => setSelectedShopFilter(e.target.value)}
-              className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-gray-900 border border-white/10 rounded-lg md:rounded-xl text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base cursor-pointer"
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setShowAddForm(true)
+                setEditingUser(null)
+                setFormData({ 
+                  name: '', 
+                  email: '', 
+                  phone: '', 
+                  role: user?.role === 'DEVELOPER' ? 'DEVELOPER' : 'BARBER', 
+                  barbershopId: '', 
+                  password: '', 
+                  isActive: true, 
+                  avatar: '',
+                  bio: '',
+                  specialties: [],
+                })
+                setCustomSpecialtyInput('')
+                setAvatarPreview('')
+                setAvatarFile(null)
+              }}
+              className="bg-gradient-to-r from-amber-400 to-amber-600 text-black px-4 md:px-5 py-2.5 rounded-xl hover:from-amber-500 hover:to-amber-700 transition-all flex items-center font-semibold text-sm shadow-lg shadow-amber-500/20"
             >
-              <option value="all">🏢 Todas as Barbearias / Empresas</option>
-              {barbershops.map((shop) => (
-                <option key={shop.id} value={shop.id}>
-                  {shop.name}
-                </option>
-              ))}
-            </select>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Usuário
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+
+        {/* Barra de Filtros e Busca */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className={`relative ${user?.role === 'DEVELOPER' ? 'md:col-span-2' : 'md:col-span-3'}`}>
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Buscar por nome, email ou telefone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
+            />
+          </div>
+
+          {/* Filtro por Empresa/Estabelecimento para DEVELOPER */}
+          {user?.role === 'DEVELOPER' && (
+            <div className="relative">
+              <select
+                value={selectedShopFilter}
+                onChange={(e) => setSelectedShopFilter(e.target.value)}
+                className="w-full px-3 md:px-4 py-2.5 bg-card border border-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm cursor-pointer"
+              >
+                <option value="all">🏢 Todas as Barbearias / Unidades</option>
+                {barbershops.map((shop) => (
+                  <option key={shop.id} value={shop.id}>
+                    {shop.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
 
       {/* Alerta de Erro com Botão de Tentar Novamente */}
       {errorMessage && (
@@ -512,8 +530,8 @@ export default function UsuariosPage() {
 
       {/* Formulário de Adicionar/Editar */}
       {showAddForm && (
-        <div className="mb-4 md:mb-6 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-4 md:p-6">
-          <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-white">
+        <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
+          <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-foreground">
             {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
@@ -839,7 +857,7 @@ export default function UsuariosPage() {
       )}
 
       {/* Lista de Usuários */}
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
         {filteredUsers.length === 0 ? (
           <div className="text-center py-8 md:py-12">
             <User className="w-10 h-10 md:w-12 md:h-12 text-white/40 mx-auto mb-3 md:mb-4" />
@@ -851,9 +869,9 @@ export default function UsuariosPage() {
         ) : (
           <div className="table-responsive">
             <table className="w-full">
-              <thead className="bg-white/5 border-b border-white/6">
+              <thead className="bg-muted/40 border-b border-border">
                 <tr>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Usuário
                   </th>
                   <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden sm:table-cell">
@@ -995,8 +1013,8 @@ export default function UsuariosPage() {
 
       {/* Resumo */}
       {users.length > 0 && (
-        <div className="mt-6 md:mt-8 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-4 md:p-6">
-          <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Resumo de Usuários</h3>
+        <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
+          <h3 className="text-base md:text-lg font-semibold text-foreground mb-3 md:mb-4">Resumo de Usuários</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
             <div>
               <p className="text-xs md:text-sm text-white/60">Total de Usuários</p>
@@ -1031,9 +1049,7 @@ export default function UsuariosPage() {
           </div>
         </div>
       )}
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   )
 }

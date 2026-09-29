@@ -38,6 +38,23 @@ function getLocalDevOrigins() {
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   allowedDevOrigins: getLocalDevOrigins(),
+  experimental: {
+    // No Next.js 15, zera o cache de navegação do cliente para refletir alterações instantaneamente no dev
+    staleTimes: {
+      dynamic: 0,
+      static: 0,
+    },
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Garante detecção imediata de alterações de arquivos no Windows (mesmo em pastas como Documents/OneDrive)
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+      };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {
@@ -51,10 +68,27 @@ const nextConfig = {
     ],
   },
   async headers() {
+    const isProd = process.env.NODE_ENV === 'production';
+
+    // Em DESENVOLVIMENTO (local): NUNCA permitir cache imutável no navegador!
+    // Forçar no-store em todos os assets locais para garantir que modificações sejam refletidas na hora
+    // sem precisar trocar de porta ou limpar o cache do navegador.
+    if (!isProd) {
+      return [
+        {
+          source: '/:path*',
+          headers: [
+            { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+            { key: 'Pragma', value: 'no-cache' },
+            { key: 'Expires', value: '0' },
+          ],
+        },
+      ];
+    }
+
+    // Em PRODUÇÃO (build real): Aplicar cache imutável seguro para arquivos estáticos com hash de build
     return [
       {
-        // Páginas e rotas de API: nunca servir versão em cache do navegador/CDN,
-        // garantindo que cada deploy seja sempre buscado do servidor.
         source: '/((?!_next/static|_next/image|icons|favicon.ico|manifest.json).*)',
         headers: [
           { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
@@ -63,8 +97,6 @@ const nextConfig = {
         ],
       },
       {
-        // Assets do build (_next/static) têm hash no nome do arquivo, então
-        // podem (e devem) ser cacheados de forma agressiva e imutável.
         source: '/_next/static/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },

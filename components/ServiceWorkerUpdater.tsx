@@ -33,33 +33,33 @@ export function ServiceWorkerUpdater() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // Limpar proativamente caches antigos com o prefixo legado 'barbershop-'
-    if ('caches' in window) {
-      caches.keys().then((keys) => {
-        for (const key of keys) {
-          if (key.startsWith('barbershop-')) {
-            caches.delete(key).catch(() => {})
-          }
-        }
-      }).catch(() => {})
-    }
-
-    if (!('serviceWorker' in navigator)) return
-
-    // Em ambiente de desenvolvimento ou localhost/127.0.0.1, desregistrar Service Workers
-    // para que nada interfira no Fast Refresh / HMR do Next.js
+    // Detectar ambiente local
     const isLocalhost =
       window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1' ||
       window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.') ||
       window.location.hostname.endsWith('.local')
 
+    // Em ambiente de desenvolvimento ou localhost:
+    // Limpar TODOS os caches (inclusive 'agendasaas-pwa-v4') e desregistrar qualquer Service Worker
+    // para NUNCA reter arquivos em cache ou interferir no Fast Refresh / HMR do Next.js
     if (process.env.NODE_ENV !== 'production' || isLocalhost) {
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        for (const registration of registrations) {
-          registration.unregister().catch(() => {})
-        }
-      }).catch(() => {})
+      if ('caches' in window) {
+        caches.keys().then((keys) => {
+          for (const key of keys) {
+            caches.delete(key).catch(() => {})
+          }
+        }).catch(() => {})
+      }
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.unregister().catch(() => {})
+          }
+        }).catch(() => {})
+      }
       return
     }
 

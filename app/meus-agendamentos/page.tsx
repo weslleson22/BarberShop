@@ -94,31 +94,31 @@ export default function MeusAgendamentosPage() {
   const list = tab === 'proximos' ? upcoming : history
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
 
-      <div className="w-full px-4 md:px-6 max-w-3xl mx-auto">
+      <main className="w-full px-4 md:px-6 max-w-3xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Meus Agendamentos</h1>
-            <p className="text-white/60 text-sm md:text-base">Seus horários com a barbearia</p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Meus Agendamentos</h1>
+            <p className="text-muted-foreground text-sm md:text-base">Seus horários com a barbearia</p>
           </div>
           <Link
             href="/agendar"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Novo Agendamento
           </Link>
         </div>
 
-        <div className="flex gap-2 mb-6 border-b border-white/10">
+        <div className="flex gap-2 mb-6 border-b border-border">
           <button
             onClick={() => setTab('proximos')}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
               tab === 'proximos'
                 ? 'border-yellow-400 text-yellow-400'
-                : 'border-transparent text-white/60 hover:text-white'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Próximos ({upcoming.length})
@@ -128,7 +128,7 @@ export default function MeusAgendamentosPage() {
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
               tab === 'historico'
                 ? 'border-yellow-400 text-yellow-400'
-                : 'border-transparent text-white/60 hover:text-white'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Histórico ({history.length})
@@ -140,8 +140,8 @@ export default function MeusAgendamentosPage() {
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />
           </div>
         ) : list.length === 0 ? (
-          <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-8 text-center">
-            <p className="text-white/60">
+          <div className="bg-card border border-border rounded-2xl p-8 text-center shadow-sm">
+            <p className="text-muted-foreground">
               {tab === 'proximos' ? 'Nenhum agendamento futuro.' : 'Nenhum agendamento no histórico ainda.'}
             </p>
           </div>
@@ -150,11 +150,11 @@ export default function MeusAgendamentosPage() {
             {list.map((a) => (
               <div
                 key={a.id}
-                className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                className="bg-card border border-border text-card-foreground rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm"
               >
                 <div>
-                  <p className="text-white font-semibold mb-1">{a.service.name}</p>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-white/60 text-sm">
+                  <p className="font-semibold mb-1 text-foreground">{a.service.name}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground text-sm">
                     <span className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5" />
                       {formatDate(a.startTime)}
@@ -181,7 +181,7 @@ export default function MeusAgendamentosPage() {
                     <button
                       onClick={() => handleCancel(a.id)}
                       disabled={cancellingId === a.id}
-                      className="p-1.5 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50"
+                      className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50"
                       title="Cancelar agendamento"
                     >
                       <X className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function MeusAgendamentosPage() {
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }

@@ -172,8 +172,8 @@ export default function AgendaPage() {
   // Aguardar carregamento inicial do contexto ou redirecionamento de role não permitida
   if (authLoading || (user && (user.role === 'DEVELOPER' || user.role === 'CLIENT'))) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
       </div>
     )
   }
@@ -302,12 +302,12 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
 
-      {/* Conteúdo Principal */}
-      <div className="w-full px-4 md:px-6">
+      {/* Conteúdo Principal Padrão */}
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
         {/* Header com controles de busca e filtro */}
         <div className="flex-shrink-0">
           <AgendaHeader
@@ -325,8 +325,7 @@ export default function AgendaPage() {
         </div>
         
         {/* Conteúdo da Agenda */}
-        <div className="flex-1 min-w-0">
-          <div className="container-responsive py-4 px-2 md:px-4">
+        <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
               {/* Calendar View - 2 colunas */}
               <div className="lg:col-span-2">
@@ -421,8 +420,7 @@ export default function AgendaPage() {
               titlePrefix={getPeriodLabel()}
             />
           </div>
-        </div>
-      </div>
+        </main>
 
       {/* Appointment Modal (Criar / Editar) */}
       <AppointmentModal

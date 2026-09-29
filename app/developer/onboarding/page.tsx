@@ -219,9 +219,9 @@ export default function DeveloperOnboardingCockpitPage() {
     : tenants.filter((t) => t.lifecycleStatus === statusFilter)
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pt-20 pb-12 font-sans">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
-      <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-8">
         {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
         <div>
@@ -823,7 +823,7 @@ export default function DeveloperOnboardingCockpitPage() {
           onFeedbackSubmitted={loadData}
         />
       )}
-      </div>
+      </main>
     </div>
   )
 }

@@ -13,7 +13,8 @@ import {
   Save,
   X,
   Settings,
-  Upload
+  Upload,
+  Edit
 } from 'lucide-react'
 
 export default function PerfilPage() {
@@ -89,17 +90,35 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
       
       {/* Conteúdo principal */}
-      <div className="w-full px-4 md:px-6">
-        <div className="p-6">
-          <div className="max-w-4xl mx-auto">
-            
-            <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
-              <h2 className="text-2xl font-bold text-white mb-6">Meu Perfil</h2>
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-6 mb-6">
+            <div>
+              <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+                <User className="w-4 h-4" />
+                <span>Identidade & Conta</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Meu Perfil</h1>
+              <p className="text-sm md:text-base text-muted-foreground mt-1">
+                Gerencie seus dados pessoais, informações de contato e vínculo com a plataforma.
+              </p>
+            </div>
+            {!isEditing && (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-semibold rounded-xl text-sm shadow-lg shadow-amber-500/20 hover:from-amber-500 hover:to-amber-700 transition-all self-start sm:self-auto cursor-pointer"
+              >
+                <Edit className="w-4 h-4" />
+                Editar Perfil
+              </button>
+            )}
+          </div>
               
               <div className="space-y-6">
                 {/* Avatar Section */}
@@ -257,9 +276,7 @@ export default function PerfilPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </main>
         </div>
-      </div>
-    </div>
-  )
-}
+      )
+    }

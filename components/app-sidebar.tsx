@@ -132,6 +132,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isRouteActive = (url?: string) => {
     if (!url || url === "#") return false
     if (url === "/dashboard") return pathname === "/dashboard"
+    if (url === "/developer") return pathname === "/developer"
     return pathname.startsWith(url)
   }
 

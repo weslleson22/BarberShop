@@ -703,10 +703,10 @@ export default function DeveloperDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
 
-      <main className="flex-1 pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-8">
         {/* Top Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-800 pb-6 mb-8">
           <div>

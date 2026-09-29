@@ -203,50 +203,49 @@ export default function ServicosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
       
-      {/* Conteúdo Principal */}
-      <div className="w-full px-4 md:px-6">
-        {/* Conteúdo com scroll */}
-        <div className="flex-1 min-w-0">
-          <div className="container-responsive py-6 px-4 md:px-6">
-          <div className="mb-6 md:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Serviços</h1>
-                <p className="text-white/60 mt-1 md:mt-2 text-sm md:text-base">Gerencie todos os serviços oferecidos pela barbearia</p>
-              </div>
-              {canManageServices && (
-                <button
-                  onClick={() => {
-                    setShowAddForm(true)
-                    setEditingService(null)
-                    setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
-                  }}
-                  className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium text-sm md:text-base"
-                >
-                  <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                  Novo Serviço
-                </button>
-              )}
+      {/* Conteúdo Principal Padrão */}
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-6">
+          <div>
+            <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+              <Scissors className="w-4 h-4" />
+              <span>Catálogo & Preços</span>
             </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Serviços</h1>
+            <p className="text-muted-foreground text-sm md:text-base mt-1">Gerencie todos os serviços oferecidos pela barbearia</p>
           </div>
+          {canManageServices && (
+            <button
+              onClick={() => {
+                setShowAddForm(true)
+                setEditingService(null)
+                setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
+              }}
+              className="bg-gradient-to-r from-amber-400 to-amber-600 text-black px-4 md:px-5 py-2.5 rounded-xl hover:from-amber-500 hover:to-amber-700 transition-all flex items-center font-semibold text-sm shadow-lg shadow-amber-500/20 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Serviço
+            </button>
+          )}
+        </div>
 
-          {/* Busca */}
-          <div className="mb-4 md:mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4 md:w-5 md:h-5" />
-              <input
-                type="text"
-                placeholder="Buscar por nome ou descrição..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/6 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-              />
-            </div>
+        {/* Busca */}
+        <div>
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Buscar por nome ou descrição..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
+            />
           </div>
+        </div>
 
           {/* Formulário de Adicionar/Editar */}
           {showAddForm && (
@@ -563,9 +562,7 @@ export default function ServicosPage() {
           </div>
         </div>
       )}
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   )
 }

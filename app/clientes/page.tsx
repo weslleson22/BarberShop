@@ -133,31 +133,23 @@ export default function ClientesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
       
-      {/* Conteúdo Principal */}
-      <div className="w-full px-4 md:px-6">
-        {/* Header fixo no topo */}
-        <div className="flex-shrink-0">
-          <ClientHeader onNewClient={handleNewClient} onSearch={setSearchQuery} clients={clients} />
-        </div>
+      {/* Conteúdo Principal Padrão */}
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
+        <ClientHeader onNewClient={handleNewClient} onSearch={setSearchQuery} clients={clients} />
         
-        {/* Conteúdo com scroll */}
-        <div className="flex-1 min-w-0">
-          <div className="p-4 md:p-6">
-            <ClientList 
-              clients={clients}
-              loading={loading}
-              searchQuery={searchQuery}
-              onEdit={handleEditClient}
-              onDelete={handleDeleteClient}
-              onMessage={handleMessageClient}
-            />
-          </div>
-        </div>
-      </div>
+        <ClientList 
+          clients={clients}
+          loading={loading}
+          searchQuery={searchQuery}
+          onEdit={handleEditClient}
+          onDelete={handleDeleteClient}
+          onMessage={handleMessageClient}
+        />
+      </main>
 
       {/* Client Modal */}
       <ClientModal

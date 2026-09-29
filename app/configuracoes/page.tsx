@@ -400,60 +400,77 @@ export default function ConfiguracoesPage() {
   const publicBookingUrl = `${origin}/b/${shopData.slug || ''}/agendamento`
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
 
-      {/* Conteúdo Principal */}
-      <div className="w-full px-4 md:px-6">
-        <div className="flex-1 min-w-0">
-          <div className="p-4 md:p-6">
-            <div className="max-w-4xl mx-auto">
-              {/* Header */}
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold text-white mb-2">Configurações</h1>
-                <p className="text-white/60">
-                  {canManageShop
-                    ? 'Gerencie seu perfil, preferências e link público da sua barbearia'
-                    : 'Gerencie seu perfil e preferências da sua conta'}
-                </p>
+      {/* Conteúdo Principal Padrão */}
+      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-6">
+          <div>
+            {user?.role === 'DEVELOPER' ? (
+              <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  DEVELOPER ADMIN
+                </span>
+                <span className="text-muted-foreground">/</span>
+                <span className="text-muted-foreground">Configurações Globais</span>
               </div>
-
-              {/* Abas de Navegação */}
-              <div className="flex items-center gap-2 border-b border-white/10 mb-8 pb-3 overflow-x-auto">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('profile')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
-                    activeTab === 'profile'
-                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow-lg shadow-yellow-500/20'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <User className="w-4 h-4" />
-                  <span>Meu Perfil</span>
-                </button>
-
-                {canManageShop && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('barbershop')}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
-                      activeTab === 'barbershop'
-                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow-lg shadow-yellow-500/20'
-                        : 'text-white/70 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4" />
-                    <span>Minha Barbearia & Link Público</span>
-                    {shopData.slug && (
-                      <span className="hidden md:inline-flex px-2 py-0.5 rounded text-[11px] font-mono bg-black/20 text-black font-bold">
-                        /b/{shopData.slug}
-                      </span>
-                    )}
-                  </button>
-                )}
+            ) : (
+              <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+                <Settings className="w-4 h-4" />
+                <span>Preferências da Conta</span>
               </div>
+            )}
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+              {user?.role === 'DEVELOPER' ? 'Configurações Globais' : 'Configurações'}
+            </h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-1">
+              {user?.role === 'DEVELOPER'
+                ? 'Gerencie seu perfil de Desenvolvedor, credenciais de acesso e preferências do sistema.'
+                : canManageShop
+                ? 'Gerencie seu perfil, preferências e link público da sua barbearia'
+                : 'Gerencie seu perfil e preferências da sua conta'}
+            </p>
+          </div>
+        </div>
+
+        {/* Abas de Navegação */}
+        <div className="flex items-center gap-2 border-b border-border/80 pb-3 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('profile')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              activeTab === 'profile'
+                ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/20'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Meu Perfil</span>
+          </button>
+
+          {canManageShop && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('barbershop')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                activeTab === 'barbershop'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/20'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              <Building2 className="w-4 h-4" />
+              <span>Minha Barbearia & Link Público</span>
+              {shopData.slug && (
+                <span className="hidden md:inline-flex px-2 py-0.5 rounded text-[11px] font-mono bg-black/20 text-black font-bold">
+                  /b/{shopData.slug}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
 
               {/* Conteúdo da Aba: MEU PERFIL */}
               {activeTab === 'profile' && (
@@ -466,8 +483,8 @@ export default function ConfiguracoesPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                       {/* Avatar Section */}
                       <div className="lg:col-span-1">
-                        <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-xl p-6">
-                          <h2 className="text-lg font-semibold text-white mb-4">Foto do Perfil</h2>
+                        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                          <h2 className="text-lg font-semibold text-foreground mb-4">Foto do Perfil</h2>
 
                           <div className="flex flex-col items-center">
                             <div className="relative mb-4">
@@ -509,13 +526,19 @@ export default function ConfiguracoesPage() {
                         </div>
 
                         {/* Quick Actions */}
-                        <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-xl p-6 mt-6">
-                          <h2 className="text-lg font-semibold text-white mb-4">Ações Rápidas</h2>
+                        <div className="bg-card border border-border rounded-xl p-6 mt-6 shadow-sm">
+                          <h2 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h2>
                           <div className="space-y-3">
                             <button
                               type="button"
-                              onClick={() => alert('Para redefinir sua senha, solicite suporte ao administrador.')}
-                              className="w-full py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                              onClick={() => {
+                                if (user?.role === 'DEVELOPER') {
+                                  alert('Você está autenticado como Administrador da Plataforma (DEVELOPER).')
+                                } else {
+                                  alert('Para redefinir sua senha, solicite suporte ao administrador da barbearia.')
+                                }
+                              }}
+                              className="w-full py-2 bg-muted/40 border border-border rounded-lg text-foreground hover:bg-muted/70 transition-all flex items-center justify-center space-x-2 cursor-pointer text-sm"
                             >
                               <Shield className="w-4 h-4" />
                               <span>Segurança & Senha</span>
@@ -536,8 +559,8 @@ export default function ConfiguracoesPage() {
 
                       {/* Form Section */}
                       <div className="lg:col-span-2">
-                        <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-xl p-6">
-                          <h2 className="text-lg font-semibold text-white mb-6">Informações Pessoais</h2>
+                        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                          <h2 className="text-lg font-semibold text-foreground mb-6">Informações Pessoais</h2>
 
                           <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1024,10 +1047,7 @@ export default function ConfiguracoesPage() {
                   )}
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   )
 }

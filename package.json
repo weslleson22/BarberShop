@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "powershell -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; next dev\"",
     "dev:3007": "powershell -ExecutionPolicy Bypass -File ./start-dev.ps1 3007",
     "dev:3008": "powershell -ExecutionPolicy Bypass -File ./start-dev.ps1 3008",
     "dev:3009": "powershell -ExecutionPolicy Bypass -File ./start-dev.ps1 3009",
