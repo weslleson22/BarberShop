@@ -20,6 +20,7 @@ interface User {
   bio?: string
   createdAt?: string
   updatedAt?: string
+  sessionId?: string
   barbershop?: {
     id?: string
     name?: string
@@ -81,6 +82,89 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }, [])
 
+  // Canal de sincronização de sessão única em tempo real entre abas do mesmo navegador
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        bc = new BroadcastChannel('barbershop-auth-channel')
+        bc.onmessage = (event) => {
+          const data = event.data
+          if (data?.type === 'NEW_LOGIN' && user && data.userId === user.id) {
+            if (data.sessionId && user.sessionId && data.sessionId !== user.sessionId) {
+              // Outra sessão assumiu a conta
+              localStorage.removeItem('auth_token')
+              localStorage.removeItem('user_data')
+              setUser(null)
+              alert('Sua sessão foi encerrada porque um novo login foi realizado nesta conta.')
+              window.location.href = '/login'
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignora erro se BroadcastChannel não estiver disponível
+    }
+
+    return () => {
+      if (bc) bc.close()
+    }
+  }, [user])
+
+  // Verificação periódica e ao focar a aba para detectar se a sessão foi invalidada por outro dispositivo
+  useEffect(() => {
+    if (!user) return
+
+    const verifyActiveSession = async () => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        if (!token) return
+
+        const res = await fetch('/api/auth/session', {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
+        })
+
+        if (res.status === 401) {
+          const data = await res.json().catch(() => ({}))
+          if (data.reason === 'SESSION_SUPERSEDED') {
+            localStorage.removeItem('auth_token')
+            localStorage.removeItem('user_data')
+            setUser(null)
+            alert('Sua sessão foi encerrada porque outro login foi realizado nesta conta.')
+            window.location.href = '/login'
+          }
+        }
+      } catch {
+        // Falha silenciosa de rede
+      }
+    }
+
+    window.addEventListener('focus', verifyActiveSession)
+    const interval = setInterval(verifyActiveSession, 25000)
+
+    return () => {
+      window.removeEventListener('focus', verifyActiveSession)
+      clearInterval(interval)
+    }
+  }, [user])
+
+  const notifyNewSession = (userId: string, sessionId?: string) => {
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window && sessionId) {
+        const bc = new BroadcastChannel('barbershop-auth-channel')
+        bc.postMessage({
+          type: 'NEW_LOGIN',
+          userId,
+          sessionId,
+        })
+        bc.close()
+      }
+    } catch {
+      // Ignora
+    }
+  }
+
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true)
@@ -104,6 +188,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', data.token)
       localStorage.setItem('user_data', JSON.stringify(data.user))
       setUser(data.user)
+
+      // Notifica outras abas para desconectar
+      notifyNewSession(data.user.id, data.user.sessionId)
       
       return { success: true }
     } catch (error: any) {
@@ -137,6 +224,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', data.token)
       localStorage.setItem('user_data', JSON.stringify(data.user))
       setUser(data.user)
+
+      notifyNewSession(data.user.id, data.user.sessionId)
       
       return true
     } catch (error) {

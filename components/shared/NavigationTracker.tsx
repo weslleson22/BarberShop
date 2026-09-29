@@ -40,26 +40,34 @@ export function NavigationTracker() {
 
     lastPathRef.current = fullPath
 
-    // Aguarda montagem estável antes de despachar
+    // Aguarda que a página carregue completamente antes de despachar telemetria em background
     const timer = setTimeout(() => {
-      try {
-        fetch('/api/audit/navigation', {
-          method: 'POST',
-          headers: getLocalAuthHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({
-            path: fullPath,
-            title: typeof document !== 'undefined' ? document.title : '',
-            referrer: typeof document !== 'undefined' ? document.referrer : '',
-          }),
-          credentials: 'include',
-          keepalive: true,
-        }).catch(() => {
-          // Falha silenciosa de telemetria
-        })
-      } catch {
-        // Ignora
+      const scheduleTelemetry = () => {
+        try {
+          fetch('/api/audit/navigation', {
+            method: 'POST',
+            headers: getLocalAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+              path: fullPath,
+              title: typeof document !== 'undefined' ? document.title : '',
+              referrer: typeof document !== 'undefined' ? document.referrer : '',
+            }),
+            credentials: 'include',
+            keepalive: true,
+          }).catch(() => {
+            // Falha silenciosa de telemetria
+          })
+        } catch {
+          // Ignora
+        }
       }
-    }, 300)
+
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(scheduleTelemetry, { timeout: 2000 })
+      } else {
+        scheduleTelemetry()
+      }
+    }, 1500)
 
     return () => clearTimeout(timer)
   }, [pathname, searchParams])

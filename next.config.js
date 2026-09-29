@@ -39,18 +39,17 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   allowedDevOrigins: getLocalDevOrigins(),
   experimental: {
-    // No Next.js 15, zera o cache de navegação do cliente para refletir alterações instantaneamente no dev
+    // Cache de navegação inteligente para transições instantâneas entre rotas
     staleTimes: {
-      dynamic: 0,
-      static: 0,
+      dynamic: 30,
+      static: 180,
     },
   },
   webpack: (config, { dev }) => {
     if (dev) {
-      // Garante detecção imediata de alterações de arquivos no Windows (mesmo em pastas como Documents/OneDrive)
       config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
+        ignored: ['**/node_modules/**', '**/.next/**'],
+        aggregateTimeout: 200,
       };
     }
     return config;
@@ -70,15 +69,14 @@ const nextConfig = {
   async headers() {
     const isProd = process.env.NODE_ENV === 'production';
 
-    // Em DESENVOLVIMENTO (local): NUNCA permitir cache imutável no navegador!
-    // Forçar no-store em todos os assets locais para garantir que modificações sejam refletidas na hora
-    // sem precisar trocar de porta ou limpar o cache do navegador.
+    // Em DESENVOLVIMENTO (local): Não cacheia páginas HTML/dados de API para refletir mudanças na hora,
+    // mas permite que chunks estáticos com hash fiquem em memória evitando requisições duplicadas.
     if (!isProd) {
       return [
         {
-          source: '/:path*',
+          source: '/((?!_next/static|_next/image|icons|favicon.ico).*)',
           headers: [
-            { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+            { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
             { key: 'Pragma', value: 'no-cache' },
             { key: 'Expires', value: '0' },
           ],

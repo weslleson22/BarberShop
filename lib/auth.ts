@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { prisma } from './prisma'
 import { ensureClientForUser } from './client-sync'
+import { SessionManager } from './session-manager'
 import type { UserRole } from './roles'
 
 function getJwtSecret(): string {
@@ -20,6 +22,7 @@ export interface JWTPayload {
   barbershopId?: string | null
   barbershopStatus?: string
   trialEndsAt?: string | null
+  sessionId?: string
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -103,6 +106,9 @@ export async function authenticateUser(email: string, password: string) {
     ? new Date(new Date(user.barbershop.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
     : null
 
+  const sessionId = 'sess_' + crypto.randomUUID()
+  SessionManager.registerSession(user.id, sessionId)
+
   const token = generateToken({
     id: user.id,
     name: user.name,
@@ -111,6 +117,7 @@ export async function authenticateUser(email: string, password: string) {
     barbershopId: user.barbershopId,
     barbershopStatus: user.barbershop?.status,
     trialEndsAt: trialEndsAtFormatted,
+    sessionId,
   })
 
   return {
@@ -123,6 +130,7 @@ export async function authenticateUser(email: string, password: string) {
       phone: user.phone,
       avatar: user.avatar,
       barbershop: user.barbershop,
+      sessionId,
     },
     token,
   }
@@ -195,12 +203,16 @@ export async function createUser(data: {
     }
   }
 
+  const sessionId = 'sess_' + crypto.randomUUID()
+  SessionManager.registerSession(user.id, sessionId)
+
   const token = generateToken({
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
     barbershopId: user.barbershopId,
+    sessionId,
   })
 
   return {
@@ -213,6 +225,7 @@ export async function createUser(data: {
       phone: user.phone,
       avatar: user.avatar,
       barbershop: user.barbershop,
+      sessionId,
     },
     token,
   }

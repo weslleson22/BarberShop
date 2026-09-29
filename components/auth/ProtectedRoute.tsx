@@ -34,8 +34,8 @@ export function ProtectedRoute({ allow, children }: ProtectedRouteProps) {
 
   if (loading || !user || !allow.includes(user.role)) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />
+      <div className="flex items-center justify-center min-h-screen bg-background text-foreground">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
       </div>
     )
   }

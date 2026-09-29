@@ -1,15 +1,25 @@
 import { NextRequest } from 'next/server'
 import { verifyToken, JWTPayload } from './auth'
 
+import { SessionManager } from './session-manager'
+
 // Extrai e valida o usuário autenticado a partir do cookie httpOnly 'auth-token'.
 // Único ponto de verdade para "quem está fazendo esta requisição" nas rotas de API —
 // nunca confiar em barbershopId/userId/role enviados no corpo/query da requisição.
 export function getAuthUser(request: NextRequest): JWTPayload | null {
+  const checkSession = (payload: JWTPayload): JWTPayload | null => {
+    if (payload.sessionId && !SessionManager.isSessionActive(payload.id, payload.sessionId)) {
+      return null
+    }
+    return payload
+  }
+
   // 1. Tentar ler e validar do cookie httpOnly 'auth-token'
   const cookieToken = request.cookies.get('auth-token')?.value
   if (cookieToken) {
     try {
-      return verifyToken(cookieToken)
+      const payload = verifyToken(cookieToken)
+      return checkSession(payload)
     } catch {
       // Cookie expirado, de deploy anterior ou corrompido:
       // Continua para tentar o header Authorization como fallback
@@ -22,7 +32,8 @@ export function getAuthUser(request: NextRequest): JWTPayload | null {
     const match = authHeader.match(/^Bearer\s+(.+)$/i)
     if (match && match[1]) {
       try {
-        return verifyToken(match[1])
+        const payload = verifyToken(match[1])
+        return checkSession(payload)
       } catch {
         // Token do header inválido
       }
@@ -33,7 +44,8 @@ export function getAuthUser(request: NextRequest): JWTPayload | null {
   try {
     const queryToken = request.nextUrl.searchParams.get('token')
     if (queryToken) {
-      return verifyToken(queryToken)
+      const payload = verifyToken(queryToken)
+      return checkSession(payload)
     }
   } catch {
     // Token da query inválido ou expirado

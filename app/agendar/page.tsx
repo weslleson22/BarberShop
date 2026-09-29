@@ -450,8 +450,8 @@ export default function AgendarPage() {
 
   if (!mounted || authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black py-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+      <div className="min-h-screen bg-background text-foreground py-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
@@ -459,15 +459,15 @@ export default function AgendarPage() {
   // Agendamento exclusivo para clientes cadastrados com login de cliente
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20 flex flex-col justify-between">
+      <div className="min-h-screen bg-background text-foreground pb-20 pt-20 flex flex-col justify-between">
         <DropdownHeader />
         <main className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-gray-900/90 border border-yellow-500/30 rounded-2xl p-6 sm:p-8 backdrop-blur-xl text-center shadow-2xl">
-            <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mx-auto mb-4 text-yellow-400">
+          <div className="max-w-md w-full bg-card border border-border rounded-2xl p-6 sm:p-8 backdrop-blur-xl text-center shadow-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4 text-primary">
               <User className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Acesso Exclusivo para Clientes</h2>
-            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+            <h2 className="text-xl font-bold text-foreground mb-2">Acesso Exclusivo para Clientes</h2>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
               O agendamento de horários online é exclusivo para clientes cadastrados com login de cliente. Por favor, faça login com sua conta para continuar.
             </p>
             <div className="space-y-3">
@@ -480,7 +480,7 @@ export default function AgendarPage() {
               </Link>
               <Link
                 href="/"
-                className="w-full flex items-center justify-center py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl text-xs font-medium transition"
+                className="w-full flex items-center justify-center py-2.5 px-4 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl text-xs font-medium transition"
               >
                 Voltar para a Página Inicial
               </Link>
@@ -494,29 +494,29 @@ export default function AgendarPage() {
   // Usuários com outras roles (ADMIN, DEVELOPER, BARBER)
   if (user.role !== 'CLIENT') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20 flex flex-col justify-between">
+      <div className="min-h-screen bg-background text-foreground pb-20 pt-20 flex flex-col justify-between">
         <DropdownHeader />
         <main className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-gray-900/90 border border-blue-500/30 rounded-2xl p-6 sm:p-8 backdrop-blur-xl text-center shadow-2xl">
+          <div className="max-w-md w-full bg-card border border-border rounded-2xl p-6 sm:p-8 backdrop-blur-xl text-center shadow-2xl">
             <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4 text-blue-400">
               <Shield className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Área Exclusiva de Clientes</h2>
-            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+            <h2 className="text-xl font-bold text-foreground mb-2">Área Exclusiva de Clientes</h2>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
               Você está conectado como <strong>{user.role}</strong>. O agendamento online através desta tela é destinado exclusivamente a usuários cadastrados como <strong>Cliente</strong>.
               Administradores e profissionais devem gerenciar os horários no painel de controle.
             </p>
             <div className="space-y-3">
               <Link
                 href={user.role === 'DEVELOPER' ? '/developer' : '/dashboard'}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-blue-500/20"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl text-sm transition-all shadow-lg shadow-yellow-500/20"
               >
                 <span>Ir para o Painel de Gestão</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/"
-                className="w-full flex items-center justify-center py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl text-xs font-medium transition"
+                className="w-full flex items-center justify-center py-2.5 px-4 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl text-xs font-medium transition"
               >
                 Voltar para a Página Inicial
               </Link>
@@ -528,7 +528,7 @@ export default function AgendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
       

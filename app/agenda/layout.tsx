@@ -3,9 +3,5 @@ export default function AgendaLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black">
-      {children}
-    </div>
-  )
+  return <>{children}</>
 }

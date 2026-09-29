@@ -14,6 +14,9 @@ export async function POST(request: NextRequest) {
   const ctx = extractRequestContext(request)
 
   if (user) {
+    const { SessionManager } = await import('@/lib/session-manager')
+    SessionManager.invalidateSession(user.id, user.sessionId)
+
     await createAuditLog({
       userId: user.id,
       barbershopId: user.barbershopId ?? null,
