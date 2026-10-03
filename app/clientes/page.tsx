@@ -1,12 +1,13 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import ClientHeader from '@/components/clientes/ClientHeader'
 import ClientList from '@/components/clientes/ClientList'
 import ClientModal from '@/components/clientes/ClientModal'
+import { getAuthHeaders } from '@/lib/utils'
 
 interface Client {
   id: string
@@ -33,53 +34,63 @@ export default function ClientesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
 
-  useEffect(() => {
-    if (user && (user.role === 'ADMIN' || user.role === 'BARBER' || user.role === 'RECEPTIONIST')) {
-      fetchClients()
-    }
-  }, [user])
-
-  // Aguardar carregamento inicial do contexto
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Carregando...</p>
-      </div>
-    )
-  }
-
-  // Verificar se usuário tem permissão
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'BARBER' && user.role !== 'RECEPTIONIST')) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Acesso Negado</h1>
-          <p className="text-gray-600">Você não tem permissão para acessar esta página.</p>
-        </div>
-      </div>
-    )
-  }
-
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     try {
-      // Buscando dados reais do banco via API
-      const response = await fetch('/api/clients/all')
+      setLoading(true)
+      const response = await fetch('/api/clients/all', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Clientes recebidos do banco de dados:', data)
-        setClients(data)
+        setClients(Array.isArray(data) ? data : [])
       } else {
         console.error('Erro ao buscar clientes do banco:', response.statusText)
-        setClients([]) // Array vazio em caso de erro
+        setClients([])
       }
     } catch (error) {
       console.error('Error fetching clients from database:', error)
-      setClients([]) // Array vazio em caso de erro
+      setClients([])
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        router.push('/login')
+      } else if (user.role === 'DEVELOPER') {
+        router.replace('/developer')
+      } else if (user.role === 'CLIENT') {
+        router.replace('/meus-agendamentos')
+      }
+    }
+  }, [user, authLoading, router])
+
+  useEffect(() => {
+    if (!authLoading && user && (user.role === 'ADMIN' || user.role === 'BARBER' || user.role === 'RECEPTIONIST')) {
+      fetchClients()
+    }
+  }, [authLoading, user, fetchClients])
+
+  // Aguardar carregamento inicial do contexto ou redirecionamento de role não permitida
+  if (authLoading || (user && (user.role === 'DEVELOPER' || user.role === 'CLIENT'))) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+      </div>
+    )
+  }
+
+  // Se não estiver autenticado e já terminou de carregar o auth context, exibe spinner enquanto o useEffect redireciona
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+      </div>
+    )
   }
 
   const handleNewClient = () => {
@@ -103,6 +114,8 @@ export default function ClientesPage() {
       try {
         const response = await fetch(`/api/clients?id=${clientId}`, {
           method: 'DELETE',
+          headers: getAuthHeaders(),
+          credentials: 'include',
         })
 
         if (response.ok) {
@@ -124,16 +137,8 @@ export default function ClientesPage() {
     console.log('Send message to client:', client)
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
       

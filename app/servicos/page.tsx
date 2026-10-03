@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Scissors, Clock, DollarSign, Plus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
@@ -194,13 +194,6 @@ export default function ServicosPage() {
     }).format(numericValue)
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
@@ -347,7 +340,11 @@ export default function ServicosPage() {
 
       {/* Lista de Serviços em Cards */}
       <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-2xl p-4 md:p-6">
-        {filteredServices.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400"></div>
+          </div>
+        ) : filteredServices.length === 0 ? (
           <div className="text-center py-8 md:py-12">
             <Scissors className="w-10 h-10 md:w-12 md:h-12 text-white/40 mx-auto mb-3 md:mb-4" />
             <p className="text-white text-base md:text-lg">Nenhum serviço encontrado</p>
