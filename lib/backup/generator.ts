@@ -230,9 +230,9 @@ export async function executeDatabaseBackup(options: {
     },
   })
 
-  // 5. Cópia local opcional (em ambiente com disco acessível)
+  // 5. Cópia local opcional (em ambiente com disco acessível, fora da Vercel)
   let localPath: string | undefined
-  if (options.saveLocalCopy !== false) {
+  if (options.saveLocalCopy !== false && !process.env.VERCEL) {
     try {
       const backupDir = path.join(process.cwd(), 'backups')
       if (!fs.existsSync(backupDir)) {

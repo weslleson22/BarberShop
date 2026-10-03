@@ -37,8 +37,30 @@ function getLocalDevOrigins() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
+  outputFileTracingExcludes: {
+    '*': [
+      'node_modules/@swc/core-linux-x64-gnu',
+      'node_modules/@swc/core-linux-x64-musl',
+      'node_modules/@esbuild/**/*',
+      'node_modules/webpack/**/*',
+      'node_modules/terser/**/*',
+      'node_modules/prettier/**/*',
+      'node_modules/typescript/**/*',
+      'node_modules/@vitest/**/*',
+      'node_modules/vitest/**/*',
+      'node_modules/playwright/**/*',
+      'node_modules/@playwright/**/*',
+      'node_modules/prisma/**/*',
+      'node_modules/@prisma/engines/**/*',
+      'backups/**/*',
+      'tests/**/*',
+      'docs/**/*',
+      '.next/cache/**/*',
+    ],
+  },
   allowedDevOrigins: getLocalDevOrigins(),
   experimental: {
+    optimizePackageImports: ['lucide-react', 'recharts'],
     // Cache de navegação inteligente para transições instantâneas entre rotas
     staleTimes: {
       dynamic: 30,

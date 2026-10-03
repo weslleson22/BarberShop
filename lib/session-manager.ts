@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import os from 'os'
 
 export interface ActiveSession {
   sessionId: string
@@ -19,7 +20,10 @@ if (!globalSessions.__activeSessions__) {
 const activeSessions = globalSessions.__activeSessions__
 
 // Local persistence file path (resilient across server restarts)
-const SESSIONS_DIR = path.join(process.cwd(), '.next')
+// Usa os.tmpdir() para evitar que o Node File Trace (NFT) da Vercel rastreie e empacote
+// todo o diretório .next (>500MB), estourando o limite de 250MB de Serverless Function,
+// e garante compatibilidade com sistemas de arquivos serverless onde apenas /tmp é gravável.
+const SESSIONS_DIR = path.join(os.tmpdir(), 'barbershop-sessions')
 const SESSIONS_FILE = path.join(SESSIONS_DIR, 'active-sessions.json')
 
 function loadPersistedSessions() {
