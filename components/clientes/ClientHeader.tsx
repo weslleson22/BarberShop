@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Search, ChevronDown, Plus, Download } from 'lucide-react'
-import * as XLSX from 'xlsx'
 
 interface ClientHeaderProps {
   onNewClient?: () => void
@@ -20,11 +19,14 @@ export default function ClientHeader({ onNewClient, onSearch, clients }: ClientH
     onSearch?.(value)
   }
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!clients || clients.length === 0) {
       alert('Nenhum cliente para exportar')
       return
     }
+
+    // Carregamento dinâmico sob demanda para não onerar o bundle inicial da página
+    const XLSX = await import('xlsx')
 
     // Preparar dados para Excel com formatação bonita
     const excelData = clients.map((client, index) => ({
