@@ -44,7 +44,7 @@ export default function TermsOfUsePage() {
         {/* Identificação das Partes */}
         <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 text-xs text-slate-300 space-y-2 leading-relaxed">
           <p>
-            Estes Termos de Uso regem a contratação e a utilização dos serviços de software disponibilizados pela <strong>S W SYSTEMS LTDA</strong>, pessoa jurídica de direito privado sob o nome fantasia <strong>S W DEVELOPMENT</strong>, inscrita no CNPJ sob o nº <strong>39.825.909/0001-14</strong>, com sede e foro na cidade de <strong>São Luís - MA</strong>, doravante denominada simplesmente <strong>"LICENCIANTE"</strong> ou <strong>"PLATAFORMA"</strong>.
+            Estes Termos de Uso regem a contratação e a utilização dos serviços de software disponibilizados pela <strong>S W SYSTEMS LTDA</strong>, pessoa jurídica de direito privado sob o nome fantasia <strong>S W DEVELOPMENT</strong>, inscrita no CNPJ sob o nº <strong>39.825.909/0001-14</strong>, com sede e foro na cidade de <strong>São Luís - MA</strong>, doravante denominada simplesmente <strong>&quot;LICENCIANTE&quot;</strong> ou <strong>&quot;PLATAFORMA&quot;</strong>.
           </p>
           <p>
             Ao se cadastrar, criar uma conta ou utilizar a plataforma, você (pessoa física ou jurídica, proprietário de barbearia ou cliente final) declara expressamente ter lido, compreendido e aceito integralmente todas as cláusulas deste contrato.
