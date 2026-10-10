@@ -32,7 +32,20 @@ export async function POST(request: NextRequest) {
     const simResult = await simulateAbacatePayment(effectivePixId)
 
     // 2. Se a simulação tiver sucesso, atualiza ou cria a assinatura correspondente no banco local
-    const barbershopId = user.barbershopId
+    let barbershopId = user.barbershopId || body.barbershopId
+    if (!barbershopId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { barbershopId: true },
+      })
+      barbershopId = dbUser?.barbershopId || null
+    }
+
+    if (!barbershopId && user.role === 'DEVELOPER') {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id || null
+    }
+
     let updatedSubscription: any = null
 
     if (barbershopId) {

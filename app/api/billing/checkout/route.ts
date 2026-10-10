@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       cancelUrl: finalCancelUrl,
       customerEmail: user.email,
       customerName: user.name,
-      customerPhone: user.phone || undefined,
+      customerPhone: (user as any).phone || undefined,
       customerTaxId: customerTaxId || undefined,
       mode: mode === 'TRANSPARENT' ? 'TRANSPARENT' : 'HOSTED',
     })

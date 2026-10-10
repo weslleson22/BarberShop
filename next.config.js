@@ -67,7 +67,15 @@ const nextConfig = {
       static: 180,
     },
   },
-  webpack: (config, { dev }) => {
+  webpack: (config, { dev, isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        os: false,
+      };
+    }
     if (dev) {
       config.watchOptions = {
         ignored: ['**/node_modules/**', '**/.next/**'],

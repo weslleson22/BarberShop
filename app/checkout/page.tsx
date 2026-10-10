@@ -6,7 +6,12 @@ import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import AbacateCheckout, { CheckoutProduct } from '@/components/billing/AbacateCheckout'
-import { CheckoutCustomizationConfig, DEFAULT_CHECKOUT_CONFIG } from '@/lib/billing/checkout-config'
+import {
+  CheckoutCustomizationConfig,
+  DEFAULT_CHECKOUT_CONFIG,
+  parseStoredAddress,
+  CustomerDefaults,
+} from '@/lib/billing/checkout-config'
 
 function CheckoutContent() {
   const searchParams = useSearchParams()
@@ -14,8 +19,10 @@ function CheckoutContent() {
   const { user } = useAuth()
 
   const planId = searchParams.get('planId') || searchParams.get('id')
+  const initialMethod = (searchParams.get('method') as 'PIX' | 'CREDIT_CARD' | 'BOLETO') || 'PIX'
   const [product, setProduct] = useState<CheckoutProduct | null>(null)
   const [config, setConfig] = useState<CheckoutCustomizationConfig>(DEFAULT_CHECKOUT_CONFIG)
+  const [customerDefaults, setCustomerDefaults] = useState<CustomerDefaults>({})
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -38,6 +45,7 @@ function CheckoutContent() {
       }
 
       // 2. Carrega dados do plano selecionado
+      let foundProduct: CheckoutProduct | null = null
       if (planId) {
         const planRes = await fetch('/api/billing/plans', {
           headers: getAuthHeaders(),
@@ -48,30 +56,66 @@ function CheckoutContent() {
           if (Array.isArray(plans)) {
             const found = plans.find((p: any) => p.id === planId)
             if (found) {
-              setProduct({
+              foundProduct = {
                 id: found.id,
                 name: found.name,
                 description: found.description || 'Assinatura BarberShop Pro',
                 price: Number(found.price),
                 currency: found.currency || 'BRL',
                 billingInterval: found.billingInterval || 'MONTHLY',
-              })
-              setLoading(false)
-              return
+              }
             }
           }
         }
       }
 
-      // Fallback padrão se nenhum planId for fornecido
-      setProduct({
-        id: 'plan_pro_default',
-        name: 'Plano BarberShop Pro',
-        description: 'Gestão completa da sua barbearia com agendamento online ilimitado',
-        price: 49.9,
-        currency: 'BRL',
-        billingInterval: 'MONTHLY',
-      })
+      // 3. Carrega dados cadastrais do cliente/barbearia para pré-preenchimento
+      try {
+        const shopRes = await fetch('/api/barbershop', {
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        })
+        if (shopRes.ok) {
+          const shop = await shopRes.json()
+          const parsedAddr = parseStoredAddress(shop.address || user?.address)
+          setCustomerDefaults({
+            name: shop.name || user?.name || '',
+            email: shop.email || user?.email || '',
+            phone: shop.phone || user?.phone || '',
+            address: parsedAddr,
+          })
+        } else if (user) {
+          setCustomerDefaults({
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            address: parseStoredAddress(user.address),
+          })
+        }
+      } catch {
+        if (user) {
+          setCustomerDefaults({
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            address: parseStoredAddress(user.address),
+          })
+        }
+      }
+
+      // Define o produto encontrado ou fallback padrão se nenhum planId for fornecido
+      if (foundProduct) {
+        setProduct(foundProduct)
+      } else {
+        setProduct({
+          id: 'plan_pro_default',
+          name: 'Plano BarberShop Pro',
+          description: 'Gestão completa da sua barbearia com agendamento online ilimitado',
+          price: 49.9,
+          currency: 'BRL',
+          billingInterval: 'MONTHLY',
+        })
+      }
     } catch (err: any) {
       console.error('Erro ao carregar checkout:', err)
       setErrorMessage('Não foi possível carregar os detalhes do produto.')
@@ -139,13 +183,10 @@ function CheckoutContent() {
             showTaxId={config.showTaxId}
             showPhone={config.showPhone}
             acceptedMethods={config.acceptedMethods}
+            initialMethod={initialMethod}
             onSuccess={handleSuccess}
             onCancel={handleCancel}
-            customerDefaults={{
-              name: user?.name,
-              email: user?.email,
-              phone: user?.phone,
-            }}
+            customerDefaults={customerDefaults}
           />
         ) : null}
       </div>

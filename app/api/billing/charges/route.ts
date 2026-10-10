@@ -130,11 +130,11 @@ export async function GET(request: NextRequest) {
           method: 'CREDIT_CARD',
           description: `Assinatura ${inv.subscription?.plan?.name || 'Plano Barbearia'}`,
           customer: {
-            name: inv.barbershop.name,
-            email: inv.barbershop.email,
-            cellphone: inv.barbershop.phone || undefined,
+            name: inv.barbershop?.name || 'Barbearia Cadastrada',
+            email: inv.barbershop?.email || '',
+            cellphone: inv.barbershop?.phone || undefined,
           },
-          barbershopName: inv.barbershop.name,
+          barbershopName: inv.barbershop?.name || 'Barbearia Geral',
           createdAt: inv.createdAt.toISOString(),
           paidAt: inv.paidAt?.toISOString() || null,
           provider: 'LOCAL',
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
           customer: {
             name: customerName || user.name,
             email: customerEmail || user.email,
-            cellphone: (customerPhone || user.phone || '11999999999').replace(/\D/g, ''),
+            cellphone: (customerPhone || (user as any).phone || '11999999999').replace(/\D/g, ''),
             taxId: (customerTaxId || '39151142054').replace(/\D/g, ''),
           },
           metadata: {
@@ -291,7 +291,7 @@ export async function POST(request: NextRequest) {
           name: customerName || user.name,
           taxId: (customerTaxId || '39151142054').replace(/\D/g, ''),
           email: customerEmail || user.email,
-          cellphone: (customerPhone || user.phone || '11999999999').replace(/\D/g, ''),
+          cellphone: (customerPhone || (user as any).phone || '11999999999').replace(/\D/g, ''),
           address,
         },
         metadata: {

@@ -6,6 +6,7 @@ import DropdownHeader from '@/components/shared/DropdownHeader'
 import { useAuth } from '@/lib/auth-context'
 import { getAuthHeaders } from '@/lib/utils'
 import AbacateBillingsManager from '@/components/billing/AbacateBillingsManager'
+import AbacateProductsManager from '@/components/billing/AbacateProductsManager'
 import CheckoutCustomizer from '@/components/billing/CheckoutCustomizer'
 import {
   CreditCard,
@@ -73,7 +74,7 @@ function DeveloperBillingContent() {
   const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>([])
   const [invoices, setInvoices] = useState<InvoiceItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'cobrancas' | 'checkout' | 'subscriptions' | 'invoices'>(initialTab)
+  const [activeTab, setActiveTab] = useState<'cobrancas' | 'produtos' | 'checkout' | 'subscriptions' | 'invoices'>(initialTab)
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
 
   useEffect(() => {
@@ -234,15 +235,14 @@ function DeveloperBillingContent() {
             </button>
 
             <button
-              onClick={() => setActiveTab('checkout')}
+              onClick={() => setActiveTab('produtos')}
               className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'checkout'
+                activeTab === 'produtos'
                   ? 'bg-emerald-500 text-black shadow-md'
                   : 'bg-muted/40 hover:bg-muted text-muted-foreground'
               }`}
             >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Personalizar Checkout</span>
+              <span>🥑 Produtos & Planos</span>
             </button>
 
             <button
@@ -268,6 +268,18 @@ function DeveloperBillingContent() {
               <FileText className="w-3.5 h-3.5" />
               <span>Faturas & Invoices ({invoices.length})</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('checkout')}
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'checkout'
+                  ? 'bg-emerald-500 text-black shadow-md'
+                  : 'bg-muted/40 hover:bg-muted text-muted-foreground'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Personalizar Checkout</span>
+            </button>
           </div>
 
           {activeTab === 'subscriptions' && (
@@ -291,7 +303,10 @@ function DeveloperBillingContent() {
         {/* Tab 1: Cobranças AbacatePay */}
         {activeTab === 'cobrancas' && <AbacateBillingsManager />}
 
-        {/* Tab 2: Personalizar Checkout */}
+        {/* Tab 2: Produtos AbacatePay & Planos Developer */}
+        {activeTab === 'produtos' && <AbacateProductsManager />}
+
+        {/* Tab 3: Personalizar Checkout */}
         {activeTab === 'checkout' && <CheckoutCustomizer />}
 
         {/* Subscriptions Table */}
@@ -391,7 +406,7 @@ function DeveloperBillingContent() {
                   <thead>
                     <tr className="border-b border-border text-xs text-muted-foreground">
                       <th className="pb-3 font-medium">Barbearia</th>
-                      <th className="pb-3 font-medium">Identificador</th>
+                      <th className="pb-3 font-medium"># Sequência</th>
                       <th className="pb-3 font-medium">Valor</th>
                       <th className="pb-3 font-medium">Status</th>
                       <th className="pb-3 font-medium">Vencimento</th>
@@ -400,13 +415,13 @@ function DeveloperBillingContent() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {invoices.map((inv) => (
+                    {invoices.map((inv, idx) => (
                       <tr key={inv.id} className="hover:bg-muted/20 transition-colors">
                         <td className="py-3.5 text-xs font-semibold text-foreground">
                           {inv.barbershop?.name || 'Barbearia'}
                         </td>
-                        <td className="py-3.5 font-mono text-[11px] text-muted-foreground">
-                          {inv.id.slice(0, 8)}...
+                        <td className="py-3.5 font-mono text-xs text-foreground font-semibold">
+                          #{String(idx + 1).padStart(3, '0')}
                         </td>
                         <td className="py-3.5 font-semibold text-foreground text-xs">
                           {formatPrice(Number(inv.amount))}

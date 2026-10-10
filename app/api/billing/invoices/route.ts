@@ -24,7 +24,14 @@ export async function GET(request: NextRequest) {
         where.barbershopId = targetShopIdParam
       }
     } else if (user.role === 'ADMIN') {
-      const userShopId = user.barbershopId
+      let userShopId = user.barbershopId
+      if (!userShopId) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { barbershopId: true },
+        })
+        userShopId = dbUser?.barbershopId || null
+      }
       if (!userShopId) {
         return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
       }

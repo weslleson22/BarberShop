@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
+import { prisma } from '@/lib/prisma'
 import { refundAbacateCharge } from '@/lib/billing/abacatepay-provider'
 
 export const dynamic = 'force-dynamic'

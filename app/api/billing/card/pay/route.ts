@@ -36,14 +36,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const barbershopId = user.barbershopId
-    if (!barbershopId) {
-      return NextResponse.json(
-        { error: 'Usuário não está vinculado a uma barbearia' },
-        { status: 400 }
-      )
-    }
-
     const body = await request.json()
     const {
       planId,
@@ -52,7 +44,29 @@ export async function POST(request: NextRequest) {
       cardExpiry,
       cardCvv,
       installments = 1,
+      barbershopId: bodyShopId,
     } = body
+
+    let barbershopId = user.barbershopId || bodyShopId
+    if (!barbershopId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { barbershopId: true },
+      })
+      barbershopId = dbUser?.barbershopId || null
+    }
+
+    if (!barbershopId && user.role === 'DEVELOPER') {
+      const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+      barbershopId = firstShop?.id || null
+    }
+
+    if (!barbershopId) {
+      return NextResponse.json(
+        { error: 'Usuário não está vinculado a uma barbearia' },
+        { status: 400 }
+      )
+    }
 
     if (!planId) {
       return NextResponse.json(

@@ -34,6 +34,22 @@ export interface CheckoutProduct {
   imageUrl?: string
 }
 
+export interface CustomerDefaults {
+  name?: string
+  email?: string
+  taxId?: string
+  phone?: string
+  address?: {
+    zipCode?: string
+    street?: string
+    number?: string
+    complement?: string
+    neighborhood?: string
+    city?: string
+    state?: string
+  }
+}
+
 export interface AbacateCheckoutProps {
   product: CheckoutProduct
   initialTheme?: 'LIGHT' | 'DARK'
@@ -42,14 +58,10 @@ export interface AbacateCheckoutProps {
   showTaxId?: boolean
   showPhone?: boolean
   acceptedMethods?: ('PIX' | 'CREDIT_CARD' | 'BOLETO')[]
+  initialMethod?: 'PIX' | 'CREDIT_CARD' | 'BOLETO'
   onSuccess?: (paymentData: any) => void
   onCancel?: () => void
-  customerDefaults?: {
-    name?: string
-    email?: string
-    taxId?: string
-    phone?: string
-  }
+  customerDefaults?: CustomerDefaults
 }
 
 export default function AbacateCheckout({
@@ -60,6 +72,7 @@ export default function AbacateCheckout({
   showTaxId = true,
   showPhone = true,
   acceptedMethods = ['PIX', 'CREDIT_CARD', 'BOLETO'],
+  initialMethod = 'PIX',
   onSuccess,
   onCancel,
   customerDefaults,
@@ -70,7 +83,7 @@ export default function AbacateCheckout({
   // Etapa atual: 1 = Dados, 2 = Endereço, 3 = Pagamento
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
 
-  // Dados Pessoais
+  // Dados Pessoais preenchidos automaticamente do cadastro do cliente
   const [customer, setCustomer] = useState({
     name: customerDefaults?.name || '',
     taxId: customerDefaults?.taxId || '',
@@ -78,20 +91,51 @@ export default function AbacateCheckout({
     phone: customerDefaults?.phone || '',
   })
 
-  // Endereço
+  // Endereço preenchido automaticamente do cadastro do cliente
   const [address, setAddress] = useState({
-    zipCode: '',
-    street: '',
-    number: '',
-    complement: '',
-    neighborhood: '',
-    city: '',
-    state: '',
+    zipCode: customerDefaults?.address?.zipCode || '',
+    street: customerDefaults?.address?.street || '',
+    number: customerDefaults?.address?.number || '',
+    complement: customerDefaults?.address?.complement || '',
+    neighborhood: customerDefaults?.address?.neighborhood || '',
+    city: customerDefaults?.address?.city || '',
+    state: customerDefaults?.address?.state || '',
   })
   const [loadingCep, setLoadingCep] = useState(false)
 
-  // Método de pagamento selecionado
-  const [selectedMethod, setSelectedMethod] = useState<'PIX' | 'CREDIT_CARD' | 'BOLETO'>('PIX')
+  // Método de pagamento selecionado (PIX ou Cartão)
+  const [selectedMethod, setSelectedMethod] = useState<'PIX' | 'CREDIT_CARD' | 'BOLETO'>(
+    initialMethod || 'PIX'
+  )
+
+  // Sincroniza dados padrão quando carregados do backend
+  useEffect(() => {
+    if (customerDefaults) {
+      setCustomer((prev) => ({
+        name: customerDefaults.name ?? prev.name,
+        taxId: customerDefaults.taxId ?? prev.taxId,
+        email: customerDefaults.email ?? prev.email,
+        phone: customerDefaults.phone ?? prev.phone,
+      }))
+      if (customerDefaults.address) {
+        setAddress((prev) => ({
+          zipCode: customerDefaults.address?.zipCode ?? prev.zipCode,
+          street: customerDefaults.address?.street ?? prev.street,
+          number: customerDefaults.address?.number ?? prev.number,
+          complement: customerDefaults.address?.complement ?? prev.complement,
+          neighborhood: customerDefaults.address?.neighborhood ?? prev.neighborhood,
+          city: customerDefaults.address?.city ?? prev.city,
+          state: customerDefaults.address?.state ?? prev.state,
+        }))
+      }
+    }
+  }, [customerDefaults])
+
+  useEffect(() => {
+    if (initialMethod) {
+      setSelectedMethod(initialMethod)
+    }
+  }, [initialMethod])
 
   // Dados do Cartão de Crédito
   const [cardData, setCardData] = useState({
@@ -339,6 +383,17 @@ export default function AbacateCheckout({
     }
   }
 
+  // Auto-geração do pagamento ao acessar a etapa 3
+  useEffect(() => {
+    if (currentStep === 3) {
+      if (selectedMethod === 'PIX' && !pixData?.brCode && !loading) {
+        generatePix()
+      } else if (selectedMethod === 'BOLETO' && !boletoData?.barCode && !loading) {
+        generateBoleto()
+      }
+    }
+  }, [currentStep, selectedMethod])
+
   // Pagamento via Cartão de Crédito
   const handlePayCard = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -380,10 +435,45 @@ export default function AbacateCheckout({
     }
   }
 
+  // Monitoramento em tempo real da detecção de pagamento PIX
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+
+    if (currentStep === 3 && selectedMethod === 'PIX' && pixData?.id && !paymentCompleted) {
+      interval = setInterval(async () => {
+        try {
+          const query = new URLSearchParams({ id: pixData.id! })
+          if (product?.id) query.set('planId', product.id)
+
+          const res = await fetch(`/api/billing/pix/check?${query.toString()}`, {
+            headers: getAuthHeaders(),
+            credentials: 'include',
+          })
+          if (res.ok) {
+            const data = await res.json()
+            if (data.status === 'PAID') {
+              if (interval) clearInterval(interval)
+              setPaymentCompleted(true)
+              if (onSuccess) {
+                setTimeout(() => onSuccess(data), 1800)
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Erro ao verificar status do PIX:', err)
+        }
+      }, 3000)
+    }
+
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [currentStep, selectedMethod, pixData?.id, paymentCompleted, product?.id, onSuccess])
+
   // Simular Aprovação do PIX (DevMode / Sandbox)
   const handleSimulatePixPayment = async () => {
-    if (!pixData?.id) return
     setLoading(true)
+    setErrorMessage(null)
     try {
       const res = await fetch('/api/billing/pix/simulate', {
         method: 'POST',
@@ -393,7 +483,7 @@ export default function AbacateCheckout({
         },
         credentials: 'include',
         body: JSON.stringify({
-          pixId: pixData.id,
+          pixId: pixData?.id || `sim_dev_${Date.now()}`,
           planId: product.id,
         }),
       })
@@ -403,9 +493,12 @@ export default function AbacateCheckout({
         if (onSuccess) {
           setTimeout(() => onSuccess(data), 1800)
         }
+      } else {
+        setErrorMessage(data.error || 'Erro ao simular pagamento')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Erro ao simular:', err)
+      setErrorMessage(err.message || 'Erro ao conectar à simulação')
     } finally {
       setLoading(false)
     }

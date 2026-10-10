@@ -37,10 +37,22 @@ export async function GET(request: NextRequest) {
     const pixData = await checkAbacatePixStatus(pixId)
 
     // Se o PIX estiver pago, sincroniza a assinatura da barbearia imediatamente
-    if (pixData.status === 'PAID' && user.barbershopId) {
-      const barbershopId = user.barbershopId
+    if (pixData.status === 'PAID') {
+      let barbershopId = user.barbershopId
+      if (!barbershopId) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { barbershopId: true },
+        })
+        barbershopId = dbUser?.barbershopId || null
+      }
+      if (!barbershopId && user.role === 'DEVELOPER') {
+        const firstShop = await prisma.barbershop.findFirst({ select: { id: true } })
+        barbershopId = firstShop?.id || null
+      }
 
-      await prisma.$transaction(async (tx) => {
+      if (barbershopId) {
+        await prisma.$transaction(async (tx) => {
         let targetPlan: any = null
         if (planId) {
           targetPlan = await tx.plan.findUnique({ where: { id: planId } })

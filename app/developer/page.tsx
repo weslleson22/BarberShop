@@ -10,6 +10,7 @@ import AddressAutocomplete from '@/components/developer/AddressAutocomplete'
 import {
   Building2,
   Users,
+  CreditCard,
   Power,
   ShieldCheck,
   Server,
@@ -723,7 +724,15 @@ export default function DeveloperDashboardPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link
+              href="/developer/billing"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-lime-500 hover:from-emerald-600 hover:to-lime-600 text-slate-950 font-bold rounded-lg text-sm shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02]"
+            >
+              <CreditCard className="h-4 w-4 text-slate-950" />
+              <span>Faturamento & AbacatePay</span>
+            </Link>
+
             <Link
               href="/developer/onboarding"
               className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-lg text-sm shadow-lg shadow-purple-600/20 transition-all hover:scale-[1.02]"
@@ -780,6 +789,102 @@ export default function DeveloperDashboardPage() {
             </button>
           </div>
         )}
+
+        {/* Hub de Faturamento, AbacatePay, Planos & Assinaturas */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">
+                <span>🥑 AbacatePay & SaaS Billing</span>
+              </div>
+              <h2 className="text-xl font-bold text-white">Gestão Financeira & Produtos</h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Controle direto de assinaturas das barbearias, cobranças geradas, produtos na AbacatePay e planos cadastrados.
+              </p>
+            </div>
+            <Link
+              href="/developer/billing"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-md transition self-start sm:self-auto cursor-pointer"
+            >
+              <span>Abrir Faturamento Completo</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+            {/* Card 1: Cobranças AbacatePay */}
+            <Link
+              href="/developer/billing?tab=cobrancas"
+              className="bg-slate-950/60 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-xl transition group flex flex-col justify-between cursor-pointer"
+            >
+              <div className="flex items-center justify-between text-gray-400 group-hover:text-emerald-400 mb-2">
+                <span className="text-xs font-semibold">Cobranças AbacatePay</span>
+                <span className="text-base">🥑</span>
+              </div>
+              <div className="text-xs text-gray-300">
+                Histórico de cobranças, links de checkout e liquidações PIX/Cartão.
+              </div>
+              <span className="text-[11px] text-emerald-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
+                Acessar cobranças →
+              </span>
+            </Link>
+
+            {/* Card 2: Assinaturas SaaS */}
+            <Link
+              href="/developer/billing?tab=subscriptions"
+              className="bg-slate-950/60 border border-slate-800 hover:border-blue-500/50 p-4 rounded-xl transition group flex flex-col justify-between cursor-pointer"
+            >
+              <div className="flex items-center justify-between text-gray-400 group-hover:text-blue-400 mb-2">
+                <span className="text-xs font-semibold">Assinaturas SaaS</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono">
+                  {barbershops.filter(b => b.subscriptionStatus === 'ACTIVE' || b.isActive).length} ativas
+                </span>
+              </div>
+              <div className="text-xs text-gray-300">
+                Status das assinaturas, vigências, renovações e inadimplência.
+              </div>
+              <span className="text-[11px] text-blue-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
+                Ver assinaturas →
+              </span>
+            </Link>
+
+            {/* Card 3: Seus Produtos no AbacatePay */}
+            <Link
+              href="/developer/billing?tab=produtos"
+              className="bg-slate-950/60 border border-slate-800 hover:border-amber-500/50 p-4 rounded-xl transition group flex flex-col justify-between cursor-pointer"
+            >
+              <div className="flex items-center justify-between text-gray-400 group-hover:text-amber-400 mb-2">
+                <span className="text-xs font-semibold">Produtos no AbacatePay</span>
+                <span className="text-base">📦</span>
+              </div>
+              <div className="text-xs text-gray-300">
+                Seus produtos cadastrados e sincronizados com a API da AbacatePay.
+              </div>
+              <span className="text-[11px] text-amber-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
+                Gerenciar produtos →
+              </span>
+            </Link>
+
+            {/* Card 4: Planos Cadastrados pelo Developer */}
+            <Link
+              href="/developer/billing?tab=produtos"
+              className="bg-slate-950/60 border border-slate-800 hover:border-purple-500/50 p-4 rounded-xl transition group flex flex-col justify-between cursor-pointer"
+            >
+              <div className="flex items-center justify-between text-gray-400 group-hover:text-purple-400 mb-2">
+                <span className="text-xs font-semibold">Planos Cadastrados</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 font-mono">
+                  Developer
+                </span>
+              </div>
+              <div className="text-xs text-gray-300">
+                Planos cadastrados pelo developer e sincronização com o gateway.
+              </div>
+              <span className="text-[11px] text-purple-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
+                Configurar planos →
+              </span>
+            </Link>
+          </div>
+        </div>
 
         {/* Metrics Grid (Platform / Technical Metrics Only - Zero Operational Appointments) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

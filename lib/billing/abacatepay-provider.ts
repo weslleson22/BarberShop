@@ -611,3 +611,54 @@ export async function getAbacateStoreInfo(): Promise<any> {
     mode: apiKey.startsWith('abc_dev_') ? 'SANDBOX / DEV' : 'PRODUÇÃO',
   }
 }
+
+/**
+ * Lista todos os produtos cadastrados na conta AbacatePay
+ */
+export async function listAbacateProducts(): Promise<any[]> {
+  const apiKey = getAbacateApiKey()
+  try {
+    const res = await fetch(`${ABACATEPAY_BASE_URL}/products/list`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    })
+    const json = await res.json()
+    if (res.ok && json.success && Array.isArray(json.data)) {
+      return json.data
+    }
+  } catch (err: any) {
+    console.warn('[ABACATEPAY_LIST_PRODUCTS_ERROR]', err?.message)
+  }
+  return []
+}
+
+/**
+ * Cria ou sincroniza um produto na AbacatePay
+ */
+export async function createAbacateProduct(params: {
+  externalId?: string
+  name: string
+  price: number // em centavos
+  description?: string
+  currency?: string
+}): Promise<any> {
+  const apiKey = getAbacateApiKey()
+  const res = await fetch(`${ABACATEPAY_BASE_URL}/products/create`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      externalId: params.externalId || `prod_${Date.now()}`,
+      name: params.name,
+      price: params.price,
+      currency: params.currency || 'BRL',
+      description: params.description || `Produto ${params.name}`,
+    }),
+  })
+  const json = await res.json()
+  if (!res.ok || !json.success) {
+    throw new Error(json.error || 'Erro ao criar produto na AbacatePay')
+  }
+  return json.data
+}

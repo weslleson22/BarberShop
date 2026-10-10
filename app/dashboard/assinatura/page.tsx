@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { useAuth } from '@/lib/auth-context'
 import { getAuthHeaders } from '@/lib/utils'
+import AbacateCheckout from '@/components/billing/AbacateCheckout'
+import { parseStoredAddress, CustomerDefaults } from '@/lib/billing/checkout-config'
 import { 
   CreditCard, 
   Check, 
@@ -58,6 +60,7 @@ interface Subscription {
   planType?: string
   provider?: string
   plan?: Plan
+  planId?: string
   invoices?: Invoice[]
 }
 
@@ -106,6 +109,20 @@ function AssinaturaContent() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successBanner, setSuccessBanner] = useState<string | null>(null)
+
+  // Estado do Modal de Checkout AbacatePay (com etapas e dados da base)
+  const [checkoutModal, setCheckoutModal] = useState<{
+    isOpen: boolean
+    plan: Plan | null
+    method: 'PIX' | 'CREDIT_CARD'
+  }>({
+    isOpen: false,
+    plan: null,
+    method: 'PIX',
+  })
+
+  // Dados do cliente/barbearia pré-carregados da base
+  const [customerDefaults, setCustomerDefaults] = useState<CustomerDefaults>({})
 
   // Estado unificado do Modal de Pagamento (PIX e Cartão de Crédito)
   const [paymentModal, setPaymentModal] = useState<PaymentModalState>({
@@ -164,8 +181,9 @@ function AssinaturaContent() {
       if (subRes.ok) {
         const subData = await subRes.json()
         if (Array.isArray(subData) && subData.length > 0) {
-          loadedSubscription = subData[0]
-          setSubscription(subData[0])
+          const activeSub = subData.find((s: any) => s.status === 'ACTIVE') || subData[0]
+          loadedSubscription = activeSub
+          setSubscription(activeSub)
         } else if (subData && !Array.isArray(subData)) {
           loadedSubscription = subData
           setSubscription(subData)
@@ -205,6 +223,37 @@ function AssinaturaContent() {
       if (invRes.ok) {
         const invData = await invRes.json()
         setInvoices(Array.isArray(invData) ? invData : [])
+      }
+
+      // Carrega dados cadastrais da barbearia para pré-preenchimento no checkout
+      try {
+        const shopRes = await fetch('/api/barbershop', { credentials: 'include', headers })
+        if (shopRes.ok) {
+          const shop = await shopRes.json()
+          const parsedAddr = parseStoredAddress(shop.address || user?.address)
+          setCustomerDefaults({
+            name: shop.name || user?.name || '',
+            email: shop.email || user?.email || '',
+            phone: shop.phone || user?.phone || '',
+            address: parsedAddr,
+          })
+        } else if (user) {
+          setCustomerDefaults({
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            address: parseStoredAddress(user.address),
+          })
+        }
+      } catch (shopErr) {
+        if (user) {
+          setCustomerDefaults({
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            address: parseStoredAddress(user.address),
+          })
+        }
       }
     } catch (err: any) {
       console.error('Erro ao carregar dados de assinatura:', err)
@@ -261,6 +310,16 @@ function AssinaturaContent() {
       }
     }
   }, [paymentModal.isOpen, paymentModal.method, paymentModal.pixId, paymentModal.status, paymentModal.plan?.id])
+
+  // Abre o checkout AbacatePay com os dados da base pré-carregados e editáveis
+  const handleOpenCheckout = (plan: Plan, method: 'PIX' | 'CREDIT_CARD') => {
+    setErrorMessage(null)
+    setCheckoutModal({
+      isOpen: true,
+      plan,
+      method,
+    })
+  }
 
   // Abre o modal de pagamento na aba selecionada (PIX ou Cartão)
   const handleOpenPayment = async (plan: Plan, initialMethod: 'PIX' | 'CREDIT_CARD' = 'PIX') => {
@@ -839,29 +898,19 @@ function AssinaturaContent() {
                         </div>
                       ) : (
                         <>
-                          {/* Botão Principal: Checkout Personalizado AbacatePay */}
+                          {/* Botão 1: Pagar via PIX (Abre Checkout AbacatePay com dados pré-preenchidos) */}
                           <button
-                            onClick={() => router.push(`/checkout?planId=${p.id}`)}
-                            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-lime-500 hover:from-emerald-600 hover:to-lime-600 text-slate-950 font-extrabold text-xs md:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                          >
-                            <Sparkles className="w-4 h-4 shrink-0" />
-                            <span>Checkout AbacatePay (Personalizado)</span>
-                            <ChevronRight className="w-4 h-4 shrink-0" />
-                          </button>
-
-                          {/* Botão 1: Contratar via PIX Instantâneo */}
-                          <button
-                            onClick={() => handleOpenPayment(p, 'PIX')}
+                            onClick={() => handleOpenCheckout(p, 'PIX')}
                             disabled={Boolean(checkoutLoading)}
-                            className="w-full py-2 px-4 rounded-xl bg-card border border-emerald-500/40 hover:bg-emerald-500/10 text-emerald-400 font-semibold text-xs md:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-lime-500 hover:from-emerald-600 hover:to-lime-600 text-slate-950 font-extrabold text-xs md:text-sm transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                           >
                             <QrCode className="w-4 h-4 shrink-0" />
-                            <span>Pagar via PIX no Modal</span>
+                            <span>Pagar via PIX</span>
                           </button>
 
-                          {/* Botão 2: Pagar com Cartão de Crédito */}
+                          {/* Botão 2: Pagar com Cartão de Crédito (Abre Checkout AbacatePay com dados pré-preenchidos) */}
                           <button
-                            onClick={() => handleOpenPayment(p, 'CREDIT_CARD')}
+                            onClick={() => handleOpenCheckout(p, 'CREDIT_CARD')}
                             disabled={Boolean(checkoutLoading)}
                             className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs md:text-sm transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                           >
@@ -873,7 +922,7 @@ function AssinaturaContent() {
                           <button
                             onClick={() => handleDirectSimulate(p)}
                             disabled={Boolean(checkoutLoading)}
-                            className="w-full py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            className="w-full py-1.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                           >
                             {checkoutLoading === `${p.id}_SIMULATE` ? (
                               <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-amber-300" />
@@ -881,22 +930,6 @@ function AssinaturaContent() {
                               <>
                                 <Zap className="w-3.5 h-3.5 text-amber-400" />
                                 <span>Simular Contratação (Dev Mode)</span>
-                              </>
-                            )}
-                          </button>
-
-                          {/* Botão 4: Checkout Hospedado AbacatePay */}
-                          <button
-                            onClick={() => handleHostedCheckout(p.id)}
-                            disabled={Boolean(checkoutLoading)}
-                            className="w-full py-1.5 px-3 rounded-xl border border-border hover:bg-muted text-muted-foreground hover:text-foreground font-medium text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                          >
-                            {checkoutLoading === `${p.id}_HOSTED` ? (
-                              <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-foreground" />
-                            ) : (
-                              <>
-                                <span>Checkout Externo AbacatePay</span>
-                                <ExternalLink className="w-3.5 h-3.5" />
                               </>
                             )}
                           </button>
@@ -937,39 +970,33 @@ function AssinaturaContent() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-border text-xs text-muted-foreground">
-                    <th className="pb-3 font-medium">Identificador</th>
+                    <th className="pb-3 font-medium"># Sequência</th>
                     <th className="pb-3 font-medium">Vencimento</th>
                     <th className="pb-3 font-medium">Valor</th>
-                    <th className="pb-3 font-medium">Provedor</th>
                     <th className="pb-3 font-medium">Status</th>
                     <th className="pb-3 font-medium">Data de Pagamento</th>
                     <th className="pb-3 font-medium text-right">Comprovante</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {invoices.map((inv) => (
+                  {invoices.map((inv, idx) => (
                     <tr key={inv.id} className="hover:bg-muted/20 transition-colors">
                       <td className="py-3.5 font-mono text-xs text-foreground font-semibold">
-                        {inv.id.slice(0, 10)}...
+                        #{String(idx + 1).padStart(3, '0')}
                       </td>
                       <td className="py-3.5 text-muted-foreground">{formatDateShort(inv.dueDate)}</td>
                       <td className="py-3.5 font-semibold text-foreground">{formatPrice(Number(inv.amount))}</td>
                       <td className="py-3.5">
-                        <span className="px-2 py-0.5 text-xs rounded-md bg-emerald-500/10 text-emerald-400 font-mono">
-                          {inv.provider || 'ABACATEPAY'}
-                        </span>
-                      </td>
-                      <td className="py-3.5">
                         {inv.status === 'PAID' ? (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="px-2.5 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">
                             Pago
                           </span>
                         ) : inv.status === 'PENDING' || inv.status === 'OPEN' ? (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                          <span className="px-2.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold">
                             Pendente
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-destructive/20 text-destructive border border-destructive/30">
+                          <span className="px-2.5 py-0.5 text-xs rounded-full bg-destructive/20 text-destructive border border-destructive/30 font-semibold">
                             {inv.status}
                           </span>
                         )}
@@ -1000,321 +1027,38 @@ function AssinaturaContent() {
       </main>
 
       {/* ========================================================================= */}
-      {/* MODAL UNIFICADO DE CONTRATAÇÃO (ABAS: PIX INSTANTÂNEO & CARTÃO DE CRÉDITO) */}
+      {/* MODAL DE CHECKOUT ABACATEPAY COM DADOS E ENDEREÇO DA BASE DE DADOS        */}
       {/* ========================================================================= */}
-      {paymentModal.isOpen && paymentModal.plan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative my-8 text-foreground">
-            {/* Botão Fechar */}
+      {checkoutModal.isOpen && checkoutModal.plan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in">
+          <div className="relative w-full max-w-5xl my-auto">
+            {/* Botão Fechar Modal */}
             <button
-              onClick={() => setPaymentModal((prev) => ({ ...prev, isOpen: false }))}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white transition cursor-pointer"
+              type="button"
+              onClick={() => setCheckoutModal({ isOpen: false, plan: null, method: 'PIX' })}
+              className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white transition shadow-xl border border-slate-700 cursor-pointer"
+              title="Fechar checkout"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Cabeçalho do Modal */}
-            <div className="flex items-center justify-between mb-4 pr-8">
-              <div>
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">
-                  Contratação BarberShop SaaS
-                </span>
-                <h3 className="text-xl font-extrabold text-white">
-                  {paymentModal.plan.name}
-                </h3>
-              </div>
-              <div className="text-right">
-                <span className="text-xl font-extrabold text-emerald-400">
-                  {formatPrice(Number(paymentModal.plan.price))}
-                </span>
-                <span className="text-xs text-slate-400 block">
-                  /{paymentModal.plan.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
-                </span>
-              </div>
-            </div>
-
-            {/* Seletor de Formas de Pagamento: PIX vs Cartão */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-2xl border border-slate-800 mb-6">
-              <button
-                type="button"
-                onClick={() => handleSwitchMethod('PIX')}
-                className={`py-2.5 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer ${
-                  paymentModal.method === 'PIX'
-                    ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20 font-bold'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <QrCode className="w-4 h-4" />
-                <span>PIX Instantâneo</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSwitchMethod('CREDIT_CARD')}
-                className={`py-2.5 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer ${
-                  paymentModal.method === 'CREDIT_CARD'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 font-bold'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>Cartão de Crédito</span>
-              </button>
-            </div>
-
-            {/* TELA DE STATUS SUCESSO / PAGO */}
-            {paymentModal.status === 'PAID' ? (
-              <div className="py-10 space-y-4 text-center animate-in zoom-in-95">
-                <div className="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-400 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <CheckCircle2 className="w-12 h-12 text-emerald-400 animate-pulse" />
-                </div>
-                <h4 className="text-xl font-extrabold text-white">Assinatura Ativada com Sucesso!</h4>
-                <p className="text-sm text-slate-300">
-                  O plano <strong>{paymentModal.plan.name}</strong> foi contratado com período de vigência atualizado.
-                </p>
-                <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
-                  <div>Início: <strong>{formatDateShort(new Date().toISOString())}</strong></div>
-                  <div>Status: <strong className="text-emerald-400">Ativo</strong></div>
-                </div>
-              </div>
-            ) : paymentModal.method === 'PIX' ? (
-              /* ============================================================== */
-              /* ABA 1: PIX INSTANTÂNEO                                         */
-              /* ============================================================== */
-              <div className="space-y-5 text-center">
-                {checkoutLoading === `${paymentModal.plan.id}_PIX` ? (
-                  <div className="py-16 space-y-3">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-400 mx-auto" />
-                    <p className="text-xs text-slate-400">Gerando QR Code PIX com a AbacatePay...</p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Container do QR Code */}
-                    <div className="bg-white p-4 rounded-2xl w-56 h-56 mx-auto flex items-center justify-center shadow-inner">
-                      {paymentModal.brCodeBase64 ? (
-                        <img
-                          src={paymentModal.brCodeBase64}
-                          alt="QR Code PIX AbacatePay"
-                          className="w-full h-full object-contain"
-                        />
-                      ) : paymentModal.brCode ? (
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(paymentModal.brCode)}`}
-                          alt="QR Code PIX"
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <QrCode className="w-36 h-36 text-black animate-pulse" />
-                      )}
-                    </div>
-
-                    {/* Status de detecção */}
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span>Aguardando detecção do pagamento via PIX...</span>
-                    </div>
-
-                    {/* Copia e Cola */}
-                    {paymentModal.brCode && (
-                      <div className="space-y-2 text-left">
-                        <label className="text-xs text-slate-400 font-medium">PIX Copia e Cola:</label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            readOnly
-                            value={paymentModal.brCode}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-3 pr-24 text-xs font-mono text-slate-300 select-all focus:outline-none"
-                          />
-                          <button
-                            onClick={handleCopyPix}
-                            className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs rounded-lg flex items-center gap-1.5 transition cursor-pointer"
-                          >
-                            {copiedCode ? (
-                              <>
-                                <Check className="w-3.5 h-3.5" />
-                                <span>Copiado!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5" />
-                                <span>Copiar</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Simulação DevMode PIX */}
-                    <div className="pt-4 border-t border-slate-800 space-y-2">
-                      <button
-                        onClick={handleSimulatePixPayment}
-                        disabled={simulating}
-                        className="w-full py-2.5 px-4 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
-                      >
-                        <Zap className={`w-3.5 h-3.5 ${simulating ? 'animate-spin' : ''}`} />
-                        <span>{simulating ? 'Processando aprovação...' : '⚡ Simular Aprovação do PIX (Dev Mode)'}</span>
-                      </button>
-                      <p className="text-[11px] text-slate-500">
-                        Ambiente Sandbox AbacatePay ativo &bull; Aprovação imediata sem cobrança real.
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              /* ============================================================== */
-              /* ABA 2: CARTÃO DE CRÉDITO                                       */
-              /* ============================================================== */
-              <div className="space-y-4">
-                {/* Cartão Virtual Interativo */}
-                <div className={`p-5 rounded-2xl bg-gradient-to-br ${currentBrand.color} text-white shadow-xl relative overflow-hidden border border-white/10`}>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="w-10 h-7 rounded-md bg-amber-400/80 border border-amber-300/50 flex items-center justify-center">
-                      <div className="w-6 h-4 border border-amber-800/40 rounded-sm" />
-                    </div>
-                    <span className="text-xs font-bold tracking-wider uppercase opacity-90">
-                      {currentBrand.name}
-                    </span>
-                  </div>
-
-                  <div className="font-mono text-base tracking-widest mb-4">
-                    {cardForm.number || '•••• •••• •••• ••••'}
-                  </div>
-
-                  <div className="flex items-end justify-between text-xs">
-                    <div>
-                      <span className="text-[9px] uppercase tracking-wider block opacity-70">Titular</span>
-                      <span className="font-semibold uppercase tracking-wider">
-                        {cardForm.holder || 'NOME DO TITULAR'}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[9px] uppercase tracking-wider block opacity-70">Validade</span>
-                      <span className="font-semibold tracking-wider font-mono">
-                        {cardForm.expiry || 'MM/AA'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Formulário de Cartão */}
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs text-slate-400 font-medium block mb-1">Número do Cartão</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="0000 0000 0000 0000"
-                        maxLength={19}
-                        value={cardForm.number}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ').slice(0, 19)
-                          setCardForm((prev) => ({ ...prev, number: val }))
-                        }}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-3 pr-10 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
-                      />
-                      <CreditCard className="w-4 h-4 text-slate-500 absolute right-3 top-3" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-slate-400 font-medium block mb-1">Nome Impresso no Cartão</label>
-                    <input
-                      type="text"
-                      placeholder="COMO ESTÁ NO CARTÃO"
-                      value={cardForm.holder}
-                      onChange={(e) => setCardForm((prev) => ({ ...prev, holder: e.target.value.toUpperCase() }))}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-slate-100 placeholder:text-slate-600 uppercase focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-slate-400 font-medium block mb-1">Validade (MM/AA)</label>
-                      <input
-                        type="text"
-                        placeholder="MM/AA"
-                        maxLength={5}
-                        value={cardForm.expiry}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '').replace(/^(\d{2})(\d)/, '$1/$2').slice(0, 5)
-                          setCardForm((prev) => ({ ...prev, expiry: val }))
-                        }}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs text-slate-400 font-medium block mb-1">CVV</label>
-                      <input
-                        type="text"
-                        placeholder="123"
-                        maxLength={4}
-                        value={cardForm.cvv}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '').slice(0, 4)
-                          setCardForm((prev) => ({ ...prev, cvv: val }))
-                        }}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Opção de Parcelamento */}
-                  <div>
-                    <label className="text-xs text-slate-400 font-medium block mb-1">Parcelamento</label>
-                    <select
-                      value={cardForm.installments}
-                      onChange={(e) => setCardForm((prev) => ({ ...prev, installments: e.target.value }))}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="1">1x de {formatPrice(Number(paymentModal.plan.price))} sem juros</option>
-                      {paymentModal.plan.billingInterval === 'YEARLY' && (
-                        <>
-                          <option value="3">3x de {formatPrice(Number(paymentModal.plan.price) / 3)} sem juros</option>
-                          <option value="6">6x de {formatPrice(Number(paymentModal.plan.price) / 6)} sem juros</option>
-                          <option value="12">12x de {formatPrice(Number(paymentModal.plan.price) / 12)} sem juros</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Ações do Cartão */}
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={handleFillTestCard}
-                      className="text-xs text-blue-400 hover:text-blue-300 font-medium cursor-pointer underline flex items-center gap-1"
-                    >
-                      <Zap className="w-3 h-3" />
-                      Preencher Cartão de Teste (Dev Mode)
-                    </button>
-                    <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                      <Lock className="w-3 h-3" /> 256-bit SSL Seguro
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handlePayWithCard}
-                    disabled={processingCard}
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-blue-500/20 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {processingCard ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    ) : (
-                      <>
-                        <Lock className="w-4 h-4" />
-                        <span>Confirmar Pagamento de {formatPrice(Number(paymentModal.plan.price))}</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
+            <AbacateCheckout
+              product={{
+                id: checkoutModal.plan.id,
+                name: checkoutModal.plan.name,
+                description: checkoutModal.plan.description || `Assinatura ${checkoutModal.plan.name} para barbearia`,
+                price: Number(checkoutModal.plan.price),
+                billingInterval: checkoutModal.plan.billingInterval,
+              }}
+              initialMethod={checkoutModal.method}
+              customerDefaults={customerDefaults}
+              onSuccess={() => {
+                setSuccessBanner(`Pagamento confirmado com sucesso via AbacatePay! O plano ${checkoutModal.plan?.name} está ativo.`)
+                setCheckoutModal({ isOpen: false, plan: null, method: 'PIX' })
+                loadData(true)
+              }}
+              onCancel={() => setCheckoutModal({ isOpen: false, plan: null, method: 'PIX' })}
+            />
           </div>
         </div>
       )}
