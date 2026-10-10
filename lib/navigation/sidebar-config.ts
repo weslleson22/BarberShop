@@ -83,19 +83,27 @@ export function getSidebarSections(role: UserRole): NavSection[] {
         label: "SaaS & Faturamento",
         items: [
           {
+            title: "Cobranças & Checkout",
+            icon: CreditCard,
+            items: [
+              { title: "Cobranças AbacatePay", url: "/developer/billing?tab=cobrancas" },
+              { title: "Personalizar Checkout", url: "/developer/billing?tab=checkout" },
+            ],
+          },
+          {
             title: "Assinaturas",
             icon: Receipt,
             items: [
               { title: "Ativas", url: "#", badge: "Em breve", disabled: true },
               { title: "Vencidas", url: "#", badge: "Em breve", disabled: true },
-              { title: "Gestão Completa", url: "/developer/billing" },
+              { title: "Gestão Completa", url: "/developer/billing?tab=subscriptions" },
             ],
           },
           {
             title: "Financeiro Global",
             icon: CreditCard,
             items: [
-              { title: "Receita Recorrente & Invoices", url: "/developer/billing" },
+              { title: "Receita Recorrente & Invoices", url: "/developer/billing?tab=invoices" },
             ],
           },
           {

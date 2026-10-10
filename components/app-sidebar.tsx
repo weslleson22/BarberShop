@@ -106,13 +106,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const shopName = (role !== 'DEVELOPER' && user?.barbershop?.name) ? user.barbershop.name : organizationContext.name
   const shopLogo = (role !== 'DEVELOPER' && user?.barbershop?.logo) ? user.barbershop.logo : null
 
-  // Sincronização suave de dados da barbearia se usuário possuir barbershopId
+  // Sincronização suave de dados da barbearia se usuário possuir barbershopId (executa apenas 1 vez por barbearia)
+  const hasSyncedShopRef = React.useRef<string | null>(null)
+
   React.useEffect(() => {
-    if (user?.barbershopId && !user.barbershop?.logo && user.role !== 'DEVELOPER') {
-      fetch('/api/barbershop')
-        .then((res) => (res.ok ? res.json() : null))
-        .then((shop) => {
-          if (shop && (shop.logo || shop.name)) {
+    if (!user?.barbershopId || user.role === 'DEVELOPER') return
+    if (hasSyncedShopRef.current === user.barbershopId) return
+
+    hasSyncedShopRef.current = user.barbershopId
+
+    fetch('/api/barbershop')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((shop) => {
+        if (shop && (shop.logo || shop.name)) {
+          if (user.barbershop?.name !== shop.name || user.barbershop?.logo !== shop.logo) {
             updateUser({
               barbershop: {
                 ...(user.barbershop || {}),
@@ -123,10 +130,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               },
             })
           }
-        })
-        .catch(() => {})
-    }
-  }, [user?.barbershopId, user?.barbershop?.logo, user?.role, updateUser])
+        }
+      })
+      .catch(() => {})
+  }, [user?.barbershopId, user?.role, user?.barbershop?.name, user?.barbershop?.logo, updateUser])
 
   // Função para verificar se a rota está ativa
   const isRouteActive = (url?: string) => {

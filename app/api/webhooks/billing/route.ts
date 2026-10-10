@@ -7,19 +7,10 @@ export const revalidate = 0
 /**
  * POST /api/webhooks/billing
  *
- * Endpoint unificado e seguro para recepção de Webhooks do Gateway de Pagamentos (Stripe).
- *
- * Requisitos de Segurança & Idempotência implementados:
- * 1. Não requer autenticação de sessão de usuário (chamada machine-to-machine externa).
- * 2. Validação obrigatória da assinatura criptográfica HMAC SHA-256 (stripe-signature).
- * 3. Tolerância a desvio de relógio/timestamp (300 segundos) para proteção contra Replay Attacks.
- * 4. Deduplicação e Idempotência estrita: se o mesmo eventId chegar 2, 3 ou 10 vezes,
- *    responde HTTP 200 sem duplicar faturas ou eventos de auditoria.
- * 5. NUNCA confia em status vindo de browser ou cliente; apenas webhooks assinados alteram status.
+ * Endpoint unificado e seguro para recepção de Webhooks da AbacatePay e Stripe.
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. Obtenção do corpo bruto (raw body) em formato de string para verificação da assinatura HMAC
     const rawBody = await request.text()
 
     if (!rawBody || rawBody.trim().length === 0) {
@@ -29,13 +20,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2. Extração do cabeçalho de assinatura do provider
-    const signatureHeader =
-      request.headers.get('stripe-signature') ||
-      request.headers.get('x-signature') ||
-      ''
+    const url = request.nextUrl
+    const secretQuery = url.searchParams.get('webhookSecret')
+    const providerParam = url.searchParams.get('provider')
 
-    if (!signatureHeader) {
+    const abacateSignature = request.headers.get('x-webhook-signature')
+    const stripeSignature = request.headers.get('stripe-signature') || request.headers.get('x-signature')
+
+    // Se nenhuma autenticação presente (nem header nem query secret)
+    if (!stripeSignature && !abacateSignature && !secretQuery) {
       console.warn('[BILLING_WEBHOOK_WARNING] Tentativa de acesso sem cabeçalho de assinatura')
       return NextResponse.json(
         { error: 'Cabeçalho de assinatura ausente' },
@@ -43,14 +36,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
+    const isStripe = Boolean(stripeSignature && !abacateSignature && !secretQuery) || providerParam?.toUpperCase() === 'STRIPE'
+    const provider: 'ABACATEPAY' | 'STRIPE' = isStripe ? 'STRIPE' : 'ABACATEPAY'
 
-    // 3. Processamento no motor central de Webhooks com idempotência e transação atômica
+    const signatureHeader = isStripe ? stripeSignature : (abacateSignature || stripeSignature)
+    const webhookSecret = isStripe
+      ? (process.env.STRIPE_WEBHOOK_SECRET || '')
+      : (process.env.ABACATEPAY_WEBHOOK_SECRET || 'barbershop_abacate_sec_2026')
+
     const result = await processBillingWebhook({
       rawBody,
       signatureHeader,
       secret: webhookSecret,
-      provider: 'STRIPE',
+      secretQuery,
+      provider,
     })
 
     if (!result.success) {
@@ -73,7 +72,6 @@ export async function POST(request: NextRequest) {
     )
   } catch (error: any) {
     console.error('[BILLING_WEBHOOK_CRITICAL_ERROR] Falha inesperada ao processar webhook:', error)
-    // Retorna 500 para instruir o provedor a reenviar o evento via retry seguro
     return NextResponse.json(
       { error: 'Erro interno ao processar evento de faturamento' },
       { status: 500 }

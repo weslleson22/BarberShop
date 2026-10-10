@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
+import { createAbacateCheckoutSession } from '@/lib/billing/abacatepay-provider'
 import { createStripeCheckoutSession } from '@/lib/billing/stripe-provider'
 import { prisma } from '@/lib/prisma'
 
@@ -10,12 +11,7 @@ export const revalidate = 0
  * POST /api/billing/checkout
  *
  * Inicia o fluxo de contratação/assinatura para a barbearia do usuário logado.
- *
- * Regras de Segurança:
- * 1. Autenticação obrigatória (somente ADMIN ou DEVELOPER).
- * 2. Barbershop isolado: o ADMIN só pode iniciar checkout para sua própria barbearia.
- * 3. NUNCA ativa a assinatura pelo frontend; retorna a URL segura do gateway (Stripe Checkout).
- *    A ativação ocorrerá exclusivamente através da confirmação por Webhook assinado.
+ * Suporta AbacatePay v2 (Hosted Checkout ou Checkout Transparente PIX) e Stripe.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +24,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { planId, successUrl, cancelUrl } = body
+    const {
+      planId,
+      successUrl,
+      cancelUrl,
+      mode = 'HOSTED', // 'HOSTED' ou 'TRANSPARENT'
+      customerTaxId,
+      provider: requestedProvider,
+    } = body
 
     if (!planId) {
       return NextResponse.json(
@@ -66,22 +69,60 @@ export async function POST(request: NextRequest) {
 
     // 2. URLs de retorno para a interface após pagamento
     const origin = request.nextUrl.origin || 'http://localhost:3000'
-    const finalSuccessUrl = successUrl || `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`
-    const finalCancelUrl = cancelUrl || `${origin}/dashboard?payment=canceled`
+    const finalSuccessUrl = successUrl || `${origin}/dashboard/assinatura?payment=success&plan_id=${plan.id}`
+    const finalCancelUrl = cancelUrl || `${origin}/dashboard/assinatura?payment=canceled`
 
-    // 3. Cria sessão de checkout hospedada no provedor (Stripe)
-    const session = await createStripeCheckoutSession({
+    // 3. Determinação do provedor
+    // Se o plano tiver provedor explicitamente configurado, respeita.
+    // Se não, verifica requestedProvider ou variável BILLING_DEFAULT_PROVIDER.
+    let provider = requestedProvider || plan.provider
+
+    if (!provider) {
+      provider = process.env.NODE_ENV === 'test' ? 'STRIPE' : (process.env.BILLING_DEFAULT_PROVIDER || 'ABACATEPAY')
+    }
+
+    if (provider === 'STRIPE') {
+      const session = await createStripeCheckoutSession({
+        barbershopId,
+        planId: plan.id,
+        successUrl: finalSuccessUrl,
+        cancelUrl: finalCancelUrl,
+        customerEmail: user.email,
+      })
+
+      return NextResponse.json({
+        checkoutUrl: session.checkoutUrl,
+        sessionId: session.sessionId,
+        provider: session.provider,
+        plan: {
+          id: plan.id,
+          name: plan.name,
+          price: Number(plan.price),
+          currency: plan.currency,
+          billingInterval: plan.billingInterval,
+        },
+      })
+    }
+
+    // 4. Criação de Checkout ou PIX na AbacatePay
+    const abacateSession = await createAbacateCheckoutSession({
       barbershopId,
       planId: plan.id,
       successUrl: finalSuccessUrl,
       cancelUrl: finalCancelUrl,
       customerEmail: user.email,
+      customerName: user.name,
+      customerPhone: user.phone || undefined,
+      customerTaxId: customerTaxId || undefined,
+      mode: mode === 'TRANSPARENT' ? 'TRANSPARENT' : 'HOSTED',
     })
 
     return NextResponse.json({
-      checkoutUrl: session.checkoutUrl,
-      sessionId: session.sessionId,
-      provider: session.provider,
+      checkoutUrl: abacateSession.checkoutUrl,
+      checkoutId: abacateSession.checkoutId,
+      provider: 'ABACATEPAY',
+      mode: mode === 'TRANSPARENT' ? 'TRANSPARENT' : 'HOSTED',
+      pix: abacateSession.pix || null,
       plan: {
         id: plan.id,
         name: plan.name,

@@ -14,6 +14,7 @@ import {
   HelpCircle,
   Building2,
   ArrowRight,
+  Zap,
 } from 'lucide-react'
 
 export default function TrialExpiredPage() {
@@ -130,25 +131,36 @@ export default function TrialExpiredPage() {
           )}
 
           {/* Botões de Ação */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={handleCheckStatus}
-              disabled={checking}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-xl text-sm transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
+          <div className="flex flex-col gap-3 justify-center mb-2">
+            <Link
+              href="/dashboard/assinatura"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-black font-extrabold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
             >
-              <RefreshCw className={`w-4 h-4 ${checking ? 'animate-spin' : ''}`} />
-              <span>Verificar Aprovação</span>
-            </button>
+              <Zap className="w-4 h-4 fill-black" />
+              <span>Assinar Plano via PIX (Liberação Imediata)</span>
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Link>
 
-            <a
-              href="https://wa.me/5500000000000?text=Olá,%20gostaria%20de%20solicitar%20a%20aprovação%20da%20minha%20empresa%20no%20BarberShop"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-medium rounded-xl text-sm border border-slate-700 transition-all cursor-pointer"
-            >
-              <MessageCircle className="w-4 h-4 text-emerald-400" />
-              <span>Falar com Administrador</span>
-            </a>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={handleCheckStatus}
+                disabled={checking}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-sm transition-all border border-slate-700 disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 ${checking ? 'animate-spin' : ''}`} />
+                <span>Verificar Aprovação</span>
+              </button>
+
+              <a
+                href="https://wa.me/5500000000000?text=Olá,%20gostaria%20de%20solicitar%20a%20aprovação%20da%20minha%20empresa%20no%20BarberShop"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-medium rounded-xl text-sm border border-slate-800 transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-400" />
+                <span>Falar com Administrador</span>
+              </a>
+            </div>
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-800/80 text-xs text-slate-500">

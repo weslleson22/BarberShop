@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { useAuth } from '@/lib/auth-context'
 import { getAuthHeaders } from '@/lib/utils'
+import AbacateBillingsManager from '@/components/billing/AbacateBillingsManager'
+import CheckoutCustomizer from '@/components/billing/CheckoutCustomizer'
 import {
   CreditCard,
   DollarSign,
@@ -16,7 +18,10 @@ import {
   ExternalLink,
   Users,
   CheckCircle2,
-  Clock
+  Clock,
+  Sliders,
+  Receipt,
+  QrCode
 } from 'lucide-react'
 
 interface SubscriptionItem {
@@ -59,14 +64,16 @@ interface InvoiceItem {
   }
 }
 
-export default function DeveloperBillingPage() {
+function DeveloperBillingContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const initialTab = (searchParams.get('tab') as any) || 'cobrancas'
 
   const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>([])
   const [invoices, setInvoices] = useState<InvoiceItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'invoices'>('subscriptions')
+  const [activeTab, setActiveTab] = useState<'cobrancas' | 'checkout' | 'subscriptions' | 'invoices'>(initialTab)
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
 
   useEffect(() => {
@@ -214,26 +221,52 @@ export default function DeveloperBillingPage() {
 
         {/* Tab Controls */}
         <div className="flex items-center justify-between border-b border-border pb-4 gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setActiveTab('cobrancas')}
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'cobrancas'
+                  ? 'bg-emerald-500 text-black shadow-md'
+                  : 'bg-muted/40 hover:bg-muted text-muted-foreground'
+              }`}
+            >
+              <span>🥑 Cobranças AbacatePay</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('checkout')}
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'checkout'
+                  ? 'bg-emerald-500 text-black shadow-md'
+                  : 'bg-muted/40 hover:bg-muted text-muted-foreground'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Personalizar Checkout</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('subscriptions')}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'subscriptions'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'bg-muted/40 hover:bg-muted text-muted-foreground'
               }`}
             >
-              Assinaturas ({subscriptions.length})
+              <Receipt className="w-3.5 h-3.5" />
+              <span>Assinaturas SaaS ({subscriptions.length})</span>
             </button>
+
             <button
               onClick={() => setActiveTab('invoices')}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'invoices'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'bg-muted/40 hover:bg-muted text-muted-foreground'
               }`}
             >
-              Faturas / Invoices ({invoices.length})
+              <FileText className="w-3.5 h-3.5" />
+              <span>Faturas & Invoices ({invoices.length})</span>
             </button>
           </div>
 
@@ -254,6 +287,12 @@ export default function DeveloperBillingPage() {
             </div>
           )}
         </div>
+
+        {/* Tab 1: Cobranças AbacatePay */}
+        {activeTab === 'cobrancas' && <AbacateBillingsManager />}
+
+        {/* Tab 2: Personalizar Checkout */}
+        {activeTab === 'checkout' && <CheckoutCustomizer />}
 
         {/* Subscriptions Table */}
         {activeTab === 'subscriptions' && (
@@ -416,3 +455,18 @@ export default function DeveloperBillingPage() {
     </div>
   )
 }
+
+export default function DeveloperBillingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+        </div>
+      }
+    >
+      <DeveloperBillingContent />
+    </Suspense>
+  )
+}
+

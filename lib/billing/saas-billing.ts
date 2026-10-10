@@ -259,7 +259,7 @@ export async function createPlan(data: CreatePlanInput): Promise<Plan> {
   const billingInterval: BillingInterval =
     data.billingInterval || (cycleType === 'YEARLY' ? 'YEARLY' : 'MONTHLY')
 
-  return await prisma.plan.create({
+  const created = await prisma.plan.create({
     data: {
       name: data.name,
       slug: data.slug.toLowerCase().trim(),
@@ -278,6 +278,18 @@ export async function createPlan(data: CreatePlanInput): Promise<Plan> {
       features: (data.features as Prisma.InputJsonValue) || {},
     },
   })
+
+  // Sincroniza produto na AbacatePay caso seja plano comercial
+  if (created.planType !== 'COURTESY' && created.provider === 'ABACATEPAY' && !created.providerProductId) {
+    try {
+      const { syncAbacateProduct } = await import('./abacatepay-provider')
+      await syncAbacateProduct(created)
+    } catch (err) {
+      console.warn('[ABACATEPAY_AUTO_SYNC_WARN] Não foi possível sincronizar produto imediatamente:', err)
+    }
+  }
+
+  return created
 }
 
 /**
@@ -570,6 +582,19 @@ export async function createSubscription(data: CreateSubscriptionInput): Promise
         },
       })
     }
+
+    try {
+      if (tx.barbershop?.update) {
+        await tx.barbershop.update({
+          where: { id: data.barbershopId },
+          data: {
+            isActive: true,
+            status: 'APPROVED',
+            contractExpiresAt: currentPeriodEnd,
+          },
+        })
+      }
+    } catch {}
 
     return subscription
   })
@@ -1154,8 +1179,18 @@ export async function createTrialSubscriptionForBarbershop(
   txClient: any = prisma,
   trialDays: number = DEFAULT_TRIAL_DAYS
 ): Promise<Subscription> {
+  const shop = await txClient.barbershop.findUnique({
+    where: { id: barbershopId },
+    select: { createdAt: true, trialEndsAt: true, contractExpiresAt: true },
+  })
+
   const now = new Date()
-  const trialEnd = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000)
+  const trialStart = shop?.createdAt ? new Date(shop.createdAt) : now
+  const trialEnd = shop?.trialEndsAt
+    ? new Date(shop.trialEndsAt)
+    : shop?.contractExpiresAt
+    ? new Date(shop.contractExpiresAt)
+    : new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000)
   const planSlug = `trial-${trialDays}-days`
 
   // 1. Localiza ou cria o plano base de Trial gratuito
@@ -1198,9 +1233,9 @@ export async function createTrialSubscriptionForBarbershop(
       barbershopId,
       planId: trialPlan.id,
       status: 'TRIALING',
-      trialStart: now,
+      trialStart,
       trialEnd,
-      currentPeriodStart: now,
+      currentPeriodStart: trialStart,
       currentPeriodEnd: trialEnd,
       provider: 'INTERNAL',
     },

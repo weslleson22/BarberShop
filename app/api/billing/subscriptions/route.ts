@@ -46,7 +46,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso restrito à gestão administrativa' }, { status: 403 })
     }
 
-    const history = await getSubscriptionHistory(targetShopId)
+    let history = await getSubscriptionHistory(targetShopId)
+
+    // Se o histórico estiver vazio para este tenant comercial, garante a criação do Trial automaticamente
+    if ((!history || history.length === 0) && targetShopId) {
+      try {
+        const { createTrialSubscriptionForBarbershop } = await import('@/lib/billing/saas-billing')
+        await createTrialSubscriptionForBarbershop(targetShopId)
+        history = await getSubscriptionHistory(targetShopId)
+      } catch (trialErr) {
+        console.warn('Não foi possível gerar trial inicial automaticamente:', trialErr)
+      }
+    }
+
     return NextResponse.json(history)
   } catch (error) {
     console.error('Erro ao buscar assinaturas:', error)
@@ -116,6 +128,18 @@ export async function POST(request: NextRequest) {
       grantedBy: user.id,
       notes: body.notes,
     })
+
+    // Atualiza status operacional da Barbearia para APPROVED e estende contrato
+    try {
+      await prisma.barbershop.update({
+        where: { id: targetShopId },
+        data: {
+          isActive: true,
+          status: 'APPROVED',
+          contractExpiresAt: subscription.currentPeriodEnd,
+        },
+      })
+    } catch {}
 
     return NextResponse.json(subscription, { status: 201 })
   } catch (error) {
