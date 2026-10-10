@@ -5,6 +5,7 @@ import Header from '@/components/landing/Header'
 import Hero from '@/components/landing/Hero'
 import Benefits from '@/components/landing/Benefits'
 import Features from '@/components/landing/Features'
+import Pricing from '@/components/landing/Pricing'
 import CTA from '@/components/landing/CTA'
 import Footer from '@/components/landing/Footer'
 
@@ -21,6 +22,7 @@ export default function HomePage() {
       <Hero />
       <Benefits />
       <Features />
+      <Pricing />
       <CTA />
       <Footer />
     </div>

@@ -32,23 +32,9 @@ let inMemoryConfig: CheckoutCustomizationConfig = { ...DEFAULT_CHECKOUT_CONFIG }
 
 /**
  * Obtém as configurações atuais de personalização do checkout
- * Seguro tanto para Client Components quanto Server Components / Lambdas
+ * 100% Isomórfico (Client Components, Server Components e Lambdas Vercel)
  */
 export function getCheckoutConfig(): CheckoutCustomizationConfig {
-  if (typeof window === 'undefined') {
-    try {
-      const fs = eval('require')('fs')
-      const path = eval('require')('path')
-      const os = eval('require')('os')
-      const filePath = path.join(os.tmpdir(), 'barbershop-checkout-config.json')
-      if (fs.existsSync(filePath)) {
-        const data = fs.readFileSync(filePath, 'utf-8')
-        inMemoryConfig = { ...DEFAULT_CHECKOUT_CONFIG, ...JSON.parse(data) }
-      }
-    } catch {
-      // Retorna inMemoryConfig caso o ambiente não permita I/O
-    }
-  }
   return inMemoryConfig
 }
 
@@ -59,17 +45,6 @@ export function updateCheckoutConfig(
   newConfig: Partial<CheckoutCustomizationConfig>
 ): CheckoutCustomizationConfig {
   inMemoryConfig = { ...inMemoryConfig, ...newConfig }
-  if (typeof window === 'undefined') {
-    try {
-      const fs = eval('require')('fs')
-      const path = eval('require')('path')
-      const os = eval('require')('os')
-      const filePath = path.join(os.tmpdir(), 'barbershop-checkout-config.json')
-      fs.writeFileSync(filePath, JSON.stringify(inMemoryConfig, null, 2), 'utf-8')
-    } catch {
-      // Ignora falhas em ambientes somente-leitura
-    }
-  }
   return inMemoryConfig
 }
 

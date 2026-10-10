@@ -52,6 +52,7 @@ export default function Header() {
             <a href="#home" className="hover:text-blue-400 transition-colors">Início</a>
             <a href="#recursos" className="hover:text-blue-400 transition-colors">Recursos do Sistema</a>
             <a href="#beneficios" className="hover:text-blue-400 transition-colors">Vantagens</a>
+            <a href="#planos" className="hover:text-blue-400 transition-colors">Planos & Preços</a>
           </nav>
 
           {/* Ações Desktop */}
@@ -123,6 +124,13 @@ export default function Header() {
                 className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
               >
                 Vantagens
+              </a>
+              <a
+                href="#planos"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+              >
+                Planos & Preços
               </a>
             </nav>
 
