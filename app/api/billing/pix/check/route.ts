@@ -53,145 +53,146 @@ export async function GET(request: NextRequest) {
 
       if (barbershopId) {
         await prisma.$transaction(async (tx) => {
-        let targetPlan: any = null
-        if (planId) {
-          targetPlan = await tx.plan.findUnique({ where: { id: planId } })
-        }
+          let targetPlan: any = null
+          if (planId) {
+            targetPlan = await tx.plan.findUnique({ where: { id: planId } })
+          }
 
-        if (!targetPlan) {
-          const currentSub = await tx.subscription.findFirst({
+          if (!targetPlan) {
+            const currentSub = await tx.subscription.findFirst({
+              where: { barbershopId },
+              orderBy: { createdAt: 'desc' },
+              include: { plan: true },
+            })
+            if (currentSub?.plan) {
+              targetPlan = currentSub.plan
+            } else {
+              targetPlan = await tx.plan.findFirst({
+                where: { isActive: true, status: 'ACTIVE', planType: 'PAID' },
+                orderBy: { price: 'asc' },
+              })
+            }
+          }
+
+          if (!targetPlan) {
+            throw new Error('Nenhum plano disponível para ativação')
+          }
+
+          const now = new Date()
+          const periodEnd = calculatePeriodEnd(
+            now,
+            targetPlan.billingInterval,
+            targetPlan.cycleType,
+            targetPlan.durationDays
+          )
+
+          let subscription = await tx.subscription.findFirst({
             where: { barbershopId },
             orderBy: { createdAt: 'desc' },
-            include: { plan: true },
           })
-          if (currentSub?.plan) {
-            targetPlan = currentSub.plan
-          } else {
-            targetPlan = await tx.plan.findFirst({
-              where: { isActive: true, status: 'ACTIVE', planType: 'PAID' },
-              orderBy: { price: 'asc' },
-            })
-          }
-        }
 
-        if (!targetPlan) {
-          throw new Error('Nenhum plano disponível para ativação')
-        }
-
-        const now = new Date()
-        const periodEnd = calculatePeriodEnd(
-          now,
-          targetPlan.billingInterval,
-          targetPlan.cycleType,
-          targetPlan.durationDays
-        )
-
-        let subscription = await tx.subscription.findFirst({
-          where: { barbershopId },
-          orderBy: { createdAt: 'desc' },
-        })
-
-        if (subscription) {
-          subscription = await tx.subscription.update({
-            where: { id: subscription.id },
-            data: {
-              planId: targetPlan.id,
-              planName: targetPlan.name,
-              price: targetPlan.price,
-              cycleType: targetPlan.cycleType,
-              planType: targetPlan.planType,
-              durationDays: targetPlan.durationDays,
-              status: 'ACTIVE',
-              currentPeriodStart: now,
-              currentPeriodEnd: periodEnd,
-              provider: 'ABACATEPAY',
-              providerSubscriptionId: pixId,
-              cancelAtPeriodEnd: false,
-              canceledAt: null,
-            },
-            include: { plan: true },
-          })
-        } else {
-          subscription = await tx.subscription.create({
-            data: {
-              barbershopId,
-              planId: targetPlan.id,
-              planName: targetPlan.name,
-              price: targetPlan.price,
-              cycleType: targetPlan.cycleType,
-              planType: targetPlan.planType,
-              durationDays: targetPlan.durationDays,
-              status: 'ACTIVE',
-              currentPeriodStart: now,
-              currentPeriodEnd: periodEnd,
-              provider: 'ABACATEPAY',
-              providerSubscriptionId: pixId,
-            },
-            include: { plan: true },
-          })
-        }
-
-        await tx.barbershop.update({
-          where: { id: barbershopId },
-          data: {
-            isActive: true,
-            status: 'APPROVED',
-            contractExpiresAt: periodEnd,
-          },
-        })
-
-        // Idempotência na fatura
-        const existingInvoice = await tx.invoice.findFirst({
-          where: { providerInvoiceId: pixId },
-        })
-
-        if (!existingInvoice) {
-          await tx.invoice.create({
-            data: {
-              subscriptionId: subscription.id,
-              barbershopId,
-              amount: targetPlan.price,
-              currency: 'BRL',
-              status: 'PAID',
-              dueDate: now,
-              paidAt: now,
-              provider: 'ABACATEPAY',
-              providerInvoiceId: pixId,
-            },
-          })
-        } else if (existingInvoice.status !== 'PAID') {
-          await tx.invoice.update({
-            where: { id: existingInvoice.id },
-            data: { status: 'PAID', paidAt: now, amount: targetPlan.price },
-          })
-        }
-
-        // Registra evento de auditoria se ainda não registrado para este pixId
-        const existingEvent = await tx.subscriptionEvent.findFirst({
-          where: {
-            subscriptionId: subscription.id,
-            payload: { path: ['providerInvoiceId'], equals: pixId },
-          },
-        })
-
-        if (!existingEvent) {
-          await tx.subscriptionEvent.create({
-            data: {
-              subscriptionId: subscription.id,
-              type: 'SUBSCRIPTION_ACTIVATED',
-              payload: {
-                provider: 'ABACATEPAY',
-                providerInvoiceId: pixId,
+          if (subscription) {
+            subscription = await tx.subscription.update({
+              where: { id: subscription.id },
+              data: {
                 planId: targetPlan.id,
                 planName: targetPlan.name,
-                activatedVia: 'pix_check_instant',
-                activatedAt: now.toISOString(),
-                periodEnd: periodEnd.toISOString(),
-              } as Prisma.InputJsonValue,
+                price: targetPlan.price,
+                cycleType: targetPlan.cycleType,
+                planType: targetPlan.planType,
+                durationDays: targetPlan.durationDays,
+                status: 'ACTIVE',
+                currentPeriodStart: now,
+                currentPeriodEnd: periodEnd,
+                provider: 'ABACATEPAY',
+                providerSubscriptionId: pixId,
+                cancelAtPeriodEnd: false,
+                canceledAt: null,
+              },
+              include: { plan: true },
+            })
+          } else {
+            subscription = await tx.subscription.create({
+              data: {
+                barbershopId,
+                planId: targetPlan.id,
+                planName: targetPlan.name,
+                price: targetPlan.price,
+                cycleType: targetPlan.cycleType,
+                planType: targetPlan.planType,
+                durationDays: targetPlan.durationDays,
+                status: 'ACTIVE',
+                currentPeriodStart: now,
+                currentPeriodEnd: periodEnd,
+                provider: 'ABACATEPAY',
+                providerSubscriptionId: pixId,
+              },
+              include: { plan: true },
+            })
+          }
+
+          await tx.barbershop.update({
+            where: { id: barbershopId },
+            data: {
+              isActive: true,
+              status: 'APPROVED',
+              contractExpiresAt: periodEnd,
             },
           })
-        }
-      })
+
+          // Idempotência na fatura
+          const existingInvoice = await tx.invoice.findFirst({
+            where: { providerInvoiceId: pixId },
+          })
+
+          if (!existingInvoice) {
+            await tx.invoice.create({
+              data: {
+                subscriptionId: subscription.id,
+                barbershopId,
+                amount: targetPlan.price,
+                currency: 'BRL',
+                status: 'PAID',
+                dueDate: now,
+                paidAt: now,
+                provider: 'ABACATEPAY',
+                providerInvoiceId: pixId,
+              },
+            })
+          } else if (existingInvoice.status !== 'PAID') {
+            await tx.invoice.update({
+              where: { id: existingInvoice.id },
+              data: { status: 'PAID', paidAt: now, amount: targetPlan.price },
+            })
+          }
+
+          // Registra evento de auditoria se ainda não registrado para este pixId
+          const existingEvent = await tx.subscriptionEvent.findFirst({
+            where: {
+              subscriptionId: subscription.id,
+              payload: { path: ['providerInvoiceId'], equals: pixId },
+            },
+          })
+
+          if (!existingEvent) {
+            await tx.subscriptionEvent.create({
+              data: {
+                subscriptionId: subscription.id,
+                type: 'SUBSCRIPTION_ACTIVATED',
+                payload: {
+                  provider: 'ABACATEPAY',
+                  providerInvoiceId: pixId,
+                  planId: targetPlan.id,
+                  planName: targetPlan.name,
+                  activatedVia: 'pix_check_instant',
+                  activatedAt: now.toISOString(),
+                  periodEnd: periodEnd.toISOString(),
+                } as Prisma.InputJsonValue,
+              },
+            })
+          }
+        })
+      }
     }
 
     return NextResponse.json({
