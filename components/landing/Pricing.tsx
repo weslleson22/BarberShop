@@ -1,26 +1,23 @@
 'use client'
 
 import Link from 'next/link'
-import { Check, Sparkles, ShieldCheck, QrCode, CreditCard, ArrowRight, Zap } from 'lucide-react'
+import { Check, ShieldCheck, QrCode, CreditCard, ArrowRight, Zap } from 'lucide-react'
 
 export default function Pricing() {
   return (
-    <section id="planos" className="py-24 bg-[#060911] relative overflow-hidden border-t border-white/5">
-      {/* Luz ambiente de fundo */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[160px] pointer-events-none" />
-
+    <section id="planos" className="py-24 bg-gray-950 relative border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Cabeçalho */}
         <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+            <CreditCard className="w-3.5 h-3.5 text-blue-400" />
             <span>Planos e Preços Transparentes</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
             Tecnologia de ponta com{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400">
+            <span className="text-blue-400">
               preços justos e previsíveis.
             </span>
           </h2>
@@ -34,7 +31,7 @@ export default function Pricing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           
           {/* Card 1: Trial Gratuito */}
-          <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-700 transition-all shadow-xl backdrop-blur-xl">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 flex flex-col justify-between hover:border-gray-700 transition-colors shadow-sm">
             <div className="space-y-6">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
@@ -88,8 +85,8 @@ export default function Pricing() {
           </div>
 
           {/* Card 2: Plano Profissional (Destaque) */}
-          <div className="bg-gradient-to-b from-blue-950/40 via-slate-900/80 to-slate-950 border-2 border-blue-500/50 rounded-3xl p-8 flex flex-col justify-between relative shadow-2xl shadow-blue-500/15 backdrop-blur-xl scale-105 z-20">
-            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-500 to-cyan-400 text-slate-950 text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-md">
+          <div className="bg-gray-900 border-2 border-blue-500 rounded-2xl p-8 flex flex-col justify-between relative shadow-md scale-105 z-20">
+            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow-sm">
               Mais Escolhido
             </span>
 
@@ -150,7 +147,7 @@ export default function Pricing() {
             <div className="pt-8">
               <Link
                 href="/register"
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-sm shadow-lg shadow-blue-500/25 transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
               >
                 <span>Contratar (30 Dias Grátis)</span>
                 <ArrowRight className="w-4 h-4" />
@@ -159,7 +156,7 @@ export default function Pricing() {
           </div>
 
           {/* Card 3: Plano Anual */}
-          <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-700 transition-all shadow-xl backdrop-blur-xl">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 flex flex-col justify-between hover:border-gray-700 transition-colors shadow-sm">
             <div className="space-y-6">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-purple-400 block mb-1">
@@ -215,9 +212,9 @@ export default function Pricing() {
         </div>
 
         {/* Faixa de Garantia e Gateway */}
-        <div className="mt-16 p-6 rounded-2xl bg-slate-900/40 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-300">
+        <div className="mt-16 p-6 rounded-2xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-300">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400 shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -230,9 +227,9 @@ export default function Pricing() {
 
           <div className="flex items-center gap-3 shrink-0">
             <span className="text-slate-400">Processado com segurança por:</span>
-            <div className="px-3 py-1.5 rounded-lg bg-slate-950 border border-emerald-500/30 text-emerald-400 font-bold flex items-center gap-1.5 shadow-sm">
-              <span className="text-base">🥑</span>
-              <span>AbacatePay</span>
+            <div className="px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-emerald-400 font-semibold flex items-center gap-1.5 shadow-sm">
+              <CreditCard className="w-4 h-4 text-emerald-400" />
+              <span>Gateway de Pagamentos</span>
             </div>
           </div>
         </div>

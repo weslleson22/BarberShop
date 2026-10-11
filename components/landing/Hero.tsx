@@ -10,7 +10,6 @@ import {
   Clock, 
   CheckCircle2, 
   ShieldCheck, 
-  Sparkles, 
   Bell, 
   Star, 
   Building2,
@@ -33,16 +32,7 @@ export default function Hero() {
   }
 
   return (
-    <section id="home" className="relative min-h-screen pt-32 pb-20 flex items-center bg-[#090D16] overflow-hidden">
-      {/* Luzes de ambientação e grid de fundo */}
-      <div className="absolute top-1/4 -left-40 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-indigo-600/10 rounded-full blur-[160px] pointer-events-none" />
-
-      {/* Grid sutil */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px]" 
-      />
+    <section id="home" className="relative min-h-screen pt-32 pb-20 flex items-center bg-gray-950">
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
@@ -51,16 +41,16 @@ export default function Hero() {
           <div className="lg:col-span-6 xl:col-span-7 space-y-8 text-center lg:text-left">
             
             {/* Badge de Destaque */}
-            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs sm:text-sm font-semibold tracking-wide">
-              <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
-              <span>Plataforma Inteligente de Gestão e Agendamento</span>
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-blue-400 text-xs sm:text-sm font-semibold tracking-wide">
+              <Calendar className="w-4 h-4 text-blue-400" />
+              <span>Plataforma de Gestão e Agendamento</span>
             </div>
 
             {/* Título de Alto Impacto */}
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
                 Gestão e agendamentos com{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400">
+                <span className="text-blue-400">
                   rapidez, controle e pontualidade.
                 </span>
               </h1>
@@ -73,7 +63,7 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
               <button 
                 onClick={handleAccess}
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold rounded-xl transition-all shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 flex items-center justify-center space-x-3 group cursor-pointer"
+                className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center space-x-3 group cursor-pointer"
               >
                 <LogIn className="w-5 h-5 text-blue-100" />
                 <span className="text-base">
@@ -111,16 +101,16 @@ export default function Hero() {
             <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6">
               <div className="flex items-center space-x-3">
                 <div className="flex -space-x-2">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 border-2 border-[#090D16] flex items-center justify-center text-xs font-bold text-slate-950">
+                  <div className="w-9 h-9 rounded-full bg-blue-600 border-2 border-gray-950 flex items-center justify-center text-xs font-bold text-white">
                     JD
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-400 border-2 border-[#090D16] flex items-center justify-center text-xs font-bold text-slate-950">
+                  <div className="w-9 h-9 rounded-full bg-indigo-600 border-2 border-gray-950 flex items-center justify-center text-xs font-bold text-white">
                     MC
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 border-2 border-[#090D16] flex items-center justify-center text-xs font-bold text-slate-950">
+                  <div className="w-9 h-9 rounded-full bg-emerald-600 border-2 border-gray-950 flex items-center justify-center text-xs font-bold text-white">
                     AL
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-slate-800 border-2 border-[#090D16] flex items-center justify-center text-xs font-bold text-blue-300">
+                  <div className="w-9 h-9 rounded-full bg-gray-800 border-2 border-gray-950 flex items-center justify-center text-xs font-bold text-blue-300">
                     +10k
                   </div>
                 </div>
@@ -147,20 +137,20 @@ export default function Hero() {
           <div className="lg:col-span-6 xl:col-span-5 relative">
             <div className="relative mx-auto max-w-lg lg:max-w-none">
               
-              {/* Moldura da Ilustração com Efeito Glassmorphism */}
-              <div className="relative rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-4 shadow-2xl shadow-blue-950/50 backdrop-blur-2xl overflow-hidden group">
-                <div className="relative h-96 sm:h-[430px] w-full rounded-2xl overflow-hidden">
+              {/* Moldura da Ilustração com visual sólido */}
+              <div className="relative rounded-2xl border border-gray-800 bg-gray-900 p-4 shadow-sm overflow-hidden group">
+                <div className="relative h-96 sm:h-[430px] w-full rounded-xl overflow-hidden bg-gray-950">
                   <Image
                     src="/images/scheduling-hero.jpg"
                     alt="Sistema de Gestão e Agendamento de Serviços"
                     fill
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                    className="object-cover object-center"
                     priority
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
+                  <div className="absolute inset-0 bg-black/40" />
 
-                  {/* Card Flutuante Superior: Disponibilidade em Tempo Real */}
-                  <div className="absolute top-4 left-4 right-4 bg-slate-900/90 border border-white/15 backdrop-blur-md rounded-2xl p-3.5 shadow-xl flex items-center justify-between">
+                  {/* Card Sólido Superior: Disponibilidade em Tempo Real */}
+                  <div className="absolute top-4 left-4 right-4 bg-gray-900 border border-gray-800 rounded-xl p-3.5 shadow-md flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400">
                         <Calendar className="w-5 h-5" />
@@ -176,8 +166,8 @@ export default function Hero() {
                     </span>
                   </div>
 
-                  {/* Card Flutuante Inferior: Simulação de Atendimento Confirmado */}
-                  <div className="absolute bottom-4 left-4 right-4 bg-slate-900/95 border border-white/15 backdrop-blur-md rounded-2xl p-4 shadow-xl space-y-3">
+                  {/* Card Sólido Inferior: Simulação de Atendimento Confirmado */}
+                  <div className="absolute bottom-4 left-4 right-4 bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-md space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
@@ -209,8 +199,8 @@ export default function Hero() {
               </div>
 
               {/* Badges Flutuantes Exteriores */}
-              <div className="absolute -top-3 -right-3 hidden sm:flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg shadow-blue-500/30">
-                <Sparkles className="w-3.5 h-3.5" />
+              <div className="absolute -top-3 -right-3 hidden sm:flex items-center space-x-1.5 bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md">
+                <Calendar className="w-3.5 h-3.5" />
                 <span>Gestão Completa SaaS</span>
               </div>
 

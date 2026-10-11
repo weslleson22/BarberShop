@@ -63,8 +63,8 @@ export function getSidebarSections(role: UserRole): NavSection[] {
               { title: "Todas as Unidades", url: "/developer" },
               { title: "Unidades Ativas", url: "/developer?status=APPROVED" },
               { title: "Em Avaliação", url: "/developer?status=PENDING" },
-              { title: "Suspensas", url: "/developer?status=SUSPENDED", badge: "Em breve", disabled: true },
-              { title: "Canceladas", url: "/developer?status=CANCELLED", badge: "Em breve", disabled: true },
+              { title: "Suspensas", url: "/developer?status=SUSPENDED" },
+              { title: "Canceladas", url: "/developer?status=CANCELLED" },
             ],
           },
           {
@@ -94,9 +94,9 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             title: "Assinaturas",
             icon: Receipt,
             items: [
-              { title: "Ativas", url: "#", badge: "Em breve", disabled: true },
-              { title: "Vencidas", url: "#", badge: "Em breve", disabled: true },
-              { title: "Gestão Completa", url: "/developer/billing?tab=subscriptions" },
+              { title: "Ativas", url: "/developer/subscriptions/ativas" },
+              { title: "Vencidas", url: "/developer/subscriptions/vencidas" },
+              { title: "Gestão Completa", url: "/developer/subscriptions" },
             ],
           },
           {
@@ -184,15 +184,13 @@ export function getSidebarSections(role: UserRole): NavSection[] {
         items: [
           {
             title: "Pagamentos & Caixa",
+            url: "/dashboard/financeiro",
             icon: CreditCard,
-            badge: "Em breve",
-            disabled: true,
           },
           {
             title: "Relatórios & BI",
+            url: "/dashboard/relatorios",
             icon: BarChart3,
-            badge: "Em breve",
-            disabled: true,
           },
         ],
       },
@@ -269,9 +267,8 @@ export function getSidebarSections(role: UserRole): NavSection[] {
           },
           {
             title: "Meus Relatórios",
+            url: "/dashboard/relatorios",
             icon: BarChart3,
-            badge: "Em breve",
-            disabled: true,
           },
         ],
       },
@@ -330,9 +327,8 @@ export function getSidebarSections(role: UserRole): NavSection[] {
           },
           {
             title: "Pagamentos de Balcão",
+            url: "/dashboard/financeiro",
             icon: CreditCard,
-            badge: "Em breve",
-            disabled: true,
           },
         ],
       },

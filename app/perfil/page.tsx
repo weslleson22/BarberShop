@@ -112,7 +112,7 @@ export default function PerfilPage() {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-semibold rounded-xl text-sm shadow-lg shadow-amber-500/20 hover:from-amber-500 hover:to-amber-700 transition-all self-start sm:self-auto cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl text-sm transition-colors self-start sm:self-auto cursor-pointer"
               >
                 <Edit className="w-4 h-4" />
                 Editar Perfil
@@ -125,7 +125,7 @@ export default function PerfilPage() {
                 <div className="flex items-center space-x-6">
                   <div className="flex flex-col items-center space-y-2">
                     <div className="relative">
-                      <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                      <div className="w-24 h-24 bg-amber-500 rounded-full flex items-center justify-center">
                         {formData.avatar ? (
                           <img 
                             src={formData.avatar} 
@@ -232,7 +232,7 @@ export default function PerfilPage() {
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium"
+                      className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-xl transition-colors flex items-center font-semibold cursor-pointer"
                     >
                       <Settings className="mr-2 h-4 w-4" />
                       Editar Perfil
@@ -257,7 +257,7 @@ export default function PerfilPage() {
                       <button
                         onClick={handleSaveProfile}
                         disabled={isLoading}
-                        className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center font-medium disabled:opacity-50"
+                        className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-xl transition-colors flex items-center font-semibold disabled:opacity-50 cursor-pointer"
                       >
                         {isLoading ? (
                           <>

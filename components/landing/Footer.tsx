@@ -5,17 +5,15 @@ import { Calendar, ArrowRight, ShieldCheck, Mail, MessageCircle, MapPin, Buildin
 
 export default function Footer() {
   return (
-    <footer className="bg-[#050811] border-t border-white/10 text-slate-400 text-sm">
+    <footer className="bg-gray-950 border-t border-gray-800 text-slate-400 text-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           
           {/* Coluna 1: Marca & Propósito */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-3 group inline-block">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 p-0.5 shadow-lg shadow-blue-500/20">
-                <div className="w-full h-full bg-[#0B1120] rounded-[10px] flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-blue-400" />
-                </div>
+              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+                <Calendar className="w-5 h-5 text-white" />
               </div>
               <div>
                 <span className="text-xl font-bold tracking-tight text-white block">
@@ -107,8 +105,8 @@ export default function Footer() {
             <div className="pt-2">
               <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5 space-y-1.5">
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
-                  <span>🥑</span>
-                  <span>Pagamentos via AbacatePay</span>
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Pagamentos com Segurança</span>
                 </div>
                 <p className="text-[10px] text-slate-400 leading-tight">
                   Cobranças intermediadas com criptografia de dados bancários (PIX e Cartão).
@@ -179,8 +177,8 @@ export default function Footer() {
                 <span>SSL Seguro 256-bit</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border border-emerald-500/30 text-[11px] text-emerald-400 font-semibold">
-                <span>🥑</span>
-                <span>AbacatePay</span>
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Pagamento Seguro</span>
               </div>
             </div>
           </div>

@@ -142,9 +142,9 @@ export default function TodayAppointments() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
         <div className="flex items-center justify-center h-24 md:h-32">
-          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-yellow-400"></div>
+          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-amber-400"></div>
         </div>
       </div>
     )
@@ -155,68 +155,68 @@ export default function TodayAppointments() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return 'text-green-400 bg-green-400/10 border-green-400/30'
+        return 'text-emerald-400 bg-emerald-950 border-emerald-800/60'
       case 'PENDING':
-        return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30'
+        return 'text-amber-400 bg-amber-950 border-amber-800/60'
       case 'CANCELLED':
-        return 'text-red-400 bg-red-400/10 border-red-400/30'
+        return 'text-red-400 bg-red-950 border-red-800/60'
       default:
-        return 'text-white/60 bg-white/10 border-white/20'
+        return 'text-gray-400 bg-gray-800 border-gray-700'
     }
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
           <h3 className="text-lg md:text-xl font-semibold text-white">Agendamentos de Hoje</h3>
-          <p className="text-white/60 text-xs md:text-sm">
+          <p className="text-gray-400 text-xs md:text-sm">
             {totalToday > 5 ? `5 de ${totalToday} agendamentos` : `${totalToday} agendamento${totalToday === 1 ? '' : 's'}`}
           </p>
         </div>
-        <div className="flex items-center space-x-2 text-white/60">
+        <div className="flex items-center space-x-2 text-gray-400">
           <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
           <span className="text-xs md:text-sm">Hoje</span>
         </div>
       </div>
 
       {appointments.length === 0 ? (
-        <div className="text-center py-8 px-4 bg-white/[0.02] border border-white/5 rounded-xl">
-          <Calendar className="w-8 h-8 text-white/20 mx-auto mb-2" />
-          <p className="text-white/80 font-medium text-sm">Nenhum agendamento para hoje</p>
-          <p className="text-white/40 text-xs mt-1">Os agendamentos confirmados para hoje aparecerão listados aqui.</p>
+        <div className="text-center py-8 px-4 bg-gray-950 border border-gray-800 rounded-xl">
+          <Calendar className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+          <p className="text-gray-300 font-medium text-sm">Nenhum agendamento para hoje</p>
+          <p className="text-gray-500 text-xs mt-1">Os agendamentos confirmados para hoje aparecerão listados aqui.</p>
         </div>
       ) : (
         <div className="space-y-2 md:space-y-3">
           {appointments.map((appointment) => (
             <div
               key={appointment.id}
-              className="flex items-center justify-between p-3 md:p-4 bg-white/5 border border-white/6 rounded-lg md:rounded-xl hover:bg-white/10 transition-all"
+              className="flex items-center justify-between p-3 md:p-4 bg-gray-950 border border-gray-800 rounded-lg md:rounded-xl hover:bg-gray-800/50 transition-colors"
             >
               <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
                 {/* Time */}
                 <div className="text-center flex-shrink-0">
                   <p className="text-white font-semibold text-sm md:text-base">{formatTime(appointment.startTime)}</p>
-                  <p className="text-white/40 text-xs">30min</p>
+                  <p className="text-gray-500 text-xs">30min</p>
                 </div>
 
                 {/* Client Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-medium text-sm md:text-base truncate">{appointment.client.name}</p>
-                  <p className="text-white/60 text-xs md:text-sm truncate">{appointment.service.name}</p>
+                  <p className="text-gray-400 text-xs md:text-sm truncate">{appointment.service.name}</p>
                 </div>
               </div>
 
               {/* Barber Info */}
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-gray-900 border border-gray-800 rounded-lg flex-shrink-0">
                 {appointment.barber?.avatar ? (
                   <img
                     src={appointment.barber.avatar}
                     alt={appointment.barber.name}
-                    className="w-5 h-5 rounded-full object-cover border border-yellow-400/40"
+                    className="w-5 h-5 rounded-full object-cover border border-amber-500/40"
                   />
                 ) : (
-                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
                     <span className="text-black font-bold text-[10px]">
                       {appointment.barber?.name?.charAt(0).toUpperCase() || 'B'}
                     </span>

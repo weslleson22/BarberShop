@@ -118,8 +118,8 @@ export default function AppointmentDetailsModal({
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-yellow-400" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-amber-400" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">Detalhes do Agendamento</h2>
@@ -148,7 +148,7 @@ export default function AppointmentDetailsModal({
             </div>
             <div className="text-right">
               <p className="text-xs text-white/60 mb-1">Valor Total</p>
-              <p className="text-xl font-bold text-yellow-400">
+              <p className="text-xl font-bold text-amber-400">
                 {formatCurrency(appointment.totalAmount || appointment.service?.price || 0)}
               </p>
             </div>
@@ -178,8 +178,8 @@ export default function AppointmentDetailsModal({
             <div className="flex items-center justify-between">
               <p className="text-white font-semibold text-base">{appointment.client.name}</p>
               {Boolean(appointment.isVip || appointment.client?.isVip) && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400/20 to-amber-500/20 text-yellow-300 border border-yellow-400/40 shadow-sm shadow-yellow-400/10">
-                  <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950/60 text-amber-300 border border-amber-800/60">
+                  <Crown className="w-3.5 h-3.5 text-amber-400" />
                   Cliente VIP
                 </span>
               )}
@@ -215,7 +215,7 @@ export default function AppointmentDetailsModal({
                 <span>Profissional</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center flex-shrink-0 border border-yellow-400/40">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-amber-500 flex items-center justify-center flex-shrink-0 border border-amber-400">
                   {appointment.barber.avatar ? (
                     <img
                       src={appointment.barber.avatar}

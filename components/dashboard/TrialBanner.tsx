@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Sparkles, AlertTriangle, Clock, ArrowRight, ShieldAlert, CheckCircle2 } from 'lucide-react'
+import { ShieldCheck, AlertTriangle, Clock, ArrowRight, ShieldAlert, CheckCircle2 } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 
@@ -78,17 +78,17 @@ export default function TrialBanner() {
     const elapsedPercent = Math.min(100, Math.max(0, Math.round(((30 - daysRemaining) / 30) * 100)))
 
     return (
-      <div className={`mb-6 rounded-2xl border p-4 md:p-5 transition-all ${
+      <div className={`mb-6 rounded-xl border p-4 md:p-5 transition-all ${
         isExpiringSoon
-          ? 'bg-amber-500/10 border-amber-500/40 text-amber-200'
-          : 'bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-transparent border-amber-500/20 text-white'
+          ? 'bg-amber-950/60 border-amber-800/80 text-amber-200'
+          : 'bg-gray-900 border-gray-800 text-white'
       }`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
             <div className={`p-2.5 rounded-xl shrink-0 ${
               isExpiringSoon ? 'bg-amber-500/20 text-amber-400' : 'bg-primary/20 text-primary'
             }`}>
-              {isExpiringSoon ? <Clock className="w-5 h-5 animate-pulse" /> : <Sparkles className="w-5 h-5" />}
+              {isExpiringSoon ? <Clock className="w-5 h-5 animate-pulse" /> : <ShieldCheck className="w-5 h-5" />}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">

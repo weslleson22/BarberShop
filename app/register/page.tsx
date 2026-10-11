@@ -17,7 +17,6 @@ import {
   User,
   CheckCircle2,
   Clock,
-  Sparkles,
   AlertCircle,
   Loader2,
   ArrowRight,
@@ -153,13 +152,8 @@ export default function RegisterPage() {
   // TELA DE SUCESSO: ACESSO TOTAL IMEDIATO COM TRIAL DE 7 DIAS
   if (isSuccess && registeredData) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-white flex flex-col justify-between relative overflow-hidden font-sans selection:bg-amber-500 selection:text-black">
-        {/* Luzes de ambientação de fundo */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-amber-600/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
-
-        <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
+      <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between relative font-sans selection:bg-amber-500 selection:text-black">
+        <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-gray-800 bg-gray-950">
           <div className="flex items-center space-x-2">
             <Link
               href="/"
@@ -170,19 +164,19 @@ export default function RegisterPage() {
             </Link>
           </div>
           <div className="flex items-center space-x-2 text-xs text-emerald-400 font-medium px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-            <Sparkles className="w-3.5 h-3.5" />
+            <ShieldCheck className="w-3.5 h-3.5" />
             <span>Trial de 7 Dias Ativo</span>
           </div>
         </header>
 
         <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-          <div className="w-full max-w-xl bg-slate-900/70 border border-amber-500/30 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl shadow-amber-500/10 text-center">
-            <div className="w-16 h-16 bg-gradient-to-tr from-amber-500/20 to-emerald-400/20 border border-amber-500/30 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-inner">
+          <div className="w-full max-w-xl bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm text-center">
+            <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/40 rounded-2xl mx-auto flex items-center justify-center mb-6">
               <CheckCircle2 className="w-8 h-8 text-amber-400" />
             </div>
 
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5" />
               Acesso Imediato Liberado (7 Dias)
             </span>
 
@@ -230,7 +224,7 @@ export default function RegisterPage() {
                 onClick={() => {
                   window.location.href = '/dashboard'
                 }}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-xl text-sm transition-all shadow-lg shadow-amber-500/20 hover:scale-[1.02] cursor-pointer"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl text-sm transition-colors cursor-pointer"
               >
                 <span>Acessar Painel da Barbearia</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
@@ -239,7 +233,7 @@ export default function RegisterPage() {
                 href="/onboarding"
                 className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 hover:text-white font-medium rounded-xl text-sm border border-slate-700 transition-all"
               >
-                <Sparkles className="w-4 h-4 text-amber-400" />
+                <Building2 className="w-4 h-4 text-amber-400" />
                 <span>Guia de Onboarding</span>
               </Link>
             </div>
@@ -254,14 +248,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-white flex flex-col justify-between relative overflow-hidden font-sans selection:bg-amber-500 selection:text-black">
-      {/* Luzes de ambientação de fundo */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between relative font-sans selection:bg-amber-500 selection:text-black">
       {/* Header com navegação */}
-      <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
+      <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-gray-800 bg-gray-950">
         <div className="flex items-center space-x-2">
           <button
             onClick={() => router.back()}
@@ -294,11 +283,11 @@ export default function RegisterPage() {
 
       {/* Conteúdo Principal do Cadastro */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-3xl bg-slate-900/60 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+        <div className="w-full max-w-3xl bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl">
           {/* Título e Apresentação */}
           <div className="text-center max-w-lg mx-auto mb-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Building2 className="w-3.5 h-3.5" />
               <span>Novo Estabelecimento</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
@@ -572,7 +561,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-semibold text-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-semibold text-black bg-amber-500 hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
               {loading ? (
                 <>

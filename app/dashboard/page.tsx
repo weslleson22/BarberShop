@@ -72,7 +72,7 @@ function ClientDashboard() {
                     {formatDate(upcoming.startTime)}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <div className="w-6 h-6 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center flex-shrink-0 border border-yellow-400/30">
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-amber-500 flex items-center justify-center flex-shrink-0">
                       {upcoming.barber?.avatar ? (
                         <img
                           src={upcoming.barber.avatar}
@@ -94,7 +94,7 @@ function ClientDashboard() {
               <div className="flex flex-wrap gap-3 mt-4">
                 <Link
                   href="/agendar"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all shadow-sm"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Agendar

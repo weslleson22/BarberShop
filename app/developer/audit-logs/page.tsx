@@ -136,15 +136,15 @@ function UserAvatar({ user, size = "sm" }: { user: AuditLogEntry["user"]; size?:
   }
   const initials = user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
   const colors: Record<string, string> = {
-    DEVELOPER: "from-violet-500 to-purple-600",
-    ADMIN: "from-amber-500 to-orange-500",
-    BARBER: "from-blue-500 to-cyan-500",
-    RECEPTIONIST: "from-emerald-500 to-teal-500",
-    CLIENT: "from-rose-500 to-pink-500",
+    DEVELOPER: "bg-purple-600",
+    ADMIN: "bg-amber-600",
+    BARBER: "bg-blue-600",
+    RECEPTIONIST: "bg-emerald-600",
+    CLIENT: "bg-rose-600",
   };
-  const gradient = colors[user.role] ?? "from-gray-500 to-gray-600";
+  const color = colors[user.role] ?? "bg-gray-600";
   return (
-    <div className={`${dim} rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center shrink-0 font-bold text-white`}>
+    <div className={`${dim} rounded-full ${color} flex items-center justify-center shrink-0 font-bold text-white`}>
       {user.avatar
         ? <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
         : initials}

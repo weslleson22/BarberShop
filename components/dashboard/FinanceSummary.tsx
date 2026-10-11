@@ -145,19 +145,19 @@ export default function FinanceSummary() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
         <div className="flex items-center justify-center h-24 md:h-32">
-          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-yellow-400"></div>
+          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-amber-400"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
       <div className="mb-4 md:mb-6">
         <h3 className="text-lg md:text-xl font-semibold text-white">Resumo Financeiro</h3>
-        <p className="text-white/60 text-xs md:text-sm">Mês atual</p>
+        <p className="text-gray-400 text-xs md:text-sm">Mês atual</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:gap-4">
@@ -168,16 +168,16 @@ export default function FinanceSummary() {
           return (
             <div
               key={index}
-              className="bg-white/5 border border-white/10 rounded-lg md:rounded-xl p-3 md:p-4"
+              className="bg-gray-950 border border-gray-800 rounded-lg md:rounded-xl p-3 md:p-4"
             >
               <div className="flex items-center justify-between mb-1.5 md:mb-2">
-                <div className={`w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br ${item.color} rounded-lg flex items-center justify-center`}>
-                  <Icon className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
+                <div className="w-7 h-7 md:w-8 md:h-8 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-amber-400">
+                  <Icon className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-400" />
                 </div>
                 <div className={`flex items-center space-x-1 px-1.5 md:px-2 py-0.5 rounded-md ${
                   isPositive 
-                    ? 'bg-green-500/20 text-green-400' 
-                    : 'bg-red-500/20 text-red-400'
+                    ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/60' 
+                    : 'bg-red-950 text-red-400 border border-red-800/60'
                 }`}>
                   {isPositive ? <ArrowUp className="w-2.5 h-2.5 md:w-3 md:h-3" /> : <ArrowDown className="w-2.5 h-2.5 md:w-3 md:h-3" />}
                   <span className="text-xs font-medium">
@@ -187,7 +187,7 @@ export default function FinanceSummary() {
               </div>
               
               <div>
-                <p className="text-white/60 text-xs mb-1">{item.title}</p>
+                <p className="text-gray-400 text-xs mb-1">{item.title}</p>
                 <p className="text-base md:text-lg font-bold text-white truncate">{item.value}</p>
               </div>
             </div>
@@ -196,13 +196,13 @@ export default function FinanceSummary() {
       </div>
 
       {/* Profit Margin Visual */}
-      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
+      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-800">
         <div className="flex items-center justify-between mb-1.5 md:mb-2">
-          <span className="text-white/60 text-xs md:text-sm">Taxa de Conclusão</span>
+          <span className="text-gray-400 text-xs md:text-sm">Taxa de Conclusão</span>
           <span className="text-white font-semibold text-sm md:text-base">{profitMargin.toFixed(1)}%</span>
         </div>
-        <div className="w-full bg-white/10 rounded-full h-2 md:h-3">
-          <div className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full" style={{ width: `${profitMargin}%` }} />
+        <div className="w-full bg-gray-800 rounded-full h-2 md:h-3">
+          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${profitMargin}%` }} />
         </div>
       </div>
     </div>

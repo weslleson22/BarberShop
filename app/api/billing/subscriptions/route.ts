@@ -157,3 +157,141 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// PATCH - Atualizar status, estender período ou alterar notas da assinatura
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = getAuthUser(request)
+    if (!user || user.role !== 'DEVELOPER') {
+      return NextResponse.json({ error: 'Acesso restrito ao DEVELOPER' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { subscriptionId, status, extendDays, notes, planId } = body
+
+    if (!subscriptionId) {
+      return NextResponse.json({ error: 'subscriptionId é obrigatório' }, { status: 400 })
+    }
+
+    const currentSub = await prisma.subscription.findUnique({
+      where: { id: subscriptionId },
+      include: { barbershop: true, plan: true },
+    })
+
+    if (!currentSub) {
+      return NextResponse.json({ error: 'Assinatura não encontrada' }, { status: 404 })
+    }
+
+    const updateData: any = { updatedAt: new Date() }
+
+    if (notes !== undefined) {
+      updateData.notes = notes
+    }
+
+    if (planId && planId !== currentSub.planId) {
+      const newPlan = await prisma.plan.findUnique({ where: { id: planId } })
+      if (newPlan) {
+        updateData.planId = planId
+        updateData.planName = newPlan.name
+        updateData.price = newPlan.price
+        updateData.cycleType = newPlan.cycleType
+      }
+    }
+
+    if (typeof extendDays === 'number' && extendDays > 0) {
+      const baseEnd = currentSub.currentPeriodEnd ? new Date(currentSub.currentPeriodEnd) : new Date()
+      const newEnd = new Date(Math.max(baseEnd.getTime(), Date.now()) + extendDays * 24 * 60 * 60 * 1000)
+      updateData.currentPeriodEnd = newEnd
+      
+      if (currentSub.trialEnd) {
+        const newTrialEnd = new Date(Math.max(new Date(currentSub.trialEnd).getTime(), Date.now()) + extendDays * 24 * 60 * 60 * 1000)
+        updateData.trialEnd = newTrialEnd
+      }
+
+      // Se estava vencida ou suspensa, reativa
+      if (currentSub.status === 'PAST_DUE' || currentSub.status === 'EXPIRED') {
+        updateData.status = 'ACTIVE'
+      }
+
+      // Atualiza expiração no registro da barbearia
+      await prisma.barbershop.update({
+        where: { id: currentSub.barbershopId },
+        data: {
+          contractExpiresAt: newEnd,
+          isActive: true,
+          status: 'APPROVED',
+        },
+      })
+    }
+
+    if (status && status !== currentSub.status) {
+      updateData.status = status
+      if (status === 'CANCELED') {
+        updateData.canceledAt = new Date()
+      } else if (status === 'ACTIVE') {
+        // Se ativou, garante que barbearia está ativa
+        await prisma.barbershop.update({
+          where: { id: currentSub.barbershopId },
+          data: { isActive: true, status: 'APPROVED' },
+        })
+      } else if (status === 'SUSPENDED') {
+        await prisma.barbershop.update({
+          where: { id: currentSub.barbershopId },
+          data: { status: 'SUSPENDED' },
+        })
+      }
+    }
+
+    const updated = await prisma.subscription.update({
+      where: { id: subscriptionId },
+      data: updateData,
+      include: {
+        barbershop: { select: { id: true, name: true, slug: true } },
+        plan: true,
+        invoices: { orderBy: { createdAt: 'desc' }, take: 5 },
+      },
+    })
+
+    return NextResponse.json(updated)
+  } catch (error) {
+    console.error('Erro ao atualizar assinatura:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erro ao atualizar assinatura' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Cancelar assinatura
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = getAuthUser(request)
+    if (!user || user.role !== 'DEVELOPER') {
+      return NextResponse.json({ error: 'Acesso restrito ao DEVELOPER' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const subscriptionId = searchParams.get('id')
+
+    if (!subscriptionId) {
+      return NextResponse.json({ error: 'ID da assinatura é obrigatório' }, { status: 400 })
+    }
+
+    const updated = await prisma.subscription.update({
+      where: { id: subscriptionId },
+      data: {
+        status: 'CANCELED',
+        canceledAt: new Date(),
+        updatedAt: new Date(),
+      },
+    })
+
+    return NextResponse.json({ success: true, subscription: updated })
+  } catch (error) {
+    console.error('Erro ao cancelar assinatura:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erro ao cancelar assinatura' },
+      { status: 500 }
+    )
+  }
+}

@@ -90,7 +90,7 @@ export default function ClientHeader({ onNewClient, onSearch, clients }: ClientH
   }
 
   return (
-    <div className="bg-gradient-to-b from-gray-900/50 to-transparent border-b border-white/6">
+    <div className="bg-gray-950 border-b border-gray-800">
       <div className="w-full px-4 md:px-6 py-6">
         {/* Page Header - Título e Descrição */}
         <div className="flex flex-col w-full mb-6">
@@ -114,7 +114,7 @@ export default function ClientHeader({ onNewClient, onSearch, clients }: ClientH
               placeholder="Buscar clientes..."
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all"
             />
           </div>
 
@@ -125,7 +125,7 @@ export default function ClientHeader({ onNewClient, onSearch, clients }: ClientH
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[100px]"
+                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all cursor-pointer min-w-[100px]"
               >
                 <option value="Todos" className="bg-gray-900">Status</option>
                 <option value="Ativos" className="bg-gray-900">Ativos</option>
@@ -140,7 +140,7 @@ export default function ClientHeader({ onNewClient, onSearch, clients }: ClientH
               <select
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[80px]"
+                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all cursor-pointer min-w-[80px]"
               >
                 <option value="Hoje" className="bg-gray-900">Hoje</option>
                 <option value="Semana" className="bg-gray-900">Semana</option>
@@ -162,7 +162,7 @@ export default function ClientHeader({ onNewClient, onSearch, clients }: ClientH
             {/* New Client Button */}
             <button 
               onClick={onNewClient}
-              className="px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-2 flex-shrink-0"
+              className="px-4 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-all flex items-center space-x-2 flex-shrink-0"
             >
               <Plus className="w-5 h-5" />
               <span className="hidden sm:inline">Novo Cliente</span>

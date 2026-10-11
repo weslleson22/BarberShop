@@ -21,7 +21,6 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Sparkles,
   RefreshCw,
   Upload,
   Camera,
@@ -363,7 +362,7 @@ export default function OnboardingPage() {
             )}
             <div>
               <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase mb-1">
-                <Sparkles className="w-4 h-4" />
+                <Building className="w-4 h-4" />
                 <span>{barbershop?.name ? `Guia de Implantação • ${barbershop.name}` : 'Guia de Implantação'}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">Onboarding da Sua Barbearia</h1>

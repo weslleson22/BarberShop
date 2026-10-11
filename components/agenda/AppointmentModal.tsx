@@ -506,8 +506,8 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
-      <div className="modal-responsive bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
+      <div className="modal-responsive bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-white">
@@ -805,7 +805,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
               </label>
               <div className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white">
                 <div className="flex items-center space-x-2 md:space-x-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 md:w-8 md:h-8 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-black font-bold text-xs md:text-sm">
                       {user?.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
@@ -977,7 +977,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
             <button
               type="submit"
               disabled={loading}
-              className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 text-sm md:text-base"
+              className="px-4 md:px-6 py-2.5 md:py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg md:rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 text-sm md:text-base"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>

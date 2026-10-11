@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import { getAuthHeaders } from '@/lib/utils'
 import AbacateBillingsManager from '@/components/billing/AbacateBillingsManager'
 import AbacateProductsManager from '@/components/billing/AbacateProductsManager'
+import AbacateCustomersManager from '@/components/billing/AbacateCustomersManager'
 import CheckoutCustomizer from '@/components/billing/CheckoutCustomizer'
 import {
   CreditCard,
@@ -22,7 +23,8 @@ import {
   Clock,
   Sliders,
   Receipt,
-  QrCode
+  QrCode,
+  Package
 } from 'lucide-react'
 
 interface SubscriptionItem {
@@ -74,7 +76,7 @@ function DeveloperBillingContent() {
   const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>([])
   const [invoices, setInvoices] = useState<InvoiceItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'cobrancas' | 'produtos' | 'checkout' | 'subscriptions' | 'invoices'>(initialTab)
+  const [activeTab, setActiveTab] = useState<'cobrancas' | 'produtos' | 'clientes' | 'checkout' | 'subscriptions' | 'invoices'>(initialTab)
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
 
   useEffect(() => {
@@ -225,24 +227,38 @@ function DeveloperBillingContent() {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setActiveTab('cobrancas')}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'cobrancas'
-                  ? 'bg-emerald-500 text-black shadow-md'
+                  ? 'bg-emerald-600 text-white'
                   : 'bg-muted/40 hover:bg-muted text-muted-foreground'
               }`}
             >
-              <span>🥑 Cobranças AbacatePay</span>
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Cobranças Gateway</span>
             </button>
 
             <button
               onClick={() => setActiveTab('produtos')}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'produtos'
-                  ? 'bg-emerald-500 text-black shadow-md'
+                  ? 'bg-emerald-600 text-white'
                   : 'bg-muted/40 hover:bg-muted text-muted-foreground'
               }`}
             >
-              <span>🥑 Produtos & Planos</span>
+              <Package className="w-3.5 h-3.5" />
+              <span>Produtos & Planos</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('clientes')}
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'clientes'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-muted/40 hover:bg-muted text-muted-foreground'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Clientes Gateway</span>
             </button>
 
             <button
@@ -306,7 +322,10 @@ function DeveloperBillingContent() {
         {/* Tab 2: Produtos AbacatePay & Planos Developer */}
         {activeTab === 'produtos' && <AbacateProductsManager />}
 
-        {/* Tab 3: Personalizar Checkout */}
+        {/* Tab 3: Clientes AbacatePay (Admins de Barbearias) */}
+        {activeTab === 'clientes' && <AbacateCustomersManager />}
+
+        {/* Tab 4: Personalizar Checkout */}
         {activeTab === 'checkout' && <CheckoutCustomizer />}
 
         {/* Subscriptions Table */}

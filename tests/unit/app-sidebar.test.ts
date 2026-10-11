@@ -67,12 +67,15 @@ describe('AppSidebar — Regras Estruturais e RBAC da Navegação Lateral shadcn
       expect(subTitles).toContain('Suspensas')
     })
 
-    it('marca funcionalidades futuras com badge "Em breve" e disabled', () => {
+    it('disponibiliza rotas ativas de Assinaturas (Ativas, Vencidas e Gestão Completa)', () => {
       const saasSection = sections.find((s) => s.label === 'SaaS & Faturamento')
       expect(saasSection).toBeDefined()
       const assItem = saasSection?.items.find((i) => i.title === 'Assinaturas')
-      expect(assItem?.items?.[0].badge).toBe('Em breve')
-      expect(assItem?.items?.[0].disabled).toBe(true)
+      expect(assItem).toBeDefined()
+      expect(assItem?.items?.[0].title).toBe('Ativas')
+      expect(assItem?.items?.[0].url).toBe('/developer/subscriptions/ativas')
+      expect(assItem?.items?.[1].title).toBe('Vencidas')
+      expect(assItem?.items?.[1].url).toBe('/developer/subscriptions/vencidas')
     })
   })
 
@@ -94,12 +97,15 @@ describe('AppSidebar — Regras Estruturais e RBAC da Navegação Lateral shadcn
       expect(allTitles).not.toContain('Dashboard SaaS')
     })
 
-    it('marca financeiro e planos planejados com badge "Em breve"', () => {
+    it('contém rotas ativas para financeiro e relatórios de BI', () => {
       const financeSection = sections.find((s) => s.label.includes('Financeiro'))
       expect(financeSection).toBeDefined()
       const pagItem = financeSection?.items.find((i) => i.title.includes('Pagamentos'))
-      expect(pagItem?.badge).toBe('Em breve')
-      expect(pagItem?.disabled).toBe(true)
+      expect(pagItem?.url).toBe('/dashboard/financeiro')
+      expect(pagItem?.disabled).toBeFalsy()
+      const relItem = financeSection?.items.find((i) => i.title.includes('Relatórios'))
+      expect(relItem?.url).toBe('/dashboard/relatorios')
+      expect(relItem?.disabled).toBeFalsy()
     })
   })
 

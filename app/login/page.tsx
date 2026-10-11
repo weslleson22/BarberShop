@@ -15,7 +15,6 @@ import {
   Clock, 
   CheckCircle2, 
   ShieldCheck, 
-  Sparkles, 
   AlertCircle,
   ArrowRight,
   Loader2
@@ -113,18 +112,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-white flex flex-col justify-between relative overflow-hidden font-sans selection:bg-blue-500 selection:text-white">
-      {/* Luzes de ambientação de fundo */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between relative font-sans selection:bg-blue-600 selection:text-white">
       {/* Barra superior de navegação rápida */}
-      <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
+      <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-gray-800 bg-gray-900">
         <div className="flex items-center space-x-2">
           <button
             onClick={() => router.back()}
-            className="flex items-center space-x-2 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-sm"
+            className="flex items-center space-x-2 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 border border-gray-800 transition-colors text-sm"
             title="Voltar à página anterior"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -132,17 +126,12 @@ export default function LoginPage() {
           </button>
           <Link
             href="/"
-            className="flex items-center space-x-2 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-sm"
+            className="flex items-center space-x-2 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 border border-gray-800 transition-colors text-sm"
             title="Página Inicial"
           >
             <Home className="w-4 h-4" />
             <span>Início</span>
           </Link>
-        </div>
-
-        <div className="flex items-center space-x-2 text-xs text-slate-400">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Sistema Operacional & Online</span>
         </div>
       </header>
 
@@ -154,73 +143,73 @@ export default function LoginPage() {
           <section className="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-between space-y-8 pr-4">
             <div className="space-y-6">
               {/* Badge de Plataforma */}
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold tracking-wide uppercase">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-md bg-gray-900 border border-gray-800 text-blue-400 text-xs font-semibold tracking-wide uppercase">
+                <Calendar className="w-3.5 h-3.5 text-blue-400" />
                 <span>Agendamentos Online</span>
               </div>
 
-              {/* Título de impacto universal */}
+              {/* Título universal sólido */}
               <div className="space-y-3">
-                <h1 className="text-4xl xl:text-5xl font-black tracking-tight text-white leading-tight">
+                <h1 className="text-4xl xl:text-5xl font-bold tracking-tight text-white leading-tight">
                   Seus agendamentos com rapidez,{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400">
+                  <span className="text-blue-400">
                     pontualidade e praticidade.
                   </span>
                 </h1>
-                <p className="text-slate-400 text-base xl:text-lg leading-relaxed max-w-xl">
+                <p className="text-gray-400 text-base xl:text-lg leading-relaxed max-w-xl">
                   Acesse para agendar novos horários, acompanhar seus serviços marcados e receber notificações em tempo real com total comodidade.
                 </p>
               </div>
 
               {/* Vitrine Visual: Preview da Plataforma de Agendamento */}
-              <div className="relative rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-950/90 p-4 shadow-2xl shadow-blue-950/40 backdrop-blur-xl overflow-hidden group">
-                <div className="relative h-64 xl:h-72 w-full rounded-xl overflow-hidden">
+              <div className="relative rounded-xl border border-gray-800 bg-gray-900 p-4 shadow-sm overflow-hidden group">
+                <div className="relative h-64 xl:h-72 w-full rounded-lg overflow-hidden bg-gray-950">
                   <Image
                     src="/images/scheduling-hero.jpg"
                     alt="Interface da Plataforma de Agendamentos"
                     fill
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                    className="object-cover object-center"
                     priority
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
+                  <div className="absolute inset-0 bg-black/40" />
                   
-                  {/* Card Flutuante Superior: Confirmação de Horário */}
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between bg-slate-900/90 border border-white/15 backdrop-blur-md rounded-xl p-3 shadow-lg">
+                  {/* Card Sólido Superior: Confirmação de Horário */}
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg p-3 shadow-md">
                     <div className="flex items-center space-x-3">
-                      <div className="w-9 h-9 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400">
+                      <div className="w-9 h-9 rounded-md bg-gray-800 border border-gray-700 flex items-center justify-center text-blue-400">
                         <Calendar className="w-5 h-5" />
                       </div>
                       <div>
                         <div className="text-xs font-semibold text-white">Horário Confirmado</div>
-                        <div className="text-[11px] text-slate-400">Lembretes automáticos e atualizações</div>
+                        <div className="text-[11px] text-gray-400">Lembretes automáticos e atualizações</div>
                       </div>
                     </div>
-                    <span className="flex items-center text-[11px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    <span className="flex items-center text-[11px] font-medium text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded">
                       <CheckCircle2 className="w-3 h-3 mr-1" /> Confirmado
                     </span>
                   </div>
 
-                  {/* Card Flutuante Inferior: Próximo Atendimento */}
-                  <div className="absolute bottom-3 left-3 right-3 bg-slate-900/90 border border-white/15 backdrop-blur-md rounded-xl p-3 shadow-lg flex items-center justify-between">
+                  {/* Card Sólido Inferior: Próximo Atendimento */}
+                  <div className="absolute bottom-3 left-3 right-3 bg-gray-900 border border-gray-800 rounded-lg p-3 shadow-md flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400">
+                      <div className="w-9 h-9 rounded-md bg-gray-800 border border-gray-700 flex items-center justify-center text-indigo-400">
                         <Clock className="w-5 h-5" />
                       </div>
                       <div>
                         <div className="text-xs font-semibold text-white">Próximo Agendamento</div>
-                        <div className="text-[11px] text-slate-400">Tudo pronto para o seu atendimento</div>
+                        <div className="text-[11px] text-gray-400">Tudo pronto para o seu atendimento</div>
                       </div>
                     </div>
-                    <span className="text-xs font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-2.5 py-1 rounded-lg">
+                    <span className="text-xs font-semibold text-blue-400 bg-gray-800 border border-gray-700 px-2.5 py-1 rounded">
                       14:30
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Métricas e Benefícios em Pílulas */}
+              {/* Métricas e Benefícios em Pílulas Sólidas */}
               <div className="grid grid-cols-3 gap-3 pt-2">
-                <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 backdrop-blur-sm">
+                <div className="rounded-lg border border-gray-800 bg-gray-900 p-3">
                   <div className="flex items-center space-x-1.5 text-blue-400 text-xs font-medium mb-1">
                     <Calendar className="w-3.5 h-3.5" />
                     <span>Em poucos cliques</span>
@@ -228,7 +217,7 @@ export default function LoginPage() {
                   <div className="text-sm font-semibold text-white">Agendamento Fácil</div>
                 </div>
 
-                <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 backdrop-blur-sm">
+                <div className="rounded-lg border border-gray-800 bg-gray-900 p-3">
                   <div className="flex items-center space-x-1.5 text-cyan-400 text-xs font-medium mb-1">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Notificações</span>
@@ -236,7 +225,7 @@ export default function LoginPage() {
                   <div className="text-sm font-semibold text-white">Lembretes de Horário</div>
                 </div>
 
-                <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 backdrop-blur-sm">
+                <div className="rounded-lg border border-gray-800 bg-gray-900 p-3">
                   <div className="flex items-center space-x-1.5 text-indigo-400 text-xs font-medium mb-1">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <span>Acesso Seguro</span>
@@ -249,21 +238,19 @@ export default function LoginPage() {
 
           {/* Coluna Direita: Formulário de Autenticação */}
           <section className="col-span-12 lg:col-span-6 xl:col-span-5 flex justify-center">
-            <div className="w-full max-w-md bg-slate-900/70 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60 backdrop-blur-2xl relative">
+            <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-md">
               
               {/* Cabeçalho do Card */}
               <div className="text-center mb-6 sm:mb-8">
                 {/* Logo da Plataforma */}
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 p-0.5 shadow-lg shadow-blue-500/25 mb-4">
-                  <div className="w-full h-full bg-[#0B1120] rounded-[14px] flex items-center justify-center">
-                    <Calendar className="w-7 h-7 text-blue-400" />
-                  </div>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white mb-4">
+                  <Calendar className="w-6 h-6 text-white" />
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                <h2 className="text-2xl font-bold tracking-tight text-white">
                   Acesse sua conta
                 </h2>
-                <p className="mt-2 text-sm text-slate-400">
+                <p className="mt-1.5 text-sm text-gray-400">
                   Informe seu e-mail e senha para acessar seus agendamentos
                 </p>
               </div>
@@ -272,7 +259,7 @@ export default function LoginPage() {
               {error && (
                 <div 
                   role="alert"
-                  className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 text-sm flex items-start space-x-3 animate-in fade-in duration-300"
+                  className="mb-6 p-3.5 rounded-lg bg-red-950/60 border border-red-800 text-red-200 text-sm flex items-start space-x-3"
                 >
                   <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1 font-medium">{error}</div>
@@ -283,11 +270,11 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                 {/* Campo de E-mail */}
                 <div>
-                  <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                  <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
                     E-mail
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                       <Mail className="w-4 h-4" />
                     </div>
                     <input
@@ -299,7 +286,7 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="seu.email@exemplo.com"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-950/60 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-gray-950 border border-gray-800 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -307,12 +294,12 @@ export default function LoginPage() {
                 {/* Campo de Senha */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                    <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-gray-300">
                       Senha
                     </label>
                   </div>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
@@ -324,12 +311,12 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-11 py-3 rounded-xl bg-slate-950/60 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                      className="w-full pl-10 pr-11 py-2.5 rounded-lg bg-gray-950 border border-gray-800 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white transition-colors"
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-white transition-colors"
                       title={showPassword ? 'Ocultar senha' : 'Ver senha'}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -339,17 +326,17 @@ export default function LoginPage() {
 
                 {/* Opção Lembrar E-mail */}
                 <div className="flex items-center justify-between pt-1 text-xs">
-                  <label className="flex items-center space-x-2 text-slate-400 cursor-pointer select-none hover:text-slate-300">
+                  <label className="flex items-center space-x-2 text-gray-400 cursor-pointer select-none hover:text-gray-300">
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500/40 focus:ring-offset-0 focus:ring-offset-transparent cursor-pointer"
+                      className="w-4 h-4 rounded border-gray-700 bg-gray-950 text-blue-600 focus:ring-0 cursor-pointer"
                     />
                     <span>Lembrar meu e-mail</span>
                   </label>
 
-                  <span className="text-slate-500 hover:text-slate-400 cursor-help" title="Entre em contato com o suporte ou gestor se esqueceu sua senha">
+                  <span className="text-gray-500 hover:text-gray-400 cursor-help" title="Entre em contato com o suporte ou gestor se esqueceu sua senha">
                     Ajuda com acesso?
                   </span>
                 </div>
@@ -359,7 +346,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed group"
+                    className="w-full py-3 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm transition-colors flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed group"
                   >
                     {loading ? (
                       <>
@@ -369,7 +356,7 @@ export default function LoginPage() {
                     ) : (
                       <>
                         <span>Entrar na Conta</span>
-                        <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
                       </>
                     )}
                   </button>
@@ -377,19 +364,19 @@ export default function LoginPage() {
               </form>
 
               {/* Rodapé do Card: Criar Conta */}
-              <div className="mt-8 pt-6 border-t border-white/10 text-center space-y-3">
-                <p className="text-sm text-slate-400">
+              <div className="mt-8 pt-6 border-t border-gray-800 text-center space-y-3">
+                <p className="text-sm text-gray-400">
                   Novo por aqui?{' '}
                   <Link 
                     href="/register" 
-                    className="font-semibold text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline transition-colors"
+                    className="font-medium text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline transition-colors"
                   >
                     Criar uma conta
                   </Link>
                 </p>
 
-                <div className="flex items-center justify-center space-x-1.5 text-[11px] text-slate-500">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/80" />
+                <div className="flex items-center justify-center space-x-1.5 text-[11px] text-gray-500">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Ambiente seguro e protegido</span>
                 </div>
               </div>
@@ -400,7 +387,7 @@ export default function LoginPage() {
       </main>
 
       {/* Rodapé Simples */}
-      <footer className="relative z-10 w-full py-4 text-center text-xs text-slate-500 border-t border-white/5 bg-slate-950/40">
+      <footer className="relative z-10 w-full py-4 text-center text-xs text-gray-500 border-t border-gray-800 bg-gray-900">
         Plataforma de Agendamentos &bull; Acesso para Clientes e Profissionais
       </footer>
     </div>

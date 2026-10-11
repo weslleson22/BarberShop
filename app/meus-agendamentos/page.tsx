@@ -105,7 +105,7 @@ export default function MeusAgendamentosPage() {
           </div>
           <Link
             href="/agendar"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all shadow-sm"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-colors"
           >
             <Plus className="w-4 h-4" />
             Novo Agendamento
@@ -115,9 +115,9 @@ export default function MeusAgendamentosPage() {
         <div className="flex gap-2 mb-6 border-b border-border">
           <button
             onClick={() => setTab('proximos')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
+            className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
               tab === 'proximos'
-                ? 'border-yellow-400 text-yellow-400'
+                ? 'border-amber-500 text-amber-500'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -125,9 +125,9 @@ export default function MeusAgendamentosPage() {
           </button>
           <button
             onClick={() => setTab('historico')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
+            className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
               tab === 'historico'
-                ? 'border-yellow-400 text-yellow-400'
+                ? 'border-amber-500 text-amber-500'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >

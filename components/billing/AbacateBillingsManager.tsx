@@ -22,8 +22,7 @@ import {
   X,
   Loader2,
   FileText,
-  ShieldCheck,
-  Sparkles
+  ShieldCheck
 } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
 import { UnifiedCharge } from '@/app/api/billing/charges/route'
@@ -287,8 +286,8 @@ export default function AbacateBillingsManager() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
-            <span>🥑</span>
-            <span>AbacatePay API v2</span>
+            <CreditCard className="w-4 h-4" />
+            <span>Gateway de Pagamentos</span>
           </div>
           <h2 className="text-2xl font-bold text-foreground">Gestão de Cobranças</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -497,7 +496,7 @@ export default function AbacateBillingsManager() {
                             className="p-1.5 rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
                             title="Simular Aprovação (Sandbox)"
                           >
-                            <Sparkles className="w-3.5 h-3.5" />
+                            <CheckCircle2 className="w-3.5 h-3.5" />
                           </button>
                         )}
 
@@ -527,10 +526,10 @@ export default function AbacateBillingsManager() {
           <div className="bg-card border border-border rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                  <span>🥑</span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                  <CreditCard className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground">Nova Cobrança AbacatePay</h3>
+                <h3 className="text-lg font-bold text-foreground">Nova Cobrança</h3>
               </div>
               <button
                 type="button"

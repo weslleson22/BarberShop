@@ -12,7 +12,6 @@ import {
   User,
   Users,
   Scissors,
-  Sparkles,
   Star,
   ArrowRight,
   CalendarDays,
@@ -383,7 +382,7 @@ export default function BarberTeamScheduler({
             onClick={() => setSelectedBarberFilter('all')}
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
               selectedBarberFilter === 'all'
-                ? 'bg-amber-400 text-black shadow-lg shadow-amber-500/20 font-bold'
+                ? 'bg-amber-400 text-black font-bold'
                 : 'bg-gray-800/80 hover:bg-gray-700/80 text-gray-300 border border-gray-700/60'
             }`}
           >
@@ -398,7 +397,7 @@ export default function BarberTeamScheduler({
               onClick={() => setSelectedBarberFilter(b.id)}
               className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
                 selectedBarberFilter === b.id
-                  ? 'bg-amber-400 text-black shadow-lg shadow-amber-500/20 font-bold'
+                  ? 'bg-amber-400 text-black font-bold'
                   : 'bg-gray-800/80 hover:bg-gray-700/80 text-gray-300 border border-gray-700/60'
               }`}
             >
@@ -431,11 +430,8 @@ export default function BarberTeamScheduler({
           return (
             <div
               key={barber.id}
-              className="rounded-3xl bg-gradient-to-b from-gray-900/90 via-gray-900/60 to-black/80 border border-gray-800 hover:border-amber-500/30 transition-all p-5 sm:p-7 shadow-2xl backdrop-blur-xl relative overflow-hidden"
+              className="rounded-2xl bg-gray-900 border border-gray-800 p-5 sm:p-7 relative overflow-hidden"
             >
-              {/* Efeito Glow Dourado de Fundo */}
-              <div className="absolute top-0 right-0 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-
               {/* 1. Header do Especialista */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-800/80">
                 <div className="flex items-center gap-4">
@@ -444,10 +440,10 @@ export default function BarberTeamScheduler({
                       <img
                         src={barber.avatar}
                         alt={barber.name}
-                        className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-amber-500/40 shadow-xl"
+                        className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-amber-500/40"
                       />
                     ) : (
-                      <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/10 border-2 border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-2xl shadow-xl">
+                      <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-2xl">
                         {barber.name.slice(0, 2).toUpperCase()}
                       </div>
                     )}
@@ -524,7 +520,7 @@ export default function BarberTeamScheduler({
                         }}
                         className={`flex flex-col items-center justify-center min-w-[70px] sm:min-w-[82px] py-3 px-2 rounded-2xl transition-all cursor-pointer border ${
                           isSelected
-                            ? 'bg-gradient-to-b from-amber-400 to-yellow-500 text-black border-yellow-300 shadow-lg shadow-amber-500/30 scale-105 font-bold'
+                            ? 'bg-amber-500 text-black border-amber-400 font-bold'
                             : day.isToday
                             ? 'bg-amber-500/10 text-amber-300 border-amber-500/40 hover:bg-amber-500/20'
                             : 'bg-gray-800/60 hover:bg-gray-800 text-gray-300 border-gray-700/60 hover:border-gray-600'
@@ -586,7 +582,7 @@ export default function BarberTeamScheduler({
                           }}
                           className={`py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
                             isChosen
-                              ? 'bg-amber-400 text-black border-amber-300 shadow-md shadow-amber-500/30 scale-105 font-bold'
+                              ? 'bg-amber-400 text-black border-amber-300 scale-105 font-bold'
                               : 'bg-gray-800/80 hover:bg-gray-700/80 text-gray-200 border-gray-700 hover:border-amber-400/50'
                           }`}
                         >
@@ -628,9 +624,9 @@ export default function BarberTeamScheduler({
                     <button
                       type="button"
                       onClick={() => handleOpenQuickBooking(barber, selectedDate, selectedTime)}
-                      className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <Sparkles className="w-4 h-4 text-black" />
+                      <Calendar className="w-4 h-4 text-black" />
                       <span>Agendar Agora</span>
                       <ArrowRight className="w-4 h-4 text-black" />
                     </button>
@@ -678,7 +674,7 @@ export default function BarberTeamScheduler({
 
             {quickBookingModal.success ? (
               <div className="py-8 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400 mx-auto shadow-lg shadow-emerald-500/20">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400 mx-auto">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
                 <h4 className="text-2xl font-bold text-white">Agendamento Realizado!</h4>
@@ -816,7 +812,7 @@ export default function BarberTeamScheduler({
                   <button
                     type="submit"
                     disabled={quickBookingModal.loading}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs sm:text-sm transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {quickBookingModal.loading ? (
                       <>

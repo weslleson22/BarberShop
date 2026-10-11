@@ -210,7 +210,7 @@ export default function ClientList({
                   <tr key={client.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-3 md:px-4 py-3 md:py-4">
                       <div className="flex items-center space-x-3 md:space-x-4">
-                        <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 md:w-14 md:h-14 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-black font-bold text-sm md:text-lg">
                             {client.name.charAt(0).toUpperCase()}
                           </span>
@@ -219,8 +219,8 @@ export default function ClientList({
                           <div className="flex items-center gap-2">
                             <p className="text-white font-semibold text-sm md:text-lg truncate">{client.name}</p>
                             {Boolean(client.isVip) && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-gradient-to-r from-yellow-400/20 to-amber-500/20 text-yellow-300 border border-yellow-400/30 flex-shrink-0 shadow-sm shadow-yellow-400/10">
-                                <Crown className="w-3 h-3 text-yellow-400" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/60 text-amber-300 border border-amber-800/60 flex-shrink-0">
+                                <Crown className="w-3 h-3 text-amber-400" />
                                 VIP
                               </span>
                             )}

@@ -37,6 +37,8 @@ import {
   Globe,
   Copy,
   Link2,
+  Package,
+  ShieldAlert,
 } from 'lucide-react'
 
 interface BarbershopData {
@@ -153,7 +155,7 @@ export default function DeveloperDashboardPage() {
   }
 
   // Abas de filtro de tenants
-  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'TRIALING' | 'EXPIRED'>('ALL')
+  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'TRIALING' | 'EXPIRED' | 'SUSPENDED' | 'CANCELLED'>('ALL')
 
   // Modal "Análise e Aprovação de Cadastro"
   const [selectedShopForApproval, setSelectedShopForApproval] = useState<BarbershopData | null>(null)
@@ -200,6 +202,17 @@ export default function DeveloperDashboardPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search)
+      const statusParam = searchParams.get('status')
+      if (statusParam === 'APPROVED' || statusParam === 'ACTIVE') {
+        setFilterTab('ACTIVE')
+      } else if (statusParam === 'PENDING') {
+        setFilterTab('PENDING')
+      } else if (statusParam === 'SUSPENDED') {
+        setFilterTab('SUSPENDED')
+      } else if (statusParam === 'CANCELLED' || statusParam === 'CANCELED') {
+        setFilterTab('CANCELLED')
+      }
+
       if (
         searchParams.get('action') === 'new' ||
         searchParams.get('novo') === 'true' ||
@@ -674,6 +687,10 @@ export default function DeveloperDashboardPage() {
   ).length
   const trialingCount = barbershops.filter((s) => s.trial?.status === 'TRIALING').length
   const expiredCount = barbershops.filter((s) => s.trial?.status === 'EXPIRED').length
+  const suspendedCount = barbershops.filter((s) => s.status === 'SUSPENDED' || s.subscriptionStatus === 'SUSPENDED').length
+  const cancelledCount = barbershops.filter(
+    (s) => s.status === 'CANCELLED' || s.status === 'CANCELED' || s.subscriptionStatus === 'CANCELED'
+  ).length
 
   const filteredBarbershops = barbershops.filter((shop) => {
     if (filterTab === 'PENDING' && shop.status !== 'PENDING') return false
@@ -685,6 +702,14 @@ export default function DeveloperDashboardPage() {
     if (filterTab === 'INACTIVE' && shop.isActive && shop.status !== 'REJECTED') return false
     if (filterTab === 'TRIALING' && shop.trial?.status !== 'TRIALING') return false
     if (filterTab === 'EXPIRED' && shop.trial?.status !== 'EXPIRED') return false
+    if (filterTab === 'SUSPENDED' && shop.status !== 'SUSPENDED' && shop.subscriptionStatus !== 'SUSPENDED') return false
+    if (
+      filterTab === 'CANCELLED' &&
+      shop.status !== 'CANCELLED' &&
+      shop.status !== 'CANCELED' &&
+      shop.subscriptionStatus !== 'CANCELED'
+    )
+      return false
 
     const q = searchTerm.toLowerCase().trim()
     if (!q) return true
@@ -727,18 +752,18 @@ export default function DeveloperDashboardPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <Link
               href="/developer/billing"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-lime-500 hover:from-emerald-600 hover:to-lime-600 text-slate-950 font-bold rounded-lg text-sm shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02]"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-medium border border-gray-700 rounded-lg text-sm transition-colors"
             >
-              <CreditCard className="h-4 w-4 text-slate-950" />
-              <span>Faturamento & AbacatePay</span>
+              <CreditCard className="h-4 w-4 text-emerald-400" />
+              <span>Faturamento & Gateway</span>
             </Link>
 
             <Link
               href="/developer/onboarding"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-lg text-sm shadow-lg shadow-purple-600/20 transition-all hover:scale-[1.02]"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-medium border border-gray-700 rounded-lg text-sm transition-colors"
             >
-              <Users className="h-4 w-4" />
-              Cockpit Onboarding (5–10 Clientes)
+              <Users className="h-4 w-4 text-blue-400" />
+              <span>Cockpit Onboarding</span>
             </Link>
 
             <button
@@ -746,7 +771,7 @@ export default function DeveloperDashboardPage() {
                 setFormError(null)
                 setIsAddModalOpen(true)
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02]"
+              className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-sm transition-colors cursor-pointer"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               Nova Empresa
@@ -790,21 +815,22 @@ export default function DeveloperDashboardPage() {
           </div>
         )}
 
-        {/* Hub de Faturamento, AbacatePay, Planos & Assinaturas */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm space-y-4">
+        {/* Hub de Faturamento, Gateway, Planos & Assinaturas */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">
-                <span>🥑 AbacatePay & SaaS Billing</span>
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Gestão Financeira SaaS</span>
               </div>
-              <h2 className="text-xl font-bold text-white">Gestão Financeira & Produtos</h2>
+              <h2 className="text-xl font-bold text-white">Faturamento & Planos</h2>
               <p className="text-xs text-gray-400 mt-0.5">
-                Controle direto de assinaturas das barbearias, cobranças geradas, produtos na AbacatePay e planos cadastrados.
+                Controle direto de assinaturas das barbearias, cobranças geradas e planos cadastrados.
               </p>
             </div>
             <Link
               href="/developer/billing"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-md transition self-start sm:self-auto cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors self-start sm:self-auto cursor-pointer"
             >
               <span>Abrir Faturamento Completo</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -812,14 +838,14 @@ export default function DeveloperDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
-            {/* Card 1: Cobranças AbacatePay */}
+            {/* Card 1: Cobranças Gateway */}
             <Link
               href="/developer/billing?tab=cobrancas"
-              className="bg-slate-950/60 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-xl transition group flex flex-col justify-between cursor-pointer"
+              className="bg-gray-950 border border-gray-800 hover:border-gray-700 p-4 rounded-xl transition-colors group flex flex-col justify-between cursor-pointer"
             >
               <div className="flex items-center justify-between text-gray-400 group-hover:text-emerald-400 mb-2">
-                <span className="text-xs font-semibold">Cobranças AbacatePay</span>
-                <span className="text-base">🥑</span>
+                <span className="text-xs font-semibold">Cobranças Gateway</span>
+                <CreditCard className="w-4 h-4 text-emerald-400" />
               </div>
               <div className="text-xs text-gray-300">
                 Histórico de cobranças, links de checkout e liquidações PIX/Cartão.
@@ -831,12 +857,12 @@ export default function DeveloperDashboardPage() {
 
             {/* Card 2: Assinaturas SaaS */}
             <Link
-              href="/developer/billing?tab=subscriptions"
-              className="bg-slate-950/60 border border-slate-800 hover:border-blue-500/50 p-4 rounded-xl transition group flex flex-col justify-between cursor-pointer"
+              href="/developer/subscriptions"
+              className="bg-gray-950 border border-gray-800 hover:border-gray-700 p-4 rounded-xl transition-colors group flex flex-col justify-between cursor-pointer"
             >
               <div className="flex items-center justify-between text-gray-400 group-hover:text-blue-400 mb-2">
                 <span className="text-xs font-semibold">Assinaturas SaaS</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-950 text-blue-400 border border-blue-800/60 font-mono">
                   {barbershops.filter(b => b.subscriptionStatus === 'ACTIVE' || b.isActive).length} ativas
                 </span>
               </div>
@@ -848,17 +874,17 @@ export default function DeveloperDashboardPage() {
               </span>
             </Link>
 
-            {/* Card 3: Seus Produtos no AbacatePay */}
+            {/* Card 3: Produtos no Gateway */}
             <Link
               href="/developer/billing?tab=produtos"
-              className="bg-slate-950/60 border border-slate-800 hover:border-amber-500/50 p-4 rounded-xl transition group flex flex-col justify-between cursor-pointer"
+              className="bg-gray-950 border border-gray-800 hover:border-gray-700 p-4 rounded-xl transition-colors group flex flex-col justify-between cursor-pointer"
             >
               <div className="flex items-center justify-between text-gray-400 group-hover:text-amber-400 mb-2">
-                <span className="text-xs font-semibold">Produtos no AbacatePay</span>
-                <span className="text-base">📦</span>
+                <span className="text-xs font-semibold">Produtos no Gateway</span>
+                <Package className="w-4 h-4 text-amber-400" />
               </div>
               <div className="text-xs text-gray-300">
-                Seus produtos cadastrados e sincronizados com a API da AbacatePay.
+                Seus produtos cadastrados e sincronizados com a API de pagamento.
               </div>
               <span className="text-[11px] text-amber-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
                 Gerenciar produtos →
@@ -868,11 +894,11 @@ export default function DeveloperDashboardPage() {
             {/* Card 4: Planos Cadastrados pelo Developer */}
             <Link
               href="/developer/billing?tab=produtos"
-              className="bg-slate-950/60 border border-slate-800 hover:border-purple-500/50 p-4 rounded-xl transition group flex flex-col justify-between cursor-pointer"
+              className="bg-gray-950 border border-gray-800 hover:border-gray-700 p-4 rounded-xl transition-colors group flex flex-col justify-between cursor-pointer"
             >
               <div className="flex items-center justify-between text-gray-400 group-hover:text-purple-400 mb-2">
                 <span className="text-xs font-semibold">Planos Cadastrados</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 font-mono">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-950 text-purple-400 border border-purple-800/60 font-mono">
                   Developer
                 </span>
               </div>
@@ -1000,7 +1026,7 @@ export default function DeveloperDashboardPage() {
                   setFormError(null)
                   setIsAddModalOpen(true)
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors cursor-pointer"
               >
                 <Plus className="h-4 w-4 stroke-[2.5]" />
                 Cadastrar Empresa
@@ -1149,6 +1175,45 @@ export default function DeveloperDashboardPage() {
                 {inactiveCount}
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setFilterTab('SUSPENDED')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                filterTab === 'SUSPENDED'
+                  ? 'bg-orange-500 text-black font-semibold shadow-sm'
+                  : 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/10'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>Suspensas</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  filterTab === 'SUSPENDED' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-orange-300'
+                }`}
+              >
+                {suspendedCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFilterTab('CANCELLED')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                filterTab === 'CANCELLED'
+                  ? 'bg-gray-700 text-white font-semibold shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <span>Canceladas</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  filterTab === 'CANCELLED' ? 'bg-black/20 text-white font-bold' : 'bg-gray-800 text-gray-400'
+                }`}
+              >
+                {cancelledCount}
+              </span>
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -1192,7 +1257,7 @@ export default function DeveloperDashboardPage() {
                               setFormError(null)
                               setIsAddModalOpen(true)
                             }}
-                            className="mt-2 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-xs shadow-lg shadow-amber-500/20 transition hover:scale-105 cursor-pointer"
+                            className="mt-2 flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors cursor-pointer"
                           >
                             <Plus className="h-4 w-4 stroke-[2.5]" />
                             Cadastrar Primeira Empresa
@@ -1347,7 +1412,7 @@ export default function DeveloperDashboardPage() {
                             <button
                               type="button"
                               onClick={() => handleOpenApprovalModal(shop)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black shadow-md shadow-amber-500/20 transition hover:scale-[1.02] cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-black transition-colors cursor-pointer"
                               title="Analisar solicitação de cadastro e aprovar"
                             >
                               <ShieldCheck className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -1717,7 +1782,7 @@ export default function DeveloperDashboardPage() {
                 <button
                   type="submit"
                   disabled={isSubmittingShop}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold rounded-lg text-sm transition shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-sm transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmittingShop ? (
                     <>
@@ -1993,7 +2058,7 @@ export default function DeveloperDashboardPage() {
                       type="button"
                       onClick={handleUpdateContract}
                       disabled={isUpdatingContract}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs transition disabled:opacity-50 cursor-pointer shadow-md shadow-emerald-600/20"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs transition disabled:opacity-50 cursor-pointer"
                     >
                       {isUpdatingContract ? (
                         <>
@@ -2101,7 +2166,7 @@ export default function DeveloperDashboardPage() {
       {/* Modal "Análise e Aprovação de Cadastro" */}
       {selectedShopForApproval && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-gray-900 border border-amber-500/40 rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl shadow-amber-500/10 relative my-8 animate-in fade-in duration-200">
+          <div className="bg-gray-900 border border-amber-500/40 rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-in fade-in duration-200">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-6">
               <div className="flex items-center gap-3">
@@ -2368,7 +2433,7 @@ export default function DeveloperDashboardPage() {
                   type="button"
                   onClick={() => handleProcessApproval('APPROVED')}
                   disabled={isProcessingApproval}
-                  className="flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-lg text-xs shadow-lg shadow-emerald-600/20 transition hover:scale-[1.02] disabled:opacity-50 cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isProcessingApproval ? (
                     <>

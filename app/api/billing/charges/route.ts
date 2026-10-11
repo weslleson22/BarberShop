@@ -6,6 +6,7 @@ import {
   listAbacateTransparents,
   createAbacateCheckoutSession,
   createAbacateBoleto,
+  resolveAbacateCustomerId,
   getAbacateApiKey,
   ABACATEPAY_BASE_URL,
 } from '@/lib/billing/abacatepay-provider'
@@ -220,6 +221,15 @@ export async function POST(request: NextRequest) {
 
     // 1. Cobrança Transparente via PIX
     if (method === 'PIX') {
+      const resolvedCustomerId = await resolveAbacateCustomerId({
+        barbershopId: user.barbershopId || undefined,
+        email: customerEmail || user.email,
+        name: customerName || user.name,
+        phone: customerPhone || (user as any).phone,
+        taxId: customerTaxId,
+        userId: user.id,
+      })
+
       const payload: any = {
         method: 'PIX',
         data: {
@@ -237,6 +247,10 @@ export async function POST(request: NextRequest) {
             planId: planId || null,
           },
         },
+      }
+
+      if (resolvedCustomerId) {
+        payload.data.customerId = resolvedCustomerId
       }
 
       try {

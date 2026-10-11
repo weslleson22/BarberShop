@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home, Star, Award, CheckCircle2, Scissors, Sparkles, Shield, AlertTriangle, RefreshCw } from 'lucide-react'
+import { ArrowRight, Clock, User, Calendar, ArrowLeft, Home, Star, Award, CheckCircle2, Scissors, Info, Shield, AlertTriangle, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { maskPhone, maskName as maskNameShared, maskEmail as maskEmailShared } from '@/lib/utils'
@@ -473,7 +473,7 @@ export default function AgendarPage() {
             <div className="space-y-3">
               <Link
                 href="/login?redirect=/agendar"
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-semibold rounded-xl text-sm transition-all shadow-lg shadow-yellow-500/20"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl text-sm transition-all"
               >
                 <span>Entrar com Login de Cliente</span>
                 <ArrowRight className="w-4 h-4" />
@@ -509,7 +509,7 @@ export default function AgendarPage() {
             <div className="space-y-3">
               <Link
                 href={user.role === 'DEVELOPER' ? '/developer' : '/dashboard'}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl text-sm transition-all shadow-lg shadow-yellow-500/20"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl text-sm transition-all"
               >
                 <span>Ir para o Painel de Gestão</span>
                 <ArrowRight className="w-4 h-4" />
@@ -554,22 +554,22 @@ export default function AgendarPage() {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
-            <div className={`flex items-center ${step >= 1 ? 'text-yellow-400' : 'text-white/40'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black' : 'bg-white/10'}`}>
+            <div className={`flex items-center ${step >= 1 ? 'text-amber-400' : 'text-white/40'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-amber-500 text-black' : 'bg-white/10'}`}>
                 1
               </div>
               <span className="ml-2">Serviço</span>
             </div>
             <ArrowRight className="w-4 h-4 text-white/40" />
-            <div className={`flex items-center ${step >= 2 ? 'text-yellow-400' : 'text-white/40'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black' : 'bg-white/10'}`}>
+            <div className={`flex items-center ${step >= 2 ? 'text-amber-400' : 'text-white/40'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 2 ? 'bg-amber-500 text-black' : 'bg-white/10'}`}>
                 2
               </div>
               <span className="ml-2">Profissional</span>
             </div>
             <ArrowRight className="w-4 h-4 text-white/40" />
-            <div className={`flex items-center ${step >= 3 ? 'text-yellow-400' : 'text-white/40'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black' : 'bg-white/10'}`}>
+            <div className={`flex items-center ${step >= 3 ? 'text-amber-400' : 'text-white/40'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 3 ? 'bg-amber-500 text-black' : 'bg-white/10'}`}>
                 3
               </div>
               <span className="ml-2">Horário</span>
@@ -591,7 +591,7 @@ export default function AgendarPage() {
                   <div
                     key={service.id}
                     onClick={() => handleServiceSelect(service)}
-                    className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6 cursor-pointer hover:bg-white/10 transition-all border-2 border-transparent hover:border-yellow-400/50"
+                    className="bg-gray-900 border border-gray-800 rounded-xl p-6 cursor-pointer hover:border-amber-500 transition-all"
                   >
                     <h3 className="text-lg font-semibold mb-2 text-white">{service.name}</h3>
                     {service.description && (
@@ -633,17 +633,17 @@ export default function AgendarPage() {
                   <div
                     key={barber.id}
                     onClick={() => handleBarberSelect(barber)}
-                    className={`relative group bg-gradient-to-br from-gray-800/60 to-black/60 border rounded-2xl p-5 md:p-6 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+                    className={`relative group bg-gray-900 border rounded-2xl p-5 md:p-6 cursor-pointer transition-all ${
                       isSelected
-                        ? 'border-yellow-400 ring-2 ring-yellow-400/40 bg-yellow-400/5'
-                        : 'border-white/10 hover:border-yellow-400/50 hover:bg-white/[0.04]'
+                        ? 'border-amber-500 bg-amber-500/10'
+                        : 'border-gray-800 hover:border-amber-500/50'
                     }`}
                   >
                     {/* Header do Card com Foto, Status e Informações */}
                     <div className="flex items-start gap-4">
                       {/* Avatar / Foto */}
                       <div className="relative flex-shrink-0">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 p-0.5 shadow-lg shadow-black/50">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-amber-500 p-0.5">
                           <div className="w-full h-full bg-gray-900 rounded-[14px] overflow-hidden flex items-center justify-center">
                             {barber.avatar ? (
                               <img
@@ -734,8 +734,8 @@ export default function AgendarPage() {
                         type="button"
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-yellow-400 text-black shadow-md shadow-yellow-400/20'
-                            : 'bg-white/10 text-white group-hover:bg-yellow-400 group-hover:text-black'
+                            ? 'bg-amber-500 text-black font-semibold'
+                            : 'bg-white/10 text-white group-hover:bg-amber-500 group-hover:text-black'
                         }`}
                       >
                         {isSelected ? 'Selecionado' : 'Escolher Profissional'}
@@ -755,15 +755,15 @@ export default function AgendarPage() {
             <h2 className="text-2xl font-bold text-center mb-8 text-white">Escolha o Horário</h2>
             
             {/* Selected Service and Barber Summary */}
-            <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4 mb-6">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-white/60">Serviço</p>
                   <p className="font-medium text-white">{selectedService?.name}</p>
-                  <p className="text-yellow-400">{selectedService && formatCurrency(selectedService.price)}</p>
+                  <p className="text-amber-400">{selectedService && formatCurrency(selectedService.price)}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center flex-shrink-0 border border-yellow-400/30">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-amber-500 flex items-center justify-center flex-shrink-0 border border-amber-400">
                     {selectedBarber?.avatar ? (
                       <img src={selectedBarber.avatar} alt={selectedBarber.name} className="w-full h-full object-cover" />
                     ) : (
@@ -812,9 +812,9 @@ export default function AgendarPage() {
                         disabled={!slot.isAvailable}
                         className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
                           selectedTime === slot
-                            ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black border-yellow-400'
+                            ? 'bg-amber-500 text-black border-amber-500 font-semibold'
                             : slot.isAvailable
-                            ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-yellow-400/50 cursor-pointer'
+                            ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-amber-400 cursor-pointer'
                             : 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed'
                         }`}
                       >
@@ -828,7 +828,7 @@ export default function AgendarPage() {
 
             {/* Client Information */}
             {selectedTime && (
-              <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-6">
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <h3 className="text-lg font-semibold mb-4 text-white">Seus Dados</h3>
                 <div className="space-y-4">
                   <div>
@@ -879,7 +879,7 @@ export default function AgendarPage() {
                 <button
                   onClick={handleBooking}
                   disabled={loading || !clientData.name.trim() || clientData.phone.replace(/\D/g, '').length < 10}
-                  className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black py-3 px-4 rounded-xl font-medium hover:from-yellow-500 hover:to-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full mt-6 bg-amber-500 hover:bg-amber-400 text-black py-3 px-4 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {loading ? 'Agendando...' : 'Confirmar Agendamento'}
                 </button>
@@ -915,8 +915,8 @@ export default function AgendarPage() {
               </p>
             </div>
 
-            <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center gap-2">
+              <Info className="w-4 h-4 text-amber-400 shrink-0" />
               <span>A grade de horários da barbearia foi atualizada automaticamente para você.</span>
             </div>
 
@@ -924,7 +924,7 @@ export default function AgendarPage() {
               <button
                 type="button"
                 onClick={() => setConflictState(null)}
-                className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-xl transition cursor-pointer"
               >
                 Escolher outro horário
               </button>

@@ -195,8 +195,8 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
-      <div className="modal-responsive bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
+      <div className="modal-responsive bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-white">
@@ -300,16 +300,16 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
           </div>
 
           {/* Cliente VIP Toggle */}
-          <div className="flex items-center justify-between p-3 md:p-3.5 bg-gradient-to-r from-yellow-400/10 via-amber-400/5 to-transparent border border-yellow-400/20 rounded-lg md:rounded-xl">
+          <div className="flex items-center justify-between p-3 md:p-3.5 bg-gray-950 border border-amber-500/30 rounded-lg md:rounded-xl">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-yellow-400/20 flex items-center justify-center flex-shrink-0">
-                <Crown className="w-4 h-4 text-yellow-400" />
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <Crown className="w-4 h-4 text-amber-400" />
               </div>
               <div>
                 <p className="text-white text-xs md:text-sm font-semibold flex items-center gap-1.5">
                   Cliente VIP
                   {formData.isVip && (
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800/60">
                       Ativo
                     </span>
                   )}
@@ -327,7 +327,7 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
                 onChange={(e) => setFormData((prev) => ({ ...prev, isVip: e.target.checked }))}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-400"></div>
+              <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
             </label>
           </div>
 
@@ -343,7 +343,7 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
             <button
               type="submit"
               disabled={loading || !isFormValid}
-              className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+              className="px-4 md:px-6 py-2.5 md:py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg md:rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>

@@ -137,7 +137,7 @@ export default function NewAgendarPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-black pt-20">
+    <div className="min-h-screen bg-gray-950 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
       
@@ -145,7 +145,7 @@ export default function NewAgendarPage() {
       <div className="w-full px-4 md:px-6">
         <div className="p-6">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6">
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-white">Agendar Horário</h2>
                 <p className="text-white/60">
@@ -324,7 +324,7 @@ export default function NewAgendarPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all font-medium disabled:opacity-50"
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-xl transition-all font-semibold disabled:opacity-50"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (

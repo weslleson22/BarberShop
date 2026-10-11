@@ -25,7 +25,6 @@ import {
   ChevronsUpDown,
   LogOut,
   Bell,
-  Sparkles,
   Store,
   Layers,
   Activity,
@@ -166,11 +165,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:!p-0"
                 >
                   {shopLogo ? (
-                    <div className="flex aspect-square size-9 items-center justify-center rounded-lg overflow-hidden border border-amber-500/30 bg-black/50 shadow-md shadow-amber-500/10">
+                    <div className="flex aspect-square size-9 items-center justify-center rounded-lg overflow-hidden border border-amber-500/30 bg-black/50">
                       <img src={shopLogo} alt={shopName} className="size-full object-cover" />
                     </div>
                   ) : (
-                    <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 text-black shadow-md shadow-amber-500/20">
+                    <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-amber-500 text-black">
                       <OrgIcon className="size-5 font-bold" />
                     </div>
                   )}

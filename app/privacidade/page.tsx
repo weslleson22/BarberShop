@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#060911] via-[#090D16] to-[#030509] text-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-950 text-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-10">
         
         {/* Navigation & Header */}
@@ -21,7 +21,7 @@ export default function PrivacyPolicyPage() {
             Voltar ao Início
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-xl shadow-blue-500/10">
+            <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white">
               <Shield className="w-6 h-6" />
             </div>
             <div>
@@ -172,7 +172,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Seção 5: Canal do Encarregado (DPO) e Contato */}
-        <section className="p-6 rounded-2xl bg-gradient-to-r from-blue-600/15 via-cyan-500/10 to-transparent border border-blue-500/30 space-y-4">
+        <section className="p-6 rounded-2xl bg-gray-900 border border-gray-800 space-y-4">
           <div>
             <h3 className="font-bold text-white text-base flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-blue-400" />

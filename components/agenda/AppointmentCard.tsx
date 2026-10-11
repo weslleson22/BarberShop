@@ -122,7 +122,7 @@ export default function AppointmentCard({
   const StatusIcon = statusInfo.icon
 
   return (
-    <div className={`bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-xl p-3 md:p-4 hover:border-white/20 transition-all duration-300 relative z-10 ${
+    <div className={`bg-gray-900 border border-gray-800 rounded-lg md:rounded-xl p-3 md:p-4 hover:border-gray-700 transition-all relative z-10 ${
       appointment.status === 'CANCELLED' ? 'opacity-70' : ''
     }`}>
       {/* Header */}
@@ -130,17 +130,17 @@ export default function AppointmentCard({
         <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
           <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
             appointment.status === 'CANCELLED' 
-              ? 'bg-gradient-to-br from-red-400/20 to-red-600/20 border border-red-400/30'
+              ? 'bg-red-950/60 border border-red-800/60'
               : appointment.status === 'COMPLETED'
-              ? 'bg-gradient-to-br from-green-400/20 to-green-600/20 border border-green-400/30'
-              : 'bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30'
+              ? 'bg-emerald-950/60 border border-emerald-800/60'
+              : 'bg-amber-950/60 border border-amber-800/60'
           }`}>
             <Clock className={`w-4 h-4 md:w-5 md:h-5 ${
               appointment.status === 'CANCELLED' 
                 ? 'text-red-400' 
                 : appointment.status === 'COMPLETED'
-                ? 'text-green-400'
-                : 'text-yellow-400'
+                ? 'text-emerald-400'
+                : 'text-amber-400'
             }`} />
           </div>
           <div className="min-w-0">
@@ -253,8 +253,8 @@ export default function AppointmentCard({
           <div className="flex items-center space-x-2 md:space-x-3">
             <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
               appointment.status === 'CANCELLED'
-                ? 'bg-gradient-to-br from-gray-400 to-gray-600'
-                : 'bg-gradient-to-br from-blue-400 to-blue-600'
+                ? 'bg-gray-700'
+                : 'bg-blue-600'
             }`}>
               <span className="text-white font-bold text-xs md:text-sm">
                 {appointment.client?.name ? appointment.client.name.charAt(0).toUpperCase() : 'C'}
@@ -266,8 +266,8 @@ export default function AppointmentCard({
                   appointment.status === 'CANCELLED' ? 'text-white/60' : 'text-white'
                 }`}>{appointment.client?.name || 'Cliente'}</p>
                 {Boolean(appointment.isVip || appointment.client?.isVip) && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] md:text-[11px] font-bold bg-gradient-to-r from-yellow-400/20 to-amber-500/20 text-yellow-300 border border-yellow-400/40 flex-shrink-0 shadow-sm shadow-yellow-400/10">
-                    <Crown className="w-2.5 h-2.5 text-yellow-400" />
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] md:text-[11px] font-bold bg-amber-950/60 text-amber-300 border border-amber-800/60 flex-shrink-0">
+                    <Crown className="w-2.5 h-2.5 text-amber-400" />
                     VIP
                   </span>
                 )}
@@ -286,8 +286,8 @@ export default function AppointmentCard({
           <div className="flex items-center space-x-2 md:space-x-3">
             <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${
               appointment.status === 'CANCELLED'
-                ? 'bg-gradient-to-br from-gray-400 to-gray-600'
-                : 'bg-gradient-to-br from-yellow-400 to-yellow-600'
+                ? 'bg-gray-700'
+                : 'bg-amber-500'
             }`}>
               {appointment.barber?.avatar ? (
                 <img

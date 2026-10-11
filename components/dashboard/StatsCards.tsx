@@ -10,7 +10,8 @@ interface StatCard {
   change: number
   changeType: 'increase' | 'decrease'
   icon: any
-  gradient: string
+  iconBg: string
+  iconColor: string
 }
 
 interface DashboardStats {
@@ -105,7 +106,8 @@ export default function StatsCards() {
       change: stats.appointments.change,
       changeType: stats.appointments.changeType,
       icon: Calendar,
-      gradient: 'from-blue-500 to-blue-600'
+      iconBg: 'bg-blue-950 border border-blue-800/60',
+      iconColor: 'text-blue-400',
     })
 
     // ADMIN e BARBER veem clientes
@@ -116,7 +118,8 @@ export default function StatsCards() {
         change: stats.clients.change,
         changeType: stats.clients.changeType,
         icon: Users,
-        gradient: 'from-purple-500 to-purple-600'
+        iconBg: 'bg-purple-950 border border-purple-800/60',
+        iconColor: 'text-purple-400',
       })
     }
 
@@ -128,7 +131,8 @@ export default function StatsCards() {
         change: stats.revenue.change,
         changeType: stats.revenue.changeType,
         icon: DollarSign,
-        gradient: 'from-green-500 to-green-600'
+        iconBg: 'bg-emerald-950 border border-emerald-800/60',
+        iconColor: 'text-emerald-400',
       })
 
       statCards.push({
@@ -137,7 +141,8 @@ export default function StatsCards() {
         change: stats.averageTicket.change,
         changeType: stats.averageTicket.changeType,
         icon: TrendingUp,
-        gradient: 'from-orange-500 to-orange-600'
+        iconBg: 'bg-amber-950 border border-amber-800/60',
+        iconColor: 'text-amber-400',
       })
     }
 
@@ -149,7 +154,8 @@ export default function StatsCards() {
         change: stats.appointments.change,
         changeType: stats.appointments.changeType,
         icon: Calendar,
-        gradient: 'from-blue-500 to-blue-600'
+        iconBg: 'bg-blue-950 border border-blue-800/60',
+        iconColor: 'text-blue-400',
       })
     }
 
@@ -162,13 +168,13 @@ export default function StatsCards() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 animate-pulse">
+          <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 animate-pulse">
             <div className="flex items-center justify-between mb-3 md:mb-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-lg md:rounded-xl"></div>
-              <div className="w-14 h-5 md:w-16 md:h-6 bg-white/10 rounded-lg"></div>
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-lg md:rounded-xl"></div>
+              <div className="w-14 h-5 md:w-16 md:h-6 bg-gray-800 rounded-lg"></div>
             </div>
-            <div className="w-20 h-6 md:w-24 md:h-8 bg-white/10 rounded-lg mb-1 md:mb-2"></div>
-            <div className="w-16 h-3 md:w-20 md:h-4 bg-white/10 rounded-lg"></div>
+            <div className="w-20 h-6 md:w-24 md:h-8 bg-gray-800 rounded-lg mb-1 md:mb-2"></div>
+            <div className="w-16 h-3 md:w-20 md:h-4 bg-gray-800 rounded-lg"></div>
           </div>
         ))}
       </div>
@@ -178,7 +184,7 @@ export default function StatsCards() {
   if (!stats) {
     return (
       <div className="text-center py-8 md:py-12">
-        <p className="text-white/60 text-sm md:text-base">Erro ao carregar estatísticas</p>
+        <p className="text-gray-400 text-sm md:text-base">Erro ao carregar estatísticas</p>
       </div>
     )
   }
@@ -192,16 +198,16 @@ export default function StatsCards() {
         return (
           <div
             key={index}
-            className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-white/10 transition-all duration-300 min-w-0"
+            className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-gray-700 transition-colors min-w-0"
           >
             <div className="flex items-start justify-between mb-3 md:mb-4">
-              <div className={`w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br ${stat.gradient} rounded-lg md:rounded-xl flex items-center justify-center`}>
-                <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              <div className={`w-10 h-10 md:w-12 md:h-12 ${stat.iconBg} rounded-lg md:rounded-xl flex items-center justify-center`}>
+                <Icon className={`w-5 h-5 md:w-6 md:h-6 ${stat.iconColor}`} />
               </div>
               <div className={`flex items-center space-x-1 px-2 py-1 rounded-lg ${
                 isPositive 
-                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                  : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/60' 
+                  : 'bg-red-950 text-red-400 border border-red-800/60'
               }`}>
                 {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                 <span className="text-xs md:text-sm font-medium">
@@ -211,9 +217,9 @@ export default function StatsCards() {
             </div>
             
             <div>
-              <p className="text-white/60 text-xs md:text-sm mb-1">{stat.title}</p>
+              <p className="text-gray-400 text-xs md:text-sm mb-1">{stat.title}</p>
               <p className="text-lg md:text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-white/40 text-xs mt-1">
+              <p className="text-gray-500 text-xs mt-1">
                 vs. semana anterior
               </p>
             </div>

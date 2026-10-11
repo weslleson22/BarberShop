@@ -32,10 +32,8 @@ export default function Header() {
           
           {/* Logo da Plataforma */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 p-0.5 shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/35 transition-all">
-              <div className="w-full h-full bg-[#0B1120] rounded-[10px] flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
-              </div>
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+              <Calendar className="w-5 h-5 text-white" />
             </div>
             <div>
               <span className="text-xl font-bold tracking-tight text-white block leading-none">
@@ -60,7 +58,7 @@ export default function Header() {
             {user ? (
               <Link
                 href={getUserDestination()}
-                className="px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2"
+                className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-colors flex items-center space-x-2"
               >
                 <User className="w-4 h-4 text-blue-100" />
                 <span>{getUserLabel()}</span>
@@ -78,11 +76,11 @@ export default function Header() {
 
                 <Link
                   href="/login"
-                  className="px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2 group"
+                  className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-colors flex items-center space-x-2 group"
                 >
                   <LogIn className="w-4 h-4 text-blue-100" />
                   <span>Entrar na Conta</span>
-                  <ArrowRight className="w-4 h-4 text-blue-100 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 text-blue-100 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </>
             )}
@@ -102,7 +100,7 @@ export default function Header() {
 
         {/* Menu Mobile */}
         {isMenuOpen && (
-          <div className="md:hidden bg-[#0B1120]/95 backdrop-blur-2xl border-t border-white/10 py-6 px-4 space-y-4 rounded-b-2xl shadow-2xl animate-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden bg-gray-900 border-t border-gray-800 py-6 px-4 space-y-4 rounded-b-2xl shadow-xl animate-in slide-in-from-top-2 duration-200">
             <nav className="flex flex-col space-y-3 text-base font-medium text-slate-300">
               <a
                 href="#home"
@@ -139,7 +137,7 @@ export default function Header() {
                 <Link
                   href={getUserDestination()}
                   onClick={() => setIsMenuOpen(false)}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2"
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center space-x-2"
                 >
                   <User className="w-4 h-4" />
                   <span>{getUserLabel()}</span>
@@ -149,7 +147,7 @@ export default function Header() {
                   <Link
                     href="/login"
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2"
+                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center space-x-2"
                   >
                     <LogIn className="w-4 h-4" />
                     <span>Entrar na Conta</span>

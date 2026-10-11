@@ -20,7 +20,6 @@ import {
   TrendingUp,
   Star,
   RefreshCw,
-  Sparkles,
   Smartphone,
   PhoneCall,
   CheckSquare,
@@ -253,7 +252,7 @@ export default function DeveloperOnboardingCockpitPage() {
           <button
             onClick={loadData}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl transition shadow-lg shadow-amber-500/20"
+            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-black rounded-xl transition"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar Dados
@@ -334,7 +333,7 @@ export default function DeveloperOnboardingCockpitPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
             <span>Taxa de Ativação</span>
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-white mt-2">
             {metrics?.activationRate ?? 0}%

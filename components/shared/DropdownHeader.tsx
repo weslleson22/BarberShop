@@ -64,7 +64,7 @@ function HeaderContent({
     <>
       <header
         style={{ left: leftOffset }}
-        className="fixed top-0 right-0 z-30 transition-[left] duration-200 ease-linear bg-gradient-to-b from-gray-900/95 to-gray-950/95 backdrop-blur-md border-b border-sidebar-border/80"
+        className="fixed top-0 right-0 z-30 transition-[left] duration-200 ease-linear bg-gray-950 border-b border-gray-800"
       >
         <div className="w-full px-4 md:px-6 py-3">
           <div className="flex items-center justify-between gap-4 h-11">
@@ -95,7 +95,7 @@ function HeaderContent({
                   placeholder="Buscar clientes, serviços, barbeiros..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 bg-sidebar-accent/50 border border-sidebar-border rounded-lg text-xs text-white placeholder-muted-foreground focus:outline-none focus:border-amber-400/50 focus:bg-sidebar-accent transition-all"
+                  className="w-full pl-9 pr-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-white placeholder-muted-foreground focus:outline-none focus:border-amber-400 focus:bg-gray-900 transition-colors"
                 />
               </div>
             </div>
@@ -106,8 +106,8 @@ function HeaderContent({
               {user && user.role !== 'DEVELOPER' && <NotificationBell />}
 
               {/* Identificação do Usuário */}
-              <div className="flex items-center gap-2.5 p-1.5 pl-2.5 bg-sidebar-accent/60 border border-sidebar-border rounded-lg">
-                <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
+              <div className="flex items-center gap-2.5 p-1.5 pl-2.5 bg-gray-900 border border-gray-800 rounded-lg">
+                <div className="w-7 h-7 bg-amber-500 text-black font-bold rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}

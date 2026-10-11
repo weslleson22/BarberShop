@@ -48,7 +48,7 @@ export default function AgendaHeader({
   }, [hideBarberFilter])
 
   return (
-    <div className="bg-gradient-to-b from-gray-900/50 to-transparent border-b border-white/6">
+    <div className="bg-gray-950 border-b border-gray-800">
       <div className="w-full px-4 md:px-6 py-6">
         {/* Page Header - Título e Descrição */}
         <div className="flex flex-col w-full mb-6">
@@ -72,7 +72,7 @@ export default function AgendaHeader({
               placeholder="Buscar por cliente, telefone, barbeiro ou serviço..."
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all text-sm"
             />
           </div>
 
@@ -83,7 +83,7 @@ export default function AgendaHeader({
               <select
                 value={currentPeriod}
                 onChange={(e) => onDatePeriodFilter?.(e.target.value as any)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[120px] pr-8"
+                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all cursor-pointer min-w-[120px] pr-8"
                 aria-label="Filtrar por período"
               >
                 <option value="all" className="bg-gray-900">Todos os Períodos</option>
@@ -99,7 +99,7 @@ export default function AgendaHeader({
               <select
                 value={currentStatus}
                 onChange={(e) => onStatusFilter?.(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[110px] pr-8"
+                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all cursor-pointer min-w-[110px] pr-8"
                 aria-label="Filtrar por status"
               >
                 <option value="" className="bg-gray-900">Todos Status</option>
@@ -117,7 +117,7 @@ export default function AgendaHeader({
                 <select
                   value={currentBarber}
                   onChange={(e) => onBarberFilter?.(e.target.value)}
-                  className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer min-w-[130px] pr-8"
+                  className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all cursor-pointer min-w-[130px] pr-8"
                   aria-label="Filtrar por barbeiro"
                 >
                   <option value="" className="bg-gray-900">Todos Barbeiros</option>
@@ -133,7 +133,7 @@ export default function AgendaHeader({
             <button
               type="button"
               onClick={onNewAppointment}
-              className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 flex-shrink-0 text-sm shadow-md"
+              className="w-full sm:w-auto px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-all flex items-center justify-center space-x-2 flex-shrink-0 text-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Novo Agendamento</span>

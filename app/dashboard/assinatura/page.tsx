@@ -10,7 +10,6 @@ import { parseStoredAddress, CustomerDefaults } from '@/lib/billing/checkout-con
 import { 
   CreditCard, 
   Check, 
-  Sparkles, 
   Calendar, 
   Clock, 
   AlertTriangle, 
@@ -683,7 +682,7 @@ function AssinaturaContent() {
         )}
 
         {/* Current Plan Overview Card (Com Período Real e Formas de Pagamento) */}
-        <div className="bg-gradient-to-br from-card via-card to-card/60 border border-border rounded-2xl p-6 md:p-8 backdrop-blur-sm relative overflow-hidden shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 relative overflow-hidden shadow-sm">
           <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-2">
@@ -823,8 +822,8 @@ function AssinaturaContent() {
                     key={p.id}
                     className={`bg-card rounded-2xl p-6 border flex flex-col justify-between transition-all relative ${
                       isCurrent
-                        ? 'border-emerald-500/50 ring-1 ring-emerald-500/30 shadow-lg shadow-emerald-500/5'
-                        : 'border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5'
+                        ? 'border-emerald-500 ring-1 ring-emerald-500/30'
+                        : 'border-border hover:border-primary/50'
                     }`}
                   >
                     {isCurrent && (
@@ -836,7 +835,7 @@ function AssinaturaContent() {
                     <div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Sparkles className="w-5 h-5 text-amber-500" />
+                          <CreditCard className="w-5 h-5 text-amber-500" />
                           <h3 className="font-bold text-lg text-foreground">{p.name}</h3>
                         </div>
                         {/* Badges de formas de pagamento aceitas */}
@@ -902,7 +901,7 @@ function AssinaturaContent() {
                           <button
                             onClick={() => handleOpenCheckout(p, 'PIX')}
                             disabled={Boolean(checkoutLoading)}
-                            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-lime-500 hover:from-emerald-600 hover:to-lime-600 text-slate-950 font-extrabold text-xs md:text-sm transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                            className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs md:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                           >
                             <QrCode className="w-4 h-4 shrink-0" />
                             <span>Pagar via PIX</span>
@@ -912,7 +911,7 @@ function AssinaturaContent() {
                           <button
                             onClick={() => handleOpenCheckout(p, 'CREDIT_CARD')}
                             disabled={Boolean(checkoutLoading)}
-                            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs md:text-sm transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                            className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs md:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                           >
                             <CreditCard className="w-4 h-4 shrink-0" />
                             <span>Pagar com Cartão de Crédito</span>

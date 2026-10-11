@@ -13,7 +13,6 @@ import {
   Star, 
   ArrowRight,
   ShieldCheck,
-  Sparkles,
   CalendarCheck,
   CheckCircle2,
   Building2,
@@ -185,19 +184,19 @@ export default async function TenantPublicPage({ params }: Props) {
   const bookingUrl = `/agendar?slug=${encodeURIComponent(activeSlug)}`
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-black text-white">
+    <div className="min-h-screen bg-gray-950 text-white">
       {/* Top Banner / Hero */}
-      <header className="relative border-b border-amber-500/20 bg-gray-900/60 backdrop-blur-xl">
+      <header className="relative border-b border-gray-800 bg-gray-900">
         <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4 text-center md:text-left">
             {tenant.logo ? (
               <img
                 src={tenant.logo}
                 alt={tenant.name}
-                className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/40 shadow-xl"
+                className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/40"
               />
             ) : (
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-black font-extrabold text-2xl shadow-xl shadow-amber-500/20">
+              <div className="w-20 h-20 rounded-2xl bg-amber-500 flex items-center justify-center text-black font-bold text-2xl">
                 <Scissors className="w-10 h-10" />
               </div>
             )}
@@ -220,7 +219,7 @@ export default async function TenantPublicPage({ params }: Props) {
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
             <Link
               href={bookingUrl}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-black shadow-lg shadow-amber-500/25 transition-all transform hover:-translate-y-0.5"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-sm bg-amber-500 hover:bg-amber-400 text-black transition-colors"
             >
               <Calendar className="w-4 h-4" />
               <span>Agendar Agora</span>
@@ -257,7 +256,7 @@ export default async function TenantPublicPage({ params }: Props) {
           <div className="flex items-center justify-between mb-8">
             <div>
               <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold tracking-wide uppercase">
-                <Sparkles className="w-4 h-4" />
+                <Scissors className="w-4 h-4" />
                 Catálogo de Serviços
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">
@@ -278,7 +277,7 @@ export default async function TenantPublicPage({ params }: Props) {
               {services.map((service) => (
                 <div
                   key={service.id}
-                  className="group relative flex flex-col justify-between p-6 rounded-2xl bg-gray-900/70 border border-gray-800/80 hover:border-amber-500/40 backdrop-blur-md transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1"
+                  className="group relative flex flex-col justify-between p-6 rounded-2xl bg-gray-900 border border-gray-800 hover:border-amber-500/50 transition-all"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-4 mb-3">
@@ -399,8 +398,8 @@ export default async function TenantPublicPage({ params }: Props) {
         </section>
 
         {/* Call to Action Final */}
-        <section className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-amber-900/40 via-yellow-900/20 to-gray-900/80 border border-amber-500/30 text-center flex flex-col items-center justify-center gap-6 shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-xl">
+        <section className="p-8 sm:p-12 rounded-2xl bg-gray-900 border border-gray-800 text-center flex flex-col items-center justify-center gap-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
             <Calendar className="w-8 h-8" />
           </div>
           <div className="max-w-xl">
@@ -413,7 +412,7 @@ export default async function TenantPublicPage({ params }: Props) {
           </div>
           <Link
             href={bookingUrl}
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-black shadow-xl shadow-amber-500/30 transition-all transform hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base bg-amber-500 hover:bg-amber-400 text-black transition-colors"
           >
             <span>Iniciar Agendamento Online</span>
             <ArrowRight className="w-5 h-5" />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Globe, Copy, Check, ExternalLink, Sparkles, Settings } from 'lucide-react'
+import { Globe, Copy, Check, ExternalLink, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 
@@ -77,19 +77,14 @@ export default function PublicLinkCard() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-900/90 via-slate-900/90 to-black/90 border border-amber-500/30 p-5 md:p-6 shadow-2xl backdrop-blur-xl mb-6">
-      {/* Background glow decorative */}
-      <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="relative overflow-hidden rounded-xl bg-gray-900 border border-gray-800 p-5 md:p-6 mb-6">
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
         <div className="space-y-1.5 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30">
-              <Sparkles className="w-3 h-3 text-amber-400" />
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-950 text-amber-400 border border-amber-800/60">
               Link Oficial da Barbearia
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-950 text-emerald-400 border border-emerald-800/60">
               Ativo
             </span>
           </div>
@@ -99,13 +94,13 @@ export default function PublicLinkCard() {
             <span>Página Pública de Agendamentos</span>
           </h2>
 
-          <p className="text-xs md:text-sm text-gray-300 max-w-2xl leading-relaxed">
+          <p className="text-xs md:text-sm text-gray-400 max-w-2xl leading-relaxed">
             Seus clientes podem visualizar serviços, escolher barbeiros e agendar horários em tempo real através deste link exclusivo.
           </p>
 
           {/* URL Box */}
           <div className="pt-2 flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-black/60 border border-white/10 text-xs md:text-sm font-mono text-amber-300 max-w-full overflow-x-auto">
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-950 border border-gray-800 text-xs md:text-sm font-mono text-amber-300 max-w-full overflow-x-auto">
               <span className="text-gray-500 select-none">{origin}/b/</span>
               <span className="font-bold text-white underline decoration-amber-500/50 underline-offset-4">{slug}</span>
             </div>

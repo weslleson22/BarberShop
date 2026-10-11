@@ -6,14 +6,14 @@ export default function DashboardPreview() {
   return (
     <div className="relative mx-auto w-full max-w-6xl">
       {/* Main Dashboard Card */}
-      <div className="bg-gradient-to-br from-gray-900/90 to-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-sm">
         <div className="flex flex-col md:flex-row">
           {/* Sidebar */}
-          <div className="hidden md:block md:w-56 lg:w-64 shrink-0 bg-black/50 border-r border-white/10 p-4">
+          <div className="hidden md:block md:w-56 lg:w-64 shrink-0 bg-gray-950 border-r border-gray-800 p-4">
             <div className="space-y-2">
-              <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30">
-                <BarChart3 className="w-5 h-5 text-yellow-400" />
-                <span className="text-yellow-400 font-medium">Dashboard</span>
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-amber-500/15 border border-amber-500/30">
+                <BarChart3 className="w-5 h-5 text-amber-400" />
+                <span className="text-amber-400 font-medium">Dashboard</span>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
                 <Calendar className="w-5 h-5 text-white/60" />
@@ -55,13 +55,13 @@ export default function DashboardPreview() {
                 <p className="text-white/60 text-sm sm:text-base truncate">Bem-vindo de volta, João</p>
               </div>
               <div className="flex items-center space-x-2 shrink-0">
-                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full"></div>
+                <div className="w-8 h-8 bg-amber-500 rounded-full"></div>
               </div>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl p-4">
+              <div className="bg-gray-950 border border-gray-800 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Calendar className="w-5 h-5 text-blue-400" />
                   <span className="text-xs text-blue-400">Hoje</span>
@@ -69,18 +69,18 @@ export default function DashboardPreview() {
                 <p className="text-2xl font-bold text-white">12</p>
                 <p className="text-xs text-white/60">Agendamentos</p>
               </div>
-              <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30 rounded-xl p-4">
+              <div className="bg-gray-950 border border-gray-800 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <DollarSign className="w-5 h-5 text-green-400" />
-                  <span className="text-xs text-green-400">Hoje</span>
+                  <DollarSign className="w-5 h-5 text-emerald-400" />
+                  <span className="text-xs text-emerald-400">Hoje</span>
                 </div>
                 <p className="text-2xl font-bold text-white">R$ 2.450</p>
                 <p className="text-xs text-white/60">Faturamento</p>
               </div>
-              <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30 rounded-xl p-4">
+              <div className="bg-gray-950 border border-gray-800 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <Users className="w-5 h-5 text-purple-400" />
-                  <span className="text-xs text-purple-400">Total</span>
+                  <Users className="w-5 h-5 text-indigo-400" />
+                  <span className="text-xs text-indigo-400">Total</span>
                 </div>
                 <p className="text-2xl font-bold text-white">186</p>
                 <p className="text-xs text-white/60">Clientes</p>
@@ -143,13 +143,13 @@ export default function DashboardPreview() {
             <div className="bg-white/5 border border-white/10 rounded-xl p-4">
               <h4 className="text-white font-medium mb-4">Receita Mensal</h4>
               <div className="flex items-end gap-1.5 sm:gap-2 h-32 overflow-x-auto">
-                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '60%'}}></div>
-                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '80%'}}></div>
-                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '45%'}}></div>
-                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '90%'}}></div>
-                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '70%'}}></div>
-                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/40 to-yellow-400 rounded-t" style={{height: '85%'}}></div>
-                <div className="w-6 sm:w-8 shrink-0 bg-gradient-to-t from-yellow-400/60 to-yellow-500 rounded-t" style={{height: '100%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-amber-500 rounded-t" style={{height: '60%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-amber-500 rounded-t" style={{height: '80%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-amber-500 rounded-t" style={{height: '45%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-amber-500 rounded-t" style={{height: '90%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-amber-500 rounded-t" style={{height: '70%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-amber-500 rounded-t" style={{height: '85%'}}></div>
+                <div className="w-6 sm:w-8 shrink-0 bg-amber-500 rounded-t" style={{height: '100%'}}></div>
               </div>
               <div className="flex justify-between mt-2 text-xs text-white/40">
                 <span>Seg</span>
@@ -164,9 +164,6 @@ export default function DashboardPreview() {
           </div>
         </div>
       </div>
-
-      {/* Glow Effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-transparent blur-3xl -z-10"></div>
     </div>
   )
 }

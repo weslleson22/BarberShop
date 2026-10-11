@@ -9,7 +9,6 @@ import {
   ShieldCheck, 
   Smartphone, 
   Users, 
-  Sparkles, 
   CheckCircle2, 
   ArrowRight,
   Layers,
@@ -33,10 +32,9 @@ export default function Features() {
       gradient: 'from-cyan-500 to-blue-500'
     },
     {
-      icon: Sparkles,
+      icon: Layers,
       title: 'Catálogo de Serviços',
       description: 'Duração estimada, valores transparentes e detalhes de cada serviço cadastrado.',
-      gradient: 'from-indigo-600 to-blue-500'
     },
     {
       icon: Users,
@@ -59,22 +57,19 @@ export default function Features() {
   ]
 
   return (
-    <section id="recursos" className="py-24 bg-[#090D16] relative overflow-hidden">
-      {/* Luz ambiente */}
-      <div className="absolute top-1/3 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-1/4 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
+    <section id="recursos" className="py-24 bg-gray-950 relative">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Cabeçalho da Seção */}
         <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+            <Calendar className="w-3.5 h-3.5 text-blue-400" />
             <span>Recursos da Plataforma</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
             Tudo o que você precisa para{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400">
+            <span className="text-blue-400">
               agendar com confiança.
             </span>
           </h2>
@@ -84,7 +79,7 @@ export default function Features() {
         </div>
 
         {/* Vitrine Visual Showcase: Imagem de Celular e Tablet */}
-        <div className="mb-20 rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-950/90 p-4 sm:p-8 shadow-2xl shadow-blue-950/40 backdrop-blur-2xl overflow-hidden">
+        <div className="mb-20 rounded-2xl border border-gray-800 bg-gray-900 p-4 sm:p-8 shadow-sm">
           <div className="grid lg:grid-cols-12 gap-8 items-center">
             
             <div className="lg:col-span-6 space-y-6">
@@ -133,7 +128,7 @@ export default function Features() {
               <div className="pt-4">
                 <button
                   onClick={() => router.push('/login')}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center space-x-2 group cursor-pointer"
+                  className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors flex items-center space-x-2 group cursor-pointer"
                 >
                   <Calendar className="w-4 h-4" />
                   <span>Acessar a Plataforma</span>
@@ -150,7 +145,7 @@ export default function Features() {
                   fill
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-slate-950/40" />
                 
                 <div className="absolute bottom-4 left-4 right-4 bg-slate-900/90 border border-white/15 backdrop-blur-md rounded-xl p-3 flex items-center justify-between text-xs">
                   <div className="flex items-center space-x-2">
@@ -170,13 +165,11 @@ export default function Features() {
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="group relative overflow-hidden bg-slate-900/60 border border-white/10 rounded-2xl p-7 hover:border-blue-500/40 transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-black/30 backdrop-blur-xl"
+              className="group relative overflow-hidden bg-gray-900 border border-gray-800 rounded-2xl p-7 hover:border-gray-700 transition-colors"
             >
               {/* Ícone */}
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} p-0.5 mb-5 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform`}>
-                <div className="w-full h-full bg-[#0B1120] rounded-[10px] flex items-center justify-center">
-                  <feature.icon className="w-6 h-6 text-blue-400" />
-                </div>
+              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white mb-5">
+                <feature.icon className="w-5 h-5 text-white" />
               </div>
               
               <h3 className="text-lg font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">

@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Copy,
   Check,
-  Sparkles,
   ShieldCheck,
   Sun,
   Moon,
@@ -542,13 +541,13 @@ export default function AbacateCheckout({
       {/* Top Header com Logo AbacatePay, Cadeado e Switcher de Tema */}
       <div className={`px-6 md:px-10 py-5 border-b flex items-center justify-between ${isDark ? 'border-[#222a3a] bg-[#121620]' : 'border-gray-100 bg-white'}`}>
         <div className="flex items-center gap-3">
-          {/* Logo AbacatePay estilizado fiel ao screenshot */}
+          {/* Logo Checkout Seguro */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center p-0.5">
-              <span className="text-base leading-none select-none">🥑</span>
+            <div className="w-6 h-6 rounded-md bg-emerald-600 flex items-center justify-center text-white">
+              <CreditCard className="w-3.5 h-3.5" />
             </div>
-            <span className={`text-xl font-bold tracking-tight ${textTitle}`}>
-              Pay
+            <span className={`text-base font-bold tracking-tight ${textTitle}`}>
+              Checkout Seguro
             </span>
           </div>
 
@@ -653,7 +652,7 @@ export default function AbacateCheckout({
                 </p>
                 <div className="pt-4">
                   <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold">
-                    <Sparkles className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4" />
                     Acesso Imediato Liberado
                   </span>
                 </div>
@@ -970,7 +969,7 @@ export default function AbacateCheckout({
                                 onClick={handleSimulatePixPayment}
                                 className="text-xs text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                               >
-                                <Sparkles className="w-3.5 h-3.5" />
+                                <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span>Simular Pagamento Aprovado (Dev Sandbox)</span>
                               </button>
                             </div>
@@ -1155,7 +1154,7 @@ export default function AbacateCheckout({
                 type="button"
                 onClick={handleContinueStep1}
                 style={{ backgroundColor: activeGreen }}
-                className="w-full py-4 px-6 rounded-full font-bold text-slate-950 flex items-center justify-center gap-2 hover:opacity-95 transition-all shadow-lg hover:shadow-emerald-500/20 cursor-pointer active:scale-[0.99]"
+                className="w-full py-4 px-6 rounded-full font-bold text-slate-950 flex items-center justify-center gap-2 hover:opacity-95 transition-all shadow-md cursor-pointer active:scale-[0.99]"
               >
                 <span className="text-sm md:text-base">Continuar</span>
                 <ArrowRight className="w-4 h-4" />
@@ -1165,7 +1164,7 @@ export default function AbacateCheckout({
                 type="button"
                 onClick={handleContinueStep2}
                 style={{ backgroundColor: activeGreen }}
-                className="w-full py-4 px-6 rounded-full font-bold text-slate-950 flex items-center justify-center gap-2 hover:opacity-95 transition-all shadow-lg hover:shadow-emerald-500/20 cursor-pointer active:scale-[0.99]"
+                className="w-full py-4 px-6 rounded-full font-bold text-slate-950 flex items-center justify-center gap-2 hover:opacity-95 transition-all shadow-md cursor-pointer active:scale-[0.99]"
               >
                 <span className="text-sm md:text-base">Continuar</span>
                 <ArrowRight className="w-4 h-4" />

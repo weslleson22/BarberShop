@@ -115,9 +115,9 @@ export default function RecentClients() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
         <div className="flex items-center justify-center h-24 md:h-32">
-          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-yellow-400"></div>
+          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-amber-400"></div>
         </div>
       </div>
     )
@@ -126,26 +126,26 @@ export default function RecentClients() {
   const getStatusBadge = (client: Client) => {
     if (isReturningClient(client)) {
       return (
-        <span className="px-1.5 md:px-2 py-0.5 md:py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-medium">
+        <span className="px-1.5 md:px-2 py-0.5 md:py-1 bg-blue-950 text-blue-400 border border-blue-800/60 rounded-lg text-xs font-medium">
           Recorrente
         </span>
       )
     }
     return (
-      <span className="px-1.5 md:px-2 py-0.5 md:py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-medium">
+      <span className="px-1.5 md:px-2 py-0.5 md:py-1 bg-emerald-950 text-emerald-400 border border-emerald-800/60 rounded-lg text-xs font-medium">
         Novo
       </span>
     )
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
           <h3 className="text-lg md:text-xl font-semibold text-white">Últimos Clientes</h3>
-          <p className="text-white/60 text-xs md:text-sm">Atividade recente</p>
+          <p className="text-gray-400 text-xs md:text-sm">Atividade recente</p>
         </div>
-        <div className="flex items-center space-x-2 text-white/60">
+        <div className="flex items-center space-x-2 text-gray-400">
           <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
           <span className="text-xs md:text-sm">5 clientes</span>
         </div>
@@ -155,11 +155,11 @@ export default function RecentClients() {
         {clients.map((client) => (
           <div
             key={client.id}
-            className="flex items-center justify-between p-3 md:p-4 bg-white/5 border border-white/6 rounded-lg md:rounded-xl hover:bg-white/10 transition-all"
+            className="flex items-center justify-between p-3 md:p-4 bg-gray-950 border border-gray-800 rounded-lg md:rounded-xl hover:bg-gray-800/50 transition-colors"
           >
             <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
               {/* Avatar */}
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-black font-bold text-xs md:text-sm">{getInitials(client.name)}</span>
               </div>
 
@@ -168,8 +168,8 @@ export default function RecentClients() {
                 <div className="flex items-center space-x-1.5 md:space-x-2 mb-1 flex-wrap gap-y-1">
                   <p className="text-white font-medium text-sm md:text-base truncate">{client.name}</p>
                   {Boolean(client.isVip) && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 rounded-lg text-xs font-bold flex-shrink-0">
-                      <Crown className="w-3 h-3 text-yellow-400" />
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-950 text-amber-300 border border-amber-800/60 rounded-lg text-xs font-bold flex-shrink-0">
+                      <Crown className="w-3 h-3 text-amber-400" />
                       VIP
                     </span>
                   )}

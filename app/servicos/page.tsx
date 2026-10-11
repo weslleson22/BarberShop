@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { Scissors, Clock, DollarSign, Plus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
@@ -218,7 +218,7 @@ export default function ServicosPage() {
                 setEditingService(null)
                 setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
               }}
-              className="bg-gradient-to-r from-amber-400 to-amber-600 text-black px-4 md:px-5 py-2.5 rounded-xl hover:from-amber-500 hover:to-amber-700 transition-all flex items-center font-semibold text-sm shadow-lg shadow-amber-500/20 cursor-pointer"
+              className="bg-amber-500 hover:bg-amber-400 text-black px-4 md:px-5 py-2.5 rounded-xl transition-colors flex items-center font-semibold text-sm cursor-pointer"
             >
               <Plus className="w-4 h-4 mr-2" />
               Novo Serviço
@@ -242,7 +242,7 @@ export default function ServicosPage() {
 
           {/* Formulário de Adicionar/Editar */}
           {showAddForm && (
-            <div className="mb-4 md:mb-6 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-2xl p-4 md:p-6">
+            <div className="mb-4 md:mb-6 bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">
                 {editingService ? 'Editar Serviço' : 'Novo Serviço'}
               </h3>
@@ -318,7 +318,7 @@ export default function ServicosPage() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <button
                 type="submit"
-                className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all font-medium text-sm md:text-base"
+                className="bg-amber-500 hover:bg-amber-400 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl transition-colors font-semibold text-sm md:text-base cursor-pointer"
               >
                 {editingService ? 'Atualizar' : 'Salvar'}
               </button>
@@ -339,7 +339,7 @@ export default function ServicosPage() {
       )}
 
       {/* Lista de Serviços em Cards */}
-      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-2xl p-4 md:p-6">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400"></div>
@@ -357,11 +357,11 @@ export default function ServicosPage() {
             {filteredServices.map((service) => (
               <div 
                 key={service.id} 
-                className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/6 rounded-xl p-4 hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer group shadow-lg flex flex-col h-full"
+                className="bg-gray-950 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors cursor-pointer group flex flex-col h-full"
               >
                 {/* Header do Card - Nome */}
                 <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                  <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0 text-black">
                     <Scissors className="w-4 h-4 text-black" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -393,7 +393,7 @@ export default function ServicosPage() {
 
                 {/* Informações principais - Duração e Preço - Alinhados */}
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-2 flex flex-col justify-center">
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-2 flex flex-col justify-center">
                     <div className="flex items-center justify-between mb-0.5">
                       <div className="flex items-center space-x-1">
                         <Clock className="w-3 h-3 text-blue-400 flex-shrink-0" />
@@ -404,10 +404,10 @@ export default function ServicosPage() {
                       {service.duration}<span className="text-[10px] font-normal text-white/60 ml-1">min</span>
                     </p>
                   </div>
-                  <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border border-yellow-500/20 rounded-lg p-2 flex flex-col justify-center">
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-2 flex flex-col justify-center">
                     <div className="flex items-center justify-between mb-0.5">
                       <div className="flex items-center space-x-1">
-                        <DollarSign className="w-3 h-3 text-yellow-400 flex-shrink-0" />
+                        <DollarSign className="w-3 h-3 text-amber-400 flex-shrink-0" />
                         <span className="text-white/50 text-[9px] font-semibold uppercase tracking-wider">Preço</span>
                       </div>
                     </div>
@@ -424,7 +424,7 @@ export default function ServicosPage() {
                       e.stopPropagation()
                       router.push('/agendar?service=' + service.id)
                     }}
-                    className="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-black px-3 py-2 rounded-lg hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 transition-all font-bold text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 mb-3 mt-auto"
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-lg transition-colors font-bold text-sm mb-3 mt-auto cursor-pointer"
                   >
                     Agendar Agora
                   </button>
@@ -495,7 +495,7 @@ export default function ServicosPage() {
 
       {/* Resumo */}
       {services.length > 0 && (
-        <div className="mt-6 md:mt-8 bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-lg md:rounded-2xl p-4 md:p-6">
+        <div className="mt-6 md:mt-8 bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
           <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Resumo de Serviços</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
             <div className="bg-white/5 border border-white/10 rounded-lg p-3 md:p-4">

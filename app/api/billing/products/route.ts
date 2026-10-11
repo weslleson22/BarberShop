@@ -84,19 +84,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { planId, name, price, description, syncAll } = body
 
-    // Opção A: Sincronizar todos os planos pendentes de uma só vez
+    // Opção A: Sincronizar todos os planos com a AbacatePay (garantindo cycle: 'MONTHLY'/'ANNUALLY')
     if (syncAll) {
-      const unsyncedPlans = await prisma.plan.findMany({
+      const { forceSync } = body
+      const plansToSync = await prisma.plan.findMany({
         where: {
-          providerProductId: null,
           isActive: true,
+          ...(forceSync ? {} : { providerProductId: null }),
         },
       })
 
       const results = []
-      for (const p of unsyncedPlans) {
+      for (const p of plansToSync) {
         try {
-          const prodId = await syncAbacateProduct(p)
+          const prodId = await syncAbacateProduct(p, Boolean(forceSync))
           results.push({ planId: p.id, name: p.name, success: true, prodId })
         } catch (err: any) {
           results.push({ planId: p.id, name: p.name, success: false, error: err.message })
@@ -120,10 +121,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Plano não encontrado' }, { status: 404 })
       }
 
-      const providerProductId = await syncAbacateProduct(plan)
+      const providerProductId = await syncAbacateProduct(plan, true)
       return NextResponse.json({
         success: true,
-        message: `Plano "${plan.name}" sincronizado com sucesso na AbacatePay!`,
+        message: `Plano "${plan.name}" sincronizado com sucesso na AbacatePay com ciclo recorrente!`,
         providerProductId,
       })
     }

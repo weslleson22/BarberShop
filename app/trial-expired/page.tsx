@@ -58,15 +58,11 @@ export default function TrialExpiredPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-black text-white flex flex-col justify-between relative overflow-hidden font-sans selection:bg-amber-500 selection:text-black">
-      {/* Luzes de ambientação */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 -right-40 w-96 h-96 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between relative font-sans selection:bg-amber-500 selection:text-black">
       {/* Header simplificado */}
-      <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
+      <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-gray-800 bg-gray-900">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center font-bold text-black text-sm">
+          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-bold text-black text-sm">
             BS
           </div>
           <span className="font-bold text-white tracking-tight">BarberShop SaaS</span>
@@ -83,10 +79,10 @@ export default function TrialExpiredPage() {
 
       {/* Conteúdo Central */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-xl bg-slate-900/80 border border-amber-500/30 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl shadow-amber-500/5 text-center">
+        <div className="w-full max-w-xl bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm text-center">
           {/* Ícone de Alerta */}
-          <div className="w-16 h-16 bg-gradient-to-tr from-amber-500/20 to-red-500/10 border border-amber-500/30 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-inner">
-            <Clock className="w-8 h-8 text-amber-400 animate-pulse" />
+          <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/40 rounded-2xl mx-auto flex items-center justify-center mb-6">
+            <Clock className="w-8 h-8 text-amber-400" />
           </div>
 
           {/* Badge de Status */}
@@ -134,9 +130,9 @@ export default function TrialExpiredPage() {
           <div className="flex flex-col gap-3 justify-center mb-2">
             <Link
               href="/dashboard/assinatura"
-              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-black font-extrabold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-colors cursor-pointer"
             >
-              <Zap className="w-4 h-4 fill-black" />
+              <Zap className="w-4 h-4 fill-white" />
               <span>Assinar Plano via PIX (Liberação Imediata)</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </Link>

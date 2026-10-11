@@ -15,7 +15,6 @@ import {
   CreditCard,
   QrCode,
   Barcode,
-  Sparkles,
   ExternalLink
 } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'

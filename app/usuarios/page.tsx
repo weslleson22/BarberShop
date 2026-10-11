@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera, Building2, Crown, X, Sparkles, Check, AlertCircle, RefreshCw } from 'lucide-react'
+import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera, Building2, Crown, X, Check, AlertCircle, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
@@ -470,7 +470,7 @@ export default function UsuariosPage() {
                 setAvatarPreview('')
                 setAvatarFile(null)
               }}
-              className="bg-gradient-to-r from-amber-400 to-amber-600 text-black px-4 md:px-5 py-2.5 rounded-xl hover:from-amber-500 hover:to-amber-700 transition-all flex items-center font-semibold text-sm shadow-lg shadow-amber-500/20"
+              className="bg-amber-500 hover:bg-amber-400 text-black px-4 md:px-5 py-2.5 rounded-xl transition-colors flex items-center font-semibold text-sm cursor-pointer"
             >
               <Plus className="w-4 h-4 mr-2" />
               Novo Usuário
@@ -541,7 +541,7 @@ export default function UsuariosPage() {
                 Foto de Perfil
               </label>
               <div className="flex items-center space-x-4">
-                <div className="relative w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center overflow-hidden">
+                <div className="relative w-16 h-16 md:w-20 md:h-20 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center justify-center overflow-hidden">
                   {avatarPreview ? (
                     <img 
                       src={avatarPreview} 
@@ -549,11 +549,11 @@ export default function UsuariosPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-yellow-400 font-bold text-xl md:text-2xl">
+                    <span className="text-amber-400 font-bold text-xl md:text-2xl">
                       {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
                     </span>
                   )}
-                  <label className="absolute bottom-0 right-0 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full p-1.5 cursor-pointer hover:from-yellow-500 hover:to-yellow-700 transition-all">
+                  <label className="absolute bottom-0 right-0 bg-amber-500 hover:bg-amber-400 rounded-full p-1.5 cursor-pointer transition-colors">
                     <Camera className="w-3 h-3 md:w-4 md:h-4 text-black" />
                     <input 
                       type="file" 
@@ -688,8 +688,8 @@ export default function UsuariosPage() {
               {formData.role === 'BARBER' && (
                 <div className="md:col-span-2 mt-2 pt-4 border-t border-white/10 space-y-4">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-yellow-400" />
-                    <h4 className="text-sm font-semibold text-yellow-400 uppercase tracking-wider">
+                    <Crown className="w-4 h-4 text-amber-400" />
+                    <h4 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">
                       Perfil do Profissional (Visível no Agendamento)
                     </h4>
                   </div>
@@ -742,11 +742,11 @@ export default function UsuariosPage() {
                               }}
                               className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
                                 isSelected
-                                  ? 'bg-yellow-400/20 text-yellow-300 border-yellow-400/50 shadow-sm shadow-yellow-400/10'
+                                  ? 'bg-amber-950/60 text-amber-300 border-amber-800/60'
                                   : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white'
                               }`}
                             >
-                              {isSelected && <Check className="w-3 h-3 text-yellow-400" />}
+                              {isSelected && <Check className="w-3 h-3 text-amber-400" />}
                               {item}
                             </button>
                           )
@@ -776,7 +776,7 @@ export default function UsuariosPage() {
                         <button
                           type="button"
                           onClick={handleAddCustomSpecialty}
-                          className="px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg text-xs hover:from-yellow-500 hover:to-yellow-700 transition-all cursor-pointer shrink-0 flex items-center gap-1"
+                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Adicionar
@@ -794,7 +794,7 @@ export default function UsuariosPage() {
                           {formData.specialties.map((spec) => (
                             <span
                               key={spec}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-yellow-400/15 to-yellow-600/15 text-yellow-300 border border-yellow-400/30 shadow-sm"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-950/60 text-amber-300 border border-amber-800/60"
                             >
                               <span>{spec}</span>
                               <button
@@ -847,7 +847,7 @@ export default function UsuariosPage() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 md:px-4 md:py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all text-sm md:text-base"
+                className="px-4 py-2 md:px-4 md:py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-colors text-sm md:text-base cursor-pointer"
               >
                 {editingUser ? 'Atualizar' : 'Cadastrar'}
               </button>
@@ -914,7 +914,7 @@ export default function UsuariosPage() {
                   <tr key={u.id} className="hover:bg-white/5">
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {u.avatar ? (
                             <img 
                               src={u.avatar} 
@@ -922,7 +922,7 @@ export default function UsuariosPage() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-yellow-400 font-bold text-xs md:text-sm">
+                            <span className="text-amber-400 font-bold text-xs md:text-sm">
                               {u.name.charAt(0).toUpperCase()}
                             </span>
                           )}

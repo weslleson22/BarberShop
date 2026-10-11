@@ -44,11 +44,11 @@ export default function ClientCard({ client, onEdit, onDelete, onMessage }: Clie
   const statusInfo = getAppointmentStatus(client._count?.appointments || 0)
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-2xl p-6 hover:border-white/10 transition-all duration-300">
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-all">
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-xl flex items-center justify-center">
-            <span className="text-xl font-bold text-yellow-400">
+          <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center">
+            <span className="text-xl font-bold text-amber-400">
               {getInitials(client.name)}
             </span>
           </div>

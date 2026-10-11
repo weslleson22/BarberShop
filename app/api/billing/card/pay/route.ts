@@ -226,6 +226,14 @@ export async function POST(request: NextRequest) {
       return { subscription, invoice }
     })
 
+    // Sincroniza a assinatura e cobrança diretamente com a AbacatePay para vincular ao customerId
+    try {
+      const { syncCustomerBillingAndSubscriptionToAbacate } = await import('@/lib/billing/abacatepay-provider')
+      await syncCustomerBillingAndSubscriptionToAbacate(user.id)
+    } catch (syncErr: any) {
+      console.warn('[ABACATEPAY_CARD_SYNC_WARN]', syncErr?.message)
+    }
+
     return NextResponse.json({
       success: true,
       message: `Pagamento de ${plan.name} aprovado no cartão ${cardBrand} final ${last4}!`,

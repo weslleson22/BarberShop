@@ -74,18 +74,12 @@ export default function DatabaseValidationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Luzes ambiente */}
-      <div className="absolute top-1/3 -left-32 w-80 h-80 bg-blue-600/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/3 -right-32 w-80 h-80 bg-cyan-500/15 rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="max-w-md w-full bg-slate-900/80 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-2xl p-8 space-y-6 relative z-10">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-gray-900 border border-gray-800 rounded-2xl p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-3">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 p-0.5 shadow-lg shadow-blue-500/25 flex items-center justify-center">
-            <div className="w-full h-full bg-[#0B1120] rounded-[14px] flex items-center justify-center">
-              <Database className="w-6 h-6 text-blue-400" />
-            </div>
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center">
+            <Database className="w-7 h-7 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white">
@@ -148,7 +142,7 @@ export default function DatabaseValidationPage() {
               {/* Retry Button */}
               <button
                 onClick={retryConnection}
-                className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-2.5 px-4 rounded-xl hover:from-blue-500 hover:to-cyan-400 transition-all font-semibold text-sm shadow-lg shadow-blue-500/20"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-4 rounded-xl transition-all font-semibold text-sm"
               >
                 Tentar Novamente
               </button>

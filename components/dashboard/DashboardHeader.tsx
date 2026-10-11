@@ -18,16 +18,16 @@ export default function DashboardHeader() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-gray-900/50 to-transparent border-b border-white/6">
+    <div className="bg-gray-950 border-b border-gray-800">
       <div className="flex items-center gap-3 w-full px-4 pt-4 pb-4 md:pt-6 md:pb-6 lg:pl-16 lg:pr-6">
         {/* Mobile Header with Menu Button */}
         <div className="lg:hidden flex items-center gap-3 w-full">
           <div className="w-12 flex-shrink-0"></div> {/* Spacer for mobile menu button */}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl md:text-2xl font-bold text-white mb-1 truncate">
-              Olá, {user?.name || 'Usuário'}! 👋
+              Olá, {user?.name || 'Usuário'}!
             </h1>
-            <p className="text-white/60 text-sm">
+            <p className="text-gray-400 text-sm">
               Aqui está o resumo do seu negócio hoje.
             </p>
           </div>
@@ -37,9 +37,9 @@ export default function DashboardHeader() {
         <div className="hidden lg:flex items-center justify-between gap-6 w-full">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 md:mb-2 truncate">
-              Olá, {user?.name || 'Usuário'}! 👋
+              Olá, {user?.name || 'Usuário'}!
             </h1>
-            <p className="text-white/60 text-sm md:text-base lg:text-lg">
+            <p className="text-gray-400 text-sm md:text-base lg:text-lg">
               Aqui está o resumo do seu negócio hoje.
             </p>
           </div>
@@ -48,13 +48,13 @@ export default function DashboardHeader() {
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             {/* Search Bar */}
             <div className="relative min-w-[120px] md:min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Buscar..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-48 md:w-64 lg:w-80 pl-9 md:pl-10 pr-4 py-2 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                className="w-full sm:w-48 md:w-64 lg:w-80 pl-9 md:pl-10 pr-4 py-2 md:py-3 bg-gray-900 border border-gray-800 rounded-lg md:rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors text-sm md:text-base"
               />
             </div>
 
@@ -63,27 +63,27 @@ export default function DashboardHeader() {
               <select
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3 text-white text-sm md:text-base focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer pr-8 md:pr-10"
+                className="appearance-none bg-gray-900 border border-gray-800 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3 text-white text-sm md:text-base focus:outline-none focus:border-amber-500 transition-colors cursor-pointer pr-8 md:pr-10"
               >
                 <option value="Hoje" className="bg-gray-900">Hoje</option>
                 <option value="Semana" className="bg-gray-900">Esta Semana</option>
                 <option value="Mês" className="bg-gray-900">Este Mês</option>
                 <option value="Ano" className="bg-gray-900">Este Ano</option>
               </select>
-              <ChevronDown className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-white/40 pointer-events-none" />
+              <ChevronDown className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-gray-400 pointer-events-none" />
             </div>
 
             {/* Notifications */}
             <NotificationBell />
 
             {/* Calendar */}
-            <button className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 transition-all hidden sm:flex flex-shrink-0" aria-label="Calendário">
+            <button className="p-2 md:p-3 bg-gray-900 border border-gray-800 rounded-lg md:rounded-xl hover:bg-gray-800 transition-colors hidden sm:flex flex-shrink-0" aria-label="Calendário">
               <Calendar className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </button>
 
             {/* User Avatar */}
-            <div className="flex items-center space-x-2 md:space-x-3 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg md:rounded-xl flex-shrink-0">
-              <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <div className="flex items-center space-x-2 md:space-x-3 p-2 bg-gray-900 border border-gray-800 rounded-lg md:rounded-xl flex-shrink-0">
+              <div className="w-7 h-7 md:w-8 md:h-8 bg-amber-500 text-black font-bold rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
@@ -149,8 +149,8 @@ export default function DashboardHeader() {
           <NotificationBell />
 
           {/* User Avatar - Mobile */}
-          <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-lg flex-shrink-0">
-            <div className="w-7 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className="flex items-center space-x-2 p-2 bg-gray-900 border border-gray-800 rounded-lg flex-shrink-0">
+            <div className="w-7 h-7 bg-amber-500 text-black font-bold rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
               {user?.avatar ? (
                 <img
                   src={user.avatar}

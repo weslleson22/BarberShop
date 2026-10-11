@@ -96,7 +96,7 @@ export default function CalendarView({
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center space-x-3">
           <button
@@ -106,10 +106,10 @@ export default function CalendarView({
             title="Clique para ver todos os agendamentos deste mês"
           >
             <h3 className={`text-lg font-bold transition-colors ${
-              isMonthView ? 'text-yellow-400 flex items-center gap-1.5' : 'text-white group-hover:text-yellow-400'
+              isMonthView ? 'text-amber-400 flex items-center gap-1.5' : 'text-white group-hover:text-amber-400'
             }`}>
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-              {isMonthView && <span className="text-[11px] font-normal px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">Mês Selecionado</span>}
+              {isMonthView && <span className="text-[11px] font-normal px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-300 border border-amber-800/60">Mês Selecionado</span>}
             </h3>
           </button>
         </div>
@@ -121,7 +121,7 @@ export default function CalendarView({
             onClick={() => onMonthSelect?.(currentDate)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
               isMonthView
-                ? 'bg-yellow-400 text-black border-yellow-400 shadow-md shadow-yellow-400/20'
+                ? 'bg-amber-500 text-black border-amber-500'
                 : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white'
             }`}
             title="Ver todos os agendamentos deste mês"
@@ -165,16 +165,16 @@ export default function CalendarView({
             className={`
               aspect-square flex items-center justify-center rounded-lg cursor-pointer transition-all
               ${day === null ? '' : 'hover:bg-white/10'}
-              ${day && isToday(day) ? 'bg-yellow-400/20 border border-yellow-400/30' : ''}
-              ${day && isSelected(day) ? 'bg-gradient-to-br from-yellow-400/30 to-yellow-600/30 border border-yellow-400/50 shadow-md' : ''}
+              ${day && isToday(day) ? 'bg-amber-500/10 border border-amber-500/30' : ''}
+              ${day && isSelected(day) ? 'bg-amber-500 text-black font-bold border border-amber-400' : ''}
             `}
             onClick={() => day && handleDateClick(day)}
           >
             {day && (
               <span className={`
                 text-sm font-medium
-                ${isToday(day) ? 'text-yellow-400 font-bold' : 'text-white/80'}
-                ${isSelected(day) ? 'text-white font-bold' : ''}
+                ${isToday(day) ? 'text-amber-400 font-bold' : 'text-white/80'}
+                ${isSelected(day) ? 'text-black font-bold' : ''}
               `}>
                 {day}
               </span>
@@ -192,7 +192,7 @@ export default function CalendarView({
             </p>
             <p className="text-white font-medium text-sm break-words">
               {isMonthView ? (
-                <span className="text-yellow-400 font-semibold">
+                <span className="text-amber-400 font-semibold">
                   Todos os agendamentos de {monthNames[currentDate.getMonth()]} de {currentDate.getFullYear()}
                 </span>
               ) : (
@@ -210,7 +210,7 @@ export default function CalendarView({
               <button 
                 type="button"
                 onClick={() => onDateSelect?.(selectedDate)}
-                className="px-3 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all text-sm whitespace-nowrap flex-shrink-0 cursor-pointer"
+                className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-all text-sm whitespace-nowrap flex-shrink-0 cursor-pointer"
               >
                 Filtrar este dia
               </button>

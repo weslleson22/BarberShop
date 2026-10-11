@@ -281,7 +281,7 @@ export default function NotificationBell() {
                       {n.title}
                     </p>
                     {!n.read && (
-                      <span className="w-2.5 h-2.5 mt-1 rounded-full bg-yellow-400 shadow-sm shadow-yellow-400 flex-shrink-0 animate-pulse" />
+                      <span className="w-2.5 h-2.5 mt-1 rounded-full bg-amber-400 flex-shrink-0 animate-pulse" />
                     )}
                   </div>
                   <p className={`text-xs mt-1.5 leading-relaxed ${n.read ? 'text-gray-400' : 'text-white font-medium'}`}>

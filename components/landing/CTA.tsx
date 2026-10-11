@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles, Clock, Lock, Building2, LogIn } from 'lucide-react'
+import { ArrowRight, CheckCircle2, ShieldCheck, Clock, Lock, Building2, LogIn } from 'lucide-react'
 
 export default function CTA() {
   const { user } = useAuth()
@@ -20,24 +20,20 @@ export default function CTA() {
   }
 
   return (
-    <section className="py-24 bg-[#080C14] border-t border-white/5 relative overflow-hidden">
-      {/* Luz ambiente */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
-
+    <section className="py-24 bg-gray-950 border-t border-gray-800 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="rounded-3xl bg-gradient-to-b from-slate-900/90 via-slate-900/60 to-slate-950/90 border border-white/10 p-8 sm:p-12 lg:p-16 shadow-2xl shadow-blue-950/40 backdrop-blur-2xl relative overflow-hidden text-center">
+        <div className="rounded-2xl bg-gray-900 border border-gray-800 p-8 sm:p-12 lg:p-16 text-center">
           
           {/* Badge */}
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gray-950 border border-gray-800 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6">
+            <Lock className="w-3.5 h-3.5 text-blue-400" />
             <span>Acesso Seguro e Centralizado</span>
           </div>
 
           {/* Título de Fechamento */}
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight max-w-3xl mx-auto mb-6">
             Pronto para simplificar seus atendimentos com{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400">
+            <span className="text-blue-400">
               total controle?
             </span>
           </h2>
@@ -50,7 +46,7 @@ export default function CTA() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-10">
             <button
               onClick={handleLogin}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold rounded-xl shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center justify-center space-x-2 group cursor-pointer"
+              className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center space-x-2 group cursor-pointer"
             >
               <LogIn className="w-5 h-5 text-blue-100" />
               <span>

@@ -6,7 +6,7 @@ import DropdownHeader from '@/components/shared/DropdownHeader'
 import { useAuth } from '@/lib/auth-context'
 import { getAuthHeaders } from '@/lib/utils'
 import {
-  Sparkles,
+  CreditCard,
   Plus,
   RefreshCw,
   AlertTriangle,
@@ -404,7 +404,7 @@ export default function DeveloperPlansPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
-              <Sparkles className="w-4 h-4" />
+              <CreditCard className="w-4 h-4" />
               <span>Gestão de Planos & Assinaturas SaaS</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Catálogo de Planos</h1>

@@ -23,7 +23,6 @@ import {
   AlertCircle,
   CheckCircle2,
   RefreshCw,
-  Sparkles,
   ImageIcon,
   Trash2,
 } from 'lucide-react'
@@ -443,7 +442,7 @@ export default function ConfiguracoesPage() {
             onClick={() => setActiveTab('profile')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
               activeTab === 'profile'
-                ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/20'
+                ? 'bg-amber-500 text-black font-semibold'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
@@ -457,7 +456,7 @@ export default function ConfiguracoesPage() {
               onClick={() => setActiveTab('barbershop')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'barbershop'
-                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/20'
+                  ? 'bg-amber-500 text-black font-semibold'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
             >
@@ -488,7 +487,7 @@ export default function ConfiguracoesPage() {
 
                           <div className="flex flex-col items-center">
                             <div className="relative mb-4">
-                              <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                              <div className="w-24 h-24 bg-amber-500 rounded-full flex items-center justify-center">
                                 {avatarPreview ? (
                                   <img
                                     src={avatarPreview}
@@ -501,7 +500,7 @@ export default function ConfiguracoesPage() {
                                   </span>
                                 )}
                               </div>
-                              <label className="absolute bottom-0 right-0 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full p-2 cursor-pointer hover:from-yellow-500 hover:to-yellow-700 transition-all">
+                              <label className="absolute bottom-0 right-0 bg-amber-500 hover:bg-amber-400 rounded-full p-2 cursor-pointer transition-colors">
                                 <Camera className="w-4 h-4 text-black" />
                                 <input
                                   type="file"
@@ -512,7 +511,7 @@ export default function ConfiguracoesPage() {
                               </label>
                             </div>
 
-                            <label className="w-full py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center justify-center space-x-2 cursor-pointer">
+                            <label className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-colors flex items-center justify-center space-x-2 cursor-pointer">
                               <Upload className="w-4 h-4" />
                               <span>Alterar Foto</span>
                               <input
@@ -663,7 +662,7 @@ export default function ConfiguracoesPage() {
                               <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-2 disabled:opacity-50 cursor-pointer shadow-lg shadow-yellow-500/20"
+                                className="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 cursor-pointer"
                               >
                                 <Save className="w-4 h-4" />
                                 <span>{isLoading ? 'Salvando...' : 'Salvar Alterações'}</span>
@@ -688,20 +687,18 @@ export default function ConfiguracoesPage() {
                   ) : (
                     <>
                       {/* Banner do Link Público */}
-                      <div className="relative overflow-hidden rounded-2xl border border-yellow-500/30 bg-gradient-to-br from-yellow-950/30 via-gray-900 to-black p-6 sm:p-8 shadow-2xl">
-                        <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-
+                      <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 p-6 sm:p-8">
                         <div className="relative z-10">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black shadow-lg shadow-yellow-500/20">
+                              <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-black font-bold">
                                 <Globe className="w-6 h-6" />
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
                                   <h2 className="text-xl font-bold text-white">Link Público Exclusivo</h2>
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 flex items-center gap-1">
-                                    <Sparkles className="w-3 h-3 text-yellow-400" />
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/60 text-amber-300 border border-amber-800/60 flex items-center gap-1">
+                                    <Globe className="w-3 h-3 text-amber-400" />
                                     Multi-tenant Ativo
                                   </span>
                                 </div>
@@ -734,7 +731,7 @@ export default function ConfiguracoesPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleCopy(publicMainUrl, 'main')}
-                                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg text-xs transition cursor-pointer shadow-md shadow-yellow-500/20"
+                                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition cursor-pointer"
                                 >
                                   {copiedType === 'main' ? (
                                     <>
@@ -816,7 +813,7 @@ export default function ConfiguracoesPage() {
                       </div>
 
                       {/* Seção: Logo da Barbearia & Identidade Visual */}
-                      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-xl p-6 sm:p-8">
+                      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 sm:p-8">
                         <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
                           <div>
                             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -846,7 +843,7 @@ export default function ConfiguracoesPage() {
                               )}
                             </div>
 
-                            <label className="absolute bottom-1 right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl p-2 cursor-pointer hover:from-yellow-500 hover:to-yellow-700 transition-all shadow-md shadow-black/50 text-black">
+                            <label className="absolute bottom-1 right-1 bg-amber-500 hover:bg-amber-400 rounded-xl p-2 cursor-pointer transition-colors text-black">
                               <Camera className="w-4 h-4" />
                               <input
                                 type="file"
@@ -866,7 +863,7 @@ export default function ConfiguracoesPage() {
                             </div>
 
                             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-                              <label className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-2 shadow-md shadow-yellow-500/20">
+                              <label className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-2">
                                 <Upload className="w-3.5 h-3.5" />
                                 <span>{logoPreview ? 'Alterar Logo' : 'Enviar Nova Logo'}</span>
                                 <input
@@ -893,7 +890,7 @@ export default function ConfiguracoesPage() {
                       </div>
 
                       {/* Formulário de Configuração do Estabelecimento & Slug */}
-                      <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/10 rounded-xl p-6 sm:p-8">
+                      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 sm:p-8">
                         <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
                           <div>
                             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -1026,7 +1023,7 @@ export default function ConfiguracoesPage() {
                             <button
                               type="submit"
                               disabled={isShopSaving}
-                              className="px-6 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all flex items-center space-x-2 disabled:opacity-50 cursor-pointer shadow-lg shadow-yellow-500/20"
+                              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 cursor-pointer"
                             >
                               {isShopSaving ? (
                                 <>

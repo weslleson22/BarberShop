@@ -203,6 +203,17 @@ export async function createUser(data: {
     }
   }
 
+  // Se o novo usuário é um ADMIN de barbearia, sincronizar automaticamente com a AbacatePay
+  if (user.role === 'ADMIN' && user.barbershopId) {
+    try {
+      const { syncBarbershopAdminToAbacate } = await import('./billing/abacatepay-provider')
+      await syncBarbershopAdminToAbacate(user.id)
+      console.log(`[ABACATEPAY_AUTO_SYNC] Admin ${user.email} sincronizado na AbacatePay via createUser.`)
+    } catch (syncError: any) {
+      console.warn('[ABACATEPAY_USER_SYNC_WARN] Aviso ao sincronizar admin na AbacatePay:', syncError?.message)
+    }
+  }
+
   const sessionId = 'sess_' + crypto.randomUUID()
   SessionManager.registerSession(user.id, sessionId)
 
@@ -279,77 +290,112 @@ export async function createBarbershop(data: {
   const { generateUniqueSlug } = await import('./tenant')
   const shopSlug = await generateUniqueSlug(data.slug || data.name)
 
-  return await prisma.$transaction(async (tx) => {
-    const barbershop = await tx.barbershop.create({
-      data: {
-        name: data.name,
-        slug: shopSlug,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        status: shopStatus,
-        isActive: isShopActive,
-        trialEndsAt: trialEndsAtDate,
-        contractExpiresAt: data.contractExpiresAt
-          ? new Date(data.contractExpiresAt)
-          : trialEndsAtDate,
-        createdById: data.createdById || null,
-      },
-    })
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const barbershop = await tx.barbershop.create({
+        data: {
+          name: data.name,
+          slug: shopSlug,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          status: shopStatus,
+          isActive: isShopActive,
+          trialEndsAt: trialEndsAtDate,
+          contractExpiresAt: data.contractExpiresAt
+            ? new Date(data.contractExpiresAt)
+            : trialEndsAtDate,
+          createdById: data.createdById || null,
+        },
+      })
 
-    // Inicialização automática do Trial gratuito de 7 dias para a nova barbearia comercial
-    const { createTrialSubscriptionForBarbershop } = await import('./billing/saas-billing')
-    await createTrialSubscriptionForBarbershop(barbershop.id, tx, trialDays)
-
-    const user = await tx.user.create({
-      data: {
-        name: data.adminUser.name,
-        email: data.adminUser.email,
-        password: hashedPassword,
-        role: 'ADMIN',
-        barbershopId: barbershop.id,
-        phone: data.adminUser.phone,
-        isActive: isAdminActive,
-      },
-      include: {
-        barbershop: {
-          select: {
-            id: true,
-            name: true,
-            isActive: true,
-            status: true,
-            trialEndsAt: true,
+      const user = await tx.user.create({
+        data: {
+          name: data.adminUser.name,
+          email: data.adminUser.email,
+          password: hashedPassword,
+          role: 'ADMIN',
+          barbershopId: barbershop.id,
+          phone: data.adminUser.phone,
+          isActive: isAdminActive,
+        },
+        include: {
+          barbershop: {
+            select: {
+              id: true,
+              name: true,
+              isActive: true,
+              status: true,
+              trialEndsAt: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    const token = generateToken({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      barbershopId: user.barbershopId,
-      barbershopStatus: barbershop.status,
-      trialEndsAt: trialEndsAtDate.toISOString(),
-    })
+      const token = generateToken({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        barbershopId: user.barbershopId,
+        barbershopStatus: barbershop.status,
+        trialEndsAt: trialEndsAtDate.toISOString(),
+      })
 
-    return {
-      barbershop,
-      adminUser: {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          barbershopId: user.barbershopId,
-          phone: user.phone,
-          avatar: user.avatar,
-          barbershop: user.barbershop,
-          isActive: user.isActive,
+      return {
+        barbershop,
+        adminUser: {
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            barbershopId: user.barbershopId,
+            phone: user.phone,
+            avatar: user.avatar,
+            barbershop: user.barbershop,
+            isActive: user.isActive,
+          },
+          token,
         },
-        token,
-      },
+      }
+    },
+    {
+      maxWait: 15000,
+      timeout: 35000,
     }
-  })
+  )
+
+  // 1. Inicialização automática do Trial gratuito de 7 dias para a nova barbearia comercial no banco de dados
+  try {
+    const { createTrialSubscriptionForBarbershop } = await import('./billing/saas-billing')
+    await createTrialSubscriptionForBarbershop(result.barbershop.id, prisma, trialDays)
+    console.log(`[TRIAL_INIT] Trial de ${trialDays} dias provisionado com sucesso para "${result.barbershop.name}" (${result.barbershop.id}).`)
+  } catch (trialErr: any) {
+    console.error('[TRIAL_INIT_WARN] Falha ao provisionar assinatura trial inicial no banco:', trialErr?.message || trialErr)
+  }
+
+  // 2. Sincronização automática na AbacatePay (Novo Estabelecimento e Administrador)
+  try {
+    const { createOrSyncAbacateCustomer } = await import('./billing/abacatepay-provider')
+    const abacateCustomer = await createOrSyncAbacateCustomer({
+      email: data.adminUser.email,
+      name: data.adminUser.name || data.name,
+      cellphone: data.adminUser.phone || data.phone,
+      address: data.address,
+      metadata: {
+        barbershopId: result.barbershop.id,
+        barbershopName: result.barbershop.name,
+        barbershopSlug: result.barbershop.slug || '',
+        userId: result.adminUser.user.id,
+        role: 'ADMIN',
+        source: 'automatic_registration',
+      },
+    })
+    console.log(`[ABACATEPAY_AUTO_SYNC] Cliente Admin ${data.adminUser.email} enviado com sucesso para a AbacatePay (ID: ${abacateCustomer?.id || 'OK'}).`)
+  } catch (syncErr: any) {
+    console.error('[ABACATEPAY_AUTO_SYNC_WARN] Aviso ao enviar cliente para AbacatePay no cadastro:', syncErr?.message || syncErr)
+  }
+
+  return result
 }

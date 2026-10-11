@@ -339,7 +339,7 @@ export default function AgendaPage() {
               
               {/* Resumo do Período - 1 coluna (sem Faturamento, foco em agendamentos) */}
               <div className="space-y-2 md:space-y-3">
-                <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl p-4 md:p-5">
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base md:text-lg font-bold text-white">Resumo: {getPeriodLabel()}</h3>
                     {datePeriod !== 'all' && (

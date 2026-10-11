@@ -49,11 +49,11 @@ export default function RevenueChart() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800/50 to-black/50 border border-white/6 rounded-xl md:rounded-2xl p-4 md:p-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
           <h3 className="text-lg md:text-xl font-semibold text-white">Faturamento</h3>
-          <p className="text-white/60 text-xs md:text-sm">Receita dos últimos 7 dias</p>
+          <p className="text-gray-400 text-xs md:text-sm">Receita dos últimos 7 dias</p>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full"></div>
