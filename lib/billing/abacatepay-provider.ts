@@ -203,12 +203,12 @@ export async function syncAbacateProduct(plan: Plan, forceSync: boolean = false)
  * Essencial para vincular cobranças e assinaturas ao perfil do cliente
  */
 export async function resolveAbacateCustomerId(params: {
-  barbershopId?: string
-  email?: string
-  name?: string
-  phone?: string
-  taxId?: string
-  userId?: string
+  barbershopId?: string | null
+  email?: string | null
+  name?: string | null
+  phone?: string | null
+  taxId?: string | null
+  userId?: string | null
 }): Promise<string | null> {
   const cleanEmail = (params.email || '').toLowerCase().trim()
 
@@ -292,7 +292,7 @@ export async function createAbacateCheckoutSession(
     barbershopId,
     email: customerEmail || barbershop.email,
     name: customerName || barbershop.name,
-    phone: customerPhone || barbershop.phone,
+    phone: customerPhone || barbershop.phone || undefined,
     taxId: customerTaxId,
   })
 
@@ -786,11 +786,11 @@ export async function createAbacateProduct(params: {
 
 export interface AbacateCustomerInput {
   email: string
-  name?: string
-  cellphone?: string
-  taxId?: string
-  zipCode?: string
-  address?: string
+  name?: string | null
+  cellphone?: string | null
+  taxId?: string | null
+  zipCode?: string | null
+  address?: string | null
   metadata?: Record<string, any>
 }
 
