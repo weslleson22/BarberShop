@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
           dueDate: latestInv.dueDate,
           provider: latestInv.provider,
           providerInvoiceId: latestInv.providerInvoiceId,
-          hostedInvoiceUrl: latestInv.hostedInvoiceUrl,
+          hostedInvoiceUrl: latestInv.providerInvoiceId ? 'https://app.abacatepay.com/billings' : null,
         } : null,
         isSynced: !!matchingCustomer,
         abacateCustomerId: matchingCustomer?.id || null,

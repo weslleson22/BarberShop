@@ -1195,7 +1195,6 @@ export async function syncCustomerBillingAndSubscriptionToAbacate(adminUserId: s
       data: {
         provider: 'ABACATEPAY',
         providerInvoiceId: abacateBilling.id,
-        hostedInvoiceUrl: abacateBilling.url || null,
       },
     })
   }
