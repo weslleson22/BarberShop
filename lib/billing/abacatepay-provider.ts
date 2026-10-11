@@ -1085,7 +1085,7 @@ export async function syncCustomerBillingAndSubscriptionToAbacate(adminUserId: s
   const customerId = abacateCustomer.id
 
   // 2. Identifica o plano do cliente (ou plano padrão ativo do sistema)
-  let plan = user.barbershop.subscriptions?.[0]?.plan
+  let plan: Plan | null = user.barbershop.subscriptions?.[0]?.plan || null
   if (!plan) {
     plan = await prisma.plan.findFirst({
       where: { isActive: true, planType: 'PAID' },
