@@ -361,8 +361,8 @@ export async function createBarbershop(data: {
       }
     },
     {
-      maxWait: 15000,
-      timeout: 35000,
+      maxWait: 5000,
+      timeout: 14000,
     }
   )
 
