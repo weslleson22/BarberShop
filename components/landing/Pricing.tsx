@@ -1,9 +1,45 @@
 'use client'
 
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Check, ShieldCheck, QrCode, CreditCard, ArrowRight, Zap } from 'lucide-react'
 
+interface PlanOption {
+  id: string
+  name: string
+  description?: string
+  price: number
+  billingInterval: string
+  features?: string[] | any
+  providerProductId?: string
+}
+
 export default function Pricing() {
+  const [plans, setPlans] = useState<PlanOption[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/billing/plans')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const activePlans = data.filter(
+            (p: any) =>
+              p.isActive === true &&
+              p.status !== 'INACTIVE' &&
+              !p.deletedAt &&
+              Number(p.price) > 0
+          )
+          setPlans(activePlans)
+        }
+      })
+      .catch((err) => console.warn('Erro ao carregar planos dinâmicos na landing:', err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)
+  }
   return (
     <section id="planos" className="py-24 bg-gray-950 relative border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -229,7 +265,7 @@ export default function Pricing() {
             <span className="text-slate-400">Processado com segurança por:</span>
             <div className="px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-emerald-400 font-semibold flex items-center gap-1.5 shadow-sm">
               <CreditCard className="w-4 h-4 text-emerald-400" />
-              <span>Gateway de Pagamentos</span>
+              <span>AbacatePay</span>
             </div>
           </div>
         </div>

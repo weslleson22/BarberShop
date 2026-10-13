@@ -39,9 +39,14 @@ interface Plan {
   durationDays?: number
   trialDays?: number
   cycleType?: string
+  planType?: string
   provider?: string
+  providerProductId?: string
+  isSyncedWithAbacate?: boolean
   features?: string[] | any
   isActive: boolean
+  status?: string
+  deletedAt?: string | null
 }
 
 interface Subscription {
@@ -216,7 +221,20 @@ function AssinaturaContent() {
 
       if (plansRes.ok) {
         const plansData = await plansRes.json()
-        setPlans(Array.isArray(plansData) ? plansData.filter((p: Plan) => p.isActive) : [])
+        // Filtra estritamente apenas os planos comerciais ativos cadastrados na AbacatePay
+        // NUNCA exibe planos descontinuados (status === 'INACTIVE', isActive === false ou deletedAt)
+        const abacatePlans = Array.isArray(plansData)
+          ? plansData.filter(
+              (p: Plan) =>
+                p.isActive === true &&
+                p.status !== 'INACTIVE' &&
+                !p.deletedAt &&
+                p.planType !== 'COURTESY' &&
+                Number(p.price) > 0 &&
+                (Boolean(p.providerProductId) || p.provider === 'ABACATEPAY' || p.isSyncedWithAbacate)
+            )
+          : []
+        setPlans(abacatePlans)
       }
 
       if (invRes.ok) {
@@ -313,6 +331,10 @@ function AssinaturaContent() {
   // Abre o checkout AbacatePay com os dados da base pré-carregados e editáveis
   const handleOpenCheckout = (plan: Plan, method: 'PIX' | 'CREDIT_CARD') => {
     setErrorMessage(null)
+    if (!plan.providerProductId && plan.provider !== 'ABACATEPAY' && !plan.isSyncedWithAbacate) {
+      setErrorMessage('Este plano não está sincronizado com a AbacatePay para pagamento.')
+      return
+    }
     setCheckoutModal({
       isOpen: true,
       plan,
@@ -620,6 +642,10 @@ function AssinaturaContent() {
   const periodEnd = subscription?.currentPeriodEnd || subscription?.trialEnd
   const daysRemaining = getDaysRemaining(periodEnd)
   const isYearly = subscription?.cycleType === 'YEARLY' || subscription?.plan?.billingInterval === 'YEARLY'
+  const isCurrentPlanDiscontinued = Boolean(
+    subscription?.plan &&
+    (subscription.plan.status === 'INACTIVE' || subscription.plan.isActive === false || Boolean(subscription.plan.deletedAt))
+  )
 
   if (authLoading || (user?.role === 'DEVELOPER')) {
     return (
@@ -694,17 +720,29 @@ function AssinaturaContent() {
                       {isYearly ? 'Ciclo Anual' : 'Ciclo Mensal'}
                     </span>
                   )}
+                  {isCurrentPlanDiscontinued && (
+                    <span className="px-2 py-0.5 text-xs rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium inline-flex items-center gap-1">
+                      <Info className="w-3 h-3" />
+                      Plano Descontinuado para novas contratações
+                    </span>
+                  )}
                 </div>
                 <h2 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
                   {subscription?.planName || subscription?.plan?.name || (subscription?.status === 'TRIALING' ? 'Plano Trial Gratuito (30 dias)' : 'Sem plano contratado')}
                 </h2>
-                <p className="text-sm text-muted-foreground max-w-2xl">
-                  {subscription?.status === 'ACTIVE'
-                    ? 'Acesso a todas as ferramentas essenciais para sua barbearia: agendamento online ilimitado, gestão de equipe, comissões e relatórios completos.'
-                    : subscription?.status === 'TRIALING'
-                    ? 'Você está no período de avaliação gratuita. Acesso a todas as ferramentas essenciais para sua barbearia.'
-                    : 'Escolha um dos planos abaixo com pagamento via Cartão de Crédito ou PIX para liberar o acesso a todas as ferramentas essenciais da sua barbearia.'}
-                </p>
+                {isCurrentPlanDiscontinued ? (
+                  <p className="text-sm text-amber-300 max-w-2xl bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                    <strong>Aviso:</strong> O plano atual da sua barbearia foi descontinuado para novas contratações. Seu acesso permanece 100% ativo e garantido até o vencimento do período contratado. Para renovar com os recursos atuais, selecione um dos novos planos oficiais abaixo.
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground max-w-2xl">
+                    {subscription?.status === 'ACTIVE'
+                      ? 'Acesso a todas as ferramentas essenciais para sua barbearia: agendamento online ilimitado, gestão de equipe, comissões e relatórios completos.'
+                      : subscription?.status === 'TRIALING'
+                      ? 'Você está no período de avaliação gratuita. Acesso a todas as ferramentas essenciais para sua barbearia.'
+                      : 'Escolha um dos planos abaixo com pagamento via Cartão de Crédito ou PIX para liberar o acesso a todas as ferramentas essenciais da sua barbearia.'}
+                  </p>
+                )}
               </div>
 
               {subscription?.status === 'ACTIVE' && subscription.price && (
@@ -794,9 +832,15 @@ function AssinaturaContent() {
         <div>
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-xl font-bold text-foreground">Planos Disponíveis para Contratação</h2>
-              <p className="text-sm text-muted-foreground">
-                Escolha o plano ideal com cobrança 100% segura via <strong>PIX</strong> ou <strong>Cartão de Crédito</strong>.
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground">Planos Disponíveis para Contratação</h2>
+                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  AbacatePay Oficial
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Planos oficiais sincronizados com a <strong>AbacatePay</strong>. Cobrança segura via <strong>PIX</strong> ou <strong>Cartão de Crédito</strong>.
               </p>
             </div>
           </div>
@@ -808,8 +852,14 @@ function AssinaturaContent() {
               ))}
             </div>
           ) : plans.length === 0 ? (
-            <div className="bg-card border border-border rounded-2xl p-8 text-center">
-              <p className="text-muted-foreground text-sm">Nenhum plano disponível no momento.</p>
+            <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+                <CreditCard className="w-6 h-6" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">Nenhum plano disponível na AbacatePay</h3>
+              <p className="text-muted-foreground text-xs max-w-md mx-auto">
+                Apenas os planos cadastrados e ativos na AbacatePay são exibidos aqui para contratação.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

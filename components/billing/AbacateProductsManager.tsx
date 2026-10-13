@@ -17,6 +17,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Loader2,
+  Trash2,
   X
 } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
@@ -69,6 +70,14 @@ export default function AbacateProductsManager() {
     description: '',
   })
   const [creatingProduct, setCreatingProduct] = useState(false)
+
+  // Estado para exclusão de produto ou plano
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<{
+    id: string
+    name: string
+    type: 'abacate' | 'local'
+  } | null>(null)
+  const [deletingProduct, setDeletingProduct] = useState(false)
 
   useEffect(() => {
     fetchProductsAndPlans()
@@ -195,6 +204,41 @@ export default function AbacateProductsManager() {
       setFeedback({ type: 'error', message: err.message || 'Erro ao cadastrar produto' })
     } finally {
       setCreatingProduct(false)
+    }
+  }
+
+  // Executa exclusão do produto na AbacatePay ou do plano no sistema
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmItem) return
+    setDeletingProduct(true)
+    setFeedback(null)
+    try {
+      const isAbacate = deleteConfirmItem.type === 'abacate'
+      const query = isAbacate
+        ? `productId=${encodeURIComponent(deleteConfirmItem.id)}`
+        : `planId=${encodeURIComponent(deleteConfirmItem.id)}&deleteLocalPlan=true`
+
+      const res = await fetch(`/api/billing/products?${query}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        setFeedback({
+          type: 'success',
+          message: data.message || `Item "${deleteConfirmItem.name}" excluído com sucesso!`,
+        })
+        setDeleteConfirmItem(null)
+        await fetchProductsAndPlans()
+      } else {
+        throw new Error(data.error || 'Erro ao excluir item')
+      }
+    } catch (err: any) {
+      setFeedback({ type: 'error', message: err.message || 'Falha ao excluir item' })
+    } finally {
+      setDeletingProduct(false)
     }
   }
 
@@ -421,9 +465,19 @@ export default function AbacateProductsManager() {
                         {prod.description || '-'}
                       </td>
                       <td className="py-3.5 text-right">
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                          Ativo na API
-                        </span>
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            Ativo na API
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirmItem({ id: prod.id, name: prod.name, type: 'abacate' })}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                            title="Excluir produto da AbacatePay"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -517,30 +571,40 @@ export default function AbacateProductsManager() {
                         )}
                       </td>
                       <td className="py-3.5 text-right">
-                        {plan.isSyncedWithAbacate ? (
+                        <div className="flex items-center justify-end gap-2">
+                          {plan.isSyncedWithAbacate ? (
+                            <button
+                              type="button"
+                              onClick={() => handleSyncPlan(plan.id)}
+                              disabled={syncingPlanId === plan.id}
+                              className="text-xs text-muted-foreground hover:text-foreground font-medium underline cursor-pointer disabled:opacity-50"
+                            >
+                              {syncingPlanId === plan.id ? 'Revalidando...' : 'Revalidar'}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSyncPlan(plan.id)}
+                              disabled={syncingPlanId === plan.id}
+                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                            >
+                              {syncingPlanId === plan.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-3 h-3" />
+                              )}
+                              <span>Sincronizar</span>
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={() => handleSyncPlan(plan.id)}
-                            disabled={syncingPlanId === plan.id}
-                            className="text-xs text-muted-foreground hover:text-foreground font-medium underline cursor-pointer disabled:opacity-50"
+                            onClick={() => setDeleteConfirmItem({ id: plan.id, name: plan.name, type: 'local' })}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                            title="Excluir plano do sistema"
                           >
-                            {syncingPlanId === plan.id ? 'Revalidando...' : 'Revalidar'}
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleSyncPlan(plan.id)}
-                            disabled={syncingPlanId === plan.id}
-                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg transition cursor-pointer disabled:opacity-50 flex items-center gap-1 ml-auto"
-                          >
-                            {syncingPlanId === plan.id ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <RefreshCw className="w-3 h-3" />
-                            )}
-                            <span>Sincronizar</span>
-                          </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -624,6 +688,62 @@ export default function AbacateProductsManager() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {deleteConfirmItem && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in-95 space-y-4">
+            <div className="flex items-center gap-3 text-destructive">
+              <div className="w-10 h-10 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <h3 className="font-bold text-foreground text-base">
+                  {deleteConfirmItem.type === 'abacate' ? 'Excluir Produto da AbacatePay' : 'Excluir Plano do Sistema'}
+                </h3>
+                <span className="text-xs text-muted-foreground">Esta ação é permanente e irreversível</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Você tem certeza que deseja excluir permanentemente o item{' '}
+              <strong className="text-foreground">"{deleteConfirmItem.name}"</strong>
+              {deleteConfirmItem.type === 'abacate'
+                ? ' da sua conta na AbacatePay? O produto deixará de existir no gateway de pagamento.'
+                : ' do banco de dados do sistema?'}
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmItem(null)}
+                disabled={deletingProduct}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={deletingProduct}
+                className="px-4 py-2 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+              >
+                {deletingProduct ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Excluindo...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirmar Exclusão</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

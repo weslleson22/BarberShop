@@ -779,6 +779,31 @@ export async function createAbacateProduct(params: {
   return json.data
 }
 
+/**
+ * Remove/deleta um produto permanentemente na AbacatePay
+ */
+export async function deleteAbacateProduct(productId: string): Promise<{ success: boolean; error?: string }> {
+  const apiKey = getAbacateApiKey()
+  try {
+    const res = await fetch(`${ABACATEPAY_BASE_URL}/products/delete`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: productId }),
+    })
+    const json = await res.json()
+    if (res.ok && json.success) {
+      return { success: true }
+    }
+    return { success: false, error: json.error || 'Erro ao excluir produto na AbacatePay' }
+  } catch (err: any) {
+    console.warn('[ABACATEPAY_DELETE_PRODUCT_ERROR]', err?.message)
+    return { success: false, error: err?.message || 'Falha de comunicação com AbacatePay' }
+  }
+}
+
 // ==========================================
 // GESTÃO E SINCRONIZAÇÃO DE CLIENTES ABACATEPAY
 // Os clientes na AbacatePay são os Administradores das Barbearias

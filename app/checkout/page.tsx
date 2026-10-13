@@ -44,26 +44,50 @@ function CheckoutContent() {
         console.warn('Erro ao carregar config:', e)
       }
 
-      // 2. Carrega dados do plano selecionado
+      // 2. Carrega dados do plano selecionado via AbacatePay
       let foundProduct: CheckoutProduct | null = null
-      if (planId) {
-        const planRes = await fetch('/api/billing/plans', {
-          headers: getAuthHeaders(),
-          credentials: 'include',
-        })
-        if (planRes.ok) {
-          const plans = await planRes.json()
-          if (Array.isArray(plans)) {
-            const found = plans.find((p: any) => p.id === planId)
+      const planRes = await fetch('/api/billing/plans', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      })
+
+      if (planRes.ok) {
+        const plans = await planRes.json()
+        if (Array.isArray(plans)) {
+          // Filtra estritamente apenas planos ativos e válidos não descontinuados
+          const activePlans = plans.filter(
+            (p: any) => p.isActive === true && p.status !== 'INACTIVE' && !p.deletedAt
+          )
+
+          if (planId) {
+            const found = activePlans.find(
+              (p: any) => p.id === planId || p.providerProductId === planId
+            )
             if (found) {
               foundProduct = {
                 id: found.id,
                 name: found.name,
-                description: found.description || 'Assinatura BarberShop Pro',
+                description: found.description || `Assinatura ${found.name} - BarberShop Pro`,
                 price: Number(found.price),
                 currency: found.currency || 'BRL',
                 billingInterval: found.billingInterval || 'MONTHLY',
               }
+            } else {
+              setErrorMessage(
+                'O plano selecionado foi descontinuado e não está mais disponível para novas contratações.'
+              )
+              setLoading(false)
+              return
+            }
+          } else if (activePlans.length > 0) {
+            const chosen = activePlans[0]
+            foundProduct = {
+              id: chosen.id,
+              name: chosen.name,
+              description: chosen.description || `Assinatura ${chosen.name} - BarberShop Pro`,
+              price: Number(chosen.price),
+              currency: chosen.currency || 'BRL',
+              billingInterval: chosen.billingInterval || 'MONTHLY',
             }
           }
         }
@@ -103,18 +127,11 @@ function CheckoutContent() {
         }
       }
 
-      // Define o produto encontrado ou fallback padrão se nenhum planId for fornecido
+      // Define o produto encontrado ou alerta de indisponibilidade
       if (foundProduct) {
         setProduct(foundProduct)
       } else {
-        setProduct({
-          id: 'plan_pro_default',
-          name: 'Plano BarberShop Pro',
-          description: 'Gestão completa da sua barbearia com agendamento online ilimitado',
-          price: 49.9,
-          currency: 'BRL',
-          billingInterval: 'MONTHLY',
-        })
+        setErrorMessage('Nenhum plano ativo sincronizado com a AbacatePay foi encontrado para contratação.')
       }
     } catch (err: any) {
       console.error('Erro ao carregar checkout:', err)

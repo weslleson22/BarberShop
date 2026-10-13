@@ -698,5 +698,68 @@ describe('EVOLUÇÃO DO SISTEMA DE PLANOS E ASSINATURAS SAAS (REQUISITOS 1 A 28)
       expect(loadedSub.durationDays).toEqual(originalSubDuration)
       expect(loadedSub.planName).toEqual(originalSubPlanName)
     })
+
+    it('25. Planos descontinuados NÃO podem ser mostrados para os administradores das barbearias', async () => {
+      // Cria plano ativo sincronizado com AbacatePay
+      const activePlan = await createPlan({
+        name: 'Plano Barba Pro Ativo',
+        slug: 'barba-pro-ativo',
+        price: '49.90',
+        provider: 'ABACATEPAY',
+        providerProductId: 'prod_ativo_123',
+      })
+
+      // Cria plano descontinuado
+      const discontinuedPlan = await createPlan({
+        name: 'Plano Barba Pro Descontinuado',
+        slug: 'barba-pro-antigo',
+        price: '29.90',
+        provider: 'ABACATEPAY',
+        providerProductId: 'prod_descontinuado_999',
+      })
+      await deleteOrDeactivatePlan(discontinuedPlan.id)
+
+      // Administrador da barbearia consulta planos para contratação
+      mockAuthUser = { id: 'admin_barbearia', role: 'ADMIN', barbershopId: 'shop_1' }
+      const req = new NextRequest('http://localhost:3000/api/billing/plans')
+      const res = await getPlansRoute(req)
+      expect(res.status).toBe(200)
+
+      const returnedPlans = await res.json()
+      expect(Array.isArray(returnedPlans)).toBe(true)
+
+      // Deve conter o plano ativo
+      const hasActive = returnedPlans.some((p: any) => p.id === activePlan.id)
+      expect(hasActive).toBe(true)
+
+      // JAMAIS pode conter o plano descontinuado
+      const hasDiscontinued = returnedPlans.some(
+        (p: any) =>
+          p.id === discontinuedPlan.id ||
+          p.name === discontinuedPlan.name ||
+          p.status === 'INACTIVE' ||
+          !p.isActive
+      )
+      expect(hasDiscontinued).toBe(false)
+    })
+
+    it('26. GET por ID de plano descontinuado para ADMIN de barbearia deve retornar 404', async () => {
+      const discontinuedPlan = await createPlan({
+        name: 'Plano Especial Antigo',
+        slug: 'especial-antigo',
+        price: '89.90',
+      })
+      await deleteOrDeactivatePlan(discontinuedPlan.id)
+
+      mockAuthUser = { id: 'admin_barbearia', role: 'ADMIN', barbershopId: 'shop_1' }
+      const req = new NextRequest(`http://localhost:3000/api/billing/plans/${discontinuedPlan.id}`)
+      const res = await getPlanByIdRoute(req, {
+        params: Promise.resolve({ id: discontinuedPlan.id }),
+      })
+
+      expect(res.status).toBe(404)
+      const data = await res.json()
+      expect(data.error).toContain('descontinuado')
+    })
   })
 })

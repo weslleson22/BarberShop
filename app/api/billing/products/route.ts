@@ -5,6 +5,7 @@ import {
   listAbacateProducts,
   createAbacateProduct,
   syncAbacateProduct,
+  deleteAbacateProduct,
 } from '@/lib/billing/abacatepay-provider'
 
 export const dynamic = 'force-dynamic'
@@ -153,6 +154,87 @@ export async function POST(request: NextRequest) {
     console.error('Erro ao sincronizar/criar produto:', error)
     return NextResponse.json(
       { error: error.message || 'Erro ao gerenciar produto na AbacatePay' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Excluir produto na AbacatePay e/ou desvincular do banco local
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = getAuthUser(request)
+    if (!requireRole(user, ['DEVELOPER'])) {
+      return NextResponse.json(
+        { error: 'Apenas desenvolvedores podem excluir produtos na AbacatePay' },
+        { status: 403 }
+      )
+    }
+
+    const { searchParams } = new URL(request.url)
+    const body = await request.json().catch(() => ({}))
+    const productId = searchParams.get('productId') || searchParams.get('id') || body.productId || body.id
+    const planId = searchParams.get('planId') || body.planId
+    const deleteLocalPlan = searchParams.get('deleteLocalPlan') === 'true' || Boolean(body.deleteLocalPlan)
+
+    if (!productId && !planId) {
+      return NextResponse.json(
+        { error: 'Informe o ID do produto da AbacatePay (productId) ou o ID do plano (planId)' },
+        { status: 400 }
+      )
+    }
+
+    let targetProductId = productId
+
+    if (planId && !targetProductId) {
+      const plan = await prisma.plan.findUnique({ where: { id: planId } })
+      if (plan?.providerProductId) {
+        targetProductId = plan.providerProductId
+      }
+    }
+
+    let abacateError: string | null = null
+
+    if (targetProductId) {
+      const abacateResult = await deleteAbacateProduct(targetProductId)
+      if (!abacateResult.success) {
+        abacateError = abacateResult.error || 'Erro na API da AbacatePay'
+        console.warn(`[ABACATE_DELETE_WARN] Produto ${targetProductId}:`, abacateError)
+      }
+
+      // Desvincula o produto dos planos locais que o utilizavam
+      await prisma.plan.updateMany({
+        where: { providerProductId: targetProductId },
+        data: { providerProductId: null },
+      })
+    }
+
+    // Se solicitado para também excluir o plano local
+    if (planId && deleteLocalPlan) {
+      try {
+        await prisma.plan.delete({ where: { id: planId } })
+      } catch {
+        await prisma.plan.update({
+          where: { id: planId },
+          data: { status: 'INACTIVE', isActive: false, deletedAt: new Date() },
+        })
+      }
+    }
+
+    if (abacateError && !targetProductId?.startsWith('prod_dev_')) {
+      return NextResponse.json({
+        success: false,
+        error: abacateError,
+      }, { status: 400 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Produto ${targetProductId || planId} excluído com sucesso da AbacatePay!`,
+    })
+  } catch (error: any) {
+    console.error('Erro ao excluir produto:', error)
+    return NextResponse.json(
+      { error: error.message || 'Erro ao excluir produto' },
       { status: 500 }
     )
   }

@@ -72,3 +72,47 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Erro ao buscar faturas' }, { status: 500 })
   }
 }
+
+// DELETE - Excluir ou cancelar fatura (Exclusivo DEVELOPER)
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = getAuthUser(request)
+    if (!user || user.role !== 'DEVELOPER') {
+      return NextResponse.json({ error: 'Acesso restrito ao perfil DEVELOPER' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const invoiceId = searchParams.get('id')
+    if (!invoiceId) {
+      return NextResponse.json({ error: 'ID da fatura é obrigatório' }, { status: 400 })
+    }
+
+    const existing = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Fatura não encontrada' }, { status: 404 })
+    }
+
+    // Se estiver paga, exige force=true para remover
+    if (existing.status === 'PAID') {
+      const force = searchParams.get('force') === 'true'
+      if (!force) {
+        return NextResponse.json(
+          { error: 'Faturas pagas não podem ser excluídas diretamente (compliance financeiro). Use force=true para confirmar.' },
+          { status: 400 }
+        )
+      }
+    }
+
+    await prisma.invoice.delete({
+      where: { id: invoiceId },
+    })
+
+    return NextResponse.json({ success: true, message: 'Fatura excluída com sucesso!' })
+  } catch (error: any) {
+    console.error('Erro ao excluir fatura:', error)
+    return NextResponse.json({ error: error.message || 'Erro ao excluir fatura' }, { status: 500 })
+  }
+}

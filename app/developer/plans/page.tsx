@@ -41,6 +41,9 @@ export interface PlanItem {
   status: 'ACTIVE' | 'INACTIVE'
   isActive: boolean
   provider?: string
+  providerProductId?: string
+  isSyncedWithAbacate?: boolean
+  abacateProductId?: string | null
   createdAt: string
   _count?: {
     subscriptions: number
@@ -253,6 +256,31 @@ export default function DeveloperPlansPage() {
       setFeedback({ type: 'error', message: 'Erro de conexão com o servidor.' })
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  // Handle Sync with AbacatePay
+  const handleSyncPlanWithAbacate = async (planId: string) => {
+    try {
+      setFeedback(null)
+      const res = await fetch('/api/billing/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ planId }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setFeedback({ type: 'success', message: data.message || 'Plano sincronizado com a AbacatePay com sucesso!' })
+        await fetchPlans()
+      } else {
+        setFeedback({ type: 'error', message: data.error || 'Erro ao sincronizar com AbacatePay.' })
+      }
+    } catch {
+      setFeedback({ type: 'error', message: 'Falha na conexão ao sincronizar com AbacatePay.' })
     }
   }
 
@@ -567,15 +595,28 @@ export default function DeveloperPlansPage() {
 
                         {/* Tipo Column */}
                         <td className="py-4 px-3">
-                          {isCourtesy ? (
-                            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                              Cortesia
-                            </span>
-                          ) : (
-                            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                              Pago
-                            </span>
-                          )}
+                          <div className="flex flex-col gap-1 items-start">
+                            {isCourtesy ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                Cortesia
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                Pago
+                              </span>
+                            )}
+                            {!isCourtesy && (
+                              plan.isSyncedWithAbacate || plan.providerProductId ? (
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1" title={plan.providerProductId || 'Sincronizado'}>
+                                  <Check className="w-2.5 h-2.5" /> AbacatePay
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20" title="Não sincronizado com AbacatePay">
+                                  Não Sincronizado
+                                </span>
+                              )
+                            )}
+                          </div>
                         </td>
 
                         {/* Ciclo Column */}
@@ -625,6 +666,16 @@ export default function DeveloperPlansPage() {
 
                         {/* Ações Column */}
                         <td className="py-4 px-4 md:px-6 text-right space-x-1.5 whitespace-nowrap">
+                          {!isCourtesy && !plan.isSyncedWithAbacate && !plan.providerProductId && plan.status === 'ACTIVE' && (
+                            <button
+                              onClick={() => handleSyncPlanWithAbacate(plan.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold transition-all shadow-sm"
+                              title="Criar/Sincronizar produto na AbacatePay"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>Sincronizar</span>
+                            </button>
+                          )}
                           {plan.status === 'ACTIVE' ? (
                             <>
                               <button

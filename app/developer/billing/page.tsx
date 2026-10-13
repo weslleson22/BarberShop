@@ -24,7 +24,9 @@ import {
   Sliders,
   Receipt,
   QrCode,
-  Package
+  Package,
+  Trash2,
+  AlertCircle
 } from 'lucide-react'
 
 interface SubscriptionItem {
@@ -115,6 +117,26 @@ function DeveloperBillingContent() {
       loadBillingData()
     }
   }, [user])
+
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    if (!confirm('Deseja realmente excluir esta fatura? Esta ação é irreversível.')) return
+    try {
+      const headers = getAuthHeaders()
+      const res = await fetch(`/api/billing/invoices?id=${invoiceId}&force=true`, {
+        method: 'DELETE',
+        headers,
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (res.ok) {
+        await loadBillingData()
+      } else {
+        alert(data.error || 'Erro ao excluir fatura')
+      }
+    } catch {
+      alert('Falha na comunicação ao tentar excluir fatura')
+    }
+  }
 
   const formatPrice = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
@@ -407,33 +429,52 @@ function DeveloperBillingContent() {
 
         {/* Invoices Table */}
         {activeTab === 'invoices' && (
-          <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm">
-            {loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className="h-14 bg-muted/30 rounded-xl animate-pulse" />
-                ))}
+          <div className="space-y-4">
+            {/* Aviso e atalho para gestão de produtos */}
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 text-foreground">
+                <Package className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>
+                  Procurando os produtos e planos da <strong>AbacatePay</strong> para criar ou <strong>excluir</strong>?
+                </span>
               </div>
-            ) : invoices.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-border rounded-xl">
-                <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                <p className="text-sm font-medium text-foreground">Nenhuma fatura registrada na plataforma.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-xs text-muted-foreground">
-                      <th className="pb-3 font-medium">Barbearia</th>
-                      <th className="pb-3 font-medium"># Sequência</th>
-                      <th className="pb-3 font-medium">Valor</th>
-                      <th className="pb-3 font-medium">Status</th>
-                      <th className="pb-3 font-medium">Vencimento</th>
-                      <th className="pb-3 font-medium">Pagamento</th>
-                      <th className="pb-3 font-medium text-right">Comprovante</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
+              <button
+                type="button"
+                onClick={() => setActiveTab('produtos')}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>Gerenciar Produtos na AbacatePay</span>
+              </button>
+            </div>
+
+            <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm">
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="h-14 bg-muted/30 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              ) : invoices.length === 0 ? (
+                <div className="text-center py-12 border border-dashed border-border rounded-xl">
+                  <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                  <p className="text-sm font-medium text-foreground">Nenhuma fatura registrada na plataforma.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-xs text-muted-foreground">
+                        <th className="pb-3 font-medium">Barbearia</th>
+                        <th className="pb-3 font-medium"># Sequência</th>
+                        <th className="pb-3 font-medium">Valor</th>
+                        <th className="pb-3 font-medium">Status</th>
+                        <th className="pb-3 font-medium">Vencimento</th>
+                        <th className="pb-3 font-medium">Pagamento</th>
+                        <th className="pb-3 font-medium text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
                     {invoices.map((inv, idx) => (
                       <tr key={inv.id} className="hover:bg-muted/20 transition-colors">
                         <td className="py-3.5 text-xs font-semibold text-foreground">
@@ -463,19 +504,27 @@ function DeveloperBillingContent() {
                         <td className="py-3.5 text-xs text-muted-foreground">{formatDate(inv.dueDate)}</td>
                         <td className="py-3.5 text-xs text-muted-foreground">{formatDate(inv.paidAt)}</td>
                         <td className="py-3.5 text-right">
-                          {inv.hostedInvoiceUrl ? (
-                            <a
-                              href={inv.hostedInvoiceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                          <div className="flex items-center justify-end gap-2">
+                            {inv.hostedInvoiceUrl ? (
+                              <a
+                                href={inv.hostedInvoiceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                              >
+                                <span>Recibo</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteInvoice(inv.id)}
+                              className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                              title="Excluir fatura"
                             >
-                              <span>Recibo</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
-                          )}
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -484,7 +533,8 @@ function DeveloperBillingContent() {
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
       </main>
     </div>
   )

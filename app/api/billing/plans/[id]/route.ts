@@ -47,9 +47,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Plano não encontrado' }, { status: 404 })
     }
 
-    // Se o plano estiver inativo, apenas DEVELOPER pode consultar detalhes completos
-    if (plan.status === 'INACTIVE' && (!user || user.role !== 'DEVELOPER')) {
-      return NextResponse.json({ error: 'Acesso restrito' }, { status: 403 })
+    // Se o plano estiver inativo ou descontinuado, apenas DEVELOPER pode consultar detalhes
+    const isDiscontinued = plan.status === 'INACTIVE' || !plan.isActive || Boolean(plan.deletedAt)
+    if (isDiscontinued && (!user || user.role !== 'DEVELOPER')) {
+      return NextResponse.json(
+        { error: 'Este plano foi descontinuado e não está disponível para novas contratações.' },
+        { status: 404 }
+      )
     }
 
     const activeCount = (plan.subscriptions || []).filter(

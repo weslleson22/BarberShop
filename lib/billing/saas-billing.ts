@@ -341,9 +341,19 @@ export async function updatePlan(planId: string, data: UpdatePlanInput): Promise
   if (data.status !== undefined) {
     updateData.status = data.status
     updateData.isActive = data.status === 'ACTIVE'
+    if (data.status === 'INACTIVE') {
+      updateData.deletedAt = new Date()
+    } else if (data.status === 'ACTIVE') {
+      updateData.deletedAt = null
+    }
   } else if (data.isActive !== undefined) {
     updateData.isActive = data.isActive
     updateData.status = data.isActive ? 'ACTIVE' : 'INACTIVE'
+    if (!data.isActive) {
+      updateData.deletedAt = new Date()
+    } else {
+      updateData.deletedAt = null
+    }
   }
 
   if (data.provider !== undefined) updateData.provider = data.provider
@@ -424,6 +434,7 @@ export interface GetPlansFilters {
   planType?: PlanType
   cycleType?: CycleType
   status?: PlanStatus
+  onlyAbacate?: boolean
 }
 
 /**
@@ -436,19 +447,34 @@ export async function getPlans(options: boolean | GetPlansFilters = true): Promi
     if (options) {
       where.status = 'ACTIVE'
       where.isActive = true
+      where.deletedAt = null
     }
   } else if (options) {
     if (options.onlyActive) {
       where.status = 'ACTIVE'
       where.isActive = true
+      where.deletedAt = null
     } else if (options.status) {
       where.status = options.status
+      if (options.status === 'ACTIVE') {
+        where.isActive = true
+        where.deletedAt = null
+      }
     }
     if (options.planType) {
       where.planType = options.planType
     }
     if (options.cycleType) {
       where.cycleType = options.cycleType
+    }
+    if (options.onlyAbacate) {
+      where.providerProductId = { not: null }
+      where.provider = 'ABACATEPAY'
+      where.planType = 'PAID'
+      where.price = { gt: 0 }
+      where.status = 'ACTIVE'
+      where.isActive = true
+      where.deletedAt = null
     }
   }
 

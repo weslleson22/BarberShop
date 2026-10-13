@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Plano não encontrado' }, { status: 404 })
     }
 
-    if (planToSubscribe.status === 'INACTIVE' || !planToSubscribe.isActive) {
+    if (planToSubscribe.status === 'INACTIVE' || !planToSubscribe.isActive || Boolean(planToSubscribe.deletedAt)) {
       return NextResponse.json(
         { error: 'Não é possível assinar um plano inativo ou descontinuado' },
         { status: 400 }

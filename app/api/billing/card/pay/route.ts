@@ -111,9 +111,9 @@ export async function POST(request: NextRequest) {
       where: { id: planId },
     })
 
-    if (!plan || plan.status === 'INACTIVE' || !plan.isActive) {
+    if (!plan || plan.status === 'INACTIVE' || !plan.isActive || Boolean(plan.deletedAt)) {
       return NextResponse.json(
-        { error: 'Plano não encontrado ou inativo para novas contratações.' },
+        { error: 'Plano não encontrado ou descontinuado para novas contratações.' },
         { status: 404 }
       )
     }
