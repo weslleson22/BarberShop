@@ -710,7 +710,7 @@ export default function AbacateProductsManager() {
 
             <p className="text-xs text-muted-foreground leading-relaxed">
               Você tem certeza que deseja excluir permanentemente o item{' '}
-              <strong className="text-foreground">"{deleteConfirmItem.name}"</strong>
+              <strong className="text-foreground">&quot;{deleteConfirmItem.name}&quot;</strong>
               {deleteConfirmItem.type === 'abacate'
                 ? ' da sua conta na AbacatePay? O produto deixará de existir no gateway de pagamento.'
                 : ' do banco de dados do sistema?'}
