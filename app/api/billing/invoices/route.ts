@@ -66,7 +66,33 @@ export async function GET(request: NextRequest) {
       orderBy: { dueDate: 'desc' },
     })
 
-    return NextResponse.json(invoices)
+    const mappedInvoices = invoices.map((inv) => {
+      let hostedInvoiceUrl: string | null = null
+      const rawId = inv.providerInvoiceId || ''
+
+      if (rawId.includes('/pay/')) {
+        // Converte link de pagamento de checkout (/pay/) para o link oficial de comprovante (/receipt/)
+        hostedInvoiceUrl = rawId.replace('/pay/', '/receipt/')
+      } else if (rawId.startsWith('http://') || rawId.startsWith('https://')) {
+        hostedInvoiceUrl = rawId
+      } else if (rawId) {
+        hostedInvoiceUrl = `https://app.abacatepay.com/receipt/${rawId}`
+      } else if (inv.status === 'PAID') {
+        hostedInvoiceUrl = 'https://app.abacatepay.com/billings'
+      }
+
+      if (hostedInvoiceUrl && hostedInvoiceUrl.startsWith('https://abacatepay.com/receipt/')) {
+        hostedInvoiceUrl = hostedInvoiceUrl.replace('https://abacatepay.com/receipt/', 'https://app.abacatepay.com/receipt/')
+      }
+
+      return {
+        ...inv,
+        amount: Number(inv.amount),
+        hostedInvoiceUrl,
+      }
+    })
+
+    return NextResponse.json(mappedInvoices)
   } catch (error) {
     console.error('Erro ao buscar faturas:', error)
     return NextResponse.json({ error: 'Erro ao buscar faturas' }, { status: 500 })

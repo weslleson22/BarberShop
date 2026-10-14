@@ -280,10 +280,20 @@ export async function processBillingWebhook(
         }
 
         if (subscription) {
-          // Registra ou atualiza fatura com status PAID
-          const providerInvoiceId = eventData.id || `inv_${Date.now()}`
+          // Registra ou atualiza fatura com status PAID e link do comprovante
+          const providerInvoiceId =
+            eventData.receiptUrl ||
+            eventData.url ||
+            (eventData.id ? `https://app.abacatepay.com/pay/${eventData.id}` : null) ||
+            `inv_${Date.now()}`
           let invoice = await tx.invoice.findFirst({
-            where: { providerInvoiceId },
+            where: {
+              OR: [
+                { providerInvoiceId },
+                ...(eventData.id ? [{ providerInvoiceId: eventData.id }] : []),
+                { subscriptionId: subscription.id, status: 'OPEN' },
+              ],
+            },
           })
 
           const finalAmount = amountPaid.isZero() && plan ? plan.price : amountPaid

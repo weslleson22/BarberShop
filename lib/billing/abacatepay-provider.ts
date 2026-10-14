@@ -199,6 +199,57 @@ export async function syncAbacateProduct(plan: Plan, forceSync: boolean = false)
 }
 
 /**
+ * Sincroniza produto de checkout avulso na AbacatePay sem ciclo de recorrência obrigatório.
+ * Isso permite pagamentos via PIX padrão (QR Code imediato) e Cartão de Crédito
+ * sem exigir que a loja tenha a permissão bancária de 'PIX Automático' habilitada.
+ */
+export async function syncAbacateCheckoutProduct(plan: Plan, forceSync: boolean = false): Promise<string> {
+  const apiKey = getAbacateApiKey()
+  const externalId = `chk_${plan.id}`
+  const priceInCents = Math.round(Number(plan.price) * 100)
+
+  try {
+    const res = await fetch(`${ABACATEPAY_BASE_URL}/products/create`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        externalId,
+        name: plan.name,
+        price: priceInCents,
+        currency: 'BRL',
+        description: plan.description || `Assinatura ${plan.name} - BarberShop Pro`,
+      }),
+    })
+
+    const json = await res.json()
+
+    if (res.ok && json.success && json.data?.id) {
+      return json.data.id
+    }
+
+    // Se já existir ou erro, busca na lista de produtos pelo externalId
+    const listRes = await fetch(`${ABACATEPAY_BASE_URL}/products/list`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    })
+    const listJson = await listRes.json()
+    if (listJson.success && Array.isArray(listJson.data)) {
+      const found = listJson.data.find((p: any) => p.externalId === externalId)
+      if (found) {
+        return found.id
+      }
+    }
+  } catch (err: any) {
+    console.warn('[ABACATEPAY_CHECKOUT_PRODUCT_WARN]', err?.message)
+  }
+
+  // Fallback
+  return syncAbacateProduct(plan, forceSync)
+}
+
+/**
  * Localiza ou cria o ID do cliente na AbacatePay (cust_...)
  * Essencial para vincular cobranças e assinaturas ao perfil do cliente
  */
@@ -392,8 +443,9 @@ export async function createAbacateCheckoutSession(
     }
   }
 
-  // 2. MODO HOSPEDADO (HOSTED CHECKOUT): Redireciona para checkout AbacatePay
-  const productId = await syncAbacateProduct(plan)
+  // 2. MODO HOSPEDADO (HOSTED CHECKOUT): Redireciona para checkout oficial AbacatePay
+  // Sincroniza produto sem ciclo obrigatório para liberar PIX padrão (QR Code) e Cartão sem exigir PIX Automático
+  const productId = await syncAbacateCheckoutProduct(plan)
 
   const body: any = {
     items: [{ id: productId, quantity: 1 }],
@@ -411,47 +463,109 @@ export async function createAbacateCheckoutSession(
     body.customerId = resolvedCustomerId
   }
 
-  // Tenta criar como Assinatura Recorrente (/subscriptions/create)
   let checkoutData: any = null
-  try {
-    const subRes = await fetch(`${ABACATEPAY_BASE_URL}/subscriptions/create`, {
+
+  // Chama o endpoint oficial de Checkout Hospedado da AbacatePay
+  let res = await fetch(`${ABACATEPAY_BASE_URL}/checkouts/create`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  let json = await res.json()
+
+  // 1. Tratamento para restrição de "PIX Automático is not available for this store"
+  if (
+    (!res.ok || !json.success) &&
+    typeof json.error === 'string' &&
+    (json.error.includes('PIX Automático') || json.error.includes('Pix Automático'))
+  ) {
+    console.warn('[ABACATEPAY_CHECKOUT] PIX Automático não habilitado na loja. Sincronizando produto avulso sem ciclo...')
+    try {
+      const cleanProdId = await syncAbacateCheckoutProduct(plan, true)
+      body.items = [{ id: cleanProdId, quantity: 1 }]
+      res = await fetch(`${ABACATEPAY_BASE_URL}/checkouts/create`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+      json = await res.json()
+
+      // Se ainda persistir restrição bancária de PIX Automático para este plano, utiliza Cartão de Crédito
+      if ((!res.ok || !json.success) && json.error?.includes('PIX Automático')) {
+        console.warn('[ABACATEPAY_CHECKOUT] Aplicando métodos suportados na loja (CARD)...')
+        const cardOnlyBody = { ...body, methods: ['CARD'] }
+        res = await fetch(`${ABACATEPAY_BASE_URL}/checkouts/create`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(cardOnlyBody),
+        })
+        json = await res.json()
+      }
+    } catch (pixErr: any) {
+      console.warn('[ABACATEPAY_CHECKOUT] Falha na auto-recuperação de PIX:', pixErr?.message)
+    }
+  }
+
+  // 2. Auto-recuperação: se o produto não existir na AbacatePay, força nova sincronização do plano e tenta novamente
+  if (
+    (!res.ok || !json.success) &&
+    (typeof json.error === 'string' && (json.error.includes('No products') || json.error.includes('product')))
+  ) {
+    console.warn('[ABACATEPAY_CHECKOUT] Produto não encontrado na AbacatePay, ressincronizando...')
+    try {
+      const newProductId = await syncAbacateCheckoutProduct(plan, true)
+      body.items = [{ id: newProductId, quantity: 1 }]
+      res = await fetch(`${ABACATEPAY_BASE_URL}/checkouts/create`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+      json = await res.json()
+    } catch (syncErr: any) {
+      console.warn('[ABACATEPAY_CHECKOUT] Falha ao ressincronizar produto:', syncErr?.message)
+    }
+  }
+
+  // 3. Auto-recuperação: se falhar com customerId em dev/sandbox, tenta sem customerId
+  if ((!res.ok || !json.success) && body.customerId) {
+    console.warn('[ABACATEPAY_CHECKOUT] Tentativa com customerId falhou, tentando checkout avulso...')
+    const fallbackBody = { ...body }
+    delete fallbackBody.customerId
+    res = await fetch(`${ABACATEPAY_BASE_URL}/checkouts/create`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(fallbackBody),
     })
-    const subJson = await subRes.json()
-    if (subRes.ok && subJson.success && subJson.data) {
-      checkoutData = subJson.data
-    }
-  } catch (subErr: any) {
-    console.warn('[ABACATEPAY_SUB_CREATE_WARN]', subErr?.message)
+    json = await res.json()
   }
 
-  // Se /subscriptions/create não estiver disponível, cria checkout padrão vinculado ao customerId
-  if (!checkoutData) {
-    const res = await fetch(`${ABACATEPAY_BASE_URL}/checkouts/create`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
-
-    const json = await res.json()
-    if (!res.ok || !json.success) {
-      console.error('[ABACATEPAY_CHECKOUT_ERROR]', json)
-      throw new Error(json.error || 'Erro ao criar sessão de checkout na AbacatePay')
-    }
-    checkoutData = json.data
+  if (!res.ok || !json.success) {
+    console.error('[ABACATEPAY_CHECKOUT_ERROR]', json)
+    throw new Error(json.error || 'Erro ao criar sessão de checkout na AbacatePay')
   }
+  checkoutData = json.data
+
+  const checkoutUrl = checkoutData.url || checkoutData.checkoutUrl || ''
 
   return {
     checkoutId: checkoutData.id,
-    checkoutUrl: checkoutData.url,
+    checkoutUrl,
     provider: 'ABACATEPAY',
   }
 }
@@ -537,6 +651,7 @@ export async function listAbacateCheckouts(): Promise<any[]> {
   try {
     const res = await fetch(`${ABACATEPAY_BASE_URL}/checkouts/list`, {
       headers: { Authorization: `Bearer ${apiKey}` },
+      cache: 'no-store',
     })
     const json = await res.json()
     if (res.ok && json.success && Array.isArray(json.data)) {

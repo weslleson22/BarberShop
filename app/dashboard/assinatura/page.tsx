@@ -5,13 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { useAuth } from '@/lib/auth-context'
 import { getAuthHeaders } from '@/lib/utils'
-import AbacateCheckout from '@/components/billing/AbacateCheckout'
-import { parseStoredAddress, CustomerDefaults } from '@/lib/billing/checkout-config'
 import { 
   CreditCard, 
   Check, 
-  Calendar, 
-  Clock, 
+  Calendar,
+  Clock,
   AlertTriangle, 
   FileText, 
   ExternalLink, 
@@ -19,13 +17,12 @@ import {
   ShieldCheck,
   CheckCircle2,
   QrCode,
-  Copy,
   Zap,
-  X,
   Lock,
-  Smartphone,
-  ChevronRight,
-  Info
+  Info,
+  Printer,
+  Download,
+  X
 } from 'lucide-react'
 
 interface Plan {
@@ -79,27 +76,6 @@ interface Invoice {
   hostedInvoiceUrl?: string
 }
 
-interface PaymentModalState {
-  isOpen: boolean
-  plan: Plan | null
-  method: 'PIX' | 'CREDIT_CARD'
-  pixId?: string
-  brCode?: string
-  brCodeBase64?: string
-  amount: number
-  status: 'IDLE' | 'PENDING' | 'PAID'
-}
-
-function detectCardBrand(num: string) {
-  const clean = num.replace(/\D/g, '')
-  if (/^4/.test(clean)) return { name: 'Visa', color: 'from-blue-600 to-indigo-900', badge: 'bg-blue-500/20 text-blue-400 border-blue-500/30' }
-  if (/^5[1-5]/.test(clean) || /^2[2-7]/.test(clean)) return { name: 'Mastercard', color: 'from-red-600 to-amber-900', badge: 'bg-orange-500/20 text-orange-400 border-orange-500/30' }
-  if (/^(4011|4389|4514|4576|5041|5066|5067|509|6277|6362|6363|650|6516|6550)/.test(clean)) return { name: 'Elo', color: 'from-amber-600 to-yellow-900', badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30' }
-  if (/^3[47]/.test(clean)) return { name: 'Amex', color: 'from-cyan-700 to-blue-950', badge: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' }
-  if (/^(606282|3841)/.test(clean)) return { name: 'Hipercard', color: 'from-rose-600 to-red-950', badge: 'bg-rose-500/20 text-rose-400 border-rose-500/30' }
-  return { name: 'Cartão de Crédito', color: 'from-slate-800 to-slate-950', badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30' }
-}
-
 function AssinaturaContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -113,43 +89,7 @@ function AssinaturaContent() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successBanner, setSuccessBanner] = useState<string | null>(null)
-
-  // Estado do Modal de Checkout AbacatePay (com etapas e dados da base)
-  const [checkoutModal, setCheckoutModal] = useState<{
-    isOpen: boolean
-    plan: Plan | null
-    method: 'PIX' | 'CREDIT_CARD'
-  }>({
-    isOpen: false,
-    plan: null,
-    method: 'PIX',
-  })
-
-  // Dados do cliente/barbearia pré-carregados da base
-  const [customerDefaults, setCustomerDefaults] = useState<CustomerDefaults>({})
-
-  // Estado unificado do Modal de Pagamento (PIX e Cartão de Crédito)
-  const [paymentModal, setPaymentModal] = useState<PaymentModalState>({
-    isOpen: false,
-    plan: null,
-    method: 'PIX',
-    amount: 0,
-    status: 'IDLE',
-  })
-
-  // Formulário do Cartão de Crédito
-  const [cardForm, setCardForm] = useState({
-    number: '',
-    holder: '',
-    expiry: '',
-    cvv: '',
-    installments: '1',
-    taxId: '',
-  })
-  const [processingCard, setProcessingCard] = useState(false)
-  const [copiedCode, setCopiedCode] = useState(false)
-  const [simulating, setSimulating] = useState(false)
-  const pollingRef = useRef<NodeJS.Timeout | null>(null)
+  const [receiptModalInvoice, setReceiptModalInvoice] = useState<Invoice | null>(null)
   const hasLoadedRef = useRef(false)
 
   useEffect(() => {
@@ -158,13 +98,50 @@ function AssinaturaContent() {
     }
   }, [user?.role, authLoading, router])
 
+  const [syncingPayment, setSyncingPayment] = useState(false)
+
+  const handleSyncPayment = async (targetPlanId?: string | null) => {
+    setSyncingPayment(true)
+    setErrorMessage(null)
+    try {
+      const headers = getAuthHeaders()
+      const res = await fetch('/api/billing/checkout/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ planId: targetPlanId || undefined }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setSuccessBanner(
+          `Pagamento confirmado com sucesso na AbacatePay! O plano "${data.plan?.name}" foi ativado. O comprovante já está disponível na coluna Comprovante.`
+        )
+        if (data.subscription) {
+          setSubscription(data.subscription)
+        }
+      } else if (data.error && targetPlanId) {
+        setErrorMessage(data.error)
+      }
+      await loadData(true)
+    } catch (err: any) {
+      console.warn('Erro ao sincronizar pagamento AbacatePay:', err)
+      await loadData(true)
+    } finally {
+      setSyncingPayment(false)
+    }
+  }
+
   useEffect(() => {
     if (paymentStatus === 'success') {
-      setSuccessBanner('Pagamento confirmado com sucesso via AbacatePay! Sua assinatura foi ativada.')
+      const planId = searchParams.get('plan_id')
+      handleSyncPayment(planId)
     } else if (paymentStatus === 'canceled') {
       setErrorMessage('O processo de pagamento foi cancelado. Você pode tentar novamente a qualquer momento.')
     }
-  }, [paymentStatus])
+  }, [paymentStatus, searchParams])
 
   const loadData = async (silent = false) => {
     if (!silent) {
@@ -219,6 +196,28 @@ function AssinaturaContent() {
         }
       }
 
+      // Se a assinatura não estiver com status ACTIVE (ex: trial, expirada ou nova compra não sincronizada),
+      // realiza auto-recuperação consultando compras concluídas na AbacatePay
+      if (!loadedSubscription || loadedSubscription.status !== 'ACTIVE') {
+        try {
+          const syncRes = await fetch('/api/billing/checkout/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...headers },
+            credentials: 'include',
+            body: JSON.stringify({}),
+          })
+          if (syncRes.ok) {
+            const syncData = await syncRes.json()
+            if (syncData.success && syncData.subscription) {
+              loadedSubscription = syncData.subscription
+              setSubscription(syncData.subscription)
+            }
+          }
+        } catch (syncErr) {
+          console.warn('Tentativa de sincronização automática com AbacatePay:', syncErr)
+        }
+      }
+
       if (plansRes.ok) {
         const plansData = await plansRes.json()
         // Filtra estritamente apenas os planos comerciais ativos cadastrados na AbacatePay
@@ -242,36 +241,6 @@ function AssinaturaContent() {
         setInvoices(Array.isArray(invData) ? invData : [])
       }
 
-      // Carrega dados cadastrais da barbearia para pré-preenchimento no checkout
-      try {
-        const shopRes = await fetch('/api/barbershop', { credentials: 'include', headers })
-        if (shopRes.ok) {
-          const shop = await shopRes.json()
-          const parsedAddr = parseStoredAddress(shop.address || user?.address)
-          setCustomerDefaults({
-            name: shop.name || user?.name || '',
-            email: shop.email || user?.email || '',
-            phone: shop.phone || user?.phone || '',
-            address: parsedAddr,
-          })
-        } else if (user) {
-          setCustomerDefaults({
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            address: parseStoredAddress(user.address),
-          })
-        }
-      } catch (shopErr) {
-        if (user) {
-          setCustomerDefaults({
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            address: parseStoredAddress(user.address),
-          })
-        }
-      }
     } catch (err: any) {
       console.error('Erro ao carregar dados de assinatura:', err)
       setErrorMessage('Não foi possível carregar as informações da sua assinatura.')
@@ -287,81 +256,10 @@ function AssinaturaContent() {
     }
   }, [user?.id, user?.role])
 
-  // Monitoramento em tempo real do status do PIX Transparente
-  useEffect(() => {
-    if (paymentModal.isOpen && paymentModal.method === 'PIX' && paymentModal.pixId && paymentModal.status === 'PENDING') {
-      pollingRef.current = setInterval(async () => {
-        try {
-          const query = new URLSearchParams({ id: paymentModal.pixId! })
-          if (paymentModal.plan?.id) query.set('planId', paymentModal.plan.id)
-
-          const res = await fetch(`/api/billing/pix/check?${query.toString()}`, {
-            headers: getAuthHeaders(),
-            credentials: 'include',
-          })
-          if (res.ok) {
-            const data = await res.json()
-            if (data.status === 'PAID') {
-              if (pollingRef.current) {
-                clearInterval(pollingRef.current)
-                pollingRef.current = null
-              }
-              setPaymentModal((prev) => ({ ...prev, status: 'PAID' }))
-              setSuccessBanner(`Pagamento PIX confirmado instantaneamente! O plano ${paymentModal.plan?.name} está ativo.`)
-              setTimeout(() => {
-                setPaymentModal((prev) => ({ ...prev, isOpen: false }))
-                loadData(true)
-              }, 2200)
-            }
-          }
-        } catch (err) {
-          console.warn('Erro ao checar status do PIX:', err)
-        }
-      }, 3000)
-    }
-
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current)
-        pollingRef.current = null
-      }
-    }
-  }, [paymentModal.isOpen, paymentModal.method, paymentModal.pixId, paymentModal.status, paymentModal.plan?.id])
-
-  // Abre o checkout AbacatePay com os dados da base pré-carregados e editáveis
-  const handleOpenCheckout = (plan: Plan, method: 'PIX' | 'CREDIT_CARD') => {
+  // Checkout oficial hospedado na AbacatePay (Redirecionamento seguro para gateway oficial)
+  const handleHostedCheckout = async (plan: Plan) => {
+    setCheckoutLoading(plan.id)
     setErrorMessage(null)
-    if (!plan.providerProductId && plan.provider !== 'ABACATEPAY' && !plan.isSyncedWithAbacate) {
-      setErrorMessage('Este plano não está sincronizado com a AbacatePay para pagamento.')
-      return
-    }
-    setCheckoutModal({
-      isOpen: true,
-      plan,
-      method,
-    })
-  }
-
-  // Abre o modal de pagamento na aba selecionada (PIX ou Cartão)
-  const handleOpenPayment = async (plan: Plan, initialMethod: 'PIX' | 'CREDIT_CARD' = 'PIX') => {
-    setErrorMessage(null)
-    setPaymentModal({
-      isOpen: true,
-      plan,
-      method: initialMethod,
-      amount: Math.round(Number(plan.price) * 100),
-      status: 'PENDING',
-    })
-
-    // Se a aba for PIX, já inicializa a geração do QR Code transparente da AbacatePay
-    if (initialMethod === 'PIX') {
-      await generatePixForPlan(plan)
-    }
-  }
-
-  // Gera cobrança PIX para o plano
-  const generatePixForPlan = async (plan: Plan) => {
-    setCheckoutLoading(`${plan.id}_PIX`)
     try {
       const origin = window.location.origin
       const res = await fetch('/api/billing/checkout', {
@@ -373,133 +271,29 @@ function AssinaturaContent() {
         credentials: 'include',
         body: JSON.stringify({
           planId: plan.id,
-          mode: 'TRANSPARENT',
+          mode: 'HOSTED',
           provider: 'ABACATEPAY',
-          successUrl: `${origin}/dashboard/assinatura?payment=success`,
+          successUrl: `${origin}/dashboard/assinatura?payment=success&plan_id=${plan.id}`,
           cancelUrl: `${origin}/dashboard/assinatura?payment=canceled`,
         }),
       })
 
       const data = await res.json()
       if (!res.ok) {
-        throw new Error(data.error || 'Erro ao gerar PIX na AbacatePay')
+        throw new Error(data.error || 'Erro ao iniciar contratação na AbacatePay')
       }
 
-      if (data.pix) {
-        setPaymentModal((prev) => ({
-          ...prev,
-          pixId: data.pix.id,
-          brCode: data.pix.brCode,
-          brCodeBase64: data.pix.brCodeBase64,
-          amount: data.pix.amount,
-          status: 'PENDING',
-        }))
+      if (data.checkoutUrl) {
+        // Redireciona o usuário diretamente para o checkout oficial hospedado da AbacatePay
+        window.location.href = data.checkoutUrl
+      } else {
+        throw new Error('URL de pagamento não retornada pela AbacatePay.')
       }
     } catch (err: any) {
-      console.error('Erro ao gerar PIX:', err)
-      setErrorMessage(err.message || 'Falha ao conectar com o gateway PIX.')
+      console.error('Erro no checkout hospedado:', err)
+      setErrorMessage(err.message || 'Falha ao conectar com o checkout oficial da AbacatePay.')
     } finally {
       setCheckoutLoading(null)
-    }
-  }
-
-  // Troca de aba dentro do modal
-  const handleSwitchMethod = async (method: 'PIX' | 'CREDIT_CARD') => {
-    setPaymentModal((prev) => ({ ...prev, method }))
-    if (method === 'PIX' && !paymentModal.brCode && paymentModal.plan) {
-      await generatePixForPlan(paymentModal.plan)
-    }
-  }
-
-  // Processa o pagamento via Cartão de Crédito
-  const handlePayWithCard = async () => {
-    if (!paymentModal.plan) return
-    setProcessingCard(true)
-    setErrorMessage(null)
-
-    try {
-      const res = await fetch('/api/billing/card/pay', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          planId: paymentModal.plan.id,
-          cardNumber: cardForm.number,
-          cardHolder: cardForm.holder,
-          cardExpiry: cardForm.expiry,
-          cardCvv: cardForm.cvv,
-          installments: cardForm.installments,
-          customerTaxId: cardForm.taxId,
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || 'Falha ao aprovar transação no cartão.')
-      }
-
-      setPaymentModal((prev) => ({ ...prev, status: 'PAID' }))
-      setSuccessBanner(`Pagamento no cartão confirmado! Plano ${paymentModal.plan.name} ativado com sucesso.`)
-      setTimeout(() => {
-        setPaymentModal((prev) => ({ ...prev, isOpen: false }))
-        loadData(true)
-      }, 2000)
-    } catch (err: any) {
-      console.error('Erro no pagamento via cartão:', err)
-      setErrorMessage(err.message || 'Erro ao processar cartão.')
-    } finally {
-      setProcessingCard(false)
-    }
-  }
-
-  // Preenche dados com cartão de teste para simulação instantânea
-  const handleFillTestCard = () => {
-    setCardForm({
-      number: '4532 0123 4567 8910',
-      holder: user?.name ? user.name.toUpperCase() : 'ADMINISTRADOR BARBERSHOP',
-      expiry: '12/29',
-      cvv: '888',
-      installments: '1',
-      taxId: '391.511.420-54',
-    })
-  }
-
-  // Simula pagamento aprovado do PIX em DevMode / Sandbox
-  const handleSimulatePixPayment = async () => {
-    if (!paymentModal.pixId) return
-    setSimulating(true)
-    try {
-      const res = await fetch('/api/billing/pix/simulate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          pixId: paymentModal.pixId,
-          planId: paymentModal.plan?.id,
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || 'Erro ao simular pagamento')
-      }
-
-      setPaymentModal((prev) => ({ ...prev, status: 'PAID' }))
-      setSuccessBanner(`Pagamento PIX simulado e aprovado! Plano ${paymentModal.plan?.name} ativado com sucesso.`)
-      setTimeout(() => {
-        setPaymentModal((prev) => ({ ...prev, isOpen: false }))
-        loadData(true)
-      }, 1800)
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Erro ao simular pagamento')
-    } finally {
-      setSimulating(false)
     }
   }
 
@@ -533,54 +327,6 @@ function AssinaturaContent() {
       setErrorMessage(err.message || 'Falha ao simular contratação do plano.')
     } finally {
       setCheckoutLoading(null)
-    }
-  }
-
-  // Checkout hospedado externo da AbacatePay
-  const handleHostedCheckout = async (planId: string) => {
-    setCheckoutLoading(`${planId}_HOSTED`)
-    setErrorMessage(null)
-    try {
-      const origin = window.location.origin
-      const res = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          planId,
-          mode: 'HOSTED',
-          provider: 'ABACATEPAY',
-          successUrl: `${origin}/dashboard/assinatura?payment=success`,
-          cancelUrl: `${origin}/dashboard/assinatura?payment=canceled`,
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || 'Erro ao iniciar checkout na AbacatePay')
-      }
-
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl
-      } else {
-        throw new Error('URL de checkout não retornada pelo provedor.')
-      }
-    } catch (err: any) {
-      console.error('Erro no checkout hospedado:', err)
-      setErrorMessage(err.message || 'Falha ao conectar com o checkout AbacatePay.')
-    } finally {
-      setCheckoutLoading(null)
-    }
-  }
-
-  const handleCopyPix = () => {
-    if (paymentModal.brCode) {
-      navigator.clipboard.writeText(paymentModal.brCode)
-      setCopiedCode(true)
-      setTimeout(() => setCopiedCode(false), 2500)
     }
   }
 
@@ -655,8 +401,6 @@ function AssinaturaContent() {
     )
   }
 
-  const currentBrand = detectCardBrand(cardForm.number)
-
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
@@ -676,14 +420,25 @@ function AssinaturaContent() {
               Gerencie a contratação da sua barbearia com pagamento em <strong>PIX instantâneo</strong> ou <strong>Cartão de Crédito</strong>.
             </p>
           </div>
-          <button
-            onClick={() => loadData(false)}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs md:text-sm font-medium rounded-xl border border-border bg-card hover:bg-accent hover:text-accent-foreground transition-all shrink-0 self-start sm:self-auto cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar dados
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+            <button
+              onClick={() => handleSyncPayment()}
+              disabled={loading || syncingPayment}
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+              title="Sincronizar pagamentos e comprovantes da AbacatePay"
+            >
+              <ShieldCheck className={`w-4 h-4 ${syncingPayment ? 'animate-spin' : ''}`} />
+              <span>{syncingPayment ? 'Sincronizando...' : 'Sincronizar AbacatePay'}</span>
+            </button>
+            <button
+              onClick={() => loadData(false)}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs md:text-sm font-medium rounded-xl border border-border bg-card hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar dados
+            </button>
+          </div>
         </div>
 
         {/* Feedback Banners */}
@@ -947,38 +702,44 @@ function AssinaturaContent() {
                         </div>
                       ) : (
                         <>
-                          {/* Botão 1: Pagar via PIX (Abre Checkout AbacatePay com dados pré-preenchidos) */}
+                          {/* Botão Oficial: Redireciona para o checkout oficial hospedado da AbacatePay */}
                           <button
-                            onClick={() => handleOpenCheckout(p, 'PIX')}
+                            onClick={() => handleHostedCheckout(p)}
                             disabled={Boolean(checkoutLoading)}
-                            className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs md:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                            className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/20 disabled:opacity-50 group"
                           >
-                            <QrCode className="w-4 h-4 shrink-0" />
-                            <span>Pagar via PIX</span>
+                            {checkoutLoading === p.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
+                                <span>Redirecionando para AbacatePay...</span>
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck className="w-4 h-4 text-emerald-200 group-hover:scale-110 transition-transform" />
+                                <span>Contratar via AbacatePay</span>
+                                <ExternalLink className="w-4 h-4 text-emerald-200 ml-auto group-hover:translate-x-0.5 transition-transform" />
+                              </>
+                            )}
                           </button>
 
-                          {/* Botão 2: Pagar com Cartão de Crédito (Abre Checkout AbacatePay com dados pré-preenchidos) */}
-                          <button
-                            onClick={() => handleOpenCheckout(p, 'CREDIT_CARD')}
-                            disabled={Boolean(checkoutLoading)}
-                            className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs md:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                          >
-                            <CreditCard className="w-4 h-4 shrink-0" />
-                            <span>Pagar com Cartão de Crédito</span>
-                          </button>
+                          <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground pt-0.5">
+                            <Lock className="w-3 h-3 text-emerald-400" />
+                            <span>Checkout oficial AbacatePay • PIX e Cartão</span>
+                          </div>
 
-                          {/* Botão 3: Simulação Imediata (Dev Mode) */}
+                          {/* Simulação Imediata (Dev Mode) */}
                           <button
                             onClick={() => handleDirectSimulate(p)}
                             disabled={Boolean(checkoutLoading)}
-                            className="w-full py-1.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            className="w-full py-1.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-medium text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 mt-1"
+                            title="Ativação imediata para testes em ambiente de desenvolvimento"
                           >
                             {checkoutLoading === `${p.id}_SIMULATE` ? (
                               <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-amber-300" />
                             ) : (
                               <>
                                 <Zap className="w-3.5 h-3.5 text-amber-400" />
-                                <span>Simular Contratação (Dev Mode)</span>
+                                <span>Simulação Instantânea (Dev Mode)</span>
                               </>
                             )}
                           </button>
@@ -1052,16 +813,29 @@ function AssinaturaContent() {
                       </td>
                       <td className="py-3.5 text-muted-foreground">{formatDateShort(inv.paidAt)}</td>
                       <td className="py-3.5 text-right">
-                        {inv.hostedInvoiceUrl ? (
-                          <a
-                            href={inv.hostedInvoiceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-                          >
-                            <span>Visualizar</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
+                        {inv.status === 'PAID' ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setReceiptModalInvoice(inv)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-all hover:scale-105 shadow-sm cursor-pointer"
+                              title="Visualizar e baixar comprovante oficial em PDF"
+                            >
+                              <FileText className="w-3.5 h-3.5 shrink-0" />
+                              <span>Comprovante</span>
+                              <Download className="w-3 h-3 opacity-80 shrink-0" />
+                            </button>
+                            {inv.hostedInvoiceUrl && (
+                              <a
+                                href={inv.hostedInvoiceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all shrink-0"
+                                title="Abrir recibo oficial no portal AbacatePay"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-xs text-muted-foreground">-</span>
                         )}
@@ -1075,42 +849,120 @@ function AssinaturaContent() {
         </div>
       </main>
 
-      {/* ========================================================================= */}
-      {/* MODAL DE CHECKOUT ABACATEPAY COM DADOS E ENDEREÇO DA BASE DE DADOS        */}
-      {/* ========================================================================= */}
-      {checkoutModal.isOpen && checkoutModal.plan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in">
-          <div className="relative w-full max-w-5xl my-auto">
-            {/* Botão Fechar Modal */}
-            <button
-              type="button"
-              onClick={() => setCheckoutModal({ isOpen: false, plan: null, method: 'PIX' })}
-              className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white transition shadow-xl border border-slate-700 cursor-pointer"
-              title="Fechar checkout"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* Modal de Comprovante Oficial de Pagamento */}
+      {receiptModalInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-card border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-400">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground text-sm sm:text-base">Comprovante de Pagamento</h3>
+                  <p className="text-[11px] text-muted-foreground">BarberShop Pro • Liquidação via AbacatePay</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setReceiptModalInvoice(null)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <AbacateCheckout
-              product={{
-                id: checkoutModal.plan.id,
-                name: checkoutModal.plan.name,
-                description: checkoutModal.plan.description || `Assinatura ${checkoutModal.plan.name} para barbearia`,
-                price: Number(checkoutModal.plan.price),
-                billingInterval: checkoutModal.plan.billingInterval,
-              }}
-              initialMethod={checkoutModal.method}
-              customerDefaults={customerDefaults}
-              onSuccess={() => {
-                setSuccessBanner(`Pagamento confirmado com sucesso via AbacatePay! O plano ${checkoutModal.plan?.name} está ativo.`)
-                setCheckoutModal({ isOpen: false, plan: null, method: 'PIX' })
-                loadData(true)
-              }}
-              onCancel={() => setCheckoutModal({ isOpen: false, plan: null, method: 'PIX' })}
-            />
+            {/* Modal Body / Printable Area */}
+            <div className="p-6 overflow-y-auto space-y-5 text-sm" id="printable-receipt">
+              {/* Status Box */}
+              <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <div>
+                    <span className="font-bold text-emerald-400 block text-sm">Pagamento Confirmado</span>
+                    <span className="text-xs text-emerald-300/80">Transação liquidada com sucesso</span>
+                  </div>
+                </div>
+                <span className="px-2.5 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">
+                  PAGO
+                </span>
+              </div>
+
+              {/* Amount Details */}
+              <div className="text-center py-4 bg-muted/30 rounded-xl border border-border">
+                <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Valor Total Pago</span>
+                <div className="text-3xl font-extrabold text-foreground mt-1">
+                  {formatPrice(Number(receiptModalInvoice.amount))}
+                </div>
+                <span className="text-xs text-emerald-400 font-medium mt-1 inline-block">
+                  {subscription?.planName || 'Assinatura Comercial BarberShop'}
+                </span>
+              </div>
+
+              {/* Details Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl border border-border bg-card/60">
+                  <span className="text-[11px] text-muted-foreground block font-medium">Data do Pagamento</span>
+                  <span className="text-xs font-semibold text-foreground flex items-center gap-1.5 mt-1">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    {formatDateDetailed(receiptModalInvoice.paidAt || receiptModalInvoice.dueDate)}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl border border-border bg-card/60">
+                  <span className="text-[11px] text-muted-foreground block font-medium">Meio de Liquidação</span>
+                  <span className="text-xs font-semibold text-foreground flex items-center gap-1.5 mt-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    PIX / Cartão (AbacatePay)
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl border border-border bg-card/60 sm:col-span-2">
+                  <span className="text-[11px] text-muted-foreground block font-medium">Favorecido / Plataforma</span>
+                  <span className="text-xs font-semibold text-foreground block mt-1">
+                    BarberShop Pro Tecnologia SaaS
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">Instituição Facilitadora: AbacatePay Meios de Pagamento</span>
+                </div>
+
+                <div className="p-3 rounded-xl border border-border bg-card/60 sm:col-span-2">
+                  <span className="text-[11px] text-muted-foreground block font-medium">ID da Transação / Autenticação</span>
+                  <span className="text-[11px] font-mono font-semibold text-foreground break-all block mt-1 select-all bg-muted/50 p-2 rounded-lg border border-border">
+                    {receiptModalInvoice.providerInvoiceId || receiptModalInvoice.id}
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-[10px] text-muted-foreground text-center pt-1">
+                Comprovante digital emitido pelo sistema BarberShop Pro em conformidade com as transações oficiais registradas na AbacatePay.
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row items-center justify-end gap-2.5">
+              {receiptModalInvoice.hostedInvoiceUrl && (
+                <a
+                  href={receiptModalInvoice.hostedInvoiceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-border bg-card hover:bg-accent text-foreground text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Ver na AbacatePay</span>
+                </a>
+              )}
+              <button
+                onClick={() => window.print()}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Baixar / Imprimir PDF</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
+
     </div>
   )
 }
