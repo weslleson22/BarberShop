@@ -5,16 +5,16 @@ let isInitialized = false
 let scheduledTask: ScheduledTask | null = null
 
 /**
- * Inicializa a rotina de cron interna para execução diária às 00:00.
+ * Inicializa a rotina de cron interna para execução diária às 00:30.
  * Indicado para ambientes de servidor Node.js com ciclo de vida contínuo (VPS / Docker / Dev).
  */
 export function initBackupCron(): { scheduled: boolean; scheduleExpression: string } {
   if (isInitialized && scheduledTask) {
-    return { scheduled: true, scheduleExpression: '0 0 * * *' }
+    return { scheduled: true, scheduleExpression: '30 0 * * *' }
   }
 
-  // Padrão: 00:00 diariamente ('0 0 * * *')
-  const cronExpression = '0 0 * * *'
+  // Padrão: 00:30 diariamente ('30 0 * * *' em America/Sao_Paulo)
+  const cronExpression = '30 0 * * *'
 
   scheduledTask = cron.schedule(
     cronExpression,
@@ -36,7 +36,7 @@ export function initBackupCron(): { scheduled: boolean; scheduleExpression: stri
   )
 
   isInitialized = true
-  console.log('[node-cron] Rotina de backup automático configurada para todos os dias às 00:00 (America/Sao_Paulo).')
+  console.log('[node-cron] Rotina de backup automático configurada para todos os dias às 00:30 (America/Sao_Paulo).')
 
   return { scheduled: true, scheduleExpression: cronExpression }
 }
@@ -62,7 +62,7 @@ export function getBackupCronStatus(): {
 } {
   return {
     isInitialized,
-    schedule: '0 0 * * *',
+    schedule: '30 0 * * *',
     timezone: 'America/Sao_Paulo',
   }
 }

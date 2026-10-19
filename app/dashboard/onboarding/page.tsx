@@ -26,8 +26,26 @@ import {
   Camera,
   Trash2,
   X,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react'
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface OnboardingStep {
   id: number
@@ -344,309 +362,357 @@ export default function OnboardingPage() {
   const progressPercentage = Math.round((completedCount / totalCount) * 100)
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
+    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
       <DropdownHeader />
 
-      <main className="w-full px-4 md:px-8 max-w-5xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            {barbershop?.logo && (
-              <div className="w-14 h-14 rounded-2xl overflow-hidden border border-primary/30 shadow-md shrink-0 bg-muted/40 hidden sm:block">
-                <img
-                  src={barbershop.logo}
-                  alt={barbershop.name || 'Logo'}
-                  className="w-full h-full object-cover"
-                />
+      <TooltipProvider delayDuration={150}>
+        <main className="w-full px-4 md:px-8 max-w-5xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-14 h-14 rounded-2xl border border-[#374151] bg-[#111827] shadow-sm shrink-0 hidden sm:flex">
+                {barbershop?.logo ? (
+                  <AvatarImage src={barbershop.logo} alt={barbershop.name || 'Logo'} className="object-cover" />
+                ) : null}
+                <AvatarFallback className="rounded-2xl bg-[#2563eb] text-white font-semibold text-lg border border-[#3b82f6]">
+                  {(barbershop?.name || 'BS').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2 text-white font-medium text-xs tracking-wider uppercase mb-1">
+                  <span className="p-1 rounded bg-[#2563eb] text-white border border-[#3b82f6]">
+                    <Building className="w-3.5 h-3.5" />
+                  </span>
+                  <span>{barbershop?.name ? `Guia de Implantação • ${barbershop.name}` : 'Guia de Implantação'}</span>
+                </div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                  Onboarding da Sua Barbearia
+                </h1>
+                <p className="text-white text-sm md:text-base mt-1 font-normal">
+                  Complete as etapas essenciais para começar a receber agendamentos online hoje mesmo.
+                </p>
               </div>
-            )}
-            <div>
-              <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase mb-1">
-                <Building className="w-4 h-4" />
-                <span>{barbershop?.name ? `Guia de Implantação • ${barbershop.name}` : 'Guia de Implantação'}</span>
-              </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Onboarding da Sua Barbearia</h1>
-              <p className="text-muted-foreground text-sm md:text-base mt-1">
-                Complete as etapas essenciais para começar a receber agendamentos online hoje mesmo.
-              </p>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={loadOnboardingData}
+              disabled={loading}
+              className="h-10 px-4 text-xs md:text-sm font-medium rounded-xl border-[#374151] bg-[#030712] hover:bg-[#1f2937] hover:text-white text-white transition-all shrink-0 self-start sm:self-auto cursor-pointer shadow-sm flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 text-white ${loading ? 'animate-spin' : ''}`} />
+              <span>Atualizar checklist</span>
+            </Button>
           </div>
 
-          <button
-            onClick={loadOnboardingData}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs md:text-sm font-medium rounded-xl border border-border bg-card hover:bg-accent hover:text-accent-foreground transition-all shrink-0 self-start sm:self-auto"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar checklist
-          </button>
-        </div>
-
-        {/* Progress Card */}
-        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-            <div>
-              <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                Etapa {completedCount} de {totalCount} concluídas
-              </span>
-              <h2 className="text-xl font-bold text-foreground mt-0.5">
-                {progressPercentage === 100
-                  ? 'Tudo pronto! Sua barbearia está 100% operacional 🎉'
-                  : `Seu estabelecimento está ${progressPercentage}% configurado`}
-              </h2>
-            </div>
-            <div className="text-right">
-              <span className="text-3xl font-extrabold text-foreground">{progressPercentage}%</span>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full bg-muted/60 h-2.5 rounded-full overflow-hidden">
-            <div
-              className="bg-primary h-full rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-
-          {/* Public Link Quick Access */}
-          {barbershop?.slug && (
-            <div className="mt-6 pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Globe className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-xs md:text-sm">Link público:</span>
-                <span className="font-mono text-xs text-foreground font-medium truncate max-w-xs md:max-w-md">
-                  {typeof window !== 'undefined' ? `${window.location.origin}/b/${barbershop.slug}` : `/b/${barbershop.slug}`}
-                </span>
+          {/* Progress Card */}
+          <Card className="bg-[#111827] border-[#374151] rounded-2xl p-6 md:p-8 shadow-sm text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div>
+                <Badge className="bg-[#2563eb] text-white border-[#3b82f6] text-xs font-medium uppercase tracking-wider mb-2">
+                  Etapa {completedCount} de {totalCount} concluídas
+                </Badge>
+                <CardTitle className="text-xl md:text-2xl font-bold text-white mt-1 tracking-tight">
+                  {progressPercentage === 100
+                    ? 'Tudo pronto! Sua barbearia está 100% operacional 🎉'
+                    : `Seu estabelecimento está ${progressPercentage}% configurado`}
+                </CardTitle>
+                <CardDescription className="text-xs text-white font-normal mt-1">
+                  {progressPercentage === 100
+                    ? 'Parabéns! Todas as etapas fundamentais de configuração foram concluídas.'
+                    : 'Siga a lista de tarefas abaixo para desbloquear o fluxo completo de agendamentos.'}
+                </CardDescription>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={copyPublicUrl}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-muted/40 hover:bg-muted text-foreground transition-all"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copiado!' : 'Copiar link'}</span>
-                </button>
-                <Link
-                  href={`/b/${barbershop.slug}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
-                >
-                  <span>Abrir</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
+              <div className="text-right">
+                <span className="text-4xl font-bold text-white font-mono">{progressPercentage}%</span>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Steps Checklist List */}
-        <div className="space-y-3.5">
-          {steps.map((step) => {
-            const Icon = step.icon
-            return (
+            {/* Progress Bar */}
+            <div className="w-full bg-[#030712] border border-[#374151] h-3 rounded-full overflow-hidden">
               <div
-                key={step.id}
-                className={`bg-card border rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
-                  step.completed ? 'border-border/60 bg-card/60' : 'border-primary/30 ring-1 ring-primary/20 shadow-sm'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="mt-1">
-                    {step.completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-muted-foreground/60 shrink-0" />
-                    )}
+                className="bg-[#059669] h-full rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
+
+            {/* Public Link Quick Access */}
+            {barbershop?.slug && (
+              <>
+                <Separator className="bg-[#374151] my-5" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+                  <div className="flex items-center gap-2 text-white">
+                    <Globe className="w-4 h-4 text-[#3b82f6] shrink-0" />
+                    <span className="text-xs md:text-sm font-normal text-white">Link público:</span>
+                    <span className="font-mono text-xs text-white font-normal bg-[#030712] px-2.5 py-1 rounded border border-[#374151] truncate max-w-xs md:max-w-md">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/b/${barbershop.slug}` : `/b/${barbershop.slug}`}
+                    </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-muted/50 text-foreground border border-border shrink-0 hidden sm:block">
-                    <Icon className="w-5 h-5" />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={copyPublicUrl}
+                          className="h-8 px-3 text-xs font-medium rounded-lg border-[#374151] bg-[#030712] hover:bg-[#1f2937] hover:text-white text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                        >
+                          {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5 text-white" />}
+                          <span>{copied ? 'Copiado!' : 'Copiar link'}</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#111827] text-white border-[#374151] font-normal text-xs">
+                        {copied ? 'Link copiado para a área de transferência!' : 'Copiar URL pública'}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Button
+                      asChild
+                      size="sm"
+                      className="h-8 px-3 text-xs font-medium rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6] transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                    >
+                      <Link href={`/b/${barbershop.slug}`} target="_blank">
+                        <span>Abrir</span>
+                        <ExternalLink className="w-3.5 h-3.5 ml-1 text-white" />
+                      </Link>
+                    </Button>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-semibold text-muted-foreground">Etapa {step.id}</span>
-                      <h3 className="font-semibold text-base text-foreground">{step.title}</h3>
-                      {step.completed && (
-                        <span className="px-2 py-0.5 text-[10px] uppercase font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                          Concluído
+                </div>
+              </>
+            )}
+          </Card>
+
+          {/* Steps Checklist List */}
+          <div className="space-y-3.5">
+            {steps.map((step) => {
+              const Icon = step.icon
+              return (
+                <Card
+                  key={step.id}
+                  className={`border rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all text-white ${
+                    step.completed
+                      ? 'border-[#374151] bg-[#111827]'
+                      : 'border-[#3b82f6] bg-[#111827] shadow-sm'
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1">
+                      {step.completed ? (
+                        <span className="p-1 rounded-full bg-[#059669] text-white inline-flex items-center justify-center border border-[#10b981]">
+                          <CheckCircle2 className="w-4 h-4 text-white" />
+                        </span>
+                      ) : (
+                        <span className="p-1 rounded-full bg-[#030712] text-gray-400 inline-flex items-center justify-center border border-[#374151]">
+                          <Circle className="w-4 h-4 text-gray-400" />
                         </span>
                       )}
                     </div>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{step.description}</p>
+                    <div className="p-2.5 rounded-xl bg-[#030712] text-white border border-[#374151] shrink-0 hidden sm:block">
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge
+                          variant="outline"
+                          className="text-[11px] font-normal text-white border-[#374151] bg-[#030712] px-2 py-0.5"
+                        >
+                          Etapa {step.id}
+                        </Badge>
+                        <h3 className="font-semibold text-base text-white">{step.title}</h3>
+                        {step.completed ? (
+                          <Badge className="px-2 py-0.5 text-[10px] uppercase font-medium rounded-full bg-[#059669] text-white border border-[#10b981]">
+                            Concluído
+                          </Badge>
+                        ) : (
+                          <Badge className="px-2 py-0.5 text-[10px] uppercase font-medium rounded-full bg-[#d97706] text-white border border-[#f59e0b]">
+                            Pendente
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs md:text-sm text-white mt-1 font-normal">{step.description}</p>
+                    </div>
                   </div>
-                </div>
 
-                {/* Thumbnail da logo no step 2 se cadastrada */}
-                {step.id === 2 && barbershop?.logo && (
-                  <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-primary/40 shadow-sm shrink-0 hidden sm:block bg-muted">
-                    <img
-                      src={barbershop.logo}
-                      alt="Logo da barbearia"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center justify-end shrink-0 sm:pl-4">
-                  {step.onClick ? (
-                    <button
-                      type="button"
-                      onClick={step.onClick}
-                      className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all shadow-sm cursor-pointer ${
-                        step.completed
-                          ? 'border border-border bg-muted/40 hover:bg-muted text-foreground'
-                          : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-                      }`}
-                    >
-                      <span>{step.actionText}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  ) : (
-                    <Link
-                      href={step.actionUrl}
-                      className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all shadow-sm ${
-                        step.completed
-                          ? 'border border-border bg-muted/40 hover:bg-muted text-foreground'
-                          : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-                      }`}
-                    >
-                      <span>{step.actionText}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Modal de Upload de Logo da Barbearia */}
-        {isLogoModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-              {/* Header do Modal */}
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
-                    <ImageIcon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-base text-foreground">Logo da Barbearia</h3>
-                    <p className="text-xs text-muted-foreground">Identidade visual do seu estabelecimento</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsLogoModalOpen(false)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Mensagens de Feedback */}
-              {logoError && (
-                <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-red-300 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-                  <span>{logoError}</span>
-                </div>
-              )}
-              {logoSuccess && (
-                <div className="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>{logoSuccess}</span>
-                </div>
-              )}
-
-              {/* Área de Preview e Upload */}
-              <div className="flex flex-col items-center justify-center gap-4 py-2">
-                <div className="relative group w-32 h-32 rounded-2xl bg-muted/40 border-2 border-dashed border-border group-hover:border-primary flex items-center justify-center overflow-hidden shadow-lg transition-all">
-                  {logoPreview ? (
-                    <img
-                      src={logoPreview}
-                      alt="Preview da Logo"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground text-center p-3">
-                      <Upload className="w-7 h-7 text-muted-foreground/60" />
-                      <span className="text-[11px]">Nenhuma logo selecionada</span>
+                  {/* Thumbnail da logo no step 2 se cadastrada */}
+                  {step.id === 2 && barbershop?.logo && (
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-[#374151] shadow-sm shrink-0 hidden sm:block bg-[#030712]">
+                      <img
+                        src={barbershop.logo}
+                        alt="Logo da barbearia"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   )}
 
-                  <label className="absolute bottom-2 right-2 p-2 rounded-xl bg-primary text-primary-foreground shadow-md hover:opacity-90 transition cursor-pointer">
-                    <Camera className="w-4 h-4" />
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                      onChange={handleLogoFileSelect}
-                    />
-                  </label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <label className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-border bg-muted/50 hover:bg-muted text-foreground text-xs font-medium cursor-pointer transition">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Selecionar imagem</span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                      onChange={handleLogoFileSelect}
-                    />
-                  </label>
-
-                  {logoPreview && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveLogo}
-                      disabled={isSavingLogo}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-destructive/30 hover:bg-destructive/10 text-destructive text-xs font-medium transition cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Remover</span>
-                    </button>
-                  )}
-                </div>
-
-                <p className="text-[11px] text-muted-foreground text-center max-w-xs">
-                  Formatos aceitos: PNG, JPG, WebP ou SVG (máx. 5MB). Aparecerá no seu link público /b/{barbershop?.slug || 'slug'}, na barra lateral e em todo o sistema.
-                </p>
-              </div>
-
-              {/* Rodapé do Modal */}
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setIsLogoModalOpen(false)}
-                  disabled={isSavingLogo}
-                  className="px-4 py-2 rounded-xl border border-border text-xs font-medium hover:bg-muted transition text-foreground cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveLogo}
-                  disabled={isSavingLogo || !logoPreview}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition shadow-sm disabled:opacity-50 cursor-pointer"
-                >
-                  {isSavingLogo ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Salvando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Salvar Logo</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
+                  <div className="flex items-center justify-end shrink-0 sm:pl-4">
+                    {step.onClick ? (
+                      <Button
+                        type="button"
+                        onClick={step.onClick}
+                        className={`h-9 px-4 text-xs md:text-sm font-medium rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5 ${
+                          step.completed
+                            ? 'border border-[#374151] bg-[#030712] hover:bg-[#1f2937] hover:text-white text-white'
+                            : 'bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6]'
+                        }`}
+                      >
+                        <span>{step.actionText}</span>
+                        <ArrowRight className="w-4 h-4 ml-0.5 text-white" />
+                      </Button>
+                    ) : (
+                      <Button
+                        asChild
+                        className={`h-9 px-4 text-xs md:text-sm font-medium rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5 ${
+                          step.completed
+                            ? 'border border-[#374151] bg-[#030712] hover:bg-[#1f2937] hover:text-white text-white'
+                            : 'bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6]'
+                        }`}
+                      >
+                        <Link href={step.actionUrl}>
+                          <span>{step.actionText}</span>
+                          <ArrowRight className="w-4 h-4 ml-0.5 text-white" />
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              )
+            })}
           </div>
-        )}
-      </main>
+
+          {/* Modal de Upload de Logo da Barbearia */}
+          {isLogoModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+              <Card className="bg-[#111827] border border-[#374151] rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl relative text-white">
+                {/* Header do Modal */}
+                <div className="flex items-center justify-between border-b border-[#374151] pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-[#2563eb] text-white border border-[#3b82f6]">
+                      <ImageIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="font-semibold text-base text-white">Logo da Barbearia</CardTitle>
+                      <CardDescription className="text-xs text-white font-normal">Identidade visual do seu estabelecimento</CardDescription>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsLogoModalOpen(false)}
+                    className="p-1.5 rounded-lg text-white hover:text-white hover:bg-[#1f2937] transition cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Mensagens de Feedback */}
+                {logoError && (
+                  <div className="p-3 bg-[#dc2626] border border-[#ef4444] rounded-xl text-white text-xs font-medium flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-white shrink-0" />
+                    <span>{logoError}</span>
+                  </div>
+                )}
+                {logoSuccess && (
+                  <div className="p-3 bg-[#059669] border border-[#10b981] rounded-xl text-white text-xs font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+                    <span>{logoSuccess}</span>
+                  </div>
+                )}
+
+                {/* Área de Preview e Upload */}
+                <div className="flex flex-col items-center justify-center gap-4 py-2">
+                  <div className="relative group w-32 h-32 rounded-2xl bg-[#030712] border-2 border-dashed border-[#374151] flex items-center justify-center overflow-hidden shadow-lg transition-all">
+                    {logoPreview ? (
+                      <img
+                        src={logoPreview}
+                        alt="Preview da Logo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 text-white text-center p-3">
+                        <Upload className="w-7 h-7 text-white" />
+                        <span className="text-[11px] font-normal text-white">Nenhuma logo selecionada</span>
+                      </div>
+                    )}
+
+                    <label className="absolute bottom-2 right-2 p-2 rounded-xl bg-[#2563eb] text-white border border-[#3b82f6] shadow-md hover:bg-[#1d4ed8] transition cursor-pointer">
+                      <Camera className="w-4 h-4 text-white" />
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        onChange={handleLogoFileSelect}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-[#374151] bg-[#030712] hover:bg-[#1f2937] text-white text-xs font-medium cursor-pointer transition shadow-sm">
+                      <Upload className="w-3.5 h-3.5 text-white" />
+                      <span>Selecionar imagem</span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        onChange={handleLogoFileSelect}
+                      />
+                    </label>
+
+                    {logoPreview && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleRemoveLogo}
+                        disabled={isSavingLogo}
+                        className="h-8 px-3 rounded-lg border border-[#ef4444] bg-[#dc2626] hover:bg-[#b91c1c] text-white text-xs font-medium transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-white" />
+                        <span>Remover</span>
+                      </Button>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-white text-center max-w-xs font-normal">
+                    Formatos aceitos: PNG, JPG, WebP ou SVG (máx. 5MB). Aparecerá no seu link público /b/{barbershop?.slug || 'slug'}, na barra lateral e em todo o sistema.
+                  </p>
+                </div>
+
+                {/* Rodapé do Modal */}
+                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#374151]">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsLogoModalOpen(false)}
+                    disabled={isSavingLogo}
+                    className="px-4 py-2 rounded-xl border border-[#374151] bg-[#030712] text-xs font-medium hover:bg-[#1f2937] hover:text-white transition text-white cursor-pointer"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSaveLogo}
+                    disabled={isSavingLogo || !logoPreview}
+                    className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white border border-[#10b981] text-xs font-medium transition shadow-sm disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSavingLogo ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+                        <span>Salvando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-white" />
+                        <span>Salvar Logo</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+        </main>
+      </TooltipProvider>
     </div>
   )
 }

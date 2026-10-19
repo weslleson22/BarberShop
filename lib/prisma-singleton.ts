@@ -22,7 +22,10 @@ function createPrismaClient(): PrismaClient {
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
-if (process.env.NODE_ENV !== 'production') {
+// Ensure prisma is saved to globalThis in ALL environments (including production).
+// In serverless environments (e.g. Vercel), warm containers re-execute modules and this prevents
+// leaking database connections and hitting PostgreSQL connection limits or remote host resets.
+if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = prisma
 }
 

@@ -255,25 +255,25 @@ export default function AbacateProductsManager() {
   const unsyncedCount = localPlans.filter((p) => !p.isSyncedWithAbacate).length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
       {/* Feedback Alert */}
       {feedback && (
         <div
-          className={`p-4 rounded-xl flex items-center justify-between text-sm animate-in fade-in ${
+          className={`p-4 rounded-xl flex items-center justify-between text-sm border font-bold ${
             feedback.type === 'success'
-              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
-              : 'bg-destructive/10 border border-destructive/30 text-destructive'
+              ? 'bg-[#059669] border-[#10b981] text-white'
+              : 'bg-[#dc2626] border-[#ef4444] text-white'
           }`}
         >
           <div className="flex items-center gap-2.5">
             {feedback.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+              <AlertCircle className="w-5 h-5 text-white shrink-0" />
             )}
             <span>{feedback.message}</span>
           </div>
-          <button onClick={() => setFeedback(null)} className="opacity-70 hover:opacity-100 cursor-pointer">
+          <button onClick={() => setFeedback(null)} className="text-white hover:text-gray-200 text-sm font-bold px-2 py-1 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -282,54 +282,54 @@ export default function AbacateProductsManager() {
       {/* Cards de Métricas e Ações Rápidas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Métrica 1: Produtos AbacatePay */}
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Produtos Gateway</span>
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between text-gray-300 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Produtos Gateway</span>
             <Package className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-3xl font-extrabold text-foreground">{abacateProducts.length}</div>
-          <span className="text-xs text-muted-foreground mt-1 block">
+          <div className="text-3xl font-black text-white">{abacateProducts.length}</div>
+          <span className="text-xs text-gray-200 mt-1 block font-medium">
             Produtos ativos na sua conta AbacatePay
           </span>
         </div>
 
         {/* Métrica 2: Planos no BarberShop */}
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Planos no Sistema</span>
-            <Layers className="w-4 h-4 text-primary" />
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between text-gray-300 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Planos no Sistema</span>
+            <Layers className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-3xl font-extrabold text-foreground">{localPlans.length}</div>
-          <span className="text-xs text-muted-foreground mt-1 block">
+          <div className="text-3xl font-black text-white">{localPlans.length}</div>
+          <span className="text-xs text-gray-200 mt-1 block font-medium">
             Planos cadastrados pelo Developer
           </span>
         </div>
 
         {/* Métrica 3: Sincronização */}
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Status da Sincronia</span>
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between text-gray-300 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Status da Sincronia</span>
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-3xl font-extrabold text-emerald-400">
+          <div className="text-3xl font-black text-emerald-400">
             {localPlans.filter((p) => p.isSyncedWithAbacate).length} / {localPlans.length}
           </div>
-          <span className="text-xs text-emerald-300/80 mt-1 block">
+          <span className="text-xs text-gray-200 mt-1 block font-bold">
             {unsyncedCount > 0 ? `${unsyncedCount} plano(s) pendente(s)` : 'Todos sincronizados'}
           </span>
         </div>
       </div>
 
       {/* Barra de Ações: Sincronizar Todos & Criar Produto & Atualizar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#374151] pb-4">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveSubTab('abacate')}
-            className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer border ${
               activeSubTab === 'abacate'
-                ? 'bg-emerald-600 text-white font-medium'
-                : 'bg-muted/40 hover:bg-muted text-muted-foreground'
+                ? 'bg-[#059669] text-white border-[#10b981]'
+                : 'bg-[#1f2937] hover:bg-[#374151] text-white border-[#4b5563]'
             }`}
           >
             <Package className="w-3.5 h-3.5" />
@@ -339,13 +339,14 @@ export default function AbacateProductsManager() {
           <button
             type="button"
             onClick={() => setActiveSubTab('local')}
-            className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer border ${
               activeSubTab === 'local'
-                ? 'bg-primary text-primary-foreground shadow-sm font-bold'
-                : 'bg-muted/40 hover:bg-muted text-muted-foreground'
+                ? 'bg-[#2563eb] text-white border-[#3b82f6]'
+                : 'bg-[#1f2937] hover:bg-[#374151] text-white border-[#4b5563]'
             }`}
           >
-            <span>📦 Planos Cadastrados pelo Developer ({localPlans.length})</span>
+            <Layers className="w-3.5 h-3.5" />
+            <span>Planos Cadastrados ({localPlans.length})</span>
           </button>
         </div>
 
@@ -355,7 +356,7 @@ export default function AbacateProductsManager() {
               type="button"
               onClick={handleSyncAllPlans}
               disabled={syncingAll}
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 bg-[#059669] hover:bg-emerald-600 text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border border-[#10b981] disabled:opacity-50"
             >
               {syncingAll ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -369,7 +370,7 @@ export default function AbacateProductsManager() {
           <button
             type="button"
             onClick={() => setIsCreateModalOpen(true)}
-            className="px-3.5 py-2 bg-card hover:bg-accent border border-border text-foreground font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 bg-[#2563eb] hover:bg-blue-600 border border-[#3b82f6] text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Novo Produto AbacatePay</span>
@@ -379,21 +380,21 @@ export default function AbacateProductsManager() {
             type="button"
             onClick={fetchProductsAndPlans}
             disabled={loading}
-            className="p-2 rounded-xl border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground transition cursor-pointer"
+            className="p-2 rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white transition cursor-pointer"
             title="Atualizar lista"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'text-white'}`} />
           </button>
         </div>
       </div>
 
       {/* ABA 1: PRODUTOS DIRETOS NA ABACATEPAY */}
       {activeSubTab === 'abacate' && (
-        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-6 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-base font-bold text-foreground">Produtos Registrados na AbacatePay</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="text-base font-extrabold text-white">Produtos Registrados na AbacatePay</h3>
+              <p className="text-xs text-gray-200 font-medium">
                 Estes são os produtos sincronizados com a chave de API da sua conta AbacatePay.
               </p>
             </div>
@@ -401,7 +402,7 @@ export default function AbacateProductsManager() {
               href="https://app.abacatepay.com/products"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-medium"
+              className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-bold"
             >
               <span>Painel AbacatePay</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -411,14 +412,14 @@ export default function AbacateProductsManager() {
           {loading ? (
             <div className="space-y-3 py-6">
               {[1, 2, 3].map((n) => (
-                <div key={n} className="h-14 bg-muted/30 rounded-xl animate-pulse" />
+                <div key={n} className="h-14 bg-[#030712] rounded-xl animate-pulse border border-[#374151]" />
               ))}
             </div>
           ) : abacateProducts.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-border rounded-xl">
-              <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-sm font-medium text-foreground">Nenhum produto encontrado na sua conta AbacatePay.</p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+            <div className="text-center py-12 border border-dashed border-[#374151] rounded-xl bg-[#030712]">
+              <Package className="w-8 h-8 text-gray-400 mx-auto mb-2 opacity-70" />
+              <p className="text-sm font-bold text-white">Nenhum produto encontrado na sua conta AbacatePay.</p>
+              <p className="text-xs text-gray-300 mt-1 max-w-md mx-auto">
                 Você pode sincronizar os planos cadastrados pelo developer clicando no botão <strong>Sincronizar Todos</strong> ou cadastrar um novo produto acima.
               </p>
             </div>
@@ -426,53 +427,53 @@ export default function AbacateProductsManager() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-border text-xs text-muted-foreground">
-                    <th className="pb-3 font-medium"># ID AbacatePay</th>
-                    <th className="pb-3 font-medium">Nome do Produto</th>
-                    <th className="pb-3 font-medium">Valor</th>
-                    <th className="pb-3 font-medium">ID Externo (Plano)</th>
-                    <th className="pb-3 font-medium">Descrição</th>
-                    <th className="pb-3 font-medium text-right">Ação</th>
+                  <tr className="border-b border-[#374151] bg-[#1f2937] text-xs font-bold uppercase tracking-wider text-white">
+                    <th className="py-3.5 px-4 font-bold"># ID AbacatePay</th>
+                    <th className="py-3.5 px-3 font-bold">Nome do Produto</th>
+                    <th className="py-3.5 px-3 font-bold">Valor</th>
+                    <th className="py-3.5 px-3 font-bold">ID Externo (Plano)</th>
+                    <th className="py-3.5 px-3 font-bold">Descrição</th>
+                    <th className="py-3.5 px-4 text-right font-bold">Ação</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-[#374151]">
                   {abacateProducts.map((prod, idx) => (
-                    <tr key={prod.id || idx} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-3.5 font-mono text-xs text-foreground font-semibold">
+                    <tr key={prod.id || idx} className="hover:bg-[#1f2937]/50 transition-colors">
+                      <td className="py-3.5 px-4 font-mono text-xs text-white font-bold">
                         <div className="flex items-center gap-1.5">
                           <span>{prod.id}</span>
                           <button
                             type="button"
                             onClick={() => handleCopy(prod.id)}
-                            className="text-muted-foreground hover:text-foreground transition cursor-pointer"
+                            className="text-gray-300 hover:text-white transition cursor-pointer p-1 rounded hover:bg-[#1f2937]"
                             title="Copiar ID"
                           >
-                            {copiedId === prod.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            {copiedId === prod.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         </div>
                       </td>
-                      <td className="py-3.5 font-bold text-foreground flex items-center gap-2">
+                      <td className="py-3.5 px-3 font-bold text-white flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-400" />
                         <span>{prod.name}</span>
                       </td>
-                      <td className="py-3.5 font-extrabold text-emerald-400 font-mono">
+                      <td className="py-3.5 px-3 font-black text-white font-mono">
                         {formatPriceBRL((prod.price || 0) / 100)}
                       </td>
-                      <td className="py-3.5 font-mono text-xs text-muted-foreground">
+                      <td className="py-3.5 px-3 font-mono text-xs text-gray-300 font-bold">
                         {prod.externalId || '-'}
                       </td>
-                      <td className="py-3.5 text-xs text-muted-foreground max-w-xs truncate">
+                      <td className="py-3.5 px-3 text-xs text-gray-200 max-w-xs truncate font-medium">
                         {prod.description || '-'}
                       </td>
-                      <td className="py-3.5 text-right">
+                      <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <span className="px-2.5 py-1 rounded text-[11px] font-bold bg-[#059669] text-white border border-[#10b981]">
                             Ativo na API
                           </span>
                           <button
                             type="button"
                             onClick={() => setDeleteConfirmItem({ id: prod.id, name: prod.name, type: 'abacate' })}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                            className="p-1.5 rounded-lg text-white bg-[#dc2626] hover:bg-red-600 border border-[#ef4444] transition cursor-pointer"
                             title="Excluir produto da AbacatePay"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -490,15 +491,15 @@ export default function AbacateProductsManager() {
 
       {/* ABA 2: PLANOS DO DEVELOPER NO SISTEMA */}
       {activeSubTab === 'local' && (
-        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-6 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-base font-bold text-foreground">Planos Cadastrados pelo Developer no Sistema</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="text-base font-extrabold text-white">Planos Cadastrados pelo Developer no Sistema</h3>
+              <p className="text-xs text-gray-200 font-medium">
                 Planos comerciais configurados para contratação pelas barbearias.
               </p>
             </div>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-white font-bold bg-[#1f2937] px-3 py-1 rounded-lg border border-[#4b5563]">
               Total: <strong>{localPlans.length}</strong> planos
             </span>
           </div>
@@ -506,78 +507,78 @@ export default function AbacateProductsManager() {
           {loading ? (
             <div className="space-y-3 py-6">
               {[1, 2, 3].map((n) => (
-                <div key={n} className="h-14 bg-muted/30 rounded-xl animate-pulse" />
+                <div key={n} className="h-14 bg-[#030712] rounded-xl animate-pulse border border-[#374151]" />
               ))}
             </div>
           ) : localPlans.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-border rounded-xl">
-              <Layers className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-sm font-medium text-foreground">Nenhum plano cadastrado no banco de dados.</p>
+            <div className="text-center py-12 border border-dashed border-[#374151] rounded-xl bg-[#030712]">
+              <Layers className="w-8 h-8 text-gray-400 mx-auto mb-2 opacity-70" />
+              <p className="text-sm font-bold text-white">Nenhum plano cadastrado no banco de dados.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-border text-xs text-muted-foreground">
-                    <th className="pb-3 font-medium">Plano</th>
-                    <th className="pb-3 font-medium">Preço / Ciclo</th>
-                    <th className="pb-3 font-medium">Status Sistema</th>
-                    <th className="pb-3 font-medium">Sincronia AbacatePay</th>
-                    <th className="pb-3 font-medium text-right">Ação</th>
+                  <tr className="border-b border-[#374151] bg-[#1f2937] text-xs font-bold uppercase tracking-wider text-white">
+                    <th className="py-3.5 px-4 font-bold">Plano</th>
+                    <th className="py-3.5 px-3 font-bold">Preço / Ciclo</th>
+                    <th className="py-3.5 px-3 font-bold">Status Sistema</th>
+                    <th className="py-3.5 px-3 font-bold">Sincronia AbacatePay</th>
+                    <th className="py-3.5 px-4 text-right font-bold">Ação</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-[#374151]">
                   {localPlans.map((plan) => (
-                    <tr key={plan.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-3.5">
-                        <div className="font-bold text-foreground">{plan.name}</div>
-                        <span className="text-xs text-muted-foreground font-mono">{plan.slug}</span>
+                    <tr key={plan.id} className="hover:bg-[#1f2937]/50 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-white">{plan.name}</div>
+                        <span className="text-xs text-gray-300 font-mono">{plan.slug}</span>
                       </td>
-                      <td className="py-3.5 font-semibold text-foreground font-mono">
+                      <td className="py-3.5 px-3 font-black text-white font-mono">
                         {formatPriceBRL(Number(plan.price))}
-                        <span className="text-xs text-muted-foreground font-normal ml-1">
+                        <span className="text-xs text-gray-200 font-bold ml-1">
                           /{plan.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
                         </span>
                       </td>
-                      <td className="py-3.5">
+                      <td className="py-3.5 px-3">
                         {plan.isActive ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#059669] text-white border border-[#10b981]">
                             Ativo
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border">
+                          <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#dc2626] text-white border border-[#ef4444]">
                             Inativo
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5">
+                      <td className="py-3.5 px-3">
                         {plan.isSyncedWithAbacate ? (
                           <div className="flex items-center gap-1.5">
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" />
+                            <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#059669] text-white border border-[#10b981] flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
                               <span>Sincronizado</span>
                             </span>
                             {plan.abacateProductId && (
-                              <span className="text-[11px] font-mono text-muted-foreground">
+                              <span className="text-[11px] font-mono text-gray-300 font-bold">
                                 ({plan.abacateProductId})
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-fit">
-                            <Clock className="w-3 h-3" />
+                          <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b] flex items-center gap-1 w-fit">
+                            <Clock className="w-3.5 h-3.5" />
                             <span>Pendente de Sincronia</span>
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5 text-right">
+                      <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {plan.isSyncedWithAbacate ? (
                             <button
                               type="button"
                               onClick={() => handleSyncPlan(plan.id)}
                               disabled={syncingPlanId === plan.id}
-                              className="text-xs text-muted-foreground hover:text-foreground font-medium underline cursor-pointer disabled:opacity-50"
+                              className="px-3 py-1 bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] font-bold text-xs rounded-lg transition cursor-pointer disabled:opacity-50"
                             >
                               {syncingPlanId === plan.id ? 'Revalidando...' : 'Revalidar'}
                             </button>
@@ -586,12 +587,12 @@ export default function AbacateProductsManager() {
                               type="button"
                               onClick={() => handleSyncPlan(plan.id)}
                               disabled={syncingPlanId === plan.id}
-                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                              className="px-3 py-1 bg-[#059669] hover:bg-emerald-600 text-white font-bold text-xs rounded-lg transition cursor-pointer disabled:opacity-50 flex items-center gap-1 border border-[#10b981]"
                             >
                               {syncingPlanId === plan.id ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                               ) : (
-                                <RefreshCw className="w-3 h-3" />
+                                <RefreshCw className="w-3.5 h-3.5" />
                               )}
                               <span>Sincronizar</span>
                             </button>
@@ -599,7 +600,7 @@ export default function AbacateProductsManager() {
                           <button
                             type="button"
                             onClick={() => setDeleteConfirmItem({ id: plan.id, name: plan.name, type: 'local' })}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                            className="p-1.5 rounded-lg text-white bg-[#dc2626] hover:bg-red-600 border border-[#ef4444] transition cursor-pointer"
                             title="Excluir plano do sistema"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -617,56 +618,56 @@ export default function AbacateProductsManager() {
 
       {/* Modal de Criar Novo Produto na AbacatePay */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-foreground">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
+          <div className="bg-[#111827] border border-[#374151] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-white space-y-4">
             <button
               onClick={() => setIsCreateModalOpen(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white transition cursor-pointer"
+              className="absolute top-5 right-5 text-gray-300 hover:text-white transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <Package className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-lg font-bold text-white">Novo Produto</h3>
+              <h3 className="text-lg font-bold text-white">Novo Produto AbacatePay</h3>
             </div>
-            <p className="text-xs text-slate-400 mb-6">
+            <p className="text-xs text-gray-200 font-medium mb-4">
               Cadastre um novo item comercial diretamente no gateway de pagamentos.
             </p>
 
             <form onSubmit={handleCreateProduct} className="space-y-4">
               <div>
-                <label className="text-xs text-slate-300 font-medium block mb-1">Nome do Produto *</label>
+                <label className="text-xs text-white font-bold block mb-1">Nome do Produto *</label>
                 <input
                   type="text"
                   required
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                   placeholder="Ex: Plano Trimestral BarberShop"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-[#030712] border border-[#374151] rounded-xl py-2.5 px-3 text-xs text-white font-medium focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 font-medium block mb-1">Preço em Reais (R$) *</label>
+                <label className="text-xs text-white font-bold block mb-1">Preço em Reais (R$) *</label>
                 <input
                   type="text"
                   required
                   value={createForm.price}
                   onChange={(e) => setCreateForm({ ...createForm, price: e.target.value })}
                   placeholder="Ex: 59.90"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-[#030712] border border-[#374151] rounded-xl py-2.5 px-3 text-xs font-mono text-white font-medium focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 font-medium block mb-1">Descrição</label>
+                <label className="text-xs text-white font-bold block mb-1">Descrição</label>
                 <textarea
                   rows={3}
                   value={createForm.description}
                   onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
                   placeholder="Descrição das funcionalidades e vigência do produto..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-[#030712] border border-[#374151] rounded-xl py-2.5 px-3 text-xs text-white font-medium focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -674,14 +675,14 @@ export default function AbacateProductsManager() {
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={creatingProduct}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-[#059669] hover:bg-emerald-600 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5 border border-[#10b981]"
                 >
                   {creatingProduct ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                   <span>Criar na AbacatePay</span>
@@ -694,23 +695,23 @@ export default function AbacateProductsManager() {
 
       {/* Modal de Confirmação de Exclusão */}
       {deleteConfirmItem && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in-95 space-y-4">
-            <div className="flex items-center gap-3 text-destructive">
-              <div className="w-10 h-10 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-center shrink-0">
-                <Trash2 className="w-5 h-5 text-destructive" />
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+          <div className="bg-[#111827] border border-[#ef4444] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-white">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#dc2626] border border-[#ef4444] flex items-center justify-center text-white shrink-0">
+                <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-foreground text-base">
+                <h3 className="font-extrabold text-white text-base">
                   {deleteConfirmItem.type === 'abacate' ? 'Excluir Produto da AbacatePay' : 'Excluir Plano do Sistema'}
                 </h3>
-                <span className="text-xs text-muted-foreground">Esta ação é permanente e irreversível</span>
+                <span className="text-xs text-gray-300 font-medium">Esta ação é permanente e irreversível</span>
               </div>
             </div>
 
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-gray-200 leading-relaxed font-medium">
               Você tem certeza que deseja excluir permanentemente o item{' '}
-              <strong className="text-foreground">&quot;{deleteConfirmItem.name}&quot;</strong>
+              <strong className="text-white font-bold">&quot;{deleteConfirmItem.name}&quot;</strong>
               {deleteConfirmItem.type === 'abacate'
                 ? ' da sua conta na AbacatePay? O produto deixará de existir no gateway de pagamento.'
                 : ' do banco de dados do sistema?'}
@@ -721,7 +722,7 @@ export default function AbacateProductsManager() {
                 type="button"
                 onClick={() => setDeleteConfirmItem(null)}
                 disabled={deletingProduct}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] transition cursor-pointer"
               >
                 Cancelar
               </button>
@@ -729,7 +730,7 @@ export default function AbacateProductsManager() {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deletingProduct}
-                className="px-4 py-2 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                className="px-5 py-2 rounded-xl bg-[#dc2626] hover:bg-red-600 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5 border border-[#ef4444] shadow-sm"
               >
                 {deletingProduct ? (
                   <>

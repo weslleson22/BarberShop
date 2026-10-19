@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
@@ -39,7 +39,42 @@ import {
   Link2,
   Package,
   ShieldAlert,
+  MoreHorizontal,
 } from 'lucide-react'
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 interface BarbershopData {
   id: string
@@ -154,8 +189,57 @@ export default function DeveloperDashboardPage() {
     setTimeout(() => setCopiedShopId(null), 2500)
   }
 
-  // Abas de filtro de tenants
+  // Abas de filtro de tenants (com drag-to-scroll e sem barra de scroll visível)
   const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'TRIALING' | 'EXPIRED' | 'SUSPENDED' | 'CANCELLED'>('ALL')
+  const tabsScrollRef = useRef<HTMLDivElement>(null)
+  const isDraggingTabsRef = useRef(false)
+  const dragStartXRef = useRef(0)
+  const dragScrollLeftRef = useRef(0)
+  const dragMovedRef = useRef(false)
+  const [isGrabbingTabs, setIsGrabbingTabs] = useState(false)
+
+  const handleTabsMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!tabsScrollRef.current) return
+    isDraggingTabsRef.current = true
+    dragMovedRef.current = false
+    dragStartXRef.current = e.pageX - tabsScrollRef.current.offsetLeft
+    dragScrollLeftRef.current = tabsScrollRef.current.scrollLeft
+    setIsGrabbingTabs(true)
+  }
+
+  const handleTabsMouseLeave = () => {
+    isDraggingTabsRef.current = false
+    setIsGrabbingTabs(false)
+  }
+
+  const handleTabsMouseUp = () => {
+    isDraggingTabsRef.current = false
+    setIsGrabbingTabs(false)
+  }
+
+  const handleTabsMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingTabsRef.current || !tabsScrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - tabsScrollRef.current.offsetLeft
+    const walk = (x - dragStartXRef.current) * 1.5
+    if (Math.abs(walk) > 4) {
+      dragMovedRef.current = true
+    }
+    tabsScrollRef.current.scrollLeft = dragScrollLeftRef.current - walk
+  }
+
+  const handleTabsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!tabsScrollRef.current) return
+    if (e.deltaY !== 0) {
+      tabsScrollRef.current.scrollLeft += e.deltaY
+    }
+  }
+
+  // Modal "Resetar Período de Trial"
+  const [trialResetShop, setTrialResetShop] = useState<BarbershopData | null>(null)
+  const [trialDaysInput, setTrialDaysInput] = useState<number>(30)
+  const [trialReasonInput, setTrialReasonInput] = useState<string>('Prorrogação de degustação comercial')
+  const [isResettingTrial, setIsResettingTrial] = useState<boolean>(false)
 
   // Modal "Análise e Aprovação de Cadastro"
   const [selectedShopForApproval, setSelectedShopForApproval] = useState<BarbershopData | null>(null)
@@ -389,7 +473,7 @@ export default function DeveloperDashboardPage() {
     if (!contractExpiresAt) {
       return {
         label: 'Vitalício',
-        color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+        color: 'bg-[#059669] text-white border border-[#10b981]',
         isExpired: false,
         daysRemaining: null,
       }
@@ -403,21 +487,21 @@ export default function DeveloperDashboardPage() {
     if (diffDays < 0) {
       return {
         label: `Expirado (${expDate.toLocaleDateString('pt-BR')})`,
-        color: 'bg-red-500/20 text-red-400 border border-red-500/30',
+        color: 'bg-[#dc2626] text-white border border-[#ef4444]',
         isExpired: true,
         daysRemaining: diffDays,
       }
     } else if (diffDays <= 15) {
       return {
         label: `Expira em ${diffDays}d (${expDate.toLocaleDateString('pt-BR')})`,
-        color: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+        color: 'bg-[#d97706] text-white border border-[#f59e0b]',
         isExpired: false,
         daysRemaining: diffDays,
       }
     } else {
       return {
         label: `Até ${expDate.toLocaleDateString('pt-BR')}`,
-        color: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+        color: 'bg-[#2563eb] text-white border border-[#3b82f6]',
         isExpired: false,
         daysRemaining: diffDays,
       }
@@ -531,6 +615,39 @@ export default function DeveloperDashboardPage() {
       setMessage({ type: 'error', text: err.message || 'Erro ao atualizar contrato' })
     } finally {
       setIsUpdatingContract(false)
+    }
+  }
+
+  const handleConfirmResetTrial = async () => {
+    if (!trialResetShop) return
+    setIsResettingTrial(true)
+    try {
+      const res = await fetch('/api/developer/trial/reset', {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'include',
+        body: JSON.stringify({
+          barbershopId: trialResetShop.id,
+          days: trialDaysInput,
+          reason: trialReasonInput,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao resetar período de trial')
+      }
+
+      setMessage({
+        type: 'success',
+        text: `Período de trial de "${trialResetShop.name}" resetado com sucesso por ${trialDaysInput} dias!`,
+      })
+      setTrialResetShop(null)
+      loadData()
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Erro ao resetar trial' })
+    } finally {
+      setIsResettingTrial(false)
     }
   }
 
@@ -729,22 +846,22 @@ export default function DeveloperDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
+    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
       <DropdownHeader />
 
       <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-8">
         {/* Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-800 pb-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#374151] pb-6 mb-8">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <span className="px-3 py-1 rounded-lg text-xs font-bold bg-[#2563eb] text-white border border-[#3b82f6] shadow-sm">
                 DEVELOPER ADMIN
               </span>
               <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                 Gestão da Plataforma SaaS
               </h1>
             </div>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-white text-sm mt-1 font-medium">
               Painel técnico de controle de tenants, isolamento multi-tenant e administração da plataforma.
             </p>
           </div>
@@ -752,17 +869,17 @@ export default function DeveloperDashboardPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <Link
               href="/developer/billing"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-medium border border-gray-700 rounded-lg text-sm transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#111827] hover:bg-[#1f2937] text-white font-bold border border-[#374151] rounded-lg text-sm transition-colors shadow-sm"
             >
-              <CreditCard className="h-4 w-4 text-emerald-400" />
+              <CreditCard className="h-4 w-4 text-white" />
               <span>Faturamento & Gateway</span>
             </Link>
 
             <Link
               href="/developer/onboarding"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-medium border border-gray-700 rounded-lg text-sm transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#111827] hover:bg-[#1f2937] text-white font-bold border border-[#374151] rounded-lg text-sm transition-colors shadow-sm"
             >
-              <Users className="h-4 w-4 text-blue-400" />
+              <Users className="h-4 w-4 text-white" />
               <span>Cockpit Onboarding</span>
             </Link>
 
@@ -771,7 +888,7 @@ export default function DeveloperDashboardPage() {
                 setFormError(null)
                 setIsAddModalOpen(true)
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-sm transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-sm border border-[#10b981] transition-colors cursor-pointer shadow-sm"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               Nova Empresa
@@ -780,7 +897,7 @@ export default function DeveloperDashboardPage() {
             <button
               onClick={loadData}
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border border-gray-700 hover:border-gray-500 rounded-lg text-sm font-medium transition text-gray-200 hover:text-white"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#111827] border border-[#374151] hover:bg-[#1f2937] rounded-lg text-sm font-bold transition text-white shadow-sm"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               Atualizar
@@ -791,23 +908,23 @@ export default function DeveloperDashboardPage() {
         {/* Feedback Alert */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-lg flex items-center justify-between gap-3 border ${
+            className={`mb-6 p-4 rounded-xl flex items-center justify-between gap-3 border shadow-sm ${
               message.type === 'success'
-                ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
-                : 'bg-red-950/40 border-red-500/30 text-red-300'
+                ? 'bg-[#059669] border-[#10b981] text-white font-bold'
+                : 'bg-[#dc2626] border-[#ef4444] text-white font-bold'
             }`}
           >
             <div className="flex items-center gap-3">
               {message.type === 'success' ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-white shrink-0" />
               ) : (
-                <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
+                <AlertTriangle className="h-5 w-5 text-white shrink-0" />
               )}
-              <span className="text-sm font-medium">{message.text}</span>
+              <span className="text-sm font-bold">{message.text}</span>
             </div>
             <button
               onClick={() => setMessage(null)}
-              className="text-gray-400 hover:text-white transition"
+              className="text-white hover:text-gray-200 transition"
               aria-label="Fechar mensagem"
             >
               <X className="h-4 w-4" />
@@ -816,21 +933,21 @@ export default function DeveloperDashboardPage() {
         )}
 
         {/* Hub de Faturamento, Gateway, Planos & Assinaturas */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-6 space-y-4 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#059669] border border-[#10b981] text-white text-xs font-bold uppercase tracking-wider mb-2">
                 <CreditCard className="w-3.5 h-3.5" />
                 <span>Gestão Financeira SaaS</span>
               </div>
               <h2 className="text-xl font-bold text-white">Faturamento & Planos</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-white font-medium mt-1">
                 Controle direto de assinaturas das barbearias, cobranças geradas e planos cadastrados.
               </p>
             </div>
             <Link
               href="/developer/billing"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors self-start sm:self-auto cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs border border-[#10b981] transition-colors self-start sm:self-auto cursor-pointer shadow-sm"
             >
               <span>Abrir Faturamento Completo</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -841,16 +958,18 @@ export default function DeveloperDashboardPage() {
             {/* Card 1: Cobranças Gateway */}
             <Link
               href="/developer/billing?tab=cobrancas"
-              className="bg-gray-950 border border-gray-800 hover:border-gray-700 p-4 rounded-xl transition-colors group flex flex-col justify-between cursor-pointer"
+              className="bg-[#030712] border border-[#374151] hover:border-[#4b5563] p-4 rounded-xl transition-colors flex flex-col justify-between cursor-pointer shadow-sm"
             >
-              <div className="flex items-center justify-between text-gray-400 group-hover:text-emerald-400 mb-2">
-                <span className="text-xs font-semibold">Cobranças Gateway</span>
-                <CreditCard className="w-4 h-4 text-emerald-400" />
+              <div className="flex items-center justify-between text-white mb-2">
+                <span className="text-xs font-bold">Cobranças Gateway</span>
+                <span className="p-1 rounded bg-[#059669] text-white border border-[#10b981]">
+                  <CreditCard className="w-3.5 h-3.5" />
+                </span>
               </div>
-              <div className="text-xs text-gray-300">
+              <div className="text-xs text-white font-medium leading-relaxed">
                 Histórico de cobranças, links de checkout e liquidações PIX/Cartão.
               </div>
-              <span className="text-[11px] text-emerald-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
+              <span className="text-[11px] text-white font-bold mt-3 flex items-center gap-1 underline">
                 Acessar cobranças →
               </span>
             </Link>
@@ -858,18 +977,18 @@ export default function DeveloperDashboardPage() {
             {/* Card 2: Assinaturas SaaS */}
             <Link
               href="/developer/subscriptions"
-              className="bg-gray-950 border border-gray-800 hover:border-gray-700 p-4 rounded-xl transition-colors group flex flex-col justify-between cursor-pointer"
+              className="bg-[#030712] border border-[#374151] hover:border-[#4b5563] p-4 rounded-xl transition-colors flex flex-col justify-between cursor-pointer shadow-sm"
             >
-              <div className="flex items-center justify-between text-gray-400 group-hover:text-blue-400 mb-2">
-                <span className="text-xs font-semibold">Assinaturas SaaS</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-950 text-blue-400 border border-blue-800/60 font-mono">
+              <div className="flex items-center justify-between text-white mb-2">
+                <span className="text-xs font-bold">Assinaturas SaaS</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[#2563eb] text-white border border-[#3b82f6] font-mono font-bold">
                   {barbershops.filter(b => b.subscriptionStatus === 'ACTIVE' || b.isActive).length} ativas
                 </span>
               </div>
-              <div className="text-xs text-gray-300">
+              <div className="text-xs text-white font-medium leading-relaxed">
                 Status das assinaturas, vigências, renovações e inadimplência.
               </div>
-              <span className="text-[11px] text-blue-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
+              <span className="text-[11px] text-white font-bold mt-3 flex items-center gap-1 underline">
                 Ver assinaturas →
               </span>
             </Link>
@@ -877,16 +996,18 @@ export default function DeveloperDashboardPage() {
             {/* Card 3: Produtos no Gateway */}
             <Link
               href="/developer/billing?tab=produtos"
-              className="bg-gray-950 border border-gray-800 hover:border-gray-700 p-4 rounded-xl transition-colors group flex flex-col justify-between cursor-pointer"
+              className="bg-[#030712] border border-[#374151] hover:border-[#4b5563] p-4 rounded-xl transition-colors flex flex-col justify-between cursor-pointer shadow-sm"
             >
-              <div className="flex items-center justify-between text-gray-400 group-hover:text-amber-400 mb-2">
-                <span className="text-xs font-semibold">Produtos no Gateway</span>
-                <Package className="w-4 h-4 text-amber-400" />
+              <div className="flex items-center justify-between text-white mb-2">
+                <span className="text-xs font-bold">Produtos no Gateway</span>
+                <span className="p-1 rounded bg-[#d97706] text-white border border-[#f59e0b]">
+                  <Package className="w-3.5 h-3.5" />
+                </span>
               </div>
-              <div className="text-xs text-gray-300">
+              <div className="text-xs text-white font-medium leading-relaxed">
                 Seus produtos cadastrados e sincronizados com a API de pagamento.
               </div>
-              <span className="text-[11px] text-amber-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
+              <span className="text-[11px] text-white font-bold mt-3 flex items-center gap-1 underline">
                 Gerenciar produtos →
               </span>
             </Link>
@@ -894,18 +1015,18 @@ export default function DeveloperDashboardPage() {
             {/* Card 4: Planos Cadastrados pelo Developer */}
             <Link
               href="/developer/billing?tab=produtos"
-              className="bg-gray-950 border border-gray-800 hover:border-gray-700 p-4 rounded-xl transition-colors group flex flex-col justify-between cursor-pointer"
+              className="bg-[#030712] border border-[#374151] hover:border-[#4b5563] p-4 rounded-xl transition-colors flex flex-col justify-between cursor-pointer shadow-sm"
             >
-              <div className="flex items-center justify-between text-gray-400 group-hover:text-purple-400 mb-2">
-                <span className="text-xs font-semibold">Planos Cadastrados</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-950 text-purple-400 border border-purple-800/60 font-mono">
+              <div className="flex items-center justify-between text-white mb-2">
+                <span className="text-xs font-bold">Planos Cadastrados</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[#7c3aed] text-white border border-[#8b5cf6] font-mono font-bold">
                   Developer
                 </span>
               </div>
-              <div className="text-xs text-gray-300">
+              <div className="text-xs text-white font-medium leading-relaxed">
                 Planos cadastrados pelo developer e sincronização com o gateway.
               </div>
-              <span className="text-[11px] text-purple-400 font-semibold mt-3 flex items-center gap-1 group-hover:underline">
+              <span className="text-[11px] text-white font-bold mt-3 flex items-center gap-1 underline">
                 Configurar planos →
               </span>
             </Link>
@@ -914,19 +1035,20 @@ export default function DeveloperDashboardPage() {
 
         {/* Metrics Grid (Platform / Technical Metrics Only - Zero Operational Appointments) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl backdrop-blur-sm">
-            <div className="flex items-center justify-between text-gray-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Empresas (Tenants)</span>
-              <Building2 className="h-5 w-5 text-amber-400" />
+          <div className="bg-[#111827] border border-[#374151] p-5 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between text-white mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-white">Empresas (Tenants)</span>
+              <span className="p-1.5 rounded-lg bg-[#2563eb] text-white border border-[#3b82f6]">
+                <Building2 className="h-4 w-4" />
+              </span>
             </div>
             <div className="text-3xl font-bold text-white">
               {metrics?.tenants?.total ?? 0}
             </div>
-            <div className="text-xs text-gray-400 mt-2 flex items-center justify-between">
+            <div className="text-xs text-white mt-2 flex items-center justify-between font-bold">
               <div className="flex items-center gap-2">
-                <span className="text-emerald-400 font-medium">{activeCount} ativas</span>
-                <span>•</span>
-                <span className="text-red-400 font-medium">{inactiveCount} inativas</span>
+                <span className="bg-[#059669] text-white border border-[#10b981] px-2 py-0.5 rounded text-[11px]">{activeCount} ativas</span>
+                <span className="bg-[#dc2626] text-white border border-[#ef4444] px-2 py-0.5 rounded text-[11px]">{inactiveCount} inativas</span>
               </div>
               <button
                 type="button"
@@ -934,7 +1056,7 @@ export default function DeveloperDashboardPage() {
                   setFormError(null)
                   setIsAddModalOpen(true)
                 }}
-                className="text-amber-400 hover:text-amber-300 font-medium text-xs flex items-center gap-1 transition cursor-pointer hover:underline"
+                className="text-white hover:text-gray-200 font-bold text-xs flex items-center gap-1 transition cursor-pointer underline"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Criar
@@ -944,9 +1066,9 @@ export default function DeveloperDashboardPage() {
               <button
                 type="button"
                 onClick={() => setFilterTab('PENDING')}
-                className="mt-2 text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition cursor-pointer hover:underline"
+                className="mt-2.5 text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b] px-2.5 py-1 rounded-md flex items-center gap-1.5 transition cursor-pointer shadow-sm w-fit"
               >
-                <Clock className="w-3.5 h-3.5 animate-pulse" />
+                <Clock className="w-3.5 h-3.5" />
                 <span>{pendingCount} aguardando aprovação</span>
               </button>
             )}
@@ -954,528 +1076,818 @@ export default function DeveloperDashboardPage() {
 
           <Link
             href="/usuarios"
-            className="block bg-gray-900/60 border border-gray-800 hover:border-blue-500/50 p-5 rounded-xl backdrop-blur-sm transition group"
+            className="block bg-[#111827] border border-[#374151] hover:border-[#4b5563] p-5 rounded-xl transition shadow-sm"
           >
-            <div className="flex items-center justify-between text-gray-400 group-hover:text-blue-400 mb-2 transition">
-              <span className="text-xs font-semibold uppercase tracking-wider">Usuários da Plataforma</span>
-              <Users className="h-5 w-5 text-blue-400" />
+            <div className="flex items-center justify-between text-white mb-2 transition">
+              <span className="text-xs font-bold uppercase tracking-wider text-white">Usuários da Plataforma</span>
+              <span className="p-1.5 rounded-lg bg-[#059669] text-white border border-[#10b981]">
+                <Users className="h-4 w-4" />
+              </span>
             </div>
             <div className="text-3xl font-bold text-white">
               {metrics?.users?.total ?? 0}
             </div>
-            <div className="text-xs text-gray-400 mt-2 flex items-center gap-2">
-              <span className="text-gray-300 font-medium">{metrics?.users?.byRole?.['ADMIN'] ?? 0} admins</span>
-              <span>•</span>
-              <span className="text-gray-300 font-medium">{metrics?.users?.byRole?.['BARBER'] ?? 0} profissionais</span>
+            <div className="text-xs text-white mt-2 flex items-center gap-2 font-bold">
+              <span className="bg-[#1f2937] text-white px-2 py-0.5 rounded border border-[#374151]">{metrics?.users?.byRole?.['ADMIN'] ?? 0} admins</span>
+              <span className="bg-[#1f2937] text-white px-2 py-0.5 rounded border border-[#374151]">{metrics?.users?.byRole?.['BARBER'] ?? 0} profissionais</span>
             </div>
           </Link>
 
-          <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl backdrop-blur-sm">
-            <div className="flex items-center justify-between text-gray-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Base de Clientes</span>
-              <ShieldCheck className="h-5 w-5 text-purple-400" />
+          <div className="bg-[#111827] border border-[#374151] p-5 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between text-white mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-white">Base de Clientes</span>
+              <span className="p-1.5 rounded-lg bg-[#7c3aed] text-white border border-[#8b5cf6]">
+                <ShieldCheck className="h-4 w-4" />
+              </span>
             </div>
             <div className="text-3xl font-bold text-white">
               {metrics?.clients?.total ?? 0}
             </div>
-            <div className="text-xs text-gray-400 mt-2">
+            <div className="text-xs text-white font-medium mt-2">
               Cadastros registrados nos tenants
             </div>
           </div>
 
-          <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl backdrop-blur-sm">
-            <div className="flex items-center justify-between text-gray-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Serviços no Catálogo</span>
-              <Briefcase className="h-5 w-5 text-emerald-400" />
+          <div className="bg-[#111827] border border-[#374151] p-5 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between text-white mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-white">Serviços no Catálogo</span>
+              <span className="p-1.5 rounded-lg bg-[#d97706] text-white border border-[#f59e0b]">
+                <Briefcase className="h-4 w-4" />
+              </span>
             </div>
             <div className="text-3xl font-bold text-white">
               {metrics?.services?.total ?? 0}
             </div>
-            <div className="text-xs text-emerald-400 mt-2">
+            <div className="text-xs text-white font-medium mt-2">
               Serviços configurados pelas empresas
             </div>
           </div>
         </div>
 
-        {/* Tenants Table */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden shadow-xl mb-8">
-          <div className="p-5 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-amber-400" />
-                <h2 className="text-lg font-semibold text-white">Tenants Cadastrados</h2>
+        {/* Tenants Table - shadcn/ui */}
+        <TooltipProvider delayDuration={150}>
+          <Card className="bg-[#111827] border-[#374151] rounded-xl overflow-hidden shadow-sm mb-8 text-white">
+            <CardHeader className="p-5 border-b border-[#374151] bg-[#111827] space-y-4">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <span className="p-2.5 rounded-lg bg-[#2563eb] text-white border border-[#3b82f6] shadow-sm mt-0.5">
+                    <Building2 className="w-5 h-5 text-white" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <CardTitle className="text-xl font-bold text-white tracking-tight">
+                        Tenants Cadastrados
+                      </CardTitle>
+                      <Badge
+                        variant="outline"
+                        className="bg-[#030712] text-white border-[#374151] font-mono text-[11px] px-2.5 py-0.5 font-bold"
+                      >
+                        {filteredBarbershops.length}{' '}
+                        {filteredBarbershops.length === 1 ? 'empresa' : 'empresas'}
+                      </Badge>
+                    </div>
+                    <CardDescription className="text-xs text-white font-medium mt-1">
+                      Controle de acesso, isolamento de dados e ativação de unidades
+                    </CardDescription>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white" />
+                    <Input
+                      type="text"
+                      placeholder="Buscar por nome, e-mail..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-9 pr-8 py-2 h-9 bg-[#030712] border-[#374151] rounded-lg text-xs text-white placeholder:text-gray-400 font-medium focus-visible:ring-1 focus-visible:ring-[#2563eb] focus-visible:border-[#2563eb] w-52 sm:w-64"
+                    />
+                    {searchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white cursor-pointer"
+                        title="Limpar busca"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setFormError(null)
+                      setIsAddModalOpen(true)
+                    }}
+                    className="h-9 px-4 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs border border-[#10b981] shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4 stroke-[2.5]" />
+                    <span>Cadastrar Empresa</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBackfillSlugs}
+                    disabled={isSyncingSlugs}
+                    className="h-9 px-3.5 bg-[#030712] hover:bg-[#1f2937] hover:text-white text-white border-[#374151] font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    title="Gera automaticamente slugs únicos para clientes e barbearias antigas sem slug"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isSyncingSlugs ? 'animate-spin text-white' : 'text-white'}`} />
+                    <span className="hidden sm:inline">
+                      {isSyncingSlugs ? 'Sincronizando...' : 'Sincronizar Slugs'}
+                    </span>
+                  </Button>
+                </div>
               </div>
-              <p className="text-xs text-gray-400 mt-0.5">Controle de acesso, isolamento de dados e ativação de unidades</p>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar empresa..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 pr-3 py-2 bg-gray-950/80 border border-gray-700 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 w-44 sm:w-56"
-                />
-              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setFormError(null)
-                  setIsAddModalOpen(true)
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors cursor-pointer"
-              >
-                <Plus className="h-4 w-4 stroke-[2.5]" />
-                Cadastrar Empresa
-              </button>
-
-              <button
-                type="button"
-                onClick={handleBackfillSlugs}
-                disabled={isSyncingSlugs}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 font-semibold rounded-lg text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
-                title="Gera automaticamente slugs únicos para clientes e barbearias antigas sem slug"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${isSyncingSlugs ? 'animate-spin text-amber-400' : 'text-gray-400'}`} />
-                <span>{isSyncingSlugs ? 'Sincronizando...' : 'Sincronizar Slugs'}</span>
-              </button>
-
-              <span className="text-xs text-gray-400 hidden lg:inline-block">
-                Total: <strong className="text-white">{filteredBarbershops.length}</strong>
-              </span>
-            </div>
-          </div>
-
-          {/* Sub-menu / Abas de Filtro de Tenants */}
-          <div className="px-5 py-2.5 bg-gray-950/40 border-b border-gray-800/80 flex items-center gap-2 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setFilterTab('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                filterTab === 'ALL'
-                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-              }`}
-            >
-              <span>Todos</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  filterTab === 'ALL' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-gray-300'
+              {/* Sub-menu / Abas de Filtro de Tenants (Arrastável e sem barra inferior) */}
+              <div
+                ref={tabsScrollRef}
+                onMouseDown={handleTabsMouseDown}
+                onMouseLeave={handleTabsMouseLeave}
+                onMouseUp={handleTabsMouseUp}
+                onMouseMove={handleTabsMouseMove}
+                onWheel={handleTabsWheel}
+                className={`pt-2 border-t border-[#374151] flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] select-none ${
+                  isGrabbingTabs ? 'cursor-grabbing' : 'cursor-grab'
                 }`}
               >
-                {barbershops.length}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFilterTab('PENDING')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                filterTab === 'PENDING'
-                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                  : 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Aguardando Aprovação</span>
-              {pendingCount > 0 ? (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-black animate-pulse">
-                  {pendingCount}
-                </span>
-              ) : (
-                <span
-                  className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                    filterTab === 'PENDING' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-gray-300'
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (dragMovedRef.current) return
+                    setFilterTab('ALL')
+                  }}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
+                    filterTab === 'ALL'
+                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
+                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
                   }`}
                 >
-                  0
-                </span>
-              )}
-            </button>
+                  <span>Todos</span>
+                  <Badge
+                    variant="outline"
+                    className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                  >
+                    {barbershops.length}
+                  </Badge>
+                </Button>
 
-            <button
-              type="button"
-              onClick={() => setFilterTab('ACTIVE')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                filterTab === 'ACTIVE'
-                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-              }`}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Ativos / Aprovados</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  filterTab === 'ACTIVE' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-gray-300'
-                }`}
-              >
-                {activeCount}
-              </span>
-            </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (dragMovedRef.current) return
+                    setFilterTab('PENDING')
+                  }}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
+                    filterTab === 'PENDING'
+                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
+                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Aguardando Aprovação</span>
+                  {pendingCount > 0 ? (
+                    <Badge className="px-1.5 py-0 text-[10px] font-bold bg-[#d97706] text-white border-[#f59e0b]">
+                      {pendingCount}
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                    >
+                      0
+                    </Badge>
+                  )}
+                </Button>
 
-            <button
-              type="button"
-              onClick={() => setFilterTab('TRIALING')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                filterTab === 'TRIALING'
-                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                  : 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
-              }`}
-            >
-              <CalendarClock className="w-3.5 h-3.5" />
-              <span>Em Trial (30 dias)</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  filterTab === 'TRIALING' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-amber-300'
-                }`}
-              >
-                {trialingCount}
-              </span>
-            </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (dragMovedRef.current) return
+                    setFilterTab('ACTIVE')
+                  }}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
+                    filterTab === 'ACTIVE'
+                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
+                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Ativos / Aprovados</span>
+                  <Badge
+                    variant="outline"
+                    className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                  >
+                    {activeCount}
+                  </Badge>
+                </Button>
 
-            <button
-              type="button"
-              onClick={() => setFilterTab('EXPIRED')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                filterTab === 'EXPIRED'
-                  ? 'bg-red-500 text-white font-semibold shadow-sm'
-                  : 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
-              }`}
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span>Trial Expirado</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  filterTab === 'EXPIRED' ? 'bg-black/20 text-white font-bold' : 'bg-gray-800 text-red-300'
-                }`}
-              >
-                {expiredCount}
-              </span>
-            </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (dragMovedRef.current) return
+                    setFilterTab('TRIALING')
+                  }}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
+                    filterTab === 'TRIALING'
+                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
+                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
+                  }`}
+                >
+                  <CalendarClock className="w-3.5 h-3.5" />
+                  <span>Em Trial (30 dias)</span>
+                  <Badge className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#d97706] text-white border-[#f59e0b]">
+                    {trialingCount}
+                  </Badge>
+                </Button>
 
-            <button
-              type="button"
-              onClick={() => setFilterTab('INACTIVE')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                filterTab === 'INACTIVE'
-                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-              }`}
-            >
-              <Power className="w-3.5 h-3.5" />
-              <span>Inativos / Rejeitados</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  filterTab === 'INACTIVE' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-gray-300'
-                }`}
-              >
-                {inactiveCount}
-              </span>
-            </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (dragMovedRef.current) return
+                    setFilterTab('EXPIRED')
+                  }}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
+                    filterTab === 'EXPIRED'
+                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
+                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
+                  }`}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>Trial Expirado</span>
+                  <Badge className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#dc2626] text-white border-[#ef4444]">
+                    {expiredCount}
+                  </Badge>
+                </Button>
 
-            <button
-              type="button"
-              onClick={() => setFilterTab('SUSPENDED')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                filterTab === 'SUSPENDED'
-                  ? 'bg-orange-500 text-black font-semibold shadow-sm'
-                  : 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/10'
-              }`}
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Suspensas</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  filterTab === 'SUSPENDED' ? 'bg-black/20 text-black font-bold' : 'bg-gray-800 text-orange-300'
-                }`}
-              >
-                {suspendedCount}
-              </span>
-            </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (dragMovedRef.current) return
+                    setFilterTab('INACTIVE')
+                  }}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
+                    filterTab === 'INACTIVE'
+                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
+                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
+                  }`}
+                >
+                  <Power className="w-3.5 h-3.5" />
+                  <span>Inativos / Rejeitados</span>
+                  <Badge
+                    variant="outline"
+                    className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                  >
+                    {inactiveCount}
+                  </Badge>
+                </Button>
 
-            <button
-              type="button"
-              onClick={() => setFilterTab('CANCELLED')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                filterTab === 'CANCELLED'
-                  ? 'bg-gray-700 text-white font-semibold shadow-sm'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-              }`}
-            >
-              <span>Canceladas</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  filterTab === 'CANCELLED' ? 'bg-black/20 text-white font-bold' : 'bg-gray-800 text-gray-400'
-                }`}
-              >
-                {cancelledCount}
-              </span>
-            </button>
-          </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (dragMovedRef.current) return
+                    setFilterTab('SUSPENDED')
+                  }}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
+                    filterTab === 'SUSPENDED'
+                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
+                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
+                  }`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Suspensas</span>
+                  <Badge className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#d97706] text-white border-[#f59e0b]">
+                    {suspendedCount}
+                  </Badge>
+                </Button>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="bg-gray-900/80 text-gray-400 border-b border-gray-800">
-                  <th className="py-3.5 px-4 font-semibold">Empresa</th>
-                  <th className="py-3.5 px-4 font-semibold">Cadastrado em</th>
-                  <th className="py-3.5 px-4 font-semibold">Trial / Assinatura</th>
-                  <th className="py-3.5 px-4 font-semibold">Contato</th>
-                  <th className="py-3.5 px-4 font-semibold text-center">Equipe</th>
-                  <th className="py-3.5 px-4 font-semibold text-center">Clientes</th>
-                  <th className="py-3.5 px-4 font-semibold text-center">Serviços</th>
-                  <th className="py-3.5 px-4 font-semibold text-center">Agendamentos</th>
-                  <th className="py-3.5 px-4 font-semibold text-center">Status</th>
-                  <th className="py-3.5 px-4 font-semibold text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800/60">
-                {filteredBarbershops.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="py-12 text-center text-gray-500">
-                      <div className="flex flex-col items-center justify-center gap-3 max-w-sm mx-auto">
-                        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                          <Building2 className="w-6 h-6 text-amber-400" />
-                        </div>
-                        <p className="text-sm font-medium text-gray-300">
-                          {searchTerm
-                            ? 'Nenhuma empresa encontrada para o termo pesquisado.'
-                            : 'Nenhuma empresa cadastrada no sistema.'}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {searchTerm
-                            ? 'Verifique os termos digitados ou limpe a busca.'
-                            : 'Comece criando o primeiro tenant da sua plataforma SaaS com o administrador da unidade.'}
-                        </p>
-                        {!searchTerm && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormError(null)
-                              setIsAddModalOpen(true)
-                            }}
-                            className="mt-2 flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors cursor-pointer"
-                          >
-                            <Plus className="h-4 w-4 stroke-[2.5]" />
-                            Cadastrar Primeira Empresa
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredBarbershops.map((shop) => (
-                    <tr key={shop.id} className="hover:bg-gray-800/30 transition">
-                      <td className="py-4 px-4">
-                        <div className="font-semibold text-white">{shop.name}</div>
-                        <div className="text-xs text-gray-500 font-mono">ID: {shop.id}</div>
-                        {shop.slug ? (
-                          <div className="mt-1 flex items-center gap-1.5">
-                            <a
-                              href={`/b/${shop.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 font-mono bg-amber-400/10 hover:bg-amber-400/20 px-2 py-0.5 rounded border border-amber-400/20 transition"
-                              title="Abrir página pública de agendamento em nova aba"
-                            >
-                              <span>/b/{shop.slug}</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                            <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (dragMovedRef.current) return
+                    setFilterTab('CANCELLED')
+                  }}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
+                    filterTab === 'CANCELLED'
+                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
+                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
+                  }`}
+                >
+                  <span>Canceladas</span>
+                  <Badge
+                    variant="outline"
+                    className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                  >
+                    {cancelledCount}
+                  </Badge>
+                </Button>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0 overflow-x-auto">
+              <Table className="w-full text-left border-collapse text-sm">
+                <TableHeader className="bg-[#030712] border-b border-[#374151]">
+                  <TableRow className="border-b border-[#374151] hover:bg-transparent">
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white">
+                      Empresa / Tenant
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white">
+                      Cadastrado em
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white">
+                      Trial / Assinatura
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white">
+                      Contato & Gestor
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                      Equipe
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                      Clientes
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                      Serviços
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                      Agendamentos
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                      Status
+                    </TableHead>
+                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-right">
+                      Ações
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-[#1f2937]">
+                  {filteredBarbershops.length === 0 ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={10} className="py-12 text-center text-white">
+                        <div className="flex flex-col items-center justify-center gap-3 max-w-sm mx-auto">
+                          <div className="w-12 h-12 rounded-xl bg-[#2563eb] border border-[#3b82f6] text-white flex items-center justify-center shadow-sm">
+                            <Building2 className="w-6 h-6 text-white" />
+                          </div>
+                          <p className="text-sm font-bold text-white">
+                            {searchTerm
+                              ? 'Nenhuma empresa encontrada para o termo pesquisado.'
+                              : 'Nenhuma empresa cadastrada no sistema.'}
+                          </p>
+                          <p className="text-xs text-white font-medium">
+                            {searchTerm
+                              ? 'Verifique os termos digitados ou limpe o filtro de busca.'
+                              : 'Comece criando o primeiro tenant da sua plataforma SaaS com o administrador da unidade.'}
+                          </p>
+                          {!searchTerm && (
+                            <Button
                               type="button"
-                              onClick={() => handleCopyPublicUrl(shop.slug!, shop.id)}
-                              className="p-1 rounded hover:bg-gray-800 text-gray-400 hover:text-amber-400 transition cursor-pointer"
-                              title="Copiar URL pública da barbearia"
+                              onClick={() => {
+                                setFormError(null)
+                                setIsAddModalOpen(true)
+                              }}
+                              className="mt-2 h-9 px-5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs transition-colors cursor-pointer border border-[#10b981] shadow-sm flex items-center gap-1.5"
                             >
-                              {copiedShopId === shop.id ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5" />
-                              )}
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="mt-1 text-[11px] text-gray-500 italic">
-                            Sem slug público
-                          </div>
-                        )}
-                        {shop.creator && (
-                          <div className="text-[11px] text-amber-400/80 mt-0.5 flex items-center gap-1">
-                            <Crown className="w-3 h-3 text-amber-400" /> Por: {shop.creator.name}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap text-xs text-gray-300">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                          {new Date(shop.createdAt).toLocaleDateString('pt-BR')}
+                              <Plus className="h-4 w-4 stroke-[2.5]" />
+                              <span>Cadastrar Primeira Empresa</span>
+                            </Button>
+                          )}
                         </div>
-                      </td>
-                      <td className="py-4 px-4 whitespace-nowrap">
-                        {shop.trial ? (
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredBarbershops.map((shop) => (
+                      <TableRow key={shop.id} className="hover:bg-[#1f2937] transition border-b border-[#1f2937]">
+                        {/* 1. Empresa / Tenant */}
+                        <TableCell className="py-4 px-4 align-top">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="h-9 w-9 rounded-lg border border-[#374151] bg-[#030712] shrink-0 mt-0.5">
+                              <AvatarFallback className="rounded-lg bg-[#2563eb] text-white font-bold text-xs border border-[#3b82f6]">
+                                {shop.name.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="space-y-1">
+                              <div className="font-bold text-white text-sm leading-tight">
+                                {shop.name}
+                              </div>
+                              <div className="text-xs text-white font-mono font-medium">
+                                ID: {shop.id}
+                              </div>
+                              {shop.slug ? (
+                                <div className="flex items-center gap-1.5 pt-0.5">
+                                  <a
+                                    href={`/b/${shop.slug}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] text-white font-mono bg-[#030712] hover:bg-[#1f2937] px-2 py-0.5 rounded border border-[#374151] font-bold transition"
+                                    title="Abrir página pública de agendamento em nova aba"
+                                  >
+                                    <span>/b/{shop.slug}</span>
+                                    <ExternalLink className="w-3 h-3 text-white" />
+                                  </a>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopyPublicUrl(shop.slug!, shop.id)}
+                                        className="p-1 rounded bg-[#030712] border border-[#374151] text-white hover:bg-[#1f2937] transition cursor-pointer"
+                                      >
+                                        {copiedShopId === shop.id ? (
+                                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                                        ) : (
+                                          <Copy className="w-3.5 h-3.5 text-white" />
+                                        )}
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="bg-[#111827] text-white border-[#374151] font-bold text-xs">
+                                      {copiedShopId === shop.id ? 'URL copiada!' : 'Copiar URL pública'}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                              ) : (
+                                <div className="text-[11px] text-white font-medium italic">
+                                  Sem slug público
+                                </div>
+                              )}
+                              {shop.creator && (
+                                <div className="text-[11px] text-white font-bold flex items-center gap-1 pt-0.5">
+                                  <Crown className="w-3.5 h-3.5 text-white" />
+                                  <span>Por: {shop.creator.name}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        {/* 2. Cadastrado em */}
+                        <TableCell className="py-4 px-4 whitespace-nowrap text-xs text-white font-medium align-top">
+                          <div className="flex items-center gap-1.5 bg-[#030712] px-2.5 py-1 rounded-md border border-[#374151] w-fit">
+                            <Calendar className="w-3.5 h-3.5 text-white" />
+                            <span>{new Date(shop.createdAt).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </TableCell>
+
+                        {/* 3. Trial / Assinatura */}
+                        <TableCell className="py-4 px-4 whitespace-nowrap align-top">
+                          {shop.trial ? (
+                            <div className="flex flex-col gap-1.5">
+                              <Badge
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold shadow-sm w-fit ${
                                   shop.trial.status === 'TRIALING'
-                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                    ? 'bg-[#d97706] text-white border border-[#f59e0b]'
                                     : shop.trial.status === 'ACTIVE'
-                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    ? 'bg-[#059669] text-white border border-[#10b981]'
                                     : shop.trial.status === 'EXPIRED'
-                                    ? 'bg-red-500/10 text-red-400 border-red-500/30'
-                                    : 'bg-gray-800 text-gray-300 border-gray-700'
+                                    ? 'bg-[#dc2626] text-white border border-[#ef4444]'
+                                    : 'bg-[#1f2937] text-white border border-[#374151]'
                                 }`}
                               >
-                                <CalendarClock className="w-3 h-3" />
-                                {shop.trial.status === 'TRIALING'
-                                  ? `Trial: ${shop.trial.daysRemaining}d restantes`
-                                  : shop.trial.status === 'ACTIVE'
-                                  ? 'Ativo (Assinatura)'
-                                  : shop.trial.status === 'EXPIRED'
-                                  ? 'Trial Expirado'
-                                  : shop.trial.status}
-                              </span>
-                            </div>
-                            <div className="text-[11px] text-gray-300 flex items-center gap-1">
-                              <span className="text-gray-500">Plano:</span>
-                              <span className="font-medium text-amber-300">{shop.trial.planName}</span>
-                            </div>
-                            {shop.trial.trialStart && shop.trial.trialEnd && (
-                              <div className="text-[10px] text-gray-400 font-mono">
-                                {new Date(shop.trial.trialStart).toLocaleDateString('pt-BR')} até{' '}
-                                {new Date(shop.trial.trialEnd).toLocaleDateString('pt-BR')}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          (() => {
-                            const status = getContractStatus(shop.contractExpiresAt)
-                            return (
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${status.color}`}>
-                                <CalendarClock className="w-3.5 h-3.5" />
-                                {status.label}
-                              </span>
-                            )
-                          })()
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="text-gray-300 text-xs">{shop.email}</div>
-                        <div className="text-xs text-gray-500">{shop.phone || 'Sem telefone'}</div>
-                      </td>
-                      <td className="py-4 px-4 text-center font-medium text-gray-200">
-                        {shop._count?.users ?? 0}
-                      </td>
-                      <td className="py-4 px-4 text-center font-medium text-gray-200">
-                        {shop._count?.clients ?? 0}
-                      </td>
-                      <td className="py-4 px-4 text-center font-medium text-gray-200">
-                        {shop._count?.services ?? 0}
-                      </td>
-                      <td className="py-4 px-4 text-center font-bold text-amber-400">
-                        {shop._count?.appointments ?? 0}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        {shop.status === 'PENDING' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse">
-                            <Clock className="w-3.5 h-3.5" />
-                            Aguardando Aprovação
-                          </span>
-                        ) : shop.status === 'REJECTED' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-                            <X className="w-3.5 h-3.5" />
-                            Rejeitado
-                          </span>
-                        ) : (
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                              shop.isActive
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                            }`}
-                          >
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full ${
-                                shop.isActive ? 'bg-emerald-400' : 'bg-red-400'
-                              }`}
-                            />
-                            {shop.isActive ? 'Ativa' : 'Desativada'}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {shop.status === 'PENDING' ? (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenApprovalModal(shop)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-black transition-colors cursor-pointer"
-                              title="Analisar solicitação de cadastro e aprovar"
-                            >
-                              <ShieldCheck className="h-3.5 w-3.5 stroke-[2.5]" />
-                              Analisar / Aprovar
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenDetails(shop)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-blue-800/80 bg-blue-950/20 text-blue-400 hover:bg-blue-900/30 transition cursor-pointer"
-                              title="Ver Detalhes da Empresa"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                              Ver Detalhes
-                            </button>
-                          )}
+                                <CalendarClock className="w-3.5 h-3.5 text-white" />
+                                <span>
+                                  {shop.trial.status === 'TRIALING'
+                                    ? `Trial: ${shop.trial.daysRemaining}d restantes`
+                                    : shop.trial.status === 'ACTIVE'
+                                    ? 'Ativo (Assinatura)'
+                                    : shop.trial.status === 'EXPIRED'
+                                    ? 'Trial Expirado'
+                                    : shop.trial.status}
+                                </span>
+                              </Badge>
 
-                          {shop.status !== 'PENDING' && (
-                            <button
-                              onClick={() => toggleBarbershopStatus(shop)}
-                              disabled={actionLoadingId === shop.id}
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
-                                shop.isActive
-                                  ? 'border-red-800/80 bg-red-950/20 text-red-400 hover:bg-red-900/30'
-                                  : 'border-emerald-800/80 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-900/30'
-                              } disabled:opacity-50 cursor-pointer`}
-                            >
-                              <Power className="h-3.5 w-3.5" />
-                              {actionLoadingId === shop.id
-                                ? 'Alterando...'
-                                : shop.isActive
-                                ? 'Desativar'
-                                : 'Ativar'}
-                            </button>
+                              <div className="text-[11px] text-white flex items-center gap-1 font-medium">
+                                <span>Plano:</span>
+                                <span className="font-bold text-white underline">{shop.trial.planName}</span>
+                              </div>
+
+                              {shop.trial.trialStart && shop.trial.trialEnd && (
+                                <div className="text-[10px] text-white font-mono font-medium">
+                                  {new Date(shop.trial.trialStart).toLocaleDateString('pt-BR')} até{' '}
+                                  {new Date(shop.trial.trialEnd).toLocaleDateString('pt-BR')}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            (() => {
+                              const status = getContractStatus(shop.contractExpiresAt)
+                              return (
+                                <Badge className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold shadow-sm ${status.color}`}>
+                                  <CalendarClock className="w-3.5 h-3.5 text-white" />
+                                  <span>{status.label}</span>
+                                </Badge>
+                              )
+                            })()
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </TableCell>
+
+                        {/* 4. Contato */}
+                        <TableCell className="py-4 px-4 align-top space-y-1">
+                          <div className="text-white text-xs font-bold flex items-center gap-1.5">
+                            <Mail className="w-3.5 h-3.5 text-white shrink-0" />
+                            <span className="truncate max-w-[190px]">{shop.email}</span>
+                          </div>
+                          <div className="text-xs text-white font-mono font-medium flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5 text-white shrink-0" />
+                            <span>{shop.phone || 'Sem telefone'}</span>
+                          </div>
+                        </TableCell>
+
+                        {/* 5. Equipe */}
+                        <TableCell className="py-4 px-4 text-center align-middle">
+                          <span className="inline-block px-2.5 py-1 rounded-md bg-[#030712] border border-[#374151] font-bold text-white text-xs">
+                            {shop._count?.users ?? 0}
+                          </span>
+                        </TableCell>
+
+                        {/* 6. Clientes */}
+                        <TableCell className="py-4 px-4 text-center align-middle">
+                          <span className="inline-block px-2.5 py-1 rounded-md bg-[#030712] border border-[#374151] font-bold text-white text-xs">
+                            {shop._count?.clients ?? 0}
+                          </span>
+                        </TableCell>
+
+                        {/* 7. Serviços */}
+                        <TableCell className="py-4 px-4 text-center align-middle">
+                          <span className="inline-block px-2.5 py-1 rounded-md bg-[#030712] border border-[#374151] font-bold text-white text-xs">
+                            {shop._count?.services ?? 0}
+                          </span>
+                        </TableCell>
+
+                        {/* 8. Agendamentos */}
+                        <TableCell className="py-4 px-4 text-center align-middle">
+                          <span className="inline-block px-2.5 py-1 rounded-md bg-[#030712] border border-[#374151] font-extrabold text-white text-xs">
+                            {shop._count?.appointments ?? 0}
+                          </span>
+                        </TableCell>
+
+                        {/* 9. Status */}
+                        <TableCell className="py-4 px-4 text-center align-middle">
+                          {shop.status === 'PENDING' ? (
+                            <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b] shadow-sm">
+                              <Clock className="w-3.5 h-3.5 text-white" />
+                              <span>Aguardando Aprovação</span>
+                            </Badge>
+                          ) : shop.status === 'REJECTED' ? (
+                            <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-[#dc2626] text-white border border-[#ef4444] shadow-sm">
+                              <X className="w-3.5 h-3.5 text-white" />
+                              <span>Rejeitado</span>
+                            </Badge>
+                          ) : (
+                            <Badge
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border shadow-sm ${
+                                shop.isActive
+                                  ? 'bg-[#059669] text-white border-[#10b981]'
+                                  : 'bg-[#dc2626] text-white border-[#ef4444]'
+                              }`}
+                            >
+                              <span className="h-2 w-2 rounded-full bg-white" />
+                              <span>{shop.isActive ? 'Ativa' : 'Desativada'}</span>
+                            </Badge>
+                          )}
+                        </TableCell>
+
+                        {/* 10. Ações */}
+                        <TableCell className="py-4 px-4 text-right align-middle">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {shop.status === 'PENDING' ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => handleOpenApprovalModal(shop)}
+                                className="h-8 px-3 rounded-lg text-xs font-bold bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6] transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
+                                title="Analisar solicitação de cadastro e aprovar"
+                              >
+                                <ShieldCheck className="h-3.5 w-3.5 stroke-[2.5]" />
+                                <span>Analisar / Aprovar</span>
+                              </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleOpenDetails(shop)}
+                                  className="h-8 px-2.5 rounded-lg text-xs font-bold border border-[#374151] bg-[#111827] text-white hover:bg-[#1f2937] hover:text-white transition cursor-pointer shadow-sm flex items-center gap-1"
+                                  title="Ver Detalhes da Empresa"
+                                >
+                                  <Info className="h-3.5 w-3.5 text-white" />
+                                  <span>Detalhes</span>
+                                </Button>
+
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => {
+                                    setTrialResetShop(shop)
+                                    setTrialDaysInput(30)
+                                    setTrialReasonInput('Prorrogação de degustação comercial')
+                                  }}
+                                  className="h-8 px-2.5 rounded-lg text-xs font-bold border border-[#f59e0b] bg-[#d97706] hover:bg-[#b45309] text-white transition cursor-pointer shadow-sm flex items-center gap-1"
+                                  title="Resetar ou prorrogar período de trial desta empresa"
+                                >
+                                  <Clock className="h-3.5 w-3.5 text-white" />
+                                  <span>Trial</span>
+                                </Button>
+                              </>
+                            )}
+
+                            {/* Dropdown Menu com Mais Ações */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8 bg-[#030712] hover:bg-[#1f2937] hover:text-white border-[#374151] text-white rounded-lg cursor-pointer"
+                                  title="Mais ações deste tenant"
+                                >
+                                  <MoreHorizontal className="h-4 w-4 text-white" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                className="w-52 bg-[#111827] border-[#374151] text-white shadow-xl rounded-xl p-1.5"
+                              >
+                                <DropdownMenuLabel className="text-xs font-bold text-white px-2 py-1.5">
+                                  Opções de Gestão
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-[#374151]" />
+
+                                {shop.status === 'PENDING' ? (
+                                  <DropdownMenuItem
+                                    onClick={() => handleOpenApprovalModal(shop)}
+                                    className="text-xs font-bold text-white hover:bg-[#2563eb] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                  >
+                                    <ShieldCheck className="h-4 w-4 text-white" />
+                                    <span>Analisar / Aprovar</span>
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() => handleOpenDetails(shop)}
+                                      className="text-xs font-bold text-white hover:bg-[#1f2937] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                    >
+                                      <Info className="h-4 w-4 text-white" />
+                                      <span>Ver Detalhes Completos</span>
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setTrialResetShop(shop)
+                                        setTrialDaysInput(30)
+                                        setTrialReasonInput('Prorrogação de degustação comercial')
+                                      }}
+                                      className="text-xs font-bold text-white hover:bg-[#1f2937] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                    >
+                                      <Clock className="h-4 w-4 text-white" />
+                                      <span>Resetar / Prorrogar Trial</span>
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+
+                                {shop.slug && (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        if (typeof window !== 'undefined') {
+                                          window.open(`/b/${shop.slug}`, '_blank')
+                                        }
+                                      }}
+                                      className="text-xs font-bold text-white hover:bg-[#1f2937] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                    >
+                                      <ExternalLink className="h-4 w-4 text-white" />
+                                      <span>Abrir Página Pública</span>
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() => handleCopyPublicUrl(shop.slug!, shop.id)}
+                                      className="text-xs font-bold text-white hover:bg-[#1f2937] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                    >
+                                      <Copy className="h-4 w-4 text-white" />
+                                      <span>Copiar Link Público</span>
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+
+                                {shop.status !== 'PENDING' && (
+                                  <>
+                                    <DropdownMenuSeparator className="bg-[#374151]" />
+                                    <DropdownMenuItem
+                                      onClick={() => toggleBarbershopStatus(shop)}
+                                      disabled={actionLoadingId === shop.id}
+                                      className={`text-xs font-bold rounded-md cursor-pointer flex items-center gap-2 px-2 py-2 ${
+                                        shop.isActive
+                                          ? 'text-white hover:bg-[#dc2626] hover:text-white'
+                                          : 'text-white hover:bg-[#059669] hover:text-white'
+                                      }`}
+                                    >
+                                      <Power className="h-4 w-4 text-white" />
+                                      <span>
+                                        {actionLoadingId === shop.id
+                                          ? 'Alterando status...'
+                                          : shop.isActive
+                                          ? 'Desativar Unidade'
+                                          : 'Ativar Unidade'}
+                                      </span>
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+
+            <CardFooter className="p-4 border-t border-[#374151] bg-[#030712] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white">
+              <div className="flex items-center gap-3">
+                <span className="font-medium text-white">
+                  Exibindo <strong className="text-white font-bold">{filteredBarbershops.length}</strong> de{' '}
+                  <strong className="text-white font-bold">{barbershops.length}</strong> empresas cadastradas
+                </span>
+                {searchTerm && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchTerm('')}
+                    className="h-7 text-xs text-white hover:text-white hover:bg-[#1f2937] px-2 font-bold underline cursor-pointer"
+                  >
+                    Limpar pesquisa
+                  </Button>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge
+                  variant="outline"
+                  className="bg-[#111827] border-[#374151] text-white text-[11px] font-bold"
+                >
+                  {activeCount} ativas
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="bg-[#111827] border-[#374151] text-white text-[11px] font-bold"
+                >
+                  {trialingCount} em trial
+                </Badge>
+                {pendingCount > 0 && (
+                  <Badge className="bg-[#d97706] text-white border-[#f59e0b] text-[11px] font-bold">
+                    {pendingCount} pendentes
+                  </Badge>
+                )}
+                {expiredCount > 0 && (
+                  <Badge className="bg-[#dc2626] text-white border-[#ef4444] text-[11px] font-bold">
+                    {expiredCount} expirados
+                  </Badge>
+                )}
+              </div>
+            </CardFooter>
+          </Card>
+        </TooltipProvider>
+
 
         {/* System Diagnostics Card */}
-        <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-5">
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <Server className="h-5 w-5 text-amber-400" />
-            <h3 className="font-semibold text-white text-base">Diagnóstico de Infraestrutura SaaS</h3>
+            <span className="p-1.5 rounded-lg bg-[#2563eb] text-white border border-[#3b82f6]">
+              <Server className="h-4 w-4" />
+            </span>
+            <h3 className="font-bold text-white text-base">Diagnóstico de Infraestrutura SaaS</h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-gray-400">
-            <div className="p-3 bg-gray-950/60 rounded-lg border border-gray-800">
-              <span className="text-gray-500 block mb-1">Ambiente de Execução:</span>
-              <span className="font-mono text-gray-200 font-semibold">{metrics?.system?.nodeEnv || 'development'}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-white">
+            <div className="p-3.5 bg-[#030712] rounded-lg border border-[#374151] shadow-sm">
+              <span className="text-white font-bold block mb-1">Ambiente de Execução:</span>
+              <span className="font-mono text-white font-bold">{metrics?.system?.nodeEnv || 'development'}</span>
             </div>
-            <div className="p-3 bg-gray-950/60 rounded-lg border border-gray-800">
-              <span className="text-gray-500 block mb-1">Banco de Dados:</span>
-              <span className="font-mono text-gray-200 font-semibold">{metrics?.system?.database || 'PostgreSQL (Prisma)'}</span>
+            <div className="p-3.5 bg-[#030712] rounded-lg border border-[#374151] shadow-sm">
+              <span className="text-white font-bold block mb-1">Banco de Dados:</span>
+              <span className="font-mono text-white font-bold">{metrics?.system?.database || 'PostgreSQL (Prisma)'}</span>
             </div>
-            <div className="p-3 bg-gray-950/60 rounded-lg border border-gray-800">
-              <span className="text-gray-500 block mb-1">Isolamento Multi-Tenant:</span>
-              <span className="font-mono text-emerald-400 font-semibold">{metrics?.system?.isolation || 'ATIVO E BLINDADO'}</span>
+            <div className="p-3.5 bg-[#030712] rounded-lg border border-[#374151] shadow-sm">
+              <span className="text-white font-bold block mb-1">Isolamento Multi-Tenant:</span>
+              <span className="font-mono text-white font-bold bg-[#059669] px-2 py-0.5 rounded border border-[#10b981] inline-block">{metrics?.system?.isolation || 'ATIVO E BLINDADO'}</span>
             </div>
           </div>
         </div>
@@ -1483,30 +1895,30 @@ export default function DeveloperDashboardPage() {
 
       {/* Modal "+ Nova Empresa" */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-6">
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#111827] border border-[#374151] rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+            <div className="flex items-center justify-between border-b border-[#374151] pb-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-amber-400" />
+                <div className="w-10 h-10 rounded-xl bg-[#2563eb] border border-[#3b82f6] text-white flex items-center justify-center shadow-sm">
+                  <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Cadastrar Nova Empresa</h3>
-                  <p className="text-xs text-gray-400">Criar um novo tenant com seu administrador inicial</p>
+                  <p className="text-xs text-white font-medium mt-0.5">Criar um novo tenant com seu administrador inicial</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
                 disabled={isSubmittingShop}
-                className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition"
+                className="p-1.5 text-white hover:bg-[#1f2937] rounded-lg transition"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
             {formError && (
-              <div className="mb-6 p-4 rounded-lg bg-red-950/40 border border-red-500/30 text-red-300 flex items-center gap-3 text-sm">
-                <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
+              <div className="mb-6 p-4 rounded-xl bg-[#dc2626] border border-[#ef4444] text-white font-bold flex items-center gap-3 text-sm shadow-sm">
+                <AlertTriangle className="h-5 w-5 text-white shrink-0" />
                 <span>{formError}</span>
               </div>
             )}
@@ -1514,13 +1926,15 @@ export default function DeveloperDashboardPage() {
             <form onSubmit={handleCreateBarbershop} className="space-y-6">
               {/* Seção 1: Dados da Empresa */}
               <div>
-                <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Building2 className="w-4 h-4" />
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <span className="p-1 rounded bg-[#2563eb] text-white border border-[#3b82f6]">
+                    <Building2 className="w-3.5 h-3.5" />
+                  </span>
                   1. Dados da Unidade (Tenant)
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                    <label className="block text-xs font-bold text-white mb-1.5">
                       Nome da Empresa *
                     </label>
                     <input
@@ -1529,21 +1943,21 @@ export default function DeveloperDashboardPage() {
                       placeholder="Ex: Minha Empresa Ltda"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
+                      className="w-full px-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition font-medium"
                     />
                   </div>
 
                   <div className="sm:col-span-2">
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-medium text-gray-300">
+                      <label className="block text-xs font-bold text-white">
                         Slug Personalizado (/b/slug)
                       </label>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-white font-medium">
                         Opcional (Deixe em branco para gerar a partir do nome)
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <span className="px-3 py-2.5 bg-gray-900 border border-r-0 border-gray-700 rounded-l-lg text-xs text-gray-500 font-mono select-none">
+                      <span className="px-3 py-2.5 bg-[#1f2937] border border-r-0 border-[#374151] rounded-l-lg text-xs text-white font-mono font-bold select-none">
                         /b/
                       </span>
                       <input
@@ -1551,54 +1965,54 @@ export default function DeveloperDashboardPage() {
                         placeholder="ex: minha-empresa"
                         value={formData.slug}
                         onChange={(e) => handleInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                        className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-r-lg text-sm text-amber-400 placeholder-gray-600 focus:outline-none focus:border-amber-500 transition font-mono"
+                        className="w-full px-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-r-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition font-mono font-bold"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                    <label className="block text-xs font-bold text-white mb-1.5">
                       Email Comercial *
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Mail className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="email"
                         required
                         placeholder="contato@empresa.com"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition font-medium"
                       />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-medium text-gray-300">
+                      <label className="block text-xs font-bold text-white">
                         Telefone / WhatsApp
                       </label>
-                      <span className="text-[10px] font-mono text-amber-400/80">(00) 00000-0000</span>
+                      <span className="text-[10px] font-mono text-white font-bold">(00) 00000-0000</span>
                     </div>
                     <div className="relative">
-                      <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Phone className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="tel"
                         maxLength={15}
                         placeholder="(11) 98765-4321"
                         value={formData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition font-mono"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition font-mono font-medium"
                       />
                     </div>
                   </div>
 
                   <div className="sm:col-span-2">
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-medium text-gray-300">
+                      <label className="block text-xs font-bold text-white">
                         Endereço Completo
                       </label>
-                      <span className="text-[10px] text-amber-400/90 font-medium">
+                      <span className="text-[10px] text-white font-bold">
                         ✦ Digite para sugerir cidades do Brasil
                       </span>
                     </div>
@@ -1611,13 +2025,13 @@ export default function DeveloperDashboardPage() {
                   </div>
 
                   {/* Vigência do Contrato */}
-                  <div className="sm:col-span-2 border-t border-gray-800/80 pt-3">
+                  <div className="sm:col-span-2 border-t border-[#374151] pt-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-medium text-amber-300 flex items-center gap-1.5">
-                        <CalendarClock className="w-4 h-4 text-amber-400" />
+                      <label className="block text-xs font-bold text-white flex items-center gap-1.5">
+                        <CalendarClock className="w-4 h-4 text-white" />
                         Vigência / Vencimento do Contrato
                       </label>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-white font-medium">
                         Opcional (Deixe em branco para vitalício)
                       </span>
                     </div>
@@ -1630,7 +2044,7 @@ export default function DeveloperDashboardPage() {
                           d.setDate(d.getDate() + 30)
                           setFormData(prev => ({ ...prev, contractExpiresAt: d.toISOString().split('T')[0] }))
                         }}
-                        className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#030712] hover:bg-[#1f2937] text-white border border-[#374151] transition cursor-pointer shadow-sm"
                       >
                         +30 dias
                       </button>
@@ -1641,7 +2055,7 @@ export default function DeveloperDashboardPage() {
                           d.setDate(d.getDate() + 90)
                           setFormData(prev => ({ ...prev, contractExpiresAt: d.toISOString().split('T')[0] }))
                         }}
-                        className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#030712] hover:bg-[#1f2937] text-white border border-[#374151] transition cursor-pointer shadow-sm"
                       >
                         +90 dias (3m)
                       </button>
@@ -1652,7 +2066,7 @@ export default function DeveloperDashboardPage() {
                           d.setDate(d.getDate() + 180)
                           setFormData(prev => ({ ...prev, contractExpiresAt: d.toISOString().split('T')[0] }))
                         }}
-                        className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#030712] hover:bg-[#1f2937] text-white border border-[#374151] transition cursor-pointer shadow-sm"
                       >
                         +180 dias (6m)
                       </button>
@@ -1663,7 +2077,7 @@ export default function DeveloperDashboardPage() {
                           d.setDate(d.getDate() + 365)
                           setFormData(prev => ({ ...prev, contractExpiresAt: d.toISOString().split('T')[0] }))
                         }}
-                        className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#030712] hover:bg-[#1f2937] text-white border border-[#374151] transition cursor-pointer shadow-sm"
                       >
                         +365 dias (1 ano)
                       </button>
@@ -1672,19 +2086,19 @@ export default function DeveloperDashboardPage() {
                         onClick={() => {
                           setFormData(prev => ({ ...prev, contractExpiresAt: '' }))
                         }}
-                        className="px-2 py-1 text-xs rounded bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-800/60 transition cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#059669] hover:bg-[#047857] text-white border border-[#10b981] transition cursor-pointer shadow-sm"
                       >
                         Vitalício (Sem vencimento)
                       </button>
                     </div>
 
                     <div className="relative">
-                      <Calendar className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Calendar className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="date"
                         value={formData.contractExpiresAt}
                         onChange={(e) => setFormData(prev => ({ ...prev, contractExpiresAt: e.target.value }))}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-amber-500 transition"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white focus:outline-none focus:border-[#2563eb] transition font-medium"
                       />
                     </div>
                   </div>
@@ -1692,14 +2106,16 @@ export default function DeveloperDashboardPage() {
               </div>
 
               {/* Seção 2: Administrador Inicial */}
-              <div className="border-t border-gray-800 pt-5">
-                <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <UserCheck className="w-4 h-4" />
+              <div className="border-t border-[#374151] pt-5">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <span className="p-1 rounded bg-[#059669] text-white border border-[#10b981]">
+                    <UserCheck className="w-3.5 h-3.5" />
+                  </span>
                   2. Administrador Inicial da Empresa
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                    <label className="block text-xs font-bold text-white mb-1.5">
                       Nome do Administrador *
                     </label>
                     <input
@@ -1708,33 +2124,33 @@ export default function DeveloperDashboardPage() {
                       placeholder="Ex: Pedro Silva"
                       value={formData.adminName}
                       onChange={(e) => handleInputChange('adminName', e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
+                      className="w-full px-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                    <label className="block text-xs font-bold text-white mb-1.5">
                       Email de Acesso do Admin *
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Mail className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="email"
                         required
                         placeholder="admin@empresa.com"
                         value={formData.adminEmail}
                         onChange={(e) => handleInputChange('adminEmail', e.target.value)}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition font-medium"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                    <label className="block text-xs font-bold text-white mb-1.5">
                       Senha Provisória * (mínimo 6 dígitos)
                     </label>
                     <div className="relative">
-                      <Lock className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Lock className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="password"
                         required
@@ -1742,27 +2158,27 @@ export default function DeveloperDashboardPage() {
                         placeholder="••••••••"
                         value={formData.adminPassword}
                         onChange={(e) => handleInputChange('adminPassword', e.target.value)}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition font-medium"
                       />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-medium text-gray-300">
+                      <label className="block text-xs font-bold text-white">
                         Telefone do Administrador
                       </label>
-                      <span className="text-[10px] font-mono text-blue-400/80">(00) 00000-0000</span>
+                      <span className="text-[10px] font-mono text-white font-bold">(00) 00000-0000</span>
                     </div>
                     <div className="relative">
-                      <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Phone className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="tel"
                         maxLength={15}
                         placeholder="(11) 98765-4321"
                         value={formData.adminPhone}
                         onChange={(e) => handleInputChange('adminPhone', e.target.value)}
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition font-mono"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition font-mono font-medium"
                       />
                     </div>
                   </div>
@@ -1770,23 +2186,23 @@ export default function DeveloperDashboardPage() {
               </div>
 
               {/* Botões do Formulário */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#374151]">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
                   disabled={isSubmittingShop}
-                  className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition cursor-pointer"
+                  className="px-4 py-2.5 bg-[#1f2937] hover:bg-[#374151] text-white rounded-lg text-sm font-bold border border-[#374151] transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingShop}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-sm transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-sm border border-[#10b981] transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   {isSubmittingShop ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
                       Cadastrando...
                     </>
                   ) : (
@@ -1804,102 +2220,102 @@ export default function DeveloperDashboardPage() {
 
       {/* Modal "Detalhes da Empresa" */}
       {selectedShopForDetails && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#111827] border border-[#374151] rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-6">
+            <div className="flex items-center justify-between border-b border-[#374151] pb-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-amber-400" />
+                <div className="w-12 h-12 rounded-xl bg-[#d97706] border border-[#f59e0b] flex items-center justify-center text-white">
+                  <Building2 className="w-6 h-6 stroke-[2.5]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl font-bold text-white">{selectedShopForDetails.name}</h3>
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
                         selectedShopForDetails.isActive
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                          ? 'bg-[#059669] text-white border border-[#10b981]'
+                          : 'bg-[#dc2626] text-white border border-[#ef4444]'
                       }`}
                     >
                       {selectedShopForDetails.isActive ? 'Ativa' : 'Desativada'}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 font-mono mt-0.5">ID: {selectedShopForDetails.id}</p>
+                  <p className="text-xs text-white font-mono mt-0.5">ID: {selectedShopForDetails.id}</p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedShopForDetails(null)}
-                className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+                className="p-2 text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] rounded-lg transition cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 stroke-[2.5]" />
               </button>
             </div>
 
             <div className="space-y-6 max-h-[72vh] overflow-y-auto pr-1">
               {/* Card 1: Registro & Origem */}
-              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
-                <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
+              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <span className="p-1 rounded bg-[#d97706] text-white"><Calendar className="w-3.5 h-3.5" /></span>
                   Informações de Cadastro
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <span className="text-gray-500 block mb-1">Data e Hora do Cadastro:</span>
-                    <span className="text-gray-200 font-medium text-sm flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-amber-400" />
+                    <span className="text-white font-semibold block mb-1">Data e Hora do Cadastro:</span>
+                    <span className="text-white font-bold text-sm flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-[#d97706]" />
                       {new Date(selectedShopForDetails.createdAt).toLocaleString('pt-BR')}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500 block mb-1">Cadastrado por:</span>
+                    <span className="text-white font-semibold block mb-1">Cadastrado por:</span>
                     {selectedShopForDetails.creator ? (
-                      <div className="text-gray-200">
-                        <span className="font-semibold text-amber-300 flex items-center gap-1">
-                          <Crown className="w-3.5 h-3.5" />
+                      <div className="text-white">
+                        <span className="font-bold text-white flex items-center gap-1">
+                          <Crown className="w-3.5 h-3.5 text-[#d97706]" />
                           {selectedShopForDetails.creator.name}
                         </span>
-                        <span className="text-gray-400 text-[11px]">{selectedShopForDetails.creator.email}</span>
+                        <span className="text-white text-[11px] block">{selectedShopForDetails.creator.email}</span>
                       </div>
                     ) : (
-                      <span className="text-gray-400 italic">Sistema / Registro Direto</span>
+                      <span className="text-white italic">Sistema / Registro Direto</span>
                     )}
                   </div>
                   <div>
-                    <span className="text-gray-500 block mb-1">Email Comercial:</span>
-                    <span className="text-gray-200 font-mono">{selectedShopForDetails.email}</span>
+                    <span className="text-white font-semibold block mb-1">Email Comercial:</span>
+                    <span className="text-white font-mono">{selectedShopForDetails.email}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500 block mb-1">Telefone da Unidade:</span>
-                    <span className="text-gray-200 font-mono">{selectedShopForDetails.phone || 'Não informado'}</span>
+                    <span className="text-white font-semibold block mb-1">Telefone da Unidade:</span>
+                    <span className="text-white font-mono">{selectedShopForDetails.phone || 'Não informado'}</span>
                   </div>
                   <div className="sm:col-span-2">
-                    <span className="text-gray-500 block mb-1">Endereço:</span>
-                    <span className="text-gray-200">{selectedShopForDetails.address || 'Não informado'}</span>
+                    <span className="text-white font-semibold block mb-1">Endereço:</span>
+                    <span className="text-white">{selectedShopForDetails.address || 'Não informado'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Card: Link Público & Identificador (Slug) */}
-              <div className="bg-gray-950/60 border border-amber-500/30 rounded-xl p-4 sm:p-5">
+              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                  <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded bg-[#2563eb] text-white"><Globe className="w-3.5 h-3.5" /></span>
                     Link Público & Identificador (Slug)
                   </h4>
                   {selectedShopForDetails.slug && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-amber-400/10 text-amber-300 border border-amber-400/20">
-                      <Link2 className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#1e40af] text-white border border-[#3b82f6]">
+                      <Link2 className="w-3.5 h-3.5" />
                       /b/{selectedShopForDetails.slug}
                     </span>
                   )}
                 </div>
 
                 <div className="space-y-3">
-                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
-                    <div className="text-[11px] text-gray-400 mb-1">Endereço público do catálogo:</div>
+                  <div className="bg-[#111827] border border-[#374151] rounded-lg p-3">
+                    <div className="text-xs text-white font-semibold mb-1">Endereço público do catálogo:</div>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                      <div className="flex-1 font-mono text-xs text-amber-300 truncate bg-black/40 px-3 py-1.5 rounded border border-gray-800">
+                      <div className="flex-1 font-mono text-xs text-white truncate bg-[#030712] px-3 py-2 rounded border border-[#374151]">
                         {typeof window !== 'undefined' ? `${window.location.origin}/b/${selectedShopForDetails.slug || ''}` : `/b/${selectedShopForDetails.slug}`}
                       </div>
                       <div className="flex items-center gap-2">
@@ -1911,7 +2327,7 @@ export default function DeveloperDashboardPage() {
                               alert('Link copiado com sucesso!')
                             }
                           }}
-                          className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded text-xs flex items-center gap-1 cursor-pointer transition"
+                          className="px-3.5 py-2 bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition"
                         >
                           <Copy className="w-3.5 h-3.5" />
                           <span>Copiar</span>
@@ -1921,7 +2337,7 @@ export default function DeveloperDashboardPage() {
                             href={`/b/${selectedShopForDetails.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded text-xs flex items-center gap-1 cursor-pointer transition"
+                            className="px-3.5 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6] rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                             <span>Visualizar</span>
@@ -1932,12 +2348,12 @@ export default function DeveloperDashboardPage() {
                   </div>
 
                   {/* Edição rápida de slug */}
-                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
-                    <label className="block text-[11px] text-gray-400 mb-1 font-medium">
+                  <div className="bg-[#111827] border border-[#374151] rounded-lg p-3">
+                    <label className="block text-xs text-white mb-1.5 font-bold">
                       Alterar Slug desta Unidade:
                     </label>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                      <div className="flex items-center px-2.5 py-1.5 bg-black/50 border border-gray-800 rounded text-xs text-gray-500 font-mono select-none">
+                      <div className="flex items-center px-3 py-2 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white font-mono select-none">
                         /b/
                       </div>
                       <input
@@ -1945,13 +2361,13 @@ export default function DeveloperDashboardPage() {
                         value={slugEditValue}
                         onChange={(e) => setSlugEditValue(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                         placeholder="ex: nova-unidade-vip"
-                        className="flex-1 px-3 py-1.5 bg-gray-950 border border-gray-700 rounded text-xs text-amber-400 font-mono focus:outline-none focus:border-amber-500"
+                        className="flex-1 px-3 py-2 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white font-mono font-medium focus:outline-none focus:border-[#2563eb]"
                       />
                       <button
                         type="button"
                         onClick={handleUpdateSlug}
                         disabled={isUpdatingSlug || !slugEditValue.trim() || slugEditValue.trim() === selectedShopForDetails.slug}
-                        className="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded text-xs transition cursor-pointer disabled:opacity-50"
+                        className="px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold rounded-lg text-xs transition cursor-pointer disabled:opacity-50 border border-[#3b82f6]"
                       >
                         {isUpdatingSlug ? 'Salvando...' : 'Salvar Slug'}
                       </button>
@@ -1961,16 +2377,16 @@ export default function DeveloperDashboardPage() {
               </div>
 
               {/* Card 2: Contrato & Vigência */}
-              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-                    <CalendarClock className="w-4 h-4" />
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded bg-[#059669] text-white"><CalendarClock className="w-3.5 h-3.5" /></span>
                     Contrato & Vigência da Licença
                   </h4>
                   {(() => {
                     const status = getContractStatus(selectedShopForDetails.contractExpiresAt)
                     return (
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${status.color}`}>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${status.color}`}>
                         <CalendarClock className="w-3.5 h-3.5" />
                         Status: {status.label}
                       </span>
@@ -1978,15 +2394,15 @@ export default function DeveloperDashboardPage() {
                   })()}
                 </div>
 
-                <p className="text-xs text-gray-400 mb-4">
+                <p className="text-xs text-white font-medium mb-4">
                   {selectedShopForDetails.contractExpiresAt
                     ? `O contrato desta unidade expira em ${new Date(selectedShopForDetails.contractExpiresAt).toLocaleDateString('pt-BR')}. Você pode estender ou renovar o prazo abaixo.`
                     : 'Esta unidade possui contrato vitalício / sem data de expiração cadastrada.'}
                 </p>
 
                 {/* Formulário de Renovação / Alteração */}
-                <div className="bg-gray-900/80 border border-gray-800 rounded-lg p-3.5">
-                  <label className="block text-xs font-medium text-gray-300 mb-2">
+                <div className="bg-[#111827] border border-[#374151] rounded-lg p-4">
+                  <label className="block text-xs font-bold text-white mb-2.5">
                     Alterar / Renovar Data de Expiração do Contrato:
                   </label>
 
@@ -1998,7 +2414,7 @@ export default function DeveloperDashboardPage() {
                         d.setDate(d.getDate() + 30)
                         setContractEditDate(d.toISOString().split('T')[0])
                       }}
-                      className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
                     >
                       +30 dias
                     </button>
@@ -2009,7 +2425,7 @@ export default function DeveloperDashboardPage() {
                         d.setDate(d.getDate() + 90)
                         setContractEditDate(d.toISOString().split('T')[0])
                       }}
-                      className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
                     >
                       +90 dias (3m)
                     </button>
@@ -2020,7 +2436,7 @@ export default function DeveloperDashboardPage() {
                         d.setDate(d.getDate() + 180)
                         setContractEditDate(d.toISOString().split('T')[0])
                       }}
-                      className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
                     >
                       +180 dias (6m)
                     </button>
@@ -2031,14 +2447,14 @@ export default function DeveloperDashboardPage() {
                         d.setDate(d.getDate() + 365)
                         setContractEditDate(d.toISOString().split('T')[0])
                       }}
-                      className="px-2 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
                     >
                       +365 dias (1 ano)
                     </button>
                     <button
                       type="button"
                       onClick={() => setContractEditDate('')}
-                      className="px-2 py-1 text-xs rounded bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-800/60 transition cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#059669] hover:bg-[#047857] text-white border border-[#10b981] transition cursor-pointer"
                     >
                       Tornar Vitalício
                     </button>
@@ -2046,19 +2462,19 @@ export default function DeveloperDashboardPage() {
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <div className="relative flex-1">
-                      <Calendar className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Calendar className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="date"
                         value={contractEditDate}
                         onChange={(e) => setContractEditDate(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                        className="w-full pl-9 pr-3 py-2 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white focus:outline-none focus:border-[#059669] transition"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={handleUpdateContract}
                       disabled={isUpdatingContract}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-xs transition disabled:opacity-50 cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs border border-[#10b981] transition disabled:opacity-50 cursor-pointer"
                     >
                       {isUpdatingContract ? (
                         <>
@@ -2067,7 +2483,7 @@ export default function DeveloperDashboardPage() {
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
                           Salvar Vigência
                         </>
                       )}
@@ -2077,9 +2493,9 @@ export default function DeveloperDashboardPage() {
               </div>
 
               {/* Card 3: Administrador da Unidade */}
-              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
-                <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <UserCheck className="w-4 h-4" />
+              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <span className="p-1 rounded bg-[#2563eb] text-white"><UserCheck className="w-3.5 h-3.5" /></span>
                   Administrador(es) da Unidade
                 </h4>
 
@@ -2087,7 +2503,7 @@ export default function DeveloperDashboardPage() {
                   const admins = (selectedShopForDetails.users || []).filter(u => u.role === 'ADMIN')
                   if (admins.length === 0) {
                     return (
-                      <p className="text-xs text-gray-500 italic">
+                      <p className="text-xs text-white font-medium italic">
                         Nenhum usuário com função de Administrador vinculado a esta empresa.
                       </p>
                     )
@@ -2095,17 +2511,17 @@ export default function DeveloperDashboardPage() {
                   return (
                     <div className="space-y-3">
                       {admins.map((adm) => (
-                        <div key={adm.id} className="p-3 bg-gray-900/90 border border-gray-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div key={adm.id} className="p-3 bg-[#111827] border border-[#374151] rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                           <div>
-                            <div className="font-semibold text-white text-sm flex items-center gap-2">
+                            <div className="font-bold text-white text-sm flex items-center gap-2">
                               {adm.name}
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${adm.isActive ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${adm.isActive ? 'bg-[#059669] text-white border border-[#10b981]' : 'bg-[#dc2626] text-white border border-[#ef4444]'}`}>
                                 {adm.isActive ? 'Ativo' : 'Inativo'}
                               </span>
                             </div>
-                            <div className="text-gray-400 mt-0.5">{adm.email} • {adm.phone || 'Sem telefone'}</div>
+                            <div className="text-white font-medium mt-0.5">{adm.email} • {adm.phone || 'Sem telefone'}</div>
                           </div>
-                          <div className="text-right text-gray-500 text-[11px]">
+                          <div className="text-right text-white font-semibold text-[11px]">
                             Cadastrado em: {new Date(adm.createdAt).toLocaleDateString('pt-BR')}
                           </div>
                         </div>
@@ -2117,23 +2533,23 @@ export default function DeveloperDashboardPage() {
 
               {/* Card 4: Métricas do Tenant */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800 text-center">
-                  <div className="text-xl font-bold text-white">{selectedShopForDetails._count?.users ?? 0}</div>
-                  <div className="text-[11px] text-gray-400 mt-1">Colaboradores</div>
+                <div className="p-4 bg-[#030712] rounded-xl border border-[#374151] text-center">
+                  <div className="text-2xl font-bold text-white">{selectedShopForDetails._count?.users ?? 0}</div>
+                  <div className="text-xs text-white font-bold mt-1">Colaboradores</div>
                 </div>
-                <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800 text-center">
-                  <div className="text-xl font-bold text-white">{selectedShopForDetails._count?.clients ?? 0}</div>
-                  <div className="text-[11px] text-gray-400 mt-1">Clientes</div>
+                <div className="p-4 bg-[#030712] rounded-xl border border-[#374151] text-center">
+                  <div className="text-2xl font-bold text-white">{selectedShopForDetails._count?.clients ?? 0}</div>
+                  <div className="text-xs text-white font-bold mt-1">Clientes</div>
                 </div>
-                <div className="p-3.5 bg-gray-950/60 rounded-xl border border-gray-800 text-center">
-                  <div className="text-xl font-bold text-white">{selectedShopForDetails._count?.services ?? 0}</div>
-                  <div className="text-[11px] text-gray-400 mt-1">Serviços</div>
+                <div className="p-4 bg-[#030712] rounded-xl border border-[#374151] text-center">
+                  <div className="text-2xl font-bold text-white">{selectedShopForDetails._count?.services ?? 0}</div>
+                  <div className="text-xs text-white font-bold mt-1">Serviços</div>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between pt-5 border-t border-gray-800 mt-6">
+            <div className="flex items-center justify-between pt-5 border-t border-[#374151] mt-6">
               <button
                 type="button"
                 onClick={() => {
@@ -2141,20 +2557,20 @@ export default function DeveloperDashboardPage() {
                   setSelectedShopForDetails((prev) => prev ? { ...prev, isActive: !prev.isActive } : null)
                 }}
                 disabled={actionLoadingId === selectedShopForDetails.id}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border transition ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold border transition ${
                   selectedShopForDetails.isActive
-                    ? 'border-red-800/80 bg-red-950/20 text-red-400 hover:bg-red-900/30'
-                    : 'border-emerald-800/80 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-900/30'
+                    ? 'border-[#ef4444] bg-[#dc2626] text-white hover:bg-[#b91c1c]'
+                    : 'border-[#10b981] bg-[#059669] text-white hover:bg-[#047857]'
                 } disabled:opacity-50 cursor-pointer`}
               >
-                <Power className="w-4 h-4" />
+                <Power className="w-4 h-4 stroke-[2.5]" />
                 {selectedShopForDetails.isActive ? 'Desativar Unidade' : 'Ativar Unidade'}
               </button>
 
               <button
                 type="button"
                 onClick={() => setSelectedShopForDetails(null)}
-                className="px-5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-semibold transition cursor-pointer"
+                className="px-6 py-2.5 bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] rounded-lg text-xs font-bold transition cursor-pointer"
               >
                 Fechar
               </button>
@@ -2165,19 +2581,19 @@ export default function DeveloperDashboardPage() {
 
       {/* Modal "Análise e Aprovação de Cadastro" */}
       {selectedShopForApproval && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-gray-900 border border-amber-500/40 rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#111827] border border-[#374151] rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-6">
+            <div className="flex items-center justify-between border-b border-[#374151] pb-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                  <ShieldCheck className="w-6 h-6 text-amber-400" />
+                <div className="w-12 h-12 rounded-xl bg-[#d97706] border border-[#f59e0b] flex items-center justify-center text-white">
+                  <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl font-bold text-white">Análise e Aprovação de Cadastro</h3>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                      <Clock className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b]">
+                      <Clock className="w-3.5 h-3.5" />
                       {selectedShopForApproval.status === 'PENDING'
                         ? 'Aguardando Aprovação'
                         : selectedShopForApproval.status === 'REJECTED'
@@ -2185,135 +2601,135 @@ export default function DeveloperDashboardPage() {
                         : 'Aprovado'}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-white font-medium mt-0.5">
                     Solicitado em: {new Date(selectedShopForApproval.createdAt).toLocaleString('pt-BR')} &bull; ID: {selectedShopForApproval.id}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedShopForApproval(null)}
-                className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+                className="p-2 text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] rounded-lg transition cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 stroke-[2.5]" />
               </button>
             </div>
 
             <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
               {/* Card 1: Dados do Estabelecimento */}
-              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded bg-[#d97706] text-white"><Building2 className="w-3.5 h-3.5" /></span>
                     1. Informações do Estabelecimento (Editáveis)
                   </h4>
-                  <span className="text-[11px] text-gray-500">Revise ou complemente antes de aprovar</span>
+                  <span className="text-[11px] text-white font-semibold">Revise ou complemente antes de aprovar</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block text-gray-400 mb-1 font-medium">Nome da Empresa:</label>
+                    <label className="block text-white mb-1.5 font-bold">Nome da Empresa:</label>
                     <input
                       type="text"
                       value={approvalFormData.name}
                       onChange={(e) => handleApprovalInputChange('name', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-medium focus:outline-none focus:border-[#2563eb]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 mb-1 font-medium">E-mail Comercial:</label>
+                    <label className="block text-white mb-1.5 font-bold">E-mail Comercial:</label>
                     <input
                       type="email"
                       value={approvalFormData.email}
                       onChange={(e) => handleApprovalInputChange('email', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#2563eb]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 mb-1 font-medium">Telefone Comercial / WhatsApp:</label>
+                    <label className="block text-white mb-1.5 font-bold">Telefone Comercial / WhatsApp:</label>
                     <input
                       type="tel"
                       value={approvalFormData.phone}
                       onChange={(e) => handleApprovalInputChange('phone', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#2563eb]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 mb-1 font-medium">Slug do Link Público (/b/slug):</label>
+                    <label className="block text-white mb-1.5 font-bold">Slug do Link Público (/b/slug):</label>
                     <input
                       type="text"
                       value={approvalFormData.slug}
                       onChange={(e) => handleApprovalInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                       placeholder="ex: barbearia-central"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-amber-400 focus:outline-none focus:border-amber-500 font-mono"
+                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono font-medium focus:outline-none focus:border-[#2563eb]"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-gray-400 mb-1 font-medium">Endereço Completo:</label>
+                  <div className="sm:col-span-2">
+                    <label className="block text-white mb-1.5 font-bold">Endereço Completo:</label>
                     <AddressAutocomplete
                       id="approvalAddress"
                       value={approvalFormData.address}
                       onChange={(val) => handleApprovalInputChange('address', val)}
                       placeholder="Rua, número, cidade - UF"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-medium focus:outline-none focus:border-[#2563eb]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Card 2: Administrador Solicitante */}
-              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
+              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                    <UserCheck className="w-4 h-4" />
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded bg-[#2563eb] text-white"><UserCheck className="w-3.5 h-3.5" /></span>
                     2. Dados do Administrador Solicitante
                   </h4>
-                  <span className="text-[11px] text-gray-500">Credenciais para acesso à conta de gestão</span>
+                  <span className="text-[11px] text-white font-semibold">Credenciais para acesso à conta de gestão</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                   <div>
-                    <label className="block text-gray-400 mb-1 font-medium">Nome do Responsável:</label>
+                    <label className="block text-white mb-1.5 font-bold">Nome do Responsável:</label>
                     <input
                       type="text"
                       value={approvalFormData.adminName}
                       onChange={(e) => handleApprovalInputChange('adminName', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-medium focus:outline-none focus:border-[#2563eb]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 mb-1 font-medium">E-mail de Login:</label>
+                    <label className="block text-white mb-1.5 font-bold">E-mail de Login:</label>
                     <input
                       type="email"
                       value={approvalFormData.adminEmail}
                       onChange={(e) => handleApprovalInputChange('adminEmail', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#2563eb]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 mb-1 font-medium">Telefone do Gestor:</label>
+                    <label className="block text-white mb-1.5 font-bold">Telefone do Gestor:</label>
                     <input
                       type="tel"
                       value={approvalFormData.adminPhone}
                       onChange={(e) => handleApprovalInputChange('adminPhone', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#2563eb]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Card 3: Vigência do Contrato Inicial */}
-              <div className="bg-gray-950/60 border border-gray-800 rounded-xl p-4 sm:p-5">
-                <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <CalendarClock className="w-4 h-4" />
+              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <span className="p-1 rounded bg-[#059669] text-white"><CalendarClock className="w-3.5 h-3.5" /></span>
                   3. Vigência Inicial do Contrato
                 </h4>
-                <p className="text-xs text-gray-400 mb-3">
+                <p className="text-xs text-white font-medium mb-3">
                   Selecione um prazo para a licença inicial da unidade. A empresa e seu administrador serão ativados com essa validade.
                 </p>
 
@@ -2328,7 +2744,7 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: d.toISOString().split('T')[0],
                       }))
                     }}
-                    className="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
                   >
                     +30 dias (1 mês)
                   </button>
@@ -2342,7 +2758,7 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: d.toISOString().split('T')[0],
                       }))
                     }}
-                    className="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
                   >
                     +90 dias (3 meses)
                   </button>
@@ -2356,7 +2772,7 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: d.toISOString().split('T')[0],
                       }))
                     }}
-                    className="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
                   >
                     +180 dias (6 meses)
                   </button>
@@ -2370,7 +2786,7 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: d.toISOString().split('T')[0],
                       }))
                     }}
-                    className="px-2.5 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
                   >
                     +365 dias (1 ano)
                   </button>
@@ -2382,14 +2798,14 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: '',
                       }))
                     }
-                    className="px-2.5 py-1 text-xs rounded bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-800/60 transition cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#059669] hover:bg-[#047857] text-white border border-[#10b981] transition cursor-pointer"
                   >
                     Vitalício
                   </button>
                 </div>
 
                 <div className="relative max-w-xs">
-                  <Calendar className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Calendar className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="date"
                     value={approvalFormData.contractExpiresAt}
@@ -2399,22 +2815,22 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: e.target.value,
                       }))
                     }
-                    className="w-full pl-9 pr-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                    className="w-full pl-9 pr-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white focus:outline-none focus:border-[#059669] transition"
                   />
                 </div>
               </div>
             </div>
 
             {/* Footer com botões de decisão */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-5 border-t border-gray-800 mt-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-5 border-t border-[#374151] mt-6">
               <div>
                 <button
                   type="button"
                   onClick={() => handleProcessApproval('REJECTED')}
                   disabled={isProcessingApproval}
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold border border-red-800/80 bg-red-950/30 text-red-400 hover:bg-red-900/40 transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-lg text-xs font-bold border border-[#ef4444] bg-[#dc2626] text-white hover:bg-[#b91c1c] transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4 stroke-[2.5]" />
                   Rejeitar Solicitação
                 </button>
               </div>
@@ -2424,7 +2840,7 @@ export default function DeveloperDashboardPage() {
                   type="button"
                   onClick={() => handleProcessApproval('SAVE')}
                   disabled={isProcessingApproval}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2.5 bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                 >
                   Salvar Informações
                 </button>
@@ -2433,7 +2849,7 @@ export default function DeveloperDashboardPage() {
                   type="button"
                   onClick={() => handleProcessApproval('APPROVED')}
                   disabled={isProcessingApproval}
-                  className="flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs border border-[#10b981] transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isProcessingApproval ? (
                     <>
@@ -2448,6 +2864,122 @@ export default function DeveloperDashboardPage() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Reset de Período de Trial */}
+      {trialResetShop && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
+          <div className="bg-[#111827] border border-[#374151] w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#374151] pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#d97706] border border-[#f59e0b] flex items-center justify-center text-white">
+                  <Clock className="w-5 h-5 stroke-[2.5]" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-white text-base">Resetar Período de Trial</h4>
+                  <p className="text-xs text-white font-medium">{trialResetShop.name}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTrialResetShop(null)}
+                className="p-1.5 text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] rounded-lg text-xs transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-white font-medium leading-relaxed">
+              Defina a quantidade de dias para reativar o período de testes gratuito desta barbearia. A conta e o administrador serão ativados automaticamente.
+            </p>
+
+            {/* Presets Rápidos */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-white uppercase tracking-wider">
+                1. Selecione um Prazo Predefinido:
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: '+7 dias', val: 7 },
+                  { label: '+14 dias', val: 14 },
+                  { label: '+30 dias', val: 30 },
+                  { label: '+60 dias', val: 60 },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => setTrialDaysInput(item.val)}
+                    className={`py-2 px-1 text-xs font-bold rounded-xl border transition cursor-pointer ${
+                      trialDaysInput === item.val
+                        ? 'bg-[#d97706] text-white border-[#f59e0b]'
+                        : 'bg-[#030712] border-[#374151] text-white hover:bg-[#1f2937]'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dias personalizados */}
+            <div>
+              <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1">
+                2. Ou especifique a quantidade de dias:
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="365"
+                value={trialDaysInput}
+                onChange={(e) => setTrialDaysInput(Math.max(1, Number(e.target.value) || 1))}
+                className="w-full px-3 py-2 bg-[#030712] border border-[#374151] rounded-xl text-xs text-white font-mono focus:outline-none focus:border-[#d97706]"
+              />
+            </div>
+
+            {/* Justificativa / Motivo */}
+            <div>
+              <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1">
+                3. Motivo / Justificativa do Reset:
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Degustação estendida, suporte comercial..."
+                value={trialReasonInput}
+                onChange={(e) => setTrialReasonInput(e.target.value)}
+                className="w-full px-3 py-2 bg-[#030712] border border-[#374151] rounded-xl text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#d97706]"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#374151]">
+              <button
+                type="button"
+                onClick={() => setTrialResetShop(null)}
+                disabled={isResettingTrial}
+                className="px-4 py-2 rounded-xl bg-[#1f2937] hover:bg-[#374151] text-white text-xs font-bold border border-[#4b5563] transition"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmResetTrial}
+                disabled={isResettingTrial}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-xs font-bold border border-[#f59e0b] transition disabled:opacity-50"
+              >
+                {isResettingTrial ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Resetando...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Confirmar e Liberar Trial</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

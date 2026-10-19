@@ -22,23 +22,33 @@ export function useDatabase() {
 }
 
 export function DatabaseProvider({ children }: { children: React.ReactNode }) {
-  const [isValidated, setIsValidated] = useState(false)
-  const [isConnected, setIsConnected] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isValidated, setIsValidated] = useState(true)
+  const [isConnected, setIsConnected] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    // Só validar em produção ou quando explicitamente solicitado
-    if (process.env.NODE_ENV === 'production' || window.location.search.includes('validate_db=true')) {
+    const shouldValidateExplicitly =
+      typeof window !== 'undefined' &&
+      (window.location.search.includes('validate_db=true') || pathname === '/loading')
+
+    const alreadyValidated =
+      typeof window !== 'undefined' &&
+      sessionStorage.getItem('db_validated') === 'true'
+
+    if (shouldValidateExplicitly) {
       validateDatabaseConnection()
-    } else {
-      setIsLoading(false)
-      setIsValidated(true)
-      setIsConnected(true)
+    } else if (process.env.NODE_ENV === 'production' && !alreadyValidated) {
+      // Valida no máximo uma única vez por sessão para não sobrecarregar Serverless e conexões de banco
+      validateDatabaseConnection().then(() => {
+        try {
+          sessionStorage.setItem('db_validated', 'true')
+        } catch {}
+      })
     }
-  }, [])
+  }, [pathname])
 
   const validateDatabaseConnection = async () => {
     try {

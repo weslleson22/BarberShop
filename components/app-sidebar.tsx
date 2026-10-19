@@ -232,7 +232,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenu>
                 {section.items.map((item) => {
                   const hasSubItems = Array.isArray(item.items) && item.items.length > 0
-                  const isAnySubActive = hasSubItems && item.items?.some((sub) => isRouteActive(sub.url))
+                  const isNotificationSettingsRoute = item.title.includes("Notificações") && pathname.startsWith("/developer/notifications-settings")
+                  const isRealtimeRoute = (item.title.includes("Tempo Real") || item.title.includes("Auditoria")) && (
+                    pathname.startsWith("/developer/online-users") ||
+                    pathname.startsWith("/developer/audit-logs") ||
+                    pathname.startsWith("/developer/reports") ||
+                    pathname.startsWith("/developer/monitoring") ||
+                    pathname.startsWith("/developer/realtime")
+                  )
+                  const isAnySubActive = hasSubItems && (item.items?.some((sub) => isRouteActive(sub.url)) || isNotificationSettingsRoute || isRealtimeRoute)
                   const isActive = isRouteActive(item.url) || isAnySubActive
 
                   if (hasSubItems) {
@@ -269,7 +277,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     {subItem.disabled ? (
                                       <SidebarMenuSubButton
                                         aria-disabled="true"
+                                        size="sm"
                                         className="opacity-50 cursor-not-allowed text-sidebar-foreground/60"
+                                        title={subItem.title}
                                       >
                                         <span className="truncate">{subItem.title}</span>
                                         {subItem.badge && (
@@ -281,9 +291,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     ) : (
                                       <SidebarMenuSubButton
                                         asChild
+                                        size="sm"
                                         isActive={isSubActive}
                                       >
-                                        <Link href={subItem.url} className="flex items-center w-full">
+                                        <Link href={subItem.url} className="flex items-center w-full" title={subItem.title}>
                                           <span className="truncate">{subItem.title}</span>
                                           {subItem.badge && (
                                             <Badge variant="secondary" className="ml-auto text-[9px] px-1 py-0 h-3.5">

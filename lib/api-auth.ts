@@ -11,6 +11,22 @@ export function getAuthUser(request: NextRequest): JWTPayload | null {
     if (payload.sessionId && !SessionManager.isSessionActive(payload.id, payload.sessionId)) {
       return null
     }
+    try {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1'
+      const ua = request.headers.get('user-agent') || undefined
+      const pathname = request.nextUrl.pathname
+      SessionManager.touchSession(payload.id, {
+        userName: payload.name,
+        userEmail: payload.email,
+        userRole: payload.role,
+        barbershopId: payload.barbershopId,
+        ipAddress: ip,
+        userAgent: ua,
+        currentPath: pathname,
+      })
+    } catch {
+      // Silently ignore session touch failures
+    }
     return payload
   }
 

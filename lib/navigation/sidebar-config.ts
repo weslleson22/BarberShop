@@ -20,6 +20,8 @@ import {
   Rocket,
   Shield,
   FileText,
+  KeyRound,
+  Bell,
   type LucideIcon,
 } from "lucide-react"
 import { ROLE_LABELS, type UserRole } from "@/lib/roles"
@@ -116,14 +118,30 @@ export function getSidebarSections(role: UserRole): NavSection[] {
         ],
       },
       {
-        label: "Monitoramento & Sistema",
+        label: "Monitoramento & Telemetria",
         items: [
           {
-            title: "Monitoramento",
+            title: "Tempo Real & Auditoria",
             icon: Activity,
             items: [
-              { title: "System Health & Métricas", url: "/developer/monitoring" },
+              { title: "Usuários Online", url: "/developer/online-users" },
               { title: "Audit Logs", url: "/developer/audit-logs" },
+              { title: "Relatórios", url: "/developer/reports" },
+              { title: "System Health", url: "/developer/monitoring" },
+            ],
+          },
+          {
+            title: "Segurança & Credenciais",
+            url: "/developer/credentials",
+            icon: KeyRound,
+          },
+          {
+            title: "Notificações & Alertas",
+            icon: Bell,
+            items: [
+              { title: "Telegram", url: "/developer/notifications-settings/telegram" },
+              { title: "E-mail SMTP", url: "/developer/notifications-settings/email" },
+              { title: "Histórico", url: "/developer/notifications-settings/history" },
             ],
           },
           {

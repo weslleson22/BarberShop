@@ -33,6 +33,19 @@ export async function GET(request: NextRequest) {
     if (entity) where.entity = entity;
     if (userId) where.userId = userId;
     if (barbershopId) where.barbershopId = barbershopId;
+
+    const role = searchParams.get("role");
+    if (role && role !== "all") {
+      where.user = { role };
+    }
+
+    const clientOnly = searchParams.get("clientOnly");
+    if (clientOnly === "true") {
+      where.OR = [
+        { user: { role: "CLIENT" } },
+        { entity: "CLIENT" },
+      ];
+    }
     if (success !== null && success !== undefined) {
       where.success = success === "true";
     }

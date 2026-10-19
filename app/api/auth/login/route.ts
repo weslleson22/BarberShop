@@ -3,6 +3,7 @@ import { authenticateUser } from '@/lib/auth'
 import { ensureClientForUser } from '@/lib/client-sync'
 import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
 import { AuditAction, AuditEntity } from '@prisma/client'
+import { notifyFailedPasswordAttempt } from '@/lib/external-notifications'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -31,6 +32,19 @@ export async function POST(request: NextRequest) {
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       })
+
+      // Notificação integrada de erro de senha (Telegram/Email)
+      try {
+        await notifyFailedPasswordAttempt({
+          email,
+          ipAddress: ctx.ipAddress,
+          userAgent: ctx.userAgent,
+          reason: 'Credenciais incorretas',
+        })
+      } catch (notifErr) {
+        console.warn('Failed to dispatch password error notification:', notifErr)
+      }
+
       return NextResponse.json(
         { error: 'Email ou senha incorretos' },
         { status: 401 }

@@ -41,6 +41,30 @@ export function verifyToken(token: string): JWTPayload {
   return jwt.verify(token, getJwtSecret()) as JWTPayload
 }
 
+export interface PasswordResetPayload {
+  userId: string
+  email: string
+  purpose: 'password_reset'
+  iat?: number
+  exp?: number
+}
+
+export function generatePasswordResetToken(userId: string, email: string): string {
+  return jwt.sign(
+    { userId, email: email.toLowerCase().trim(), purpose: 'password_reset' },
+    getJwtSecret(),
+    { expiresIn: '1h' }
+  )
+}
+
+export function verifyPasswordResetToken(token: string): PasswordResetPayload {
+  const decoded = jwt.verify(token, getJwtSecret()) as PasswordResetPayload
+  if (!decoded || decoded.purpose !== 'password_reset' || !decoded.userId) {
+    throw new Error('Token de redefinição de senha inválido')
+  }
+  return decoded
+}
+
 export async function authenticateUser(email: string, password: string) {
   const user = await prisma.user.findUnique({
     where: { email },
@@ -107,7 +131,15 @@ export async function authenticateUser(email: string, password: string) {
     : null
 
   const sessionId = 'sess_' + crypto.randomUUID()
-  SessionManager.registerSession(user.id, sessionId)
+  SessionManager.registerSession(user.id, sessionId, {
+    userName: user.name,
+    userEmail: user.email,
+    userRole: user.role,
+    avatar: user.avatar,
+    barbershopId: user.barbershopId,
+    barbershopName: user.barbershop?.name,
+    barbershopSlug: user.barbershop?.slug,
+  })
 
   const token = generateToken({
     id: user.id,
@@ -215,7 +247,15 @@ export async function createUser(data: {
   }
 
   const sessionId = 'sess_' + crypto.randomUUID()
-  SessionManager.registerSession(user.id, sessionId)
+  SessionManager.registerSession(user.id, sessionId, {
+    userName: user.name,
+    userEmail: user.email,
+    userRole: user.role,
+    avatar: user.avatar,
+    barbershopId: user.barbershopId,
+    barbershopName: user.barbershop?.name,
+    barbershopSlug: user.barbershop?.slug,
+  })
 
   const token = generateToken({
     id: user.id,

@@ -85,6 +85,8 @@ const nextConfig = {
     return config;
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2678400, // 31 dias de cache para imagens otimizadas no Edge da Vercel
     remotePatterns: [
       {
         protocol: 'http',
@@ -104,7 +106,7 @@ const nextConfig = {
     if (!isProd) {
       return [
         {
-          source: '/((?!_next/static|_next/image|icons|favicon.ico).*)',
+          source: '/((?!_next/static|_next/image|icons|images|favicon.ico).*)',
           headers: [
             { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
             { key: 'Pragma', value: 'no-cache' },
@@ -114,20 +116,41 @@ const nextConfig = {
       ];
     }
 
-    // Em PRODUÇÃO (build real): Aplicar cache imutável seguro para arquivos estáticos com hash de build
+    // Em PRODUÇÃO (Vercel):
+    // 1. Chunks com hash de compilação são imutáveis (1 ano de cache)
+    // 2. Imagens e ícones públicos ficam em cache no Edge CDN e no navegador
+    // 3. Service worker é sempre revalidado para nunca prender o usuário em versão antiga
     return [
-      {
-        source: '/((?!_next/static|_next/image|icons|favicon.ico|manifest.json).*)',
-        headers: [
-          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
-          { key: 'Pragma', value: 'no-cache' },
-          { key: 'Expires', value: '0' },
-        ],
-      },
       {
         source: '/_next/static/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/images/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/icons/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/(favicon.ico|manifest.json)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
         ],
       },
     ];

@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { resolvePublicTenant } from '@/lib/tenant'
 import BarberTeamScheduler from '@/components/public/BarberTeamScheduler'
+import PublicServicesCatalog from '@/components/public/PublicServicesCatalog'
 import { 
   Scissors, 
   Clock, 
@@ -251,67 +252,16 @@ export default async function TenantPublicPage({ params }: Props) {
 
       {/* Main Content Area */}
       <main className="max-w-6xl mx-auto px-4 py-12 space-y-16">
-        {/* Services Section */}
-        <section>
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold tracking-wide uppercase">
-                <Scissors className="w-4 h-4" />
-                Catálogo de Serviços
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">
-                Serviços Disponíveis
-              </h2>
-            </div>
-            <span className="text-xs text-gray-400 bg-gray-800/80 px-3 py-1.5 rounded-lg border border-gray-700">
-              {services.length} serviços cadastrados
-            </span>
-          </div>
-
-          {services.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-gray-900/60 border border-gray-800 text-center text-gray-400">
-              Nenhum serviço disponível no momento para esta unidade.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((service) => (
-                <div
-                  key={service.id}
-                  className="group relative flex flex-col justify-between p-6 rounded-2xl bg-gray-900 border border-gray-800 hover:border-amber-500/50 transition-all"
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <h3 className="font-bold text-lg text-white group-hover:text-amber-400 transition-colors">
-                        {service.name}
-                      </h3>
-                      <span className="text-lg font-black text-amber-400 whitespace-nowrap">
-                        {formatCurrency(Number(service.price))}
-                      </span>
-                    </div>
-                    {service.description && (
-                      <p className="text-xs text-gray-400 mb-4 line-clamp-2">
-                        {service.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between text-xs">
-                    <span className="inline-flex items-center gap-1.5 text-gray-300">
-                      <Clock className="w-3.5 h-3.5 text-amber-400" />
-                      {service.duration} minutos
-                    </span>
-                    <Link
-                      href={bookingUrl}
-                      className="inline-flex items-center gap-1 font-semibold text-amber-400 hover:text-amber-300"
-                    >
-                      Escolher <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        {/* Catálogo de Serviços & Fluxo Completo de Agendamento */}
+        <PublicServicesCatalog
+          services={serializedServices}
+          barbers={barbers}
+          appointments={serializedAppointments}
+          slug={activeSlug}
+          tenantName={tenant.name}
+          tenantAddress={tenant.address}
+          tenantPhone={tenant.phone}
+        />
 
         {/* Barbers / Professionals Section */}
         <section>

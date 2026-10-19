@@ -36,6 +36,27 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Registra atividade em tempo real para o dashboard de usuários online
+  const referer = request.headers.get('referer')
+  let currentPath = '/'
+  if (referer) {
+    try {
+      currentPath = new URL(referer).pathname
+    } catch {}
+  }
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1'
+  const ua = request.headers.get('user-agent') || undefined
+
+  SessionManager.touchSession(user.id, {
+    userName: user.name,
+    userEmail: user.email,
+    userRole: user.role,
+    barbershopId: user.barbershopId,
+    currentPath,
+    ipAddress: ip,
+    userAgent: ua,
+  })
+
   return NextResponse.json({
     valid: true,
     user: {

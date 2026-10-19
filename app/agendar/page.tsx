@@ -124,6 +124,21 @@ export default function AgendarPage() {
     }
   }, [barbers])
 
+  // Pré-selecionar serviço quando vindo via query param (?serviceId=...)
+  useEffect(() => {
+    if (services.length > 0 && typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search)
+      const qServiceId = searchParams.get('serviceId')
+      if (qServiceId) {
+        const found = services.find((s) => s.id === qServiceId)
+        if (found) {
+          setSelectedService(found)
+          setStep((curr) => (curr === 1 ? 2 : curr))
+        }
+      }
+    }
+  }, [services])
+
   const getTenantParam = () => {
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
     const slug = searchParams?.get('slug')

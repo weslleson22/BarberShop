@@ -107,15 +107,18 @@ export async function GET(request: NextRequest) {
 
     const lastBackup = allBackups.length > 0 ? allBackups[0] : null
 
-    // Próximo agendado (00:00 UTC)
+    // Próximo agendado (00:30 Horário de Brasília / 03:30 UTC)
     const nextCron = new Date()
-    nextCron.setUTCHours(24, 0, 0, 0)
+    nextCron.setUTCHours(3, 30, 0, 0)
+    if (nextCron.getTime() <= Date.now()) {
+      nextCron.setDate(nextCron.getDate() + 1)
+    }
 
     return NextResponse.json({
       backups: allBackups,
       lastBackup,
       nextScheduledBackup: nextCron.toISOString(),
-      scheduleDescription: 'Diariamente às 00:00 UTC',
+      scheduleDescription: 'Diariamente às 00:30 (Horário de Brasília)',
       encryption: 'Gzip (.sql.gz)',
       storageDestination: `Cloudflare R2 (${bucket})`,
       targetRpoHours: 24,

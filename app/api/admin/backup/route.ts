@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       total: backups.length,
       backups,
       lastBackup: backups.length > 0 ? backups[0] : null,
-      nextScheduled: 'Diariamente às 00:00 UTC (Vercel Cron / node-cron)',
+      nextScheduled: 'Diariamente às 00:30 (Horário de Brasília - America/Sao_Paulo)',
     })
   } catch (error: any) {
     console.error('[API /api/admin/backup GET] Erro ao listar backups:', error)

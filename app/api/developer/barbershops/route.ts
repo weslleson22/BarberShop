@@ -525,6 +525,43 @@ export async function POST(request: NextRequest) {
       userAgent: ctx.userAgent,
     })
 
+    // Notificações e e-mail caloroso de boas-vindas
+    try {
+      const { notifyNewRegistration, sendCompanyWelcomeEmail } = await import('@/lib/external-notifications')
+      const origin =
+        request.headers.get('origin') ||
+        (request.headers.get('referer') ? new URL(request.headers.get('referer')!).origin : null) ||
+        process.env.NEXTAUTH_URL ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        'http://localhost:3000'
+
+      await notifyNewRegistration({
+        type: 'COMPANY',
+        name: adminName,
+        email: adminEmail,
+        role: 'ADMIN (Proprietário)',
+        phone: adminPhone || phone,
+        barbershopName: result.barbershop.name,
+        barbershopEmail: result.barbershop.email,
+        barbershopPhone: result.barbershop.phone,
+        barbershopAddress: result.barbershop.address,
+        barbershopSlug: result.barbershop.slug,
+        origin: 'Painel do Desenvolvedor (Cadastro Manual)',
+      })
+
+      await sendCompanyWelcomeEmail({
+        companyName: result.barbershop.name,
+        adminName,
+        adminEmail,
+        slug: result.barbershop.slug,
+        trialDays: 7,
+        trialEndsAt: contractExpiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        baseUrl: origin,
+      })
+    } catch (notifErr) {
+      console.warn('Failed to send barbershop notifications:', notifErr)
+    }
+
     return NextResponse.json(result, { status: 201 })
   } catch (error: any) {
     console.error('Developer create barbershop error:', error)

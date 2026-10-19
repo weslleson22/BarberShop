@@ -5,6 +5,7 @@ import { ensureClientForUser } from '@/lib/client-sync'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
 import { AuditAction, AuditEntity } from '@prisma/client'
+import { notifyNewRegistration } from '@/lib/external-notifications'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -226,6 +227,30 @@ export async function POST(request: NextRequest) {
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
     })
+
+    try {
+      const shop = user.barbershopId
+        ? await prisma.barbershop.findUnique({
+            where: { id: user.barbershopId },
+            select: { name: true, slug: true },
+          })
+        : null
+
+      await notifyNewRegistration({
+        type: user.role === 'CLIENT' ? 'CLIENT' : 'TEAM_MEMBER',
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        barbershopName: shop?.name || null,
+        barbershopSlug: shop?.slug || null,
+        origin: `Cadastrado na Equipe por ${admin.name}`,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      })
+    } catch (notifErr) {
+      console.warn('Failed to send user creation notification:', notifErr)
+    }
 
     return NextResponse.json(user, { status: 201 })
   } catch (error) {

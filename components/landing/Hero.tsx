@@ -144,6 +144,7 @@ export default function Hero() {
                     src="/images/scheduling-hero.jpg"
                     alt="Sistema de Gestão e Agendamento de Serviços"
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 520px"
                     className="object-cover object-center"
                     priority
                   />

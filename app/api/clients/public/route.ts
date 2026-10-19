@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/api-auth'
 import { resolvePublicTenant } from '@/lib/tenant'
+import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
+import { AuditAction, AuditEntity } from '@prisma/client'
+import { notifyNewRegistration } from '@/lib/external-notifications'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -190,6 +193,43 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('Cliente criado com sucesso:', client)
+
+    const ctx = extractRequestContext(request)
+    await createAuditLog({
+      userId: finalUserId || null,
+      barbershopId,
+      action: AuditAction.CLIENT_CREATED,
+      entity: AuditEntity.CLIENT,
+      entityId: client.id,
+      success: true,
+      metadata: {
+        name: client.name,
+        phone: client.phone,
+        email: client.email,
+        source: 'PUBLIC_FLOW',
+        isClientAction: true,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    })
+
+    try {
+      await notifyNewRegistration({
+        type: 'CLIENT',
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        role: 'CLIENT',
+        barbershopName: tenantResult.tenant.name,
+        barbershopSlug: tenantResult.tenant.slug,
+        origin: 'Página Pública de Agendamento',
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      })
+    } catch (notifErr) {
+      console.warn('Failed to dispatch public client notification:', notifErr)
+    }
+
     return NextResponse.json(client, { status: 201 })
   } catch (error) {
     console.error('Create client error:', error)

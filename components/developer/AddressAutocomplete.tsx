@@ -163,7 +163,7 @@ export default function AddressAutocomplete({
           autoComplete="off"
           className={
             className ||
-            'w-full pl-9 pr-10 py-2.5 bg-gray-950 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition'
+            'w-full pl-9 pr-10 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 transition'
           }
         />
 
@@ -174,8 +174,8 @@ export default function AddressAutocomplete({
 
       {/* Sugestão de busca por CEP detectado */}
       {detectedCep && (
-        <div className="mt-1 flex items-center justify-between px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-md text-xs text-amber-300 animate-in fade-in duration-150">
-          <span className="flex items-center gap-1.5">
+        <div className="mt-1 flex items-center justify-between px-3 py-1.5 bg-[#111827] border border-[#f59e0b] rounded-lg text-xs text-white">
+          <span className="flex items-center gap-1.5 font-bold">
             <Search className="w-3.5 h-3.5 text-amber-400" />
             CEP detectado: <strong>{detectedCep.slice(0, 5)}-{detectedCep.slice(5)}</strong>
           </span>
@@ -183,25 +183,25 @@ export default function AddressAutocomplete({
             type="button"
             onClick={() => handleFetchCep(detectedCep)}
             disabled={isSearchingCep}
-            className="px-2 py-0.5 bg-amber-500 text-black font-semibold rounded hover:bg-amber-400 transition text-[11px]"
+            className="px-2.5 py-1 bg-[#d97706] hover:bg-amber-600 text-white font-bold rounded-md transition text-xs border border-[#f59e0b]"
           >
-            {isSearchingCep ? 'Buscando...' : 'Auto-completar Endereço'}
+            {isSearchingCep ? 'Buscando...' : 'Auto-completar'}
           </button>
         </div>
       )}
 
       {/* Dropdown de cidades brasileiras */}
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-gray-900/95 border border-gray-700 rounded-xl shadow-2xl backdrop-blur-xl max-h-60 overflow-y-auto py-1 text-xs">
-          <div className="px-3.5 py-2 text-[10px] font-semibold tracking-wide text-amber-400 bg-gray-950/80 border-b border-gray-800 flex items-center justify-between">
+        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-[#111827] border border-[#374151] rounded-xl shadow-2xl max-h-60 overflow-y-auto py-1 text-xs">
+          <div className="px-3.5 py-2 text-[10px] font-bold tracking-wide text-amber-400 bg-[#030712] border-b border-[#374151] flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Base Oficial IBGE (5.571 municípios) &bull; {suggestions.length} encontrados
             </span>
-            <span className="text-[9px] text-gray-500 font-normal">Use ↑↓ e Enter</span>
+            <span className="text-[10px] text-gray-300 font-medium">Use ↑↓ e Enter</span>
           </div>
 
-          <ul className="divide-y divide-gray-800/40">
+          <ul className="divide-y divide-[#374151]">
             {suggestions.map((city, idx) => {
               const isSelected = idx === selectedIndex
               return (
@@ -213,20 +213,20 @@ export default function AddressAutocomplete({
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`px-3.5 py-2.5 flex items-center justify-between cursor-pointer transition ${
-                    isSelected ? 'bg-amber-500/20 text-white' : 'text-gray-300 hover:bg-gray-800/80 hover:text-white'
+                    isSelected ? 'bg-[#2563eb] text-white font-bold' : 'text-gray-200 hover:bg-[#1f2937] hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-gray-800 flex items-center justify-center text-amber-400 shrink-0">
+                    <div className="w-6 h-6 rounded-md bg-[#030712] border border-[#374151] flex items-center justify-center text-amber-400 shrink-0">
                       <MapPin className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <span className="font-semibold text-sm text-white">{city.nome}</span>
-                      <span className="text-gray-400 text-xs ml-1.5 font-medium">({city.uf})</span>
+                      <span className="font-bold text-sm text-white">{city.nome}</span>
+                      <span className="text-gray-300 text-xs ml-1.5 font-medium">({city.uf})</span>
                     </div>
                   </div>
 
-                  <span className="px-1.5 py-0.5 rounded bg-gray-800 text-[10px] font-mono text-amber-400 uppercase">
+                  <span className="px-2 py-0.5 rounded bg-[#030712] border border-[#374151] text-[10px] font-mono text-amber-400 font-bold uppercase">
                     {city.uf}
                   </span>
                 </li>

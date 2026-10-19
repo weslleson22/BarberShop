@@ -4,6 +4,7 @@ import { getAuthUser, requireRole } from '@/lib/api-auth'
 import { notifyAdminsNewClient } from '@/lib/notifications'
 import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
 import { AuditAction, AuditEntity } from '@prisma/client'
+import { notifyNewRegistration } from '@/lib/external-notifications'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -141,6 +142,27 @@ export async function POST(request: NextRequest) {
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
     })
+
+    try {
+      const shop = await prisma.barbershop.findUnique({
+        where: { id: targetBarbershopId },
+        select: { name: true, slug: true },
+      })
+      await notifyNewRegistration({
+        type: 'CLIENT',
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        role: 'CLIENT',
+        barbershopName: shop?.name || null,
+        barbershopSlug: shop?.slug || null,
+        origin: `Painel do Estabelecimento (${decoded.name})`,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      })
+    } catch (notifErr) {
+      console.warn('Failed to send client registration notification:', notifErr)
+    }
 
     return NextResponse.json(client, { status: 201 })
   } catch (error) {

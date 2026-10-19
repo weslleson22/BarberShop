@@ -1,12 +1,24 @@
 import './globals.css'
 import { Suspense } from 'react'
-import { Inter } from 'next/font/google'
+import { Roboto, Roboto_Mono } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth-context'
 import { DatabaseProvider } from '@/components/database-validation/DatabaseValidator'
 import { ServiceWorkerUpdater } from '@/components/ServiceWorkerUpdater'
 import { NavigationTracker } from '@/components/shared/NavigationTracker'
 
-const inter = Inter({ subsets: ['latin'] })
+const roboto = Roboto({
+  weight: ['300', '400', '500', '700', '900'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-roboto',
+})
+
+const robotoMono = Roboto_Mono({
+  weight: ['400', '500', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-roboto-mono',
+})
 
 export const metadata = {
   metadataBase: new URL('https://barber-shop-nine-ebon.vercel.app'),
@@ -49,12 +61,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={`${roboto.variable} ${robotoMono.variable}`}>
       <head>
-        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-        <meta httpEquiv="Pragma" content="no-cache" />
-        <meta httpEquiv="Expires" content="0" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="theme-color" content="#0ea5e9" />
@@ -64,7 +72,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="AgendaSaaS" />
         <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" />
       </head>
-      <body className={inter.className}>
+      <body className={`${roboto.className} font-sans`}>
         <DatabaseProvider>
           <AuthProvider>
             <Suspense fallback={null}>

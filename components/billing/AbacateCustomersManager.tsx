@@ -102,17 +102,18 @@ export default function AbacateCustomersManager() {
     abacateCustomersCount: 0,
   })
   const [loading, setLoading] = useState(true)
-  const [syncingAdminId, setSyncingAdminId] = useState<string | null>(null)
-  const [syncingSubId, setSyncingSubId] = useState<string | null>(null)
   const [syncingAll, setSyncingAll] = useState(false)
   const [syncingAllSubs, setSyncingAllSubs] = useState(false)
+  const [syncingAdminId, setSyncingAdminId] = useState<string | null>(null)
+  const [syncingSubId, setSyncingSubId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeSubTab, setActiveSubTab] = useState<'admins' | 'abacate'>('admins')
 
-  // Modal para cadastrar cliente manual
+  // Modal para cadastro manual
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [creatingCustomer, setCreatingCustomer] = useState(false)
   const [createForm, setCreateForm] = useState({
     name: '',
     email: '',
@@ -120,7 +121,6 @@ export default function AbacateCustomersManager() {
     taxId: '',
     zipCode: '',
   })
-  const [creatingCustomer, setCreatingCustomer] = useState(false)
 
   useEffect(() => {
     fetchCustomersData()
@@ -135,29 +135,21 @@ export default function AbacateCustomersManager() {
         headers,
         credentials: 'include',
       })
-      const json = await res.json()
 
-      if (res.ok && json.success) {
-        setAdmins(json.admins || [])
-        setAbacateCustomers(json.abacateCustomers || [])
-        setSummary(json.summary || {
-          totalAdmins: json.admins?.length || 0,
-          syncedCount: json.admins?.filter((a: any) => a.isSynced)?.length || 0,
-          pendingCount: json.admins?.filter((a: any) => !a.isSynced)?.length || 0,
-          withBillingCount: json.admins?.filter((a: any) => a.hasAbacateBilling)?.length || 0,
-          abacateCustomersCount: json.abacateCustomers?.length || 0,
-        })
+      if (res.ok) {
+        const data = await res.json()
+        setAbacateCustomers(data.abacateCustomers || [])
+        setAdmins(data.admins || [])
+        if (data.summary) {
+          setSummary(data.summary)
+        }
       } else {
-        setFeedback({
-          type: 'error',
-          message: json.error || 'Erro ao carregar clientes da AbacatePay',
-        })
+        const err = await res.json()
+        setFeedback({ type: 'error', message: err.error || 'Erro ao carregar dados de clientes' })
       }
     } catch (err: any) {
-      setFeedback({
-        type: 'error',
-        message: err?.message || 'Falha na conexão com a API de clientes',
-      })
+      console.warn('Erro ao consultar clientes da AbacatePay:', err)
+      setFeedback({ type: 'error', message: 'Falha na conexão com o serviço de faturamento' })
     } finally {
       setLoading(false)
     }
@@ -185,20 +177,14 @@ export default function AbacateCustomersManager() {
       if (res.ok && json.success) {
         setFeedback({
           type: 'success',
-          message: json.message || 'Cliente administrador sincronizado com sucesso na AbacatePay!',
+          message: `Cliente ${json.customer?.name || ''} sincronizado com sucesso no AbacatePay!`,
         })
         await fetchCustomersData()
       } else {
-        setFeedback({
-          type: 'error',
-          message: json.error || 'Falha ao sincronizar cliente na AbacatePay',
-        })
+        setFeedback({ type: 'error', message: json.error || 'Falha ao sincronizar cliente' })
       }
     } catch (err: any) {
-      setFeedback({
-        type: 'error',
-        message: err?.message || 'Erro inesperado na sincronização',
-      })
+      setFeedback({ type: 'error', message: err?.message || 'Erro inesperado na sincronização' })
     } finally {
       setSyncingAdminId(null)
     }
@@ -226,20 +212,14 @@ export default function AbacateCustomersManager() {
       if (res.ok && json.success) {
         setFeedback({
           type: 'success',
-          message: json.message || 'Cobrança e assinatura vinculadas com sucesso na AbacatePay!',
+          message: json.message || 'Cobrança e assinatura vinculadas com sucesso no AbacatePay!',
         })
         await fetchCustomersData()
       } else {
-        setFeedback({
-          type: 'error',
-          message: json.error || 'Falha ao vincular cobrança/assinatura na AbacatePay',
-        })
+        setFeedback({ type: 'error', message: json.error || 'Falha ao vincular assinatura' })
       }
     } catch (err: any) {
-      setFeedback({
-        type: 'error',
-        message: err?.message || 'Erro inesperado ao gerar assinatura na AbacatePay',
-      })
+      setFeedback({ type: 'error', message: err?.message || 'Erro inesperado ao gerar assinatura' })
     } finally {
       setSyncingSubId(null)
     }
@@ -266,20 +246,14 @@ export default function AbacateCustomersManager() {
       if (res.ok && json.success) {
         setFeedback({
           type: 'success',
-          message: json.message || `Sincronização concluída! ${json.synced} clientes sincronizados.`,
+          message: `Sincronização em lote concluída! ${json.synced} de ${json.total} clientes sincronizados na AbacatePay.`,
         })
         await fetchCustomersData()
       } else {
-        setFeedback({
-          type: 'error',
-          message: json.error || 'Falha ao sincronizar clientes em lote',
-        })
+        setFeedback({ type: 'error', message: json.error || 'Falha ao sincronizar todos os clientes' })
       }
     } catch (err: any) {
-      setFeedback({
-        type: 'error',
-        message: err?.message || 'Erro inesperado na sincronização em lote',
-      })
+      setFeedback({ type: 'error', message: err?.message || 'Erro inesperado ao sincronizar em lote' })
     } finally {
       setSyncingAll(false)
     }
@@ -415,27 +389,27 @@ export default function AbacateCustomersManager() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
       {/* Feedback Alert */}
       {feedback && (
         <div
-          className={`p-4 rounded-xl border flex items-center justify-between transition-all ${
+          className={`p-4 rounded-xl border flex items-center justify-between font-bold text-sm ${
             feedback.type === 'success'
-              ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-              : 'bg-red-950/40 border-red-500/40 text-red-300'
+              ? 'bg-[#059669] border-[#10b981] text-white'
+              : 'bg-[#dc2626] border-[#ef4444] text-white'
           }`}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {feedback.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+              <AlertCircle className="w-5 h-5 text-white shrink-0" />
             )}
-            <span className="text-sm font-medium">{feedback.message}</span>
+            <span>{feedback.message}</span>
           </div>
           <button
             onClick={() => setFeedback(null)}
-            className="text-xs opacity-70 hover:opacity-100 transition-opacity"
+            className="text-white hover:text-gray-200 text-sm font-bold px-2 py-1"
           >
             <X className="w-4 h-4" />
           </button>
@@ -444,61 +418,61 @@ export default function AbacateCustomersManager() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-medium">Admins do Sistema</span>
-            <Users className="w-4 h-4 text-primary" />
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between text-gray-300 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Admins do Sistema</span>
+            <Users className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-extrabold text-foreground">{summary.totalAdmins}</div>
-          <span className="text-xs text-muted-foreground mt-2 block">
+          <div className="text-2xl font-black text-white">{summary.totalAdmins}</div>
+          <span className="text-xs text-gray-200 font-medium mt-2 block">
             Donos/Gestores de Barbearias
           </span>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-medium">Clientes Sincronizados</span>
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between text-gray-300 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Clientes Sincronizados</span>
             <UserCheck className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-extrabold text-emerald-400">{summary.syncedCount}</div>
-          <span className="text-xs text-emerald-300 font-medium mt-2 block">
+          <div className="text-2xl font-black text-emerald-400">{summary.syncedCount}</div>
+          <span className="text-xs text-gray-200 font-bold mt-2 block">
             Cadastrados na AbacatePay
           </span>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-medium">Cobranças & Assinaturas</span>
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between text-gray-300 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Cobranças & Assinaturas</span>
             <Receipt className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-extrabold text-lime-400">{summary.withBillingCount}</div>
-          <span className="text-xs text-lime-300 font-medium mt-2 block">
+          <div className="text-2xl font-black text-emerald-400">{summary.withBillingCount}</div>
+          <span className="text-xs text-gray-200 font-bold mt-2 block">
             Vinculadas na AbacatePay
           </span>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground mb-2">
-            <span className="text-xs font-medium">Total no Gateway</span>
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between text-gray-300 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Total no Gateway</span>
+            <ShieldCheck className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-extrabold text-foreground">{summary.abacateCustomersCount}</div>
-          <span className="text-xs text-muted-foreground mt-2 block">
+          <div className="text-2xl font-black text-white">{summary.abacateCustomersCount}</div>
+          <span className="text-xs text-gray-200 font-medium mt-2 block">
             Base na AbacatePay API v2
           </span>
         </div>
       </div>
 
       {/* Header Actions & Sub-Tabs */}
-      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-[#111827] border border-[#374151] rounded-xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         {/* SubTabs */}
-        <div className="flex items-center gap-2 p-1 bg-muted/30 rounded-xl border border-border/50 w-full md:w-auto">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <button
             onClick={() => setActiveSubTab('admins')}
-            className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 border ${
               activeSubTab === 'admins'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-[#2563eb] text-white border-[#3b82f6]'
+                : 'bg-[#1f2937] hover:bg-[#374151] text-white border-[#4b5563]'
             }`}
           >
             <Building2 className="w-4 h-4" />
@@ -506,10 +480,10 @@ export default function AbacateCustomersManager() {
           </button>
           <button
             onClick={() => setActiveSubTab('abacate')}
-            className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors flex items-center justify-center gap-2 border ${
               activeSubTab === 'abacate'
-                ? 'bg-emerald-600 text-white font-medium'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-[#059669] text-white border-[#10b981]'
+                : 'bg-[#1f2937] hover:bg-[#374151] text-white border-[#4b5563]'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -522,16 +496,16 @@ export default function AbacateCustomersManager() {
           <button
             onClick={fetchCustomersData}
             disabled={loading}
-            className="p-2.5 rounded-xl border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
+            className="p-2.5 rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white transition-all cursor-pointer disabled:opacity-50"
             title="Atualizar dados"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'text-white'}`} />
           </button>
 
           <button
             onClick={handleSyncAll}
             disabled={syncingAll || loading}
-            className="px-3.5 py-2.5 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs md:text-sm flex items-center gap-2 transition-all border border-border cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-2.5 rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white font-bold text-xs md:text-sm flex items-center gap-2 transition-all border border-[#4b5563] cursor-pointer disabled:opacity-50"
             title="Sincroniza os perfis de clientes na AbacatePay"
           >
             {syncingAll ? (
@@ -550,7 +524,7 @@ export default function AbacateCustomersManager() {
           <button
             onClick={handleSyncAllSubscriptions}
             disabled={syncingAllSubs || loading}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs md:text-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-md"
+            className="px-4 py-2.5 rounded-lg bg-[#059669] hover:bg-emerald-600 text-white font-bold text-xs md:text-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 border border-[#10b981] shadow-md"
             title="Gera cobranças e checkouts de assinaturas vinculados a cada cliente na AbacatePay"
           >
             {syncingAllSubs ? (
@@ -568,7 +542,7 @@ export default function AbacateCustomersManager() {
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="px-3.5 py-2.5 rounded-xl bg-muted/60 hover:bg-muted text-foreground font-semibold text-xs md:text-sm flex items-center gap-2 transition-all border border-border cursor-pointer"
+            className="px-3.5 py-2.5 rounded-lg bg-[#2563eb] hover:bg-blue-600 text-white font-bold text-xs md:text-sm flex items-center gap-2 transition-all border border-[#3b82f6] cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Cadastrar Manual</span>
@@ -578,7 +552,7 @@ export default function AbacateCustomersManager() {
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" />
         <input
           type="text"
           placeholder={
@@ -588,61 +562,61 @@ export default function AbacateCustomersManager() {
           }
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-xs md:text-sm text-foreground focus:outline-none focus:border-emerald-500 transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 bg-[#030712] border border-[#374151] rounded-xl text-xs md:text-sm text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 transition-colors"
         />
       </div>
 
       {/* SUBTAB 1: Admins de Barbearias do Sistema */}
       {activeSubTab === 'admins' && (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-border/60 bg-muted/10 flex items-center justify-between flex-wrap gap-2">
+        <div className="bg-[#111827] border border-[#374151] rounded-xl overflow-hidden shadow-xl">
+          <div className="p-4 border-b border-[#374151] bg-[#1f2937] flex items-center justify-between flex-wrap gap-2">
             <div>
-              <h3 className="text-sm font-bold text-foreground">Administradores e Donos de Barbearias</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h3 className="text-sm font-extrabold text-white">Administradores e Donos de Barbearias</h3>
+              <p className="text-xs text-gray-200 mt-0.5 font-medium">
                 Os clientes pagantes do seu SaaS. Suas cobranças e assinaturas aparecem diretamente em /customers/ na AbacatePay.
               </p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground">
+            <span className="text-xs font-bold px-3 py-1 rounded-md bg-[#2563eb] border border-[#3b82f6] text-white">
               {filteredAdmins.length} registros
             </span>
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-muted-foreground">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-emerald-500 mb-3" />
+            <div className="p-12 text-center text-white font-bold">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-400 mb-3" />
               <p className="text-sm">Carregando lista de administradores e faturamento...</p>
             </div>
           ) : filteredAdmins.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">
-              <Users className="w-8 h-8 mx-auto opacity-30 mb-3" />
+            <div className="p-12 text-center text-white font-medium">
+              <Users className="w-8 h-8 mx-auto text-gray-400 mb-3" />
               <p className="text-sm">Nenhum administrador encontrado com o filtro atual.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs md:text-sm">
-                <thead className="bg-muted/30 text-muted-foreground border-b border-border text-[11px] uppercase tracking-wider">
+                <thead className="bg-[#1f2937] text-white border-b border-[#374151] text-[11px] uppercase font-bold tracking-wider">
                   <tr>
-                    <th className="py-3 px-4">Administrador / Barbearia</th>
-                    <th className="py-3 px-4">Plano Contratado</th>
-                    <th className="py-3 px-4 text-center">Status Cliente</th>
-                    <th className="py-3 px-4">Cobrança & Assinatura AbacatePay</th>
-                    <th className="py-3 px-4 text-right">Ações</th>
+                    <th className="py-3.5 px-4">Administrador / Barbearia</th>
+                    <th className="py-3.5 px-4">Plano Contratado</th>
+                    <th className="py-3.5 px-4 text-center">Status Cliente</th>
+                    <th className="py-3.5 px-4">Cobrança & Assinatura AbacatePay</th>
+                    <th className="py-3.5 px-4 text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/40">
+                <tbody className="divide-y divide-[#374151]">
                   {filteredAdmins.map((admin) => (
-                    <tr key={admin.id} className="hover:bg-muted/20 transition-colors">
+                    <tr key={admin.id} className="hover:bg-[#1f2937]/50 transition-colors">
                       <td className="py-3.5 px-4">
-                        <div className="font-semibold text-foreground">{admin.name}</div>
-                        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                          <Mail className="w-3 h-3" />
+                        <div className="font-bold text-white">{admin.name}</div>
+                        <div className="text-xs text-gray-300 font-medium flex items-center gap-1.5 mt-0.5">
+                          <Mail className="w-3.5 h-3.5" />
                           <span>{admin.email}</span>
                         </div>
                         {admin.barbershop && (
-                          <div className="text-xs text-emerald-400 font-medium flex items-center gap-1 mt-1">
-                            <Building2 className="w-3 h-3" />
+                          <div className="text-xs text-amber-400 font-bold flex items-center gap-1 mt-1">
+                            <Building2 className="w-3.5 h-3.5" />
                             <span>{admin.barbershop.name}</span>
-                            <span className="text-muted-foreground font-mono text-[10px]">
+                            <span className="text-gray-300 font-mono text-[10px]">
                               (/{admin.barbershop.slug})
                             </span>
                           </div>
@@ -652,40 +626,40 @@ export default function AbacateCustomersManager() {
                       <td className="py-3.5 px-4">
                         {admin.subscription ? (
                           <div>
-                            <span className="font-semibold text-foreground block">
+                            <span className="font-bold text-white block">
                               {admin.subscription.planName}
                             </span>
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-xs text-gray-200 font-medium">
                               {formatPrice(admin.subscription.price)} / {admin.subscription.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
                             </div>
                             <span
-                              className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              className={`inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-bold ${
                                 admin.subscription.status === 'ACTIVE'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-[#059669] text-white border border-[#10b981]'
                                   : admin.subscription.status === 'TRIALING'
-                                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                  : 'bg-muted text-muted-foreground'
+                                  ? 'bg-[#d97706] text-white border border-[#f59e0b]'
+                                  : 'bg-[#1f2937] text-white border border-[#4b5563]'
                               }`}
                             >
                               {admin.subscription.status}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground italic">Sem plano ativo</span>
+                          <span className="text-xs text-gray-300 italic font-medium">Sem plano ativo</span>
                         )}
                       </td>
 
                       <td className="py-3.5 px-4 text-center">
                         {admin.isSynced ? (
                           <div className="inline-flex flex-col items-center gap-1">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-[#059669] text-white border border-[#10b981]">
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               Sincronizado
                             </span>
                             {admin.abacateCustomerId && (
                               <button
                                 onClick={() => copyToClipboard(admin.abacateCustomerId!, admin.id)}
-                                className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+                                className="text-[10px] text-gray-300 hover:text-white flex items-center gap-1 font-mono font-bold"
                                 title="Copiar ID na AbacatePay"
                               >
                                 <code>{admin.abacateCustomerId.substring(0, 14)}...</code>
@@ -698,7 +672,7 @@ export default function AbacateCustomersManager() {
                             )}
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b]">
                             <Clock className="w-3.5 h-3.5" />
                             Pendente
                           </span>
@@ -708,12 +682,12 @@ export default function AbacateCustomersManager() {
                       <td className="py-3.5 px-4">
                         {admin.hasAbacateBilling ? (
                           <div className="space-y-1">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-lime-500/10 text-lime-400 border border-lime-500/20">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#059669] text-white border border-[#10b981]">
                               <Receipt className="w-3 h-3" />
                               Cobrança Vinculada
                             </span>
                             {admin.subscription?.providerSubscriptionId && (
-                              <div className="text-[10px] font-mono text-muted-foreground">
+                              <div className="text-[10px] font-mono text-gray-300 font-bold">
                                 ID: {admin.subscription.providerSubscriptionId}
                               </div>
                             )}
@@ -722,7 +696,7 @@ export default function AbacateCustomersManager() {
                                 href={admin.invoice.hostedInvoiceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1"
+                                className="text-[11px] text-blue-400 font-bold hover:underline flex items-center gap-1"
                               >
                                 <span>Ver Checkout AbacatePay</span>
                                 <ExternalLink className="w-2.5 h-2.5" />
@@ -731,11 +705,11 @@ export default function AbacateCustomersManager() {
                           </div>
                         ) : (
                           <div className="space-y-1">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#dc2626] text-white border border-[#ef4444]">
                               Sem cobrança na AbacatePay
                             </span>
-                            <p className="text-[10px] text-muted-foreground/80">
-                              Gere uma assinatura para aparecer em /customers/
+                            <p className="text-[10px] text-gray-200 font-medium">
+                              Gere uma assinatura para vincular
                             </p>
                           </div>
                         )}
@@ -746,7 +720,7 @@ export default function AbacateCustomersManager() {
                           <button
                             onClick={() => handleSyncSubscriptionOne(admin.id)}
                             disabled={syncingSubId === admin.id}
-                            className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                            className="px-3 py-1.5 rounded-lg bg-[#059669] hover:bg-emerald-600 text-white border border-[#10b981] text-xs font-bold flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
                             title="Gera o checkout de assinatura na AbacatePay para este cliente"
                           >
                             {syncingSubId === admin.id ? (
@@ -760,7 +734,7 @@ export default function AbacateCustomersManager() {
                           <button
                             onClick={() => handleSyncOne(admin.id)}
                             disabled={syncingAdminId === admin.id}
-                            className="px-2 py-1.5 rounded-lg border border-border hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
+                            className="px-2.5 py-1.5 rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-50"
                             title="Atualizar dados cadastrais do cliente"
                           >
                             {syncingAdminId === admin.id ? (
@@ -782,11 +756,11 @@ export default function AbacateCustomersManager() {
 
       {/* SUBTAB 2: Clientes na AbacatePay */}
       {activeSubTab === 'abacate' && (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-border/60 bg-muted/10 flex items-center justify-between">
+        <div className="bg-[#111827] border border-[#374151] rounded-xl overflow-hidden shadow-xl">
+          <div className="p-4 border-b border-[#374151] bg-[#1f2937] flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-foreground">Base de Clientes na AbacatePay</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h3 className="text-sm font-extrabold text-white">Base de Clientes na AbacatePay</h3>
+              <p className="text-xs text-gray-200 mt-0.5 font-medium">
                 Clientes cadastrados diretamente no gateway de pagamentos via API v2.
               </p>
             </div>
@@ -794,7 +768,7 @@ export default function AbacateCustomersManager() {
               href="https://app.abacatepay.com/customers"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-semibold text-emerald-400 hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-emerald-400 hover:underline flex items-center gap-1"
             >
               <span>Painel AbacatePay</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -802,34 +776,34 @@ export default function AbacateCustomersManager() {
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-muted-foreground">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-emerald-500 mb-3" />
+            <div className="p-12 text-center text-white font-bold">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-400 mb-3" />
               <p className="text-sm">Consultando clientes na AbacatePay...</p>
             </div>
           ) : filteredAbacateCustomers.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">
-              <ShieldCheck className="w-8 h-8 mx-auto opacity-30 mb-3" />
-              <p className="text-sm">Nenhum cliente cadastrado na AbacatePay ainda.</p>
-              <p className="text-xs mt-1 text-muted-foreground/80">
+            <div className="p-12 text-center text-white font-medium">
+              <ShieldCheck className="w-8 h-8 mx-auto text-gray-400 mb-3" />
+              <p className="text-sm font-bold">Nenhum cliente cadastrado na AbacatePay ainda.</p>
+              <p className="text-xs mt-1 text-gray-300">
                 Clique em &quot;Sincronizar Clientes&quot; acima para exportar todos os admins de barbearias existentes.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs md:text-sm">
-                <thead className="bg-muted/30 text-muted-foreground border-b border-border text-[11px] uppercase tracking-wider">
+                <thead className="bg-[#1f2937] text-white border-b border-[#374151] text-[11px] uppercase font-bold tracking-wider">
                   <tr>
-                    <th className="py-3 px-4">ID Cliente</th>
-                    <th className="py-3 px-4">Nome / Razão</th>
-                    <th className="py-3 px-4">E-mail</th>
-                    <th className="py-3 px-4">Telefone</th>
-                    <th className="py-3 px-4">CPF / CNPJ</th>
-                    <th className="py-3 px-4">Metadata Vinculada</th>
+                    <th className="py-3.5 px-4">ID Cliente</th>
+                    <th className="py-3.5 px-4">Nome / Razão</th>
+                    <th className="py-3.5 px-4">E-mail</th>
+                    <th className="py-3.5 px-4">Telefone</th>
+                    <th className="py-3.5 px-4">CPF / CNPJ</th>
+                    <th className="py-3.5 px-4">Metadata Vinculada</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/40">
+                <tbody className="divide-y divide-[#374151]">
                   {filteredAbacateCustomers.map((customer) => (
-                    <tr key={customer.id} className="hover:bg-muted/20 transition-colors">
+                    <tr key={customer.id} className="hover:bg-[#1f2937]/50 transition-colors">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2">
                           <code className="text-xs font-mono text-emerald-400 font-bold">
@@ -837,50 +811,50 @@ export default function AbacateCustomersManager() {
                           </code>
                           <button
                             onClick={() => copyToClipboard(customer.id, customer.id)}
-                            className="text-muted-foreground hover:text-foreground"
+                            className="text-gray-300 hover:text-white p-1 rounded hover:bg-[#1f2937]"
                             title="Copiar ID"
                           >
                             {copiedId === customer.id ? (
-                              <Check className="w-3 h-3 text-emerald-400" />
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
                             ) : (
-                              <Copy className="w-3 h-3" />
+                              <Copy className="w-3.5 h-3.5" />
                             )}
                           </button>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 font-semibold text-foreground">
+                      <td className="py-3.5 px-4 font-bold text-white">
                         {customer.name || 'Sem nome'}
                       </td>
 
-                      <td className="py-3.5 px-4 text-foreground">
+                      <td className="py-3.5 px-4 text-white font-medium">
                         {customer.email}
                       </td>
 
-                      <td className="py-3.5 px-4 text-muted-foreground">
+                      <td className="py-3.5 px-4 text-gray-200 font-medium">
                         {customer.cellphone || '—'}
                       </td>
 
-                      <td className="py-3.5 px-4 text-muted-foreground font-mono text-xs">
+                      <td className="py-3.5 px-4 text-gray-200 font-mono text-xs font-bold">
                         {customer.taxId || '—'}
                       </td>
 
                       <td className="py-3.5 px-4">
                         {customer.metadata ? (
-                          <div className="text-[11px] text-muted-foreground">
+                          <div className="text-[11px] text-gray-200 font-medium">
                             {customer.metadata.barbershopName && (
-                              <span className="font-medium text-foreground block">
+                              <span className="font-bold text-white block">
                                 {customer.metadata.barbershopName}
                               </span>
                             )}
                             {customer.metadata.role && (
-                              <span className="text-[10px] text-emerald-400">
+                              <span className="text-[10px] text-emerald-400 font-bold">
                                 {customer.metadata.role}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground italic">—</span>
+                          <span className="text-xs text-gray-400 italic">—</span>
                         )}
                       </td>
                     </tr>
@@ -894,18 +868,18 @@ export default function AbacateCustomersManager() {
 
       {/* MODAL: Cadastrar Cliente Manual */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-lg shadow-2xl p-6 relative">
-            <div className="flex items-center justify-between pb-4 border-b border-border mb-5">
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+          <div className="bg-[#111827] border border-[#374151] rounded-2xl w-full max-w-lg shadow-2xl p-6 relative text-white space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-[#374151] mb-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                <div className="w-8 h-8 rounded-lg bg-[#059669] border border-[#10b981] flex items-center justify-center text-white">
                   <Users className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-bold text-foreground">Cadastrar Cliente no Gateway</h3>
+                <h3 className="text-base font-bold text-white">Cadastrar Cliente no Gateway</h3>
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-gray-300 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -913,7 +887,7 @@ export default function AbacateCustomersManager() {
 
             <form onSubmit={handleCreateCustomer} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">
+                <label className="text-xs font-bold text-white mb-1 block">
                   E-mail do Cliente *
                 </label>
                 <input
@@ -922,12 +896,12 @@ export default function AbacateCustomersManager() {
                   placeholder="admin@barbearia.com"
                   value={createForm.email}
                   onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs md:text-sm text-foreground focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-xl text-xs md:text-sm text-white font-medium focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">
+                <label className="text-xs font-bold text-white mb-1 block">
                   Nome Completo / Razão Social
                 </label>
                 <input
@@ -935,13 +909,13 @@ export default function AbacateCustomersManager() {
                   placeholder="Nome do Dono ou Barbearia"
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs md:text-sm text-foreground focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-xl text-xs md:text-sm text-white font-medium focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-foreground mb-1 block">
+                  <label className="text-xs font-bold text-white mb-1 block">
                     WhatsApp / Telefone
                   </label>
                   <input
@@ -949,12 +923,12 @@ export default function AbacateCustomersManager() {
                     placeholder="(11) 99999-9999"
                     value={createForm.cellphone}
                     onChange={(e) => setCreateForm({ ...createForm, cellphone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs md:text-sm text-foreground focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-xl text-xs md:text-sm text-white font-medium focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-foreground mb-1 block">
+                  <label className="text-xs font-bold text-white mb-1 block">
                     CPF / CNPJ
                   </label>
                   <input
@@ -962,13 +936,13 @@ export default function AbacateCustomersManager() {
                     placeholder="000.000.000-00"
                     value={createForm.taxId}
                     onChange={(e) => setCreateForm({ ...createForm, taxId: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs md:text-sm text-foreground focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-xl text-xs md:text-sm text-white font-medium focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">
+                <label className="text-xs font-bold text-white mb-1 block">
                   CEP (Opcional)
                 </label>
                 <input
@@ -976,22 +950,22 @@ export default function AbacateCustomersManager() {
                   placeholder="00000-000"
                   value={createForm.zipCode}
                   onChange={(e) => setCreateForm({ ...createForm, zipCode: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs md:text-sm text-foreground focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 bg-[#030712] border border-[#374151] rounded-xl text-xs md:text-sm text-white font-medium focus:outline-none focus:border-blue-500"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border mt-5">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#374151] mt-5">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-border hover:bg-muted text-xs font-semibold text-muted-foreground"
+                  className="px-4 py-2.5 rounded-xl border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-xs font-bold text-white"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={creatingCustomer}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold flex items-center gap-2 shadow-md disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-[#059669] hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-2 border border-[#10b981] shadow-md disabled:opacity-50"
                 >
                   {creatingCustomer ? (
                     <>

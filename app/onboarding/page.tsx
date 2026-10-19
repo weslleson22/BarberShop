@@ -24,20 +24,20 @@ export default function OnboardingRoutePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
         <DropdownHeader />
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-400" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
       </div>
     )
   }
 
   if (user?.role === 'DEVELOPER') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
         <DropdownHeader />
         <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mx-auto" />
-          <p className="text-slate-400 text-sm">Carregando Cockpit de Onboarding do Desenvolvedor...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent mx-auto" />
+          <p className="text-white font-normal text-sm">Carregando Cockpit de Onboarding do Desenvolvedor...</p>
         </div>
       </div>
     )

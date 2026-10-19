@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createUser, createBarbershop } from '@/lib/auth'
 import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
 import { AuditAction, AuditEntity } from '@prisma/client'
+import { notifyNewRegistration, sendCompanyWelcomeEmail } from '@/lib/external-notifications'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -92,6 +93,52 @@ export async function POST(request: NextRequest) {
         userAgent: ctx.userAgent,
       })
 
+      // Notificação externa integrada (Telegram / Email)
+      try {
+        await notifyNewRegistration({
+          type: 'COMPANY',
+          name: result.adminUser.user.name,
+          email: result.adminUser.user.email,
+          role: 'ADMIN (Proprietário)',
+          phone: result.adminUser.user.phone,
+          barbershopName: result.barbershop.name,
+          barbershopEmail: result.barbershop.email,
+          barbershopPhone: result.barbershop.phone,
+          barbershopAddress: result.barbershop.address,
+          barbershopSlug: result.barbershop.slug,
+          isTrial: true,
+          trialDays: 7,
+          trialEndsAt: trialEndsAt.toISOString(),
+          origin: 'Cadastro Público de Empresa (/register)',
+          ipAddress: ctx.ipAddress,
+          userAgent: ctx.userAgent,
+        })
+      } catch (notifErr) {
+        console.warn('Failed to send new barbershop notification:', notifErr)
+      }
+
+      // E-mail caloroso de boas-vindas com orientações, links essenciais e suporte para o novo cliente
+      try {
+        const origin =
+          request.headers.get('origin') ||
+          (request.headers.get('referer') ? new URL(request.headers.get('referer')!).origin : null) ||
+          process.env.NEXTAUTH_URL ||
+          process.env.NEXT_PUBLIC_APP_URL ||
+          'http://localhost:3000'
+
+        await sendCompanyWelcomeEmail({
+          companyName: result.barbershop.name,
+          adminName: result.adminUser.user.name,
+          adminEmail: result.adminUser.user.email,
+          slug: result.barbershop.slug,
+          trialDays: 7,
+          trialEndsAt: trialEndsAt,
+          baseUrl: origin,
+        })
+      } catch (welcomeErr) {
+        console.warn('Failed to dispatch company welcome email:', welcomeErr)
+      }
+
       // Concede acesso total imediato e define cookie de autenticação
       const response = NextResponse.json({
         success: true,
@@ -151,6 +198,22 @@ export async function POST(request: NextRequest) {
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       })
+
+      // Notificação externa integrada (Telegram / Email)
+      try {
+        await notifyNewRegistration({
+          type: 'CLIENT',
+          name: result.user.name,
+          email: result.user.email,
+          role: 'CLIENT',
+          phone: result.user.phone,
+          origin: 'Cadastro Público (/register)',
+          ipAddress: ctx.ipAddress,
+          userAgent: ctx.userAgent,
+        })
+      } catch (notifErr) {
+        console.warn('Failed to send new client notification:', notifErr)
+      }
 
       const response = NextResponse.json(result)
       response.cookies.set('auth-token', result.token, {

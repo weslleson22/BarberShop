@@ -12,7 +12,7 @@ interface Notification {
   createdAt: string
 }
 
-const POLL_INTERVAL_MS = 10 * 1000
+const POLL_INTERVAL_MS = 60 * 1000
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -22,9 +22,12 @@ export default function NotificationBell() {
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all')
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = useCallback(async (isBackground = false) => {
+    // Evita gastar requisições e invocações de Serverless na Vercel se a aba estiver em segundo plano
+    if (typeof document !== 'undefined' && document.hidden) return
+
     try {
-      setLoading(true)
+      if (!isBackground) setLoading(true)
       const res = await fetch('/api/notifications', {
         headers: getAuthHeaders(),
         credentials: 'include',
@@ -39,24 +42,32 @@ export default function NotificationBell() {
     } catch (err) {
       console.error('Erro ao buscar notificações:', err)
     } finally {
-      setLoading(false)
+      if (!isBackground) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, POLL_INTERVAL_MS)
+    const interval = setInterval(() => fetchNotifications(true), POLL_INTERVAL_MS)
 
     const handleRefresh = () => {
-      fetchNotifications()
+      fetchNotifications(true)
     }
+    const handleVisibilityOrFocus = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        fetchNotifications(true)
+      }
+    }
+
     window.addEventListener('notification-refresh', handleRefresh)
+    window.addEventListener('focus', handleVisibilityOrFocus)
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus)
 
     let bc: BroadcastChannel | null = null
     try {
       bc = new BroadcastChannel('barbershop-notifications')
       bc.onmessage = () => {
-        fetchNotifications()
+        fetchNotifications(true)
       }
     } catch {
       // BroadcastChannel não suportado em ambientes restritos
@@ -65,6 +76,8 @@ export default function NotificationBell() {
     return () => {
       clearInterval(interval)
       window.removeEventListener('notification-refresh', handleRefresh)
+      window.removeEventListener('focus', handleVisibilityOrFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus)
       if (bc) bc.close()
     }
   }, [fetchNotifications])

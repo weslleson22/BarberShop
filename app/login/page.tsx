@@ -30,8 +30,16 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resetSuccess, setResetSuccess] = useState(false)
 
-  // Carregar e-mail salvo anteriormente, se houver
+  // Estados do Modal "Esqueci minha senha"
+  const [showForgotModal, setShowForgotModal] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotSuccess, setForgotSuccess] = useState('')
+  const [forgotError, setForgotError] = useState('')
+
+  // Carregar e-mail salvo anteriormente e checar reset bem-sucedido
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.title = 'Entrar na Conta | Agendamentos Online'
@@ -41,10 +49,41 @@ export default function LoginPage() {
       if (savedEmail) {
         setEmail(savedEmail)
       }
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('reset') === 'success') {
+        setResetSuccess(true)
+      }
     } catch {
       // Ignora erro de acesso a localStorage
     }
   }, [])
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setForgotLoading(true)
+    setForgotError('')
+    setForgotSuccess('')
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setForgotSuccess(data.message || 'E-mail de recuperação enviado com sucesso!')
+      } else {
+        setForgotError(data.error || 'Erro ao enviar e-mail de recuperação.')
+      }
+    } catch {
+      setForgotError('Erro de conexão ao solicitar recuperação de senha.')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
 
   // Obter redirecionamento padrão baseado na role
   const getRedirectUrl = (userRole: string) => {
@@ -168,6 +207,7 @@ export default function LoginPage() {
                     src="/images/scheduling-hero.jpg"
                     alt="Interface da Plataforma de Agendamentos"
                     fill
+                    sizes="(max-width: 1024px) 100vw, 480px"
                     className="object-cover object-center"
                     priority
                   />
@@ -255,6 +295,19 @@ export default function LoginPage() {
                 </p>
               </div>
 
+              {/* Banner de Sucesso pós-reset de senha */}
+              {resetSuccess && (
+                <div 
+                  role="alert"
+                  className="mb-6 p-3.5 rounded-lg bg-emerald-950/60 border border-emerald-700 text-emerald-200 text-sm flex items-start space-x-3 animate-in fade-in"
+                >
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 font-medium">
+                    Senha redefinida com sucesso! Você já pode entrar com sua nova senha.
+                  </div>
+                </div>
+              )}
+
               {/* Mensagem de Erro (Alerta Customizado) */}
               {error && (
                 <div 
@@ -293,11 +346,9 @@ export default function LoginPage() {
 
                 {/* Campo de Senha */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-gray-300">
-                      Senha
-                    </label>
-                  </div>
+                  <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
+                    Senha
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                       <Lock className="w-4 h-4" />
@@ -336,9 +387,18 @@ export default function LoginPage() {
                     <span>Lembrar meu e-mail</span>
                   </label>
 
-                  <span className="text-gray-500 hover:text-gray-400 cursor-help" title="Entre em contato com o suporte ou gestor se esqueceu sua senha">
-                    Ajuda com acesso?
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotEmail(email || '')
+                      setForgotError('')
+                      setForgotSuccess('')
+                      setShowForgotModal(true)
+                    }}
+                    className="text-blue-400 hover:text-blue-300 font-medium transition-colors cursor-pointer"
+                  >
+                    Esqueceu a senha?
+                  </button>
                 </div>
 
                 {/* Botão de Envio (Entrar) */}
@@ -384,6 +444,114 @@ export default function LoginPage() {
           </section>
 
         </div>
+
+        {/* Modal de Recuperação de Senha via Resend */}
+        {showForgotModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+            <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-7 shadow-2xl space-y-5 animate-in zoom-in-95">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-base">Redefinir Senha</h3>
+                    <p className="text-xs text-gray-400">Recuperação segura via e-mail</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="text-gray-400 hover:text-white text-sm px-2 py-1 rounded-lg hover:bg-gray-800 transition"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {forgotSuccess ? (
+                <div className="space-y-4 py-2">
+                  <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-700/50 text-emerald-200 text-xs sm:text-sm space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-emerald-400">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>E-mail Enviado!</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      {forgotSuccess}
+                    </p>
+                    <p className="text-[11px] text-emerald-300/80">
+                      O link expira em 1 hora por segurança. Verifique também sua caixa de spam ou lixo eletrônico.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition"
+                  >
+                    Entendido, voltar ao login
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotSubmit} className="space-y-4">
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    Informe o e-mail cadastrado na sua conta. Enviaremos um link de acesso seguro para você cadastrar uma nova senha.
+                  </p>
+
+                  {forgotError && (
+                    <div className="p-3 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span className="leading-relaxed">{forgotError}</span>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1.5 uppercase tracking-wider">
+                      Seu E-mail Cadastrado:
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="email"
+                        required
+                        autoFocus
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="seu.email@exemplo.com"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-950 border border-gray-800 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-blue-500 font-sans"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotModal(false)}
+                      className="w-1/2 py-2.5 px-4 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold transition"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={forgotLoading || !forgotEmail}
+                      className="w-1/2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {forgotLoading ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Enviando...</span>
+                        </>
+                      ) : (
+                        <span>Enviar Link</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Rodapé Simples */}

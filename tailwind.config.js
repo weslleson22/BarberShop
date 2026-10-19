@@ -60,7 +60,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['var(--font-roboto)', 'Roboto', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['var(--font-roboto-mono)', 'Roboto Mono', 'monospace'],
       },
     },
   },

@@ -143,6 +143,7 @@ export default function Features() {
                   src="/images/scheduling-mobile-preview.jpg"
                   alt="Aplicativo de Agendamento de Serviços"
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 580px"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-slate-950/40" />

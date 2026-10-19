@@ -116,6 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return
 
     const verifyActiveSession = async () => {
+      // Se a aba estiver em segundo plano/oculta, não faz requisição
+      if (typeof document !== 'undefined' && document.hidden) return
+
       try {
         const token = localStorage.getItem('auth_token')
         if (!token) return
@@ -140,11 +143,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    window.addEventListener('focus', verifyActiveSession)
-    const interval = setInterval(verifyActiveSession, 25000)
+    const handleFocusOrVisible = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        verifyActiveSession()
+      }
+    }
+
+    window.addEventListener('focus', handleFocusOrVisible)
+    document.addEventListener('visibilitychange', handleFocusOrVisible)
+    const interval = setInterval(verifyActiveSession, 45000)
 
     return () => {
-      window.removeEventListener('focus', verifyActiveSession)
+      window.removeEventListener('focus', handleFocusOrVisible)
+      document.removeEventListener('visibilitychange', handleFocusOrVisible)
       clearInterval(interval)
     }
   }, [user])

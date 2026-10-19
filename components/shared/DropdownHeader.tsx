@@ -27,8 +27,16 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/configuracoes': { title: 'Configurações', subtitle: 'Preferências da Conta' },
   '/perfil': { title: 'Meu Perfil', subtitle: 'Dados Pessoais & Unidade' },
   '/developer': { title: 'Painel SaaS', subtitle: 'Gestão Global de Barbearias' },
-  '/developer/audit-logs': { title: 'Audit Logs', subtitle: 'Rastreamento de Ações do Sistema' },
-  '/developer/monitoring': { title: 'Monitoramento', subtitle: 'System Health & Telemetria' },
+  '/developer/online-users': { title: 'Tempo Real & Auditoria', subtitle: 'Usuários Online' },
+  '/developer/audit-logs': { title: 'Tempo Real & Auditoria', subtitle: 'Audit Logs' },
+  '/developer/reports': { title: 'Tempo Real & Auditoria', subtitle: 'Relatórios' },
+  '/developer/monitoring': { title: 'Tempo Real & Auditoria', subtitle: 'System Health' },
+  '/developer/realtime': { title: 'Tempo Real & Auditoria', subtitle: 'Telemetria & Métricas' },
+  '/developer/credentials': { title: 'Gestão de Credenciais', subtitle: 'Controle Restrito de Senhas & Acessos' },
+  '/developer/notifications-settings': { title: 'Notificações & Alertas', subtitle: 'Configurações Globais & Canais' },
+  '/developer/notifications-settings/telegram': { title: 'Notificações & Alertas', subtitle: 'Telegram' },
+  '/developer/notifications-settings/email': { title: 'Notificações & Alertas', subtitle: 'E-mail SMTP' },
+  '/developer/notifications-settings/history': { title: 'Notificações & Alertas', subtitle: 'Histórico' },
   '/developer/backup': { title: 'Backup & Restore', subtitle: 'Gestão de Dados' },
   '/developer/billing': { title: 'Faturamento & Cobranças', subtitle: 'AbacatePay, Cobranças & Checkout' },
   '/developer/plans': { title: 'Planos', subtitle: 'Tiers & Configuração' },
@@ -75,11 +83,11 @@ function HeaderContent({
               <Separator orientation="vertical" className="h-5 bg-sidebar-border" />
 
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-white tracking-tight">
+                <span className="text-sm font-extrabold text-white tracking-tight">
                   {currentPageInfo.title}
                 </span>
                 {currentPageInfo.subtitle && (
-                  <span className="text-[11px] text-muted-foreground hidden sm:block">
+                  <span className="text-[11px] text-gray-200 font-medium hidden sm:block">
                     {currentPageInfo.subtitle}
                   </span>
                 )}
@@ -89,13 +97,13 @@ function HeaderContent({
             {/* Centro: Barra de Busca (Desktop) */}
             <div className="hidden md:flex flex-1 max-w-sm mx-4">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                 <input
                   type="text"
                   placeholder="Buscar clientes, serviços, barbeiros..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-white placeholder-muted-foreground focus:outline-none focus:border-amber-400 focus:bg-gray-900 transition-colors"
+                  className="w-full pl-9 pr-4 py-1.5 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white placeholder-gray-400 font-medium focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
@@ -106,8 +114,8 @@ function HeaderContent({
               {user && user.role !== 'DEVELOPER' && <NotificationBell />}
 
               {/* Identificação do Usuário */}
-              <div className="flex items-center gap-2.5 p-1.5 pl-2.5 bg-gray-900 border border-gray-800 rounded-lg">
-                <div className="w-7 h-7 bg-amber-500 text-black font-bold rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="flex items-center gap-2.5 p-1.5 pl-2.5 bg-[#111827] border border-[#374151] rounded-lg">
+                <div className="w-7 h-7 bg-[#d97706] text-white font-black rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
@@ -120,21 +128,21 @@ function HeaderContent({
                       }}
                     />
                   ) : null}
-                  <span className={`text-black font-extrabold text-xs ${user?.avatar ? 'hidden' : 'flex'}`}>
+                  <span className={`text-white font-extrabold text-xs ${user?.avatar ? 'hidden' : 'flex'}`}>
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="hidden sm:block min-w-0 pr-1">
-                  <p className="text-white font-medium text-xs truncate max-w-[130px] leading-tight">
+                  <p className="text-white font-bold text-xs truncate max-w-[130px] leading-tight">
                     {user?.name || 'Usuário'}
                   </p>
-                  <p className="text-amber-400 text-[10px] leading-tight font-semibold">
+                  <p className="text-amber-400 text-[10px] leading-tight font-bold">
                     {ROLE_LABELS[(user?.role as UserRole) || 'CLIENT']}
                   </p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-white/5 rounded-md transition-all flex-shrink-0"
+                  className="p-1.5 text-gray-300 hover:text-white hover:bg-[#dc2626] rounded-md transition-all flex-shrink-0"
                   title="Sair da conta"
                   aria-label="Sair da conta"
                 >

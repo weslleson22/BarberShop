@@ -702,7 +702,6 @@ function AssinaturaContent() {
                         </div>
                       ) : (
                         <>
-                          {/* Botão Oficial: Redireciona para o checkout oficial hospedado da AbacatePay */}
                           <button
                             onClick={() => handleHostedCheckout(p)}
                             disabled={Boolean(checkoutLoading)}
@@ -711,35 +710,12 @@ function AssinaturaContent() {
                             {checkoutLoading === p.id ? (
                               <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
-                                <span>Redirecionando para AbacatePay...</span>
+                                <span>Redirecionando...</span>
                               </>
                             ) : (
                               <>
                                 <ShieldCheck className="w-4 h-4 text-emerald-200 group-hover:scale-110 transition-transform" />
-                                <span>Contratar via AbacatePay</span>
-                                <ExternalLink className="w-4 h-4 text-emerald-200 ml-auto group-hover:translate-x-0.5 transition-transform" />
-                              </>
-                            )}
-                          </button>
-
-                          <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground pt-0.5">
-                            <Lock className="w-3 h-3 text-emerald-400" />
-                            <span>Checkout oficial AbacatePay • PIX e Cartão</span>
-                          </div>
-
-                          {/* Simulação Imediata (Dev Mode) */}
-                          <button
-                            onClick={() => handleDirectSimulate(p)}
-                            disabled={Boolean(checkoutLoading)}
-                            className="w-full py-1.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-medium text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 mt-1"
-                            title="Ativação imediata para testes em ambiente de desenvolvimento"
-                          >
-                            {checkoutLoading === `${p.id}_SIMULATE` ? (
-                              <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-amber-300" />
-                            ) : (
-                              <>
-                                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                                <span>Simulação Instantânea (Dev Mode)</span>
+                                <span>Fazer assinatura do plano.</span>
                               </>
                             )}
                           </button>

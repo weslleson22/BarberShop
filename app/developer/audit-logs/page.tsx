@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getAuthHeaders } from "@/lib/utils";
 import DropdownHeader from "@/components/shared/DropdownHeader";
+import RealtimeNavTabs from "@/components/developer/RealtimeNavTabs";
 import {
   CheckCircle2, XCircle, RefreshCw, Search, ChevronLeft, ChevronRight,
   ClipboardList, User, Globe, X, AlertTriangle, Filter, Clock, Activity,
@@ -75,24 +76,24 @@ interface ActionConfig {
 
 function getActionConfig(action: string): ActionConfig {
   if (action === "LOGIN")
-    return { dot:"bg-emerald-500", text:"text-emerald-400", bg:"bg-emerald-500/10", border:"border-emerald-500/20", icon:<Shield className="h-3.5 w-3.5"/>, label:"Entrou no sistema" };
+    return { dot:"bg-[#10b981]", text:"text-white font-bold", bg:"bg-[#059669]", border:"border-[#10b981]", icon:<Shield className="h-3.5 w-3.5 text-white"/>, label:"Entrou no sistema" };
   if (action === "LOGOUT")
-    return { dot:"bg-slate-400", text:"text-slate-400", bg:"bg-slate-500/10", border:"border-slate-500/20", icon:<Shield className="h-3.5 w-3.5"/>, label:"Saiu do sistema" };
+    return { dot:"bg-[#9ca3af]", text:"text-white font-bold", bg:"bg-[#374151]", border:"border-[#4b5563]", icon:<Shield className="h-3.5 w-3.5 text-white"/>, label:"Saiu do sistema" };
   if (action === "LOGIN_FAILED")
-    return { dot:"bg-red-500", text:"text-red-400", bg:"bg-red-500/10", border:"border-red-500/20", icon:<XCircle className="h-3.5 w-3.5"/>, label:"Falha de autenticação" };
+    return { dot:"bg-[#ef4444]", text:"text-white font-bold", bg:"bg-[#dc2626]", border:"border-[#ef4444]", icon:<XCircle className="h-3.5 w-3.5 text-white"/>, label:"Falha de autenticação" };
   if (action.includes("APPOINTMENT"))
-    return { dot:"bg-blue-500", text:"text-blue-400", bg:"bg-blue-500/10", border:"border-blue-500/20", icon:<Calendar className="h-3.5 w-3.5"/>, label: action.includes("CREATED") ? "Agendamento criado" : action.includes("CANCELLED") ? "Agendamento cancelado" : action.includes("COMPLETED") ? "Atendimento concluído" : "Agendamento atualizado" };
+    return { dot:"bg-[#3b82f6]", text:"text-white font-bold", bg:"bg-[#2563eb]", border:"border-[#3b82f6]", icon:<Calendar className="h-3.5 w-3.5 text-white"/>, label: action.includes("CREATED") ? "Agendamento criado" : action.includes("CANCELLED") ? "Agendamento cancelado" : action.includes("COMPLETED") ? "Atendimento concluído" : "Agendamento atualizado" };
   if (action.includes("CLIENT"))
-    return { dot:"bg-violet-500", text:"text-violet-400", bg:"bg-violet-500/10", border:"border-violet-500/20", icon:<User className="h-3.5 w-3.5"/>, label: action.includes("CREATED") ? "Cliente cadastrado" : action.includes("DELETED") ? "Cliente removido" : "Cliente atualizado" };
+    return { dot:"bg-[#8b5cf6]", text:"text-white font-bold", bg:"bg-[#7c3aed]", border:"border-[#8b5cf6]", icon:<User className="h-3.5 w-3.5 text-white"/>, label: action.includes("CREATED") ? "Cliente cadastrado" : action.includes("DELETED") ? "Cliente removido" : "Cliente atualizado" };
   if (action.includes("SERVICE"))
-    return { dot:"bg-yellow-500", text:"text-yellow-400", bg:"bg-yellow-500/10", border:"border-yellow-500/20", icon:<Scissors className="h-3.5 w-3.5"/>, label: action.includes("CREATED") ? "Serviço criado" : action.includes("DELETED") ? "Serviço removido" : "Serviço atualizado" };
+    return { dot:"bg-[#f59e0b]", text:"text-white font-bold", bg:"bg-[#d97706]", border:"border-[#f59e0b]", icon:<Scissors className="h-3.5 w-3.5 text-white"/>, label: action.includes("CREATED") ? "Serviço criado" : action.includes("DELETED") ? "Serviço removido" : "Serviço atualizado" };
   if (action.includes("SUBSCRIPTION") || action.includes("TRIAL") || action.includes("PAYMENT"))
-    return { dot:"bg-orange-500", text:"text-orange-400", bg:"bg-orange-500/10", border:"border-orange-500/20", icon:<CreditCard className="h-3.5 w-3.5"/>, label: action.includes("PAYMENT_RECEIVED") ? "Pagamento recebido" : action.includes("PAYMENT_FAILED") ? "Pagamento falhou" : action.includes("TRIAL_STARTED") ? "Trial iniciado" : "Assinatura atualizada" };
+    return { dot:"bg-[#f97316]", text:"text-white font-bold", bg:"bg-[#ea580c]", border:"border-[#f97316]", icon:<CreditCard className="h-3.5 w-3.5 text-white"/>, label: action.includes("PAYMENT_RECEIVED") ? "Pagamento recebido" : action.includes("PAYMENT_FAILED") ? "Pagamento falhou" : action.includes("TRIAL_STARTED") ? "Trial iniciado" : "Assinatura atualizada" };
   if (action.includes("BARBERSHOP"))
-    return { dot:"bg-cyan-500", text:"text-cyan-400", bg:"bg-cyan-500/10", border:"border-cyan-500/20", icon:<Settings className="h-3.5 w-3.5"/>, label: action.includes("APPROVED") ? "Barbearia aprovada" : action.includes("SUSPENDED") ? "Barbearia suspensa" : "Barbearia criada" };
+    return { dot:"bg-[#06b6d4]", text:"text-white font-bold", bg:"bg-[#0891b2]", border:"border-[#06b6d4]", icon:<Settings className="h-3.5 w-3.5 text-white"/>, label: action.includes("APPROVED") ? "Barbearia aprovada" : action.includes("SUSPENDED") ? "Barbearia suspensa" : "Barbearia criada" };
   if (action.includes("FAILED") || action.includes("ERROR"))
-    return { dot:"bg-red-500", text:"text-red-400", bg:"bg-red-500/10", border:"border-red-500/20", icon:<AlertTriangle className="h-3.5 w-3.5"/>, label:"Operação falhou" };
-  return { dot:"bg-gray-500", text:"text-gray-400", bg:"bg-gray-500/10", border:"border-gray-500/20", icon:<Activity className="h-3.5 w-3.5"/>, label: action.replace(/_/g," ").toLowerCase() };
+    return { dot:"bg-[#ef4444]", text:"text-white font-bold", bg:"bg-[#dc2626]", border:"border-[#ef4444]", icon:<AlertTriangle className="h-3.5 w-3.5 text-white"/>, label:"Operação falhou" };
+  return { dot:"bg-[#6b7280]", text:"text-white font-bold", bg:"bg-[#1f2937]", border:"border-[#374151]", icon:<Activity className="h-3.5 w-3.5 text-white"/>, label: action.replace(/_/g," ").toLowerCase() };
 }
 
 // ── Descrição legível para o Feed ───────────────────────────────
@@ -129,22 +130,22 @@ function UserAvatar({ user, size = "sm" }: { user: AuditLogEntry["user"]; size?:
   const dim = size === "sm" ? "h-7 w-7 text-[10px]" : "h-9 w-9 text-xs";
   if (!user) {
     return (
-      <div className={`${dim} rounded-full bg-muted flex items-center justify-center shrink-0`}>
-        <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+      <div className={`${dim} rounded-full bg-[#1f2937] border border-[#374151] flex items-center justify-center shrink-0`}>
+        <Activity className="h-3.5 w-3.5 text-white" />
       </div>
     );
   }
   const initials = user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
   const colors: Record<string, string> = {
-    DEVELOPER: "bg-purple-600",
-    ADMIN: "bg-amber-600",
-    BARBER: "bg-blue-600",
-    RECEPTIONIST: "bg-emerald-600",
-    CLIENT: "bg-rose-600",
+    DEVELOPER: "bg-[#7c3aed]",
+    ADMIN: "bg-[#d97706]",
+    BARBER: "bg-[#2563eb]",
+    RECEPTIONIST: "bg-[#059669]",
+    CLIENT: "bg-[#4b5563]",
   };
-  const color = colors[user.role] ?? "bg-gray-600";
+  const color = colors[user.role] ?? "bg-[#374151]";
   return (
-    <div className={`${dim} rounded-full ${color} flex items-center justify-center shrink-0 font-bold text-white`}>
+    <div className={`${dim} rounded-full ${color} flex items-center justify-center shrink-0 font-bold text-white shadow-sm`}>
       {user.avatar
         ? <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
         : initials}
@@ -240,17 +241,17 @@ function getLogRequest(log: AuditLogEntry): { method: string; path: string; full
 function getMethodBadge(method: string) {
   switch (method) {
     case "GET":
-      return "bg-sky-500/10 text-sky-400 border-sky-500/30";
+      return "bg-[#2563eb] text-white border-[#3b82f6]";
     case "POST":
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+      return "bg-[#059669] text-white border-[#10b981]";
     case "PUT":
-      return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+      return "bg-[#d97706] text-white border-[#f59e0b]";
     case "PATCH":
-      return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+      return "bg-[#7c3aed] text-white border-[#8b5cf6]";
     case "DELETE":
-      return "bg-rose-500/10 text-rose-400 border-rose-500/30";
+      return "bg-[#dc2626] text-white border-[#ef4444]";
     default:
-      return "bg-card text-muted-foreground border-border";
+      return "bg-[#1f2937] text-white border-[#374151]";
   }
 }
 
@@ -266,13 +267,13 @@ function getLogStatus(log: AuditLogEntry): { code: number; text: string; color: 
   }
 
   if (code >= 200 && code < 300) {
-    return { code, text: `${code}`, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" };
+    return { code, text: `${code}`, color: "text-white font-bold", bg: "bg-[#059669]", border: "border-[#10b981]" };
   } else if (code >= 300 && code < 400) {
-    return { code, text: `${code}`, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" };
+    return { code, text: `${code}`, color: "text-white font-bold", bg: "bg-[#0891b2]", border: "border-[#06b6d4]" };
   } else if (code >= 400 && code < 500) {
-    return { code, text: `${code}`, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" };
+    return { code, text: `${code}`, color: "text-white font-bold", bg: "bg-[#d97706]", border: "border-[#f59e0b]" };
   } else {
-    return { code, text: `${code}`, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" };
+    return { code, text: `${code}`, color: "text-white font-bold", bg: "bg-[#dc2626]", border: "border-[#ef4444]" };
   }
 }
 
@@ -489,6 +490,7 @@ export default function AuditLogsPage() {
 
   // ── Sincronização em segundo plano (Fallback & Garantia Real-Time) ──
   const syncLatestLogs = useCallback(async () => {
+    if (typeof document !== "undefined" && document.hidden) return;
     try {
       const token = typeof window !== "undefined"
         ? (localStorage.getItem("auth_token") || localStorage.getItem("auth-token") || "")
@@ -543,11 +545,17 @@ export default function AuditLogsPage() {
     isUnmountedRef.current = false;
     if (user?.role === "DEVELOPER") {
       connectSSE();
-      // Polling de redundância a cada 4 segundos garante dados frescos mesmo se o SSE oscilar
-      const interval = setInterval(syncLatestLogs, 4000);
+      // Polling de redundância a cada 12 segundos garante dados frescos sem sobrecarregar a Vercel
+      const interval = setInterval(syncLatestLogs, 12000);
+      const handleVisible = () => {
+        if (typeof document !== "undefined" && !document.hidden) syncLatestLogs();
+      };
+      document.addEventListener("visibilitychange", handleVisible);
+
       return () => {
         isUnmountedRef.current = true;
         clearInterval(interval);
+        document.removeEventListener("visibilitychange", handleVisible);
         if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
         sseRef.current?.close();
       };
@@ -573,86 +581,89 @@ export default function AuditLogsPage() {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
+    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
       <DropdownHeader />
 
-      <main className="w-full px-4 md:px-6 max-w-[1600px] mx-auto space-y-4">
+      <main className="w-full px-4 md:px-6 max-w-[1600px] mx-auto space-y-6 pt-4">
+        {/* Navegação por Subitens / Abas */}
+        <RealtimeNavTabs activeTab="audit-logs" />
 
         {/* ── Header ──────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-4 pt-2">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-              <ClipboardList className="h-4 w-4 text-primary" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2563eb] border border-[#3b82f6] shadow-sm">
+              <ClipboardList className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">Audit Logs</h1>
-              <p className="text-[11px] text-muted-foreground leading-none">
-                Rastreamento em tempo real de todas as ações
+              <h1 className="text-xl font-bold tracking-tight text-white">Audit Logs</h1>
+              <p className="text-xs text-white font-medium leading-none mt-1">
+                Rastreamento e auditoria em tempo real de todas as ações
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             {/* SSE status indicator */}
-            <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border ${
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border shadow-sm ${
               sseStatus === "live"
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                ? "bg-[#059669] border-[#10b981] text-white"
                 : sseStatus === "connecting"
-                ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
+                ? "bg-[#d97706] border-[#f59e0b] text-white"
                 : sseStatus === "error"
-                ? "bg-red-500/10 border-red-500/30 text-red-400"
-                : "bg-card border-border text-muted-foreground"
+                ? "bg-[#dc2626] border-[#ef4444] text-white"
+                : "bg-[#111827] border-[#374151] text-white"
             }`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${
-                sseStatus === "live" ? "bg-emerald-400 animate-pulse" :
-                sseStatus === "connecting" ? "bg-yellow-400 animate-pulse" :
-                sseStatus === "error" ? "bg-red-400" : "bg-muted-foreground"
+              <span className={`h-2 w-2 rounded-full ${
+                sseStatus === "live" ? "bg-white" :
+                sseStatus === "connecting" ? "bg-white" :
+                sseStatus === "error" ? "bg-white" : "bg-gray-400"
               }`} />
-              <Zap className="h-3 w-3" />
-              {sseStatus === "live" ? "Live" : sseStatus === "connecting" ? "Conectando..." : sseStatus === "error" ? "Reconectando" : "Offline"}
+              <Zap className="h-3.5 w-3.5 text-white" />
+              {sseStatus === "live" ? "Ao Vivo (Polling 3s)" : sseStatus === "connecting" ? "Conectando..." : sseStatus === "error" ? "Reconectando" : "Offline"}
             </div>
 
             {activeTab === "logs" && (
               <button
                 onClick={() => fetchLogs(pagination.page)}
                 disabled={loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-card border border-border text-muted-foreground hover:text-foreground transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#111827] border border-[#374151] text-white hover:bg-[#1f2937] font-semibold transition-all shadow-sm"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                Atualizar
               </button>
             )}
           </div>
         </div>
 
         {/* ── Tabs ────────────────────────────────────────── */}
-        <div className="flex items-center gap-1 border-b border-border">
+        <div className="flex items-center gap-2 border-b border-[#374151] pb-3">
           <button
             onClick={() => setActiveTab("feed")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${
               activeTab === "feed"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "bg-[#2563eb] text-white border-[#3b82f6] shadow-sm"
+                : "bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]"
             }`}
           >
             <Activity className="h-4 w-4" />
             Feed de Atividades
             {newCount > 0 && (
-              <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+              <span className="flex h-4 min-w-[1.25rem] items-center justify-center rounded-full bg-[#dc2626] px-1 text-[10px] font-extrabold text-white">
                 {newCount > 99 ? "99+" : newCount}
               </span>
             )}
           </button>
           <button
             onClick={() => setActiveTab("logs")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${
               activeTab === "logs"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "bg-[#2563eb] text-white border-[#3b82f6] shadow-sm"
+                : "bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]"
             }`}
           >
             <ClipboardList className="h-4 w-4" />
             Logs do Sistema
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-mono">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#030712] text-white font-mono border border-[#374151] font-bold">
               {Math.max(pagination.total, displayLogs.length).toLocaleString("pt-BR")}
             </span>
           </button>
@@ -667,117 +678,106 @@ export default function AuditLogsPage() {
             <div ref={feedRef} className={`flex-1 min-w-0 ${selected ? "hidden md:block" : ""}`}>
               {/* Indicador topo */}
               {sseStatus === "live" && (
-                <div className="flex items-center gap-2 mb-3 text-[11px] text-emerald-400 font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Conectado — atualizações em tempo real (polling a cada 3s)
+                <div className="flex items-center gap-2 mb-3 text-xs text-white font-bold bg-[#111827] border border-[#374151] px-3 py-1.5 rounded-lg w-fit shadow-sm">
+                  <span className="h-2 w-2 rounded-full bg-[#10b981]" />
+                  Atualizações automáticas ativas em tempo real
                 </div>
               )}
 
               {feed.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-border bg-card/30">
-                  <div className="relative mb-4">
-                    <Activity className="h-12 w-12 text-muted-foreground/20" />
-                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-muted-foreground/20 animate-ping" />
+                <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-[#374151] bg-[#111827] shadow-sm">
+                  <div className="mb-4">
+                    <Activity className="h-10 w-10 text-white" />
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground">Aguardando atividades...</p>
-                  <p className="text-xs text-muted-foreground/50 mt-1.5 max-w-xs">
+                  <p className="text-sm font-bold text-white">Aguardando atividades...</p>
+                  <p className="text-xs text-white mt-1.5 max-w-xs font-medium">
                     {sseStatus === "connecting"
-                      ? "Estabelecendo conexão em tempo real..."
-                      : "Realize um login, crie um cliente ou agende um serviço para ver eventos aqui."}
+                      ? "Estabelecendo conexão em tempo real com o servidor..."
+                      : "Realize um login, cadastre um cliente ou faça uma operação para visualizar os eventos."}
                   </p>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {feed.map((log, idx) => {
+                <div className="space-y-2">
+                  {feed.map((log) => {
                     const cfg = getActionConfig(log.action);
                     const isCurrentUser = log.userId === user?.id;
                     const isSelected = selected?.id === log.id;
-                    const isNew = idx < 3; // Os 3 mais recentes ganham efeito visual sutil
 
                     return (
                       <div
                         key={log.id}
                         onClick={() => setSelected(isSelected ? null : log)}
-                        className={`relative flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all group ${
+                        className={`relative flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all shadow-sm ${
                           isSelected
-                            ? "border-primary/40 bg-primary/5"
-                            : isNew
-                            ? `${cfg.border} ${cfg.bg} hover:border-opacity-50`
-                            : "border-border/40 bg-card/30 hover:bg-card/60 hover:border-border"
+                            ? "border-[#2563eb] bg-[#1f2937]"
+                            : "border-[#374151] bg-[#111827] hover:bg-[#1f2937]"
                         }`}
                       >
                         {/* Dot de linha do tempo */}
                         <div className="relative mt-1 shrink-0">
                           <UserAvatar user={log.user} size="sm" />
-                          <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${cfg.dot}`} />
+                          <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-gray-950 ${cfg.dot}`} />
                         </div>
 
                         {/* Conteúdo */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5">
+                          <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
                             {/* Nome do autor */}
-                            <span className="text-xs font-semibold text-foreground truncate">
+                            <span className="text-xs font-bold text-white truncate">
                               {log.user?.name ?? "Sistema"}
                             </span>
 
                             {/* Badge "Você" */}
                             {isCurrentUser && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary/15 text-primary border border-primary/20 leading-none">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#2563eb] text-white border border-[#3b82f6] leading-none">
                                 Você
                               </span>
                             )}
 
                             {/* Role badge */}
                             {log.user && (
-                              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full border leading-none ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border leading-none ${cfg.bg} text-white ${cfg.border}`}>
                                 {log.user.role}
                               </span>
                             )}
 
                             {/* Tempo */}
-                            <span className="ml-auto text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
+                            <span className="ml-auto text-xs text-white font-medium whitespace-nowrap shrink-0">
                               {formatFeedTime(log.createdAt)}
                             </span>
                           </div>
 
                           {/* Descrição legível */}
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                            <span className={`font-medium ${cfg.text}`}>{cfg.icon}</span>
-                            {" "}
+                          <p className="text-xs text-white mt-1 leading-relaxed font-medium">
+                            <span className={`font-bold inline-flex items-center gap-1 ${cfg.bg} px-1.5 py-0.5 rounded text-[10px] text-white mr-1.5 border ${cfg.border}`}>
+                              {cfg.icon} {cfg.label}
+                            </span>
                             {buildFeedDescription(log)}
                             {log.barbershop && (
-                              <span className="opacity-60"> · {log.barbershop.name}</span>
+                              <span className="font-bold text-white"> · {log.barbershop.name}</span>
                             )}
                           </p>
 
                           {/* Metadados rápidos */}
-                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                            <span className={`inline-flex items-center gap-1 text-[10px] font-mono font-medium ${cfg.text}`}>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#030712] border border-[#374151] text-white">
                               <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
                               {log.action}
                             </span>
                             {!log.success && (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-red-400">
-                                <AlertTriangle className="h-3 w-3" />
-                                Falhou
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-[#dc2626] border border-[#ef4444] text-white">
+                                <AlertTriangle className="h-3 w-3 text-white" />
+                                Falha
                               </span>
                             )}
                             {log.ipAddress && (
-                              <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono">
-                                <Globe className="h-3 w-3" />
+                              <span className="flex items-center gap-1 text-[10px] text-white font-mono bg-[#030712] border border-[#374151] px-2 py-0.5 rounded font-medium">
+                                <Globe className="h-3 w-3 text-white" />
                                 {log.ipAddress}
                               </span>
                             )}
                           </div>
                         </div>
-
-                        {/* Indicador novo (pulsante) */}
-                        {isNew && idx === 0 && (
-                          <span className="absolute top-2 right-2 flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                          </span>
-                        )}
                       </div>
                     );
                   })}
@@ -797,35 +797,65 @@ export default function AuditLogsPage() {
         {/* ══════════════════════════════════════════════════ */}
         {activeTab === "logs" && (
           <>
+            {/* Atalhos de Filtro por Categoria */}
+            <div className="flex flex-wrap items-center gap-2 pb-1">
+              {[
+                { label: "Todos os Eventos", act: "all", ent: "all", q: "" },
+                { label: "👤 Ações de Clientes", act: "all", ent: "CLIENT", q: "" },
+                { label: "🛡️ Logins & Sessões", act: "LOGIN", ent: "all", q: "" },
+                { label: "📅 Agendamentos", act: "APPOINTMENT_CREATED", ent: "APPOINTMENT", q: "" },
+                { label: "💳 Assinaturas & Trial", act: "all", ent: "SUBSCRIPTION", q: "" },
+              ].map((pill) => {
+                const isSelected = (pill.ent !== "all" && filterEntity === pill.ent) || (pill.act !== "all" && filterAction === pill.act);
+                return (
+                  <button
+                    key={pill.label}
+                    onClick={() => {
+                      setFilterAction(pill.act);
+                      setFilterEntity(pill.ent);
+                      if (pill.q) setSearch(pill.q);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                      isSelected
+                        ? "bg-[#2563eb] border-[#3b82f6] text-white shadow-sm"
+                        : "bg-[#111827] border-[#374151] text-white hover:bg-[#1f2937]"
+                    }`}
+                  >
+                    {pill.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Filtros */}
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[240px]">
-                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white" />
                 <input
                   type="text"
-                  placeholder="Buscar logs..."
-                  className="w-full pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all"
+                  placeholder="Buscar requisições, rotas, usuários..."
+                  className="w-full pl-9 pr-8 py-2 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white placeholder:text-gray-400 font-medium focus:outline-none focus:border-[#2563eb] transition-all"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
                 {search && (
-                  <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSearch("")}>
+                  <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white hover:text-gray-300" onClick={() => setSearch("")}>
                     <X className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs border transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold border transition-all shadow-sm ${
                   showFilters || activeFiltersCount > 0
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                    ? "bg-[#2563eb] border-[#3b82f6] text-white"
+                    : "bg-[#111827] border-[#374151] text-white hover:bg-[#1f2937]"
                 }`}
               >
-                <Filter className="h-3.5 w-3.5" />
+                <Filter className="h-3.5 w-3.5 text-white" />
                 Filtros
                 {activeFiltersCount > 0 && (
-                  <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold">
+                  <span className="ml-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[#dc2626] text-[10px] text-white font-extrabold px-1">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -833,24 +863,24 @@ export default function AuditLogsPage() {
             </div>
 
             {showFilters && (
-              <div className="flex flex-wrap gap-3 p-3 rounded-lg border border-border bg-card">
+              <div className="flex flex-wrap gap-4 p-4 rounded-xl border border-[#374151] bg-[#111827] shadow-sm">
                 {[
                   { label:"Ação", value:filterAction, setter:setFilterAction, options:AUDIT_ACTIONS, width:"160px" },
                   { label:"Entidade", value:filterEntity, setter:setFilterEntity, options:AUDIT_ENTITIES, width:"140px" },
                 ].map(({ label, value, setter, options, width }) => (
-                  <div key={label} className="flex flex-col gap-1">
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</label>
+                  <div key={label} className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase tracking-wider text-white font-bold">{label}</label>
                     <select value={value} onChange={(e) => setter(e.target.value)} style={{ minWidth: width }}
-                      className="text-xs bg-background border border-border rounded-md px-2 py-1.5 text-foreground focus:outline-none focus:border-primary/50">
+                      className="text-xs bg-[#030712] border border-[#374151] rounded-md px-3 py-1.5 text-white font-semibold focus:outline-none focus:border-[#2563eb]">
                       <option value="all">Todos</option>
                       {options.map(o => <option key={o} value={o}>{o}</option>)}
                     </select>
                   </div>
                 ))}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Status</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase tracking-wider text-white font-bold">Status</label>
                   <select value={filterSuccess} onChange={(e) => setFilterSuccess(e.target.value)}
-                    className="text-xs bg-background border border-border rounded-md px-2 py-1.5 text-foreground focus:outline-none focus:border-primary/50 min-w-[120px]">
+                    className="text-xs bg-[#030712] border border-[#374151] rounded-md px-3 py-1.5 text-white font-semibold focus:outline-none focus:border-[#2563eb] min-w-[120px]">
                     <option value="all">Todos</option>
                     <option value="true">✅ Sucesso</option>
                     <option value="false">❌ Falha</option>
@@ -859,8 +889,8 @@ export default function AuditLogsPage() {
                 {activeFiltersCount > 0 && (
                   <div className="flex items-end">
                     <button onClick={() => { setFilterAction("all"); setFilterEntity("all"); setFilterSuccess("all"); }}
-                      className="text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 border border-border rounded-md transition-all">
-                      Limpar
+                      className="text-xs text-white font-bold bg-[#dc2626] hover:bg-[#b91c1c] border border-[#ef4444] px-3 py-1.5 rounded-md transition-all shadow-sm">
+                      Limpar Filtros
                     </button>
                   </div>
                 )}
@@ -870,37 +900,37 @@ export default function AuditLogsPage() {
             {/* Layout dois painéis */}
             <div className="flex gap-3 items-start">
               {/* Tabela terminal */}
-              <div className={`flex-1 min-w-0 rounded-xl border border-border bg-[#0a0a0a] overflow-hidden flex flex-col ${selected ? "hidden md:flex" : ""}`}>
+              <div className={`flex-1 min-w-0 rounded-xl border border-[#374151] bg-[#030712] overflow-hidden flex flex-col shadow-sm ${selected ? "hidden md:flex" : ""}`}>
                 <div className="overflow-x-auto">
-                  <div className="grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-2.5 border-b border-border/50 bg-card/20">
+                  <div className="grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-3 border-b border-[#374151] bg-[#111827]">
                     {[
-                      { name: "Hora", icon: <Clock className="h-3 w-3" /> },
+                      { name: "Hora", icon: <Clock className="h-3 w-3 text-white" /> },
                       { name: "Status" },
                       { name: "Request" },
                       { name: "Messages" },
                       { name: "Usuário" },
                       { name: "Origem / IP" },
                     ].map(h => (
-                      <span key={h.name} className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                      <span key={h.name} className="text-[10px] uppercase tracking-wider text-white font-bold flex items-center gap-1.5">
                         {h.icon}
                         {h.name}
                       </span>
                     ))}
                   </div>
-                  <div className="divide-y divide-border/20">
+                  <div className="divide-y divide-[#1f2937]">
                     {loading && displayLogs.length === 0 ? (
                       Array.from({ length: 10 }).map((_, i) => (
                         <div key={i} className="grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-2.5">
                           {Array.from({ length: 6 }).map((__, j) => (
-                            <div key={j} className="h-3 rounded bg-muted/20 animate-pulse" />
+                            <div key={j} className="h-3.5 rounded bg-[#1f2937]" />
                           ))}
                         </div>
                       ))
                     ) : displayLogs.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-24 text-center">
-                        <Activity className="h-10 w-10 text-muted-foreground/20 mb-3" />
-                        <p className="text-sm font-medium text-muted-foreground">Nenhum log encontrado</p>
-                        <p className="text-xs text-muted-foreground/50 mt-1 max-w-sm">
+                        <Activity className="h-10 w-10 text-white mb-3" />
+                        <p className="text-sm font-bold text-white">Nenhum log encontrado</p>
+                        <p className="text-xs text-white mt-1 max-w-sm font-medium">
                           Navegue pelo sistema ou limpe os filtros para visualizar as requisições em tempo real.
                         </p>
                       </div>
@@ -917,52 +947,52 @@ export default function AuditLogsPage() {
                             key={log.id}
                             onClick={() => setSelected(isSelected ? null : log)}
                             className={`grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-2.5 cursor-pointer transition-colors text-[11px] font-mono items-center ${
-                              isSelected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-white/[0.02] border-l-2 border-l-transparent"
+                              isSelected ? "bg-[#1e293b] border-l-4 border-l-[#2563eb]" : "hover:bg-[#111827] border-l-4 border-l-transparent"
                             }`}
                           >
                             {/* Hora */}
-                            <span className="text-muted-foreground whitespace-nowrap truncate">{formatTimestamp(log.createdAt)}</span>
+                            <span className="text-white font-medium whitespace-nowrap truncate">{formatTimestamp(log.createdAt)}</span>
 
                             {/* Status */}
                             <span className="flex items-center gap-1">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${status.bg} ${status.color} ${status.border}`}>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border shadow-sm ${status.bg} ${status.color} ${status.border}`}>
                                 {status.text}
                               </span>
                             </span>
 
                             {/* Request (Method + Path) */}
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold border shrink-0 ${getMethodBadge(req.method)}`}>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold border shrink-0 ${getMethodBadge(req.method)}`}>
                                 {req.method}
                               </span>
-                              <span className="text-foreground font-medium truncate text-[11px]" title={req.path}>
+                              <span className="text-white font-bold truncate text-[11px]" title={req.path}>
                                 {req.path}
                               </span>
                             </div>
 
                             {/* Messages */}
                             <div className="min-w-0 pr-2">
-                              <span className={`truncate block text-[11px] ${msg.isError ? "text-red-400 font-medium" : "text-muted-foreground"}`} title={msg.text}>
-                                {msg.isError && <span className="text-red-500 mr-1">⚠</span>}
+                              <span className={`truncate block text-[11px] ${msg.isError ? "text-white font-bold bg-[#dc2626] border border-[#ef4444] px-2 py-0.5 rounded" : "text-white font-medium"}`} title={msg.text}>
+                                {msg.isError && <span className="text-white mr-1">⚠</span>}
                                 {msg.text}
                               </span>
                             </div>
 
                             {/* Usuário */}
-                            <span className="text-muted-foreground truncate flex items-center gap-1">
+                            <span className="text-white font-medium truncate flex items-center gap-1.5">
                               <span className="truncate">{log.user?.name ?? "sistema"}</span>
-                              {isCurrentUser && <span className="text-[8px] px-1 py-0.2 rounded bg-primary/20 text-primary font-bold shrink-0">Você</span>}
+                              {isCurrentUser && <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2563eb] text-white font-bold shrink-0 border border-[#3b82f6]">Você</span>}
                             </span>
 
                             {/* Origem / IP */}
-                            <span className="text-muted-foreground flex items-center gap-1 truncate text-[10px]">
+                            <span className="text-white font-medium flex items-center gap-1 truncate text-[10px]">
                               {log.ipAddress ? (
                                 <>
-                                  <Globe className="h-3 w-3 shrink-0 opacity-50" />
+                                  <Globe className="h-3 w-3 shrink-0 text-white" />
                                   <span className="truncate">{log.ipAddress}</span>
                                 </>
                               ) : log.barbershop?.slug ? (
-                                <span className="truncate">/{log.barbershop.slug}</span>
+                                <span className="truncate font-bold">/{log.barbershop.slug}</span>
                               ) : (
                                 "—"
                               )}
@@ -983,14 +1013,14 @@ export default function AuditLogsPage() {
 
             {/* Paginação */}
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-white font-semibold pt-1">
                 <span>Página {pagination.page} de {pagination.totalPages} — {pagination.total.toLocaleString("pt-BR")} registros</span>
-                <div className="flex gap-1.5">
-                  <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-border bg-card hover:bg-accent disabled:opacity-40 transition-all"
+                <div className="flex gap-2">
+                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#374151] bg-[#111827] text-white hover:bg-[#1f2937] font-bold disabled:opacity-40 transition-all shadow-sm"
                     disabled={pagination.page <= 1 || loading} onClick={() => fetchLogs(pagination.page - 1)}>
                     <ChevronLeft className="h-3.5 w-3.5" /> Anterior
                   </button>
-                  <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-border bg-card hover:bg-accent disabled:opacity-40 transition-all"
+                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#374151] bg-[#111827] text-white hover:bg-[#1f2937] font-bold disabled:opacity-40 transition-all shadow-sm"
                     disabled={pagination.page >= pagination.totalPages || loading} onClick={() => fetchLogs(pagination.page + 1)}>
                     Próxima <ChevronRight className="h-3.5 w-3.5" />
                   </button>
@@ -1024,60 +1054,60 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
   };
 
   return (
-    <div className="w-full md:w-[380px] lg:w-[420px] shrink-0 rounded-xl border border-border bg-[#0a0a0a] flex flex-col overflow-hidden shadow-2xl animate-in fade-in slide-in-from-right-2 duration-150">
+    <div className="w-full md:w-[380px] lg:w-[420px] shrink-0 rounded-xl border border-[#374151] bg-[#111827] flex flex-col overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-card/20">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className={`p-1.5 rounded-md ${cfg.bg} ${cfg.text} border ${cfg.border}`}>
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#374151] bg-[#030712]">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className={`p-2 rounded-lg ${cfg.bg} text-white border ${cfg.border} shadow-sm`}>
             {cfg.icon}
           </span>
           <div className="min-w-0">
-            <h3 className="text-xs font-semibold text-foreground truncate">{cfg.label}</h3>
-            <span className="text-[10px] font-mono text-muted-foreground truncate block">{log.id}</span>
+            <h3 className="text-sm font-bold text-white truncate">{cfg.label}</h3>
+            <span className="text-[11px] font-mono text-white truncate block font-medium">{log.id}</span>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-md text-white hover:bg-[#374151] transition-colors"
           title="Fechar detalhes"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4 text-white" />
         </button>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-220px)] divide-y divide-border/20 [&>*]:pt-3.5 [&>*:first-child]:pt-0">
+      <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-220px)] divide-y divide-[#1f2937] [&>*]:pt-3.5 [&>*:first-child]:pt-0">
         {/* Status e Ação */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
-            <span className="text-xs font-mono font-medium text-foreground">{log.action}</span>
+            <span className={`h-2.5 w-2.5 rounded-full ${cfg.dot}`} />
+            <span className="text-xs font-mono font-bold text-white">{log.action}</span>
           </div>
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold border shadow-sm ${
               log.success
-                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                : "bg-red-500/10 text-red-400 border-red-500/20"
+                ? "bg-[#059669] text-white border-[#10b981]"
+                : "bg-[#dc2626] text-white border-[#ef4444]"
             }`}
           >
-            {log.success ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+            {log.success ? <CheckCircle2 className="h-3.5 w-3.5 text-white" /> : <XCircle className="h-3.5 w-3.5 text-white" />}
             {getLogStatus(log).text}
           </span>
         </div>
 
         {/* Requisição HTTP */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
             Requisição (Request)
           </span>
-          <div className="p-2.5 rounded-lg bg-card/40 border border-border/40 space-y-1.5 text-xs font-mono">
+          <div className="p-3 rounded-lg bg-[#030712] border border-[#374151] space-y-2 text-xs font-mono shadow-sm">
             <div className="flex items-center gap-2">
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold border ${getMethodBadge(getLogRequest(log).method)}`}>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${getMethodBadge(getLogRequest(log).method)}`}>
                 {getLogRequest(log).method}
               </span>
-              <span className="text-foreground truncate select-all">{getLogRequest(log).path}</span>
+              <span className="text-white font-bold truncate select-all">{getLogRequest(log).path}</span>
             </div>
-            <div className="text-[11px] text-muted-foreground pt-1.5 border-t border-border/20 flex justify-between items-center">
+            <div className="text-[11px] text-white pt-2 border-t border-[#1f2937] flex justify-between items-center font-medium">
               <span>Status HTTP</span>
               <span className={`font-bold ${getLogStatus(log).color}`}>{getLogStatus(log).code}</span>
             </div>
@@ -1086,11 +1116,11 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
 
         {/* Mensagem / Detalhes */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
             Mensagem (Messages)
           </span>
-          <div className={`p-2.5 rounded-lg border text-xs leading-relaxed ${
-            getLogMessage(log).isError ? "bg-red-500/10 border-red-500/30 text-red-300 font-mono" : "bg-card/40 border-border/40 text-foreground"
+          <div className={`p-3 rounded-lg border text-xs leading-relaxed shadow-sm ${
+            getLogMessage(log).isError ? "bg-[#dc2626] border-[#ef4444] text-white font-mono font-bold" : "bg-[#030712] border-[#374151] text-white font-medium"
           }`}>
             {getLogMessage(log).text}
           </div>
@@ -1098,30 +1128,30 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
 
         {/* Usuário executor */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
             Usuário Executor
           </span>
           {log.user ? (
-            <div className="flex items-center gap-2.5 p-2 rounded-lg bg-card/40 border border-border/40">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-[#030712] border border-[#374151] shadow-sm">
               <UserAvatar user={log.user} size="sm" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-medium text-foreground truncate">{log.user.name}</span>
+                  <span className="text-xs font-bold text-white truncate">{log.user.name}</span>
                   {isCurrentUser && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2563eb] text-white font-bold border border-[#3b82f6]">
                       Você
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] text-muted-foreground truncate block">{log.user.email}</span>
+                <span className="text-[11px] text-white truncate block font-medium">{log.user.email}</span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#1f2937] text-white font-mono border border-[#374151] font-bold">
                 {log.user.role}
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-card/20 border border-border/30 text-xs text-muted-foreground">
-              <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-[#030712] border border-[#374151] text-xs text-white font-medium shadow-sm">
+              <Activity className="h-4 w-4 text-white" />
               <span>Ação do Sistema (Automático)</span>
             </div>
           )}
@@ -1129,29 +1159,29 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
 
         {/* Entidade Alvo */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
             Recurso / Entidade
           </span>
-          <div className="space-y-1.5 text-xs">
+          <div className="space-y-2 text-xs p-3 rounded-lg bg-[#030712] border border-[#374151] shadow-sm">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-muted-foreground">Tipo</span>
-              <span className="font-mono text-foreground font-medium">{log.entity}</span>
+              <span className="text-white font-medium">Tipo</span>
+              <span className="font-mono text-white font-bold">{log.entity}</span>
             </div>
             {log.entityId && (
               <div className="flex justify-between items-center gap-2">
-                <span className="text-muted-foreground">ID</span>
-                <span className="font-mono text-muted-foreground text-[11px] truncate max-w-[200px]" title={log.entityId}>
+                <span className="text-white font-medium">ID</span>
+                <span className="font-mono text-white text-[11px] font-bold truncate max-w-[200px]" title={log.entityId}>
                   {log.entityId}
                 </span>
               </div>
             )}
             {log.barbershop && (
               <div className="flex justify-between items-center gap-2">
-                <span className="text-muted-foreground">Barbearia</span>
-                <span className="text-foreground truncate">
+                <span className="text-white font-medium">Barbearia</span>
+                <span className="text-white truncate font-bold">
                   {log.barbershop.name}
                   {log.barbershop.slug && (
-                    <span className="text-muted-foreground text-[10px] font-mono ml-1">
+                    <span className="text-white text-[11px] font-mono ml-1">
                       (/{log.barbershop.slug})
                     </span>
                   )}
@@ -1163,37 +1193,37 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
 
         {/* Data e Hora */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
             Data e Hora
           </span>
-          <div className="space-y-1 text-xs">
+          <div className="space-y-2 text-xs p-3 rounded-lg bg-[#030712] border border-[#374151] shadow-sm">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-muted-foreground">Horário</span>
-              <span className="font-mono text-foreground">{formatDateFull(log.createdAt)}</span>
+              <span className="text-white font-medium">Horário</span>
+              <span className="font-mono text-white font-bold">{formatDateFull(log.createdAt)}</span>
             </div>
             <div className="flex justify-between items-center gap-2">
-              <span className="text-muted-foreground">Relativo</span>
-              <span className="text-muted-foreground text-[11px]">{formatFeedTime(log.createdAt)}</span>
+              <span className="text-white font-medium">Relativo</span>
+              <span className="text-white text-[11px] font-bold">{formatFeedTime(log.createdAt)}</span>
             </div>
           </div>
         </div>
 
         {/* Contexto de Rede */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
             Contexto de Rede
           </span>
-          <div className="space-y-2 text-xs">
+          <div className="space-y-2.5 text-xs p-3 rounded-lg bg-[#030712] border border-[#374151] shadow-sm">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Globe className="h-3 w-3" /> IP
+              <span className="text-white font-medium flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5 text-white" /> IP
               </span>
-              <span className="font-mono text-foreground">{log.ipAddress ?? "—"}</span>
+              <span className="font-mono text-white font-bold">{log.ipAddress ?? "—"}</span>
             </div>
             {log.userAgent && (
               <div>
-                <span className="text-muted-foreground text-[10px] block mb-1">User Agent</span>
-                <div className="p-2 rounded bg-muted/20 border border-border/30 text-[10px] font-mono text-muted-foreground break-all leading-relaxed">
+                <span className="text-white text-[10px] font-bold block mb-1">User Agent</span>
+                <div className="p-2.5 rounded bg-[#111827] border border-[#374151] text-[10px] font-mono text-white break-all leading-relaxed">
                   {log.userAgent}
                 </div>
               </div>
@@ -1204,11 +1234,11 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
         {/* Erro (se houver) */}
         {!log.success && log.errorMessage && (
           <div>
-            <span className="text-[10px] uppercase tracking-wider text-red-400 font-semibold block mb-2">
+            <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
               Mensagem de Erro
             </span>
-            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-300 font-mono">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-[#dc2626] border border-[#ef4444] text-xs text-white font-mono font-bold shadow-sm">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-white mt-0.5" />
               <span className="break-all">{log.errorMessage}</span>
             </div>
           </div>
@@ -1218,18 +1248,18 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
         {log.metadata && Object.keys(log.metadata).length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              <span className="text-[10px] uppercase tracking-wider text-white font-bold">
                 Metadados (JSON)
               </span>
               <button
                 onClick={copyMetadata}
-                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-white font-bold bg-[#030712] border border-[#374151] hover:bg-[#1f2937] px-2.5 py-1 rounded transition-colors shadow-sm"
               >
-                {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-white" />}
                 <span>{copied ? "Copiado!" : "Copiar"}</span>
               </button>
             </div>
-            <pre className="text-[10px] font-mono bg-card/40 border border-border/40 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all text-foreground/80 leading-relaxed max-h-56">
+            <pre className="text-[11px] font-mono bg-[#030712] border border-[#374151] rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all text-white leading-relaxed max-h-56 shadow-sm">
               {JSON.stringify(log.metadata, null, 2)}
             </pre>
           </div>

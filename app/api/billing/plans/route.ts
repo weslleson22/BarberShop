@@ -228,7 +228,11 @@ export async function GET(request: NextRequest) {
         (a, b) => Number(a.price) - Number(b.price)
       )
 
-      return NextResponse.json(verifiedPlans)
+      return NextResponse.json(verifiedPlans, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      })
     }
 
     // Fallback: Se a API da AbacatePay estiver temporariamente inacessível,
@@ -252,7 +256,11 @@ export async function GET(request: NextRequest) {
         isSyncedWithAbacate: true,
       }))
 
-    return NextResponse.json(fallbackPlans)
+    return NextResponse.json(fallbackPlans, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    })
   } catch (error) {
     console.error('Erro ao buscar planos:', error)
     return NextResponse.json({ error: 'Erro ao buscar planos' }, { status: 500 })

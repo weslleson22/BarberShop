@@ -47,7 +47,6 @@ export default function CheckoutCustomizer() {
     billingInterval: 'MONTHLY',
   }
 
-  // Carrega as configurações atuais
   useEffect(() => {
     fetchConfig()
   }, [])
@@ -100,7 +99,7 @@ export default function CheckoutCustomizer() {
   const toggleMethod = (method: 'PIX' | 'CREDIT_CARD' | 'BOLETO') => {
     const current = config.acceptedMethods
     if (current.includes(method)) {
-      if (current.length === 1) return // não permite desmarcar todos
+      if (current.length === 1) return
       setConfig({ ...config, acceptedMethods: current.filter((m) => m !== method) })
     } else {
       setConfig({ ...config, acceptedMethods: [...current, method] })
@@ -108,17 +107,17 @@ export default function CheckoutCustomizer() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in">
+    <div className="space-y-6 text-white">
       {/* Header com Ações */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border p-6 rounded-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111827] border border-[#374151] p-6 rounded-xl">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+            <span className="p-1.5 rounded-lg bg-[#059669] text-white border border-[#10b981]">
               <Sliders className="w-4 h-4" />
             </span>
-            <h2 className="text-xl font-bold text-foreground">Personalizar Checkout AbacatePay</h2>
+            <h2 className="text-xl font-extrabold text-white">Personalizar Checkout AbacatePay</h2>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-200 mt-1 font-medium">
             Ajuste a identidade visual, etapas e campos exibidos aos seus clientes na hora de pagar.
           </p>
         </div>
@@ -128,17 +127,17 @@ export default function CheckoutCustomizer() {
             type="button"
             onClick={fetchConfig}
             disabled={loading}
-            className="p-2.5 rounded-xl border border-border bg-card hover:bg-accent text-foreground text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+            className="py-2.5 px-4 rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Restaurar</span>
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'text-white'}`} />
+            <span>Restaurar</span>
           </button>
 
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-bold flex items-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
+            className="py-2.5 px-5 rounded-lg bg-[#059669] hover:bg-emerald-600 text-white border border-[#10b981] text-xs font-bold flex items-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
           >
             {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>Salvar Personalização</span>
@@ -147,24 +146,24 @@ export default function CheckoutCustomizer() {
       </div>
 
       {successMessage && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-3 text-sm animate-in fade-in">
+        <div className="p-4 rounded-xl bg-[#059669] border border-[#10b981] text-white flex items-center gap-3 text-sm font-bold">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {/* Grid: Controles de Customização (Esquerda) + Preview ao Vivo (Direita) */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* Painel de Controles */}
-        <div className="xl:col-span-5 space-y-6 bg-card border border-border p-6 rounded-2xl shadow-sm">
-          <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+        <div className="xl:col-span-5 space-y-6 bg-[#111827] border border-[#374151] p-6 rounded-xl shadow-xl">
+          <h3 className="text-base font-extrabold text-white flex items-center gap-2">
             <Palette className="w-4 h-4 text-emerald-400" />
             <span>Configurações Visuais</span>
           </h3>
 
           {/* Tema Padrão */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Tema Padrão do Checkout</label>
+            <label className="text-xs font-bold text-gray-200 uppercase tracking-wider block">Tema Padrão do Checkout</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -172,10 +171,10 @@ export default function CheckoutCustomizer() {
                   setConfig({ ...config, theme: 'LIGHT' })
                   setPreviewTheme('LIGHT')
                 }}
-                className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`p-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   config.theme === 'LIGHT'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500'
-                    : 'border-border text-foreground hover:bg-accent'
+                    ? 'border-[#3b82f6] bg-[#2563eb] text-white'
+                    : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
                 }`}
               >
                 <span>☀️ Claro (Light)</span>
@@ -187,10 +186,10 @@ export default function CheckoutCustomizer() {
                   setConfig({ ...config, theme: 'DARK' })
                   setPreviewTheme('DARK')
                 }}
-                className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`p-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   config.theme === 'DARK'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500'
-                    : 'border-border text-foreground hover:bg-accent'
+                    ? 'border-[#3b82f6] bg-[#2563eb] text-white'
+                    : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
                 }`}
               >
                 <span>🌙 Escuro (Dark)</span>
@@ -200,24 +199,24 @@ export default function CheckoutCustomizer() {
 
           {/* Cor de Destaque */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Cor de Destaque dos Botões</label>
+            <label className="text-xs font-bold text-gray-200 uppercase tracking-wider block">Cor de Destaque dos Botões</label>
             <div className="grid grid-cols-3 gap-2">
               {COLOR_PRESETS.map((color) => (
                 <button
                   key={color.value}
                   type="button"
                   onClick={() => setConfig({ ...config, accentColor: color.value })}
-                  className={`p-2.5 rounded-xl border text-[11px] font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                  className={`p-2.5 rounded-lg border text-[11px] font-bold flex items-center gap-2 transition-all cursor-pointer ${
                     config.accentColor === color.value
-                      ? 'border-foreground shadow-sm'
-                      : 'border-border hover:border-muted-foreground'
+                      ? 'border-white bg-[#1f2937] text-white shadow-md'
+                      : 'border-[#374151] bg-[#030712] text-gray-200 hover:border-[#4b5563]'
                   }`}
                 >
                   <span
                     className="w-3.5 h-3.5 rounded-full shrink-0 shadow-inner"
                     style={{ backgroundColor: color.value }}
                   />
-                  <span className="truncate text-foreground">{color.name.split(' ')[0]}</span>
+                  <span className="truncate text-white font-bold">{color.name.split(' ')[0]}</span>
                 </button>
               ))}
             </div>
@@ -225,39 +224,39 @@ export default function CheckoutCustomizer() {
 
           {/* Nome da Loja */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Nome de Exibição da Loja</label>
+            <label className="text-xs font-bold text-gray-200 uppercase tracking-wider block">Nome de Exibição da Loja</label>
             <input
               type="text"
               value={config.storeName}
               onChange={(e) => setConfig({ ...config, storeName: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-sm text-white font-medium focus:outline-none focus:border-blue-500"
             />
           </div>
 
           {/* Selo de Garantia */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Texto do Selo de Segurança</label>
+            <label className="text-xs font-bold text-gray-200 uppercase tracking-wider block">Texto do Selo de Segurança</label>
             <input
               type="text"
               value={config.guaranteeBadgeText}
               onChange={(e) => setConfig({ ...config, guaranteeBadgeText: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-sm text-white font-medium focus:outline-none focus:border-blue-500"
             />
           </div>
 
-          <div className="h-[1px] bg-border my-4" />
+          <div className="h-[1px] bg-[#374151] my-4" />
 
           {/* Campos Obrigatórios / Exibidos */}
-          <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+          <h3 className="text-base font-extrabold text-white flex items-center gap-2">
             <FileText className="w-4 h-4 text-emerald-400" />
             <span>Campos do Formulário</span>
           </h3>
 
           <div className="space-y-3">
-            <label className="flex items-center justify-between p-3 rounded-xl border border-border bg-background cursor-pointer hover:bg-accent/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 rounded-xl border border-[#374151] bg-[#030712] cursor-pointer hover:bg-[#1f2937]/50 transition-colors">
               <div className="flex items-center gap-2.5">
                 <MapPin className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-medium text-foreground">Exigir Endereço Completo (Passo 2)</span>
+                <span className="text-xs font-bold text-white">Exigir Endereço Completo (Passo 2)</span>
               </div>
               <input
                 type="checkbox"
@@ -267,10 +266,10 @@ export default function CheckoutCustomizer() {
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 rounded-xl border border-border bg-background cursor-pointer hover:bg-accent/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 rounded-xl border border-[#374151] bg-[#030712] cursor-pointer hover:bg-[#1f2937]/50 transition-colors">
               <div className="flex items-center gap-2.5">
                 <FileText className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-medium text-foreground">Solicitar CPF / CNPJ</span>
+                <span className="text-xs font-bold text-white">Solicitar CPF / CNPJ</span>
               </div>
               <input
                 type="checkbox"
@@ -280,10 +279,10 @@ export default function CheckoutCustomizer() {
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 rounded-xl border border-border bg-background cursor-pointer hover:bg-accent/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 rounded-xl border border-[#374151] bg-[#030712] cursor-pointer hover:bg-[#1f2937]/50 transition-colors">
               <div className="flex items-center gap-2.5">
                 <Smartphone className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-medium text-foreground">Solicitar Telefone de Contato</span>
+                <span className="text-xs font-bold text-white">Solicitar Telefone de Contato</span>
               </div>
               <input
                 type="checkbox"
@@ -294,10 +293,10 @@ export default function CheckoutCustomizer() {
             </label>
           </div>
 
-          <div className="h-[1px] bg-border my-4" />
+          <div className="h-[1px] bg-[#374151] my-4" />
 
           {/* Métodos de Pagamento Permitidos */}
-          <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+          <h3 className="text-base font-extrabold text-white flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-emerald-400" />
             <span>Métodos de Pagamento Aceitos</span>
           </h3>
@@ -306,10 +305,10 @@ export default function CheckoutCustomizer() {
             <button
               type="button"
               onClick={() => toggleMethod('PIX')}
-              className={`p-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+              className={`p-3 rounded-lg border text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                 config.acceptedMethods.includes('PIX')
-                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                  : 'border-border text-muted-foreground hover:bg-accent'
+                  ? 'border-[#10b981] bg-[#059669] text-white'
+                  : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
               }`}
             >
               <QrCode className="w-5 h-5" />
@@ -319,10 +318,10 @@ export default function CheckoutCustomizer() {
             <button
               type="button"
               onClick={() => toggleMethod('CREDIT_CARD')}
-              className={`p-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+              className={`p-3 rounded-lg border text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                 config.acceptedMethods.includes('CREDIT_CARD')
-                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                  : 'border-border text-muted-foreground hover:bg-accent'
+                  ? 'border-[#10b981] bg-[#059669] text-white'
+                  : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
               }`}
             >
               <CreditCard className="w-5 h-5" />
@@ -332,10 +331,10 @@ export default function CheckoutCustomizer() {
             <button
               type="button"
               onClick={() => toggleMethod('BOLETO')}
-              className={`p-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+              className={`p-3 rounded-lg border text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                 config.acceptedMethods.includes('BOLETO')
-                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                  : 'border-border text-muted-foreground hover:bg-accent'
+                  ? 'border-[#10b981] bg-[#059669] text-white'
+                  : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
               }`}
             >
               <Barcode className="w-5 h-5" />
@@ -349,17 +348,17 @@ export default function CheckoutCustomizer() {
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm font-bold text-foreground">Live Preview em Tempo Real</span>
+              <span className="text-sm font-extrabold text-white">Live Preview em Tempo Real</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground hidden sm:inline">Visualizar como:</span>
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-card border border-border">
+              <span className="text-xs text-gray-200 font-bold hidden sm:inline">Visualizar como:</span>
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-[#111827] border border-[#374151]">
                 <button
                   type="button"
                   onClick={() => setPreviewTheme('LIGHT')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    previewTheme === 'LIGHT' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
+                  className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                    previewTheme === 'LIGHT' ? 'bg-[#2563eb] text-white border border-[#3b82f6]' : 'text-gray-300 hover:text-white'
                   }`}
                 >
                   Claro
@@ -367,8 +366,8 @@ export default function CheckoutCustomizer() {
                 <button
                   type="button"
                   onClick={() => setPreviewTheme('DARK')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    previewTheme === 'DARK' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
+                  className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                    previewTheme === 'DARK' ? 'bg-[#2563eb] text-white border border-[#3b82f6]' : 'text-gray-300 hover:text-white'
                   }`}
                 >
                   Escuro
@@ -378,7 +377,7 @@ export default function CheckoutCustomizer() {
           </div>
 
           {/* O componente de checkout real rodando com os parâmetros ao vivo */}
-          <div className="p-4 sm:p-6 rounded-3xl bg-black/30 border border-border shadow-inner">
+          <div className="p-4 sm:p-6 rounded-2xl bg-[#030712] border border-[#374151] shadow-xl">
             <AbacateCheckout
               key={`${previewTheme}-${config.accentColor}-${config.showAddress}`}
               product={sampleProduct}

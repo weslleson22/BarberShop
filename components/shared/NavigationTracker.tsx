@@ -44,6 +44,11 @@ export function NavigationTracker() {
     const timer = setTimeout(() => {
       const scheduleTelemetry = () => {
         try {
+          // Apenas registrar auditoria no banco para usuários autenticados no sistema.
+          // Visitantes anônimos e bots de busca não sobrecarregam o banco nem consomem funções da Vercel.
+          const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+          if (!token) return
+
           fetch('/api/audit/navigation', {
             method: 'POST',
             headers: getLocalAuthHeaders({ 'Content-Type': 'application/json' }),
