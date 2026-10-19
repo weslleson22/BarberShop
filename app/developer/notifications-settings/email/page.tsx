@@ -1,7 +1,7 @@
 'use client'
 
-import NotificationsSettingsPage from '../page'
+import { NotificationsSettingsView } from '../page'
 
 export default function EmailSettingsRoute() {
-  return <NotificationsSettingsPage initialTab="email" />
+  return <NotificationsSettingsView initialTab="email" />
 }

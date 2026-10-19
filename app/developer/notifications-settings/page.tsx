@@ -57,7 +57,7 @@ interface SentAlertRecord {
   error?: string
 }
 
-export default function NotificationsSettingsPage({
+export function NotificationsSettingsView({
   initialTab = 'all'
 }: {
   initialTab?: 'all' | 'telegram' | 'email' | 'history'
@@ -922,4 +922,8 @@ export default function NotificationsSettingsPage({
       </main>
     </div>
   )
+}
+
+export default function NotificationsSettingsPage() {
+  return <NotificationsSettingsView initialTab="all" />
 }

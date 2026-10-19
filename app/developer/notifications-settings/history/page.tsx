@@ -1,7 +1,7 @@
 'use client'
 
-import NotificationsSettingsPage from '../page'
+import { NotificationsSettingsView } from '../page'
 
 export default function HistorySettingsRoute() {
-  return <NotificationsSettingsPage initialTab="history" />
+  return <NotificationsSettingsView initialTab="history" />
 }

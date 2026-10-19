@@ -1,7 +1,7 @@
 'use client'
 
-import NotificationsSettingsPage from '../page'
+import { NotificationsSettingsView } from '../page'
 
 export default function TelegramSettingsRoute() {
-  return <NotificationsSettingsPage initialTab="telegram" />
+  return <NotificationsSettingsView initialTab="telegram" />
 }
