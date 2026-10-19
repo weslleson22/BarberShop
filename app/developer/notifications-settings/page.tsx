@@ -570,7 +570,7 @@ export default function NotificationsSettingsPage({
                     Provedor de Envio (EMAIL_PROVIDER):
                   </label>
                   <span className="text-xs font-mono text-white font-bold bg-[#374151] px-2.5 py-1 rounded border border-[#4b5563]">
-                    EMAIL_PROVIDER="{settings.emailProvider}"
+                    EMAIL_PROVIDER=&quot;{settings.emailProvider}&quot;
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
