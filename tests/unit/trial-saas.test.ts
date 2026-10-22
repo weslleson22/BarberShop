@@ -37,7 +37,7 @@ vi.mock('@/lib/notifications', () => ({
   notifyClientNewAppointment: vi.fn().mockResolvedValue(true),
 }))
 
-describe('SISTEMA SAAS: TRIAL GRATUITO DE 30 DIAS & CONTROLE DE ACESSO', () => {
+describe('SISTEMA SAAS: TRIAL GRATUITO DE 7 DIAS & CONTROLE DE ACESSO', () => {
   let inMemoryBarbershops: any[] = []
   let inMemoryPlans: any[] = []
   let inMemorySubscriptions: any[] = []
@@ -70,12 +70,12 @@ describe('SISTEMA SAAS: TRIAL GRATUITO DE 30 DIAS & CONTROLE DE ACESSO', () => {
     inMemoryPlans = [
       {
         id: 'plan_trial_default',
-        name: 'Plano Trial Gratuito (30 dias)',
-        slug: 'trial-30-days',
+        name: 'Plano Trial Gratuito (7 dias)',
+        slug: 'trial-7-days',
         price: new Prisma.Decimal('0.00'),
         currency: 'BRL',
         billingInterval: 'MONTHLY',
-        trialDays: 30,
+        trialDays: 7,
         isActive: true,
         features: { maxBarbers: 5, dashboard: true },
         createdAt: new Date(),
@@ -234,9 +234,9 @@ describe('SISTEMA SAAS: TRIAL GRATUITO DE 30 DIAS & CONTROLE DE ACESSO', () => {
   })
 
   // ==========================================
-  // 1. NOVO TENANT & INÍCIO DO TRIAL DE 30 DIAS
+  // 1. NOVO TENANT & INÍCIO DO TRIAL DE 7 DIAS
   // ==========================================
-  it('1. Novo tenant recebe automaticamente status TRIALING com 30 dias de trial', async () => {
+  it('1. Novo tenant recebe automaticamente status TRIALING com 7 dias de trial', async () => {
     const sub = await createTrialSubscriptionForBarbershop('shop_trial')
 
     expect(sub.id).toBeDefined()
@@ -244,10 +244,10 @@ describe('SISTEMA SAAS: TRIAL GRATUITO DE 30 DIAS & CONTROLE DE ACESSO', () => {
     expect(sub.trialStart).toBeInstanceOf(Date)
     expect(sub.trialEnd).toBeInstanceOf(Date)
 
-    // Duração exata de 30 dias (em milissegundos)
+    // Duração exata de 7 dias (em milissegundos)
     const diffDays = Math.round((sub.trialEnd!.getTime() - sub.trialStart!.getTime()) / (1000 * 60 * 60 * 24))
     expect(diffDays).toBe(DEFAULT_TRIAL_DAYS)
-    expect(diffDays).toBe(30)
+    expect(diffDays).toBe(7)
 
     // Auditoria deve conter criação e início do trial
     const events = inMemoryEvents.filter(e => e.subscriptionId === sub.id)
@@ -260,37 +260,37 @@ describe('SISTEMA SAAS: TRIAL GRATUITO DE 30 DIAS & CONTROLE DE ACESSO', () => {
   })
 
   // ==========================================
-  // 2. DIAS RESTANTES DO TRIAL (30, 29, 7, 1 DIA)
+  // 2. DIAS RESTANTES DO TRIAL (7, 6, 3, 1 DIA)
   // ==========================================
-  it('2. getSubscriptionAccess calcula corretamente os dias restantes (30, 29, 7 e 1 dia)', async () => {
+  it('2. getSubscriptionAccess calcula corretamente os dias restantes (7, 6, 3 e 1 dia)', async () => {
     const sub = await createTrialSubscriptionForBarbershop('shop_trial')
     const trialStart = new Date(sub.trialStart!)
 
-    // Momento da criação (30 dias restantes)
+    // Momento da criação (7 dias restantes)
     const accessDay0 = await getSubscriptionAccess('shop_trial', trialStart)
     expect(accessDay0.allowed).toBe(true)
     expect(accessDay0.canAccessOperations).toBe(true)
     expect(accessDay0.isTrial).toBe(true)
     expect(accessDay0.status).toBe('TRIALING')
-    expect(accessDay0.daysRemaining).toBe(30)
+    expect(accessDay0.daysRemaining).toBe(7)
 
-    // 1 dia após a criação (29 dias restantes)
+    // 1 dia após a criação (6 dias restantes)
     const day1 = new Date(trialStart.getTime() + 1 * 24 * 60 * 60 * 1000)
     const accessDay1 = await getSubscriptionAccess('shop_trial', day1)
-    expect(accessDay1.daysRemaining).toBe(29)
+    expect(accessDay1.daysRemaining).toBe(6)
     expect(accessDay1.allowed).toBe(true)
 
-    // 23 dias após a criação (7 dias restantes)
-    const day23 = new Date(trialStart.getTime() + 23 * 24 * 60 * 60 * 1000)
-    const accessDay23 = await getSubscriptionAccess('shop_trial', day23)
-    expect(accessDay23.daysRemaining).toBe(7)
-    expect(accessDay23.allowed).toBe(true)
+    // 4 dias após a criação (3 dias restantes)
+    const day4 = new Date(trialStart.getTime() + 4 * 24 * 60 * 60 * 1000)
+    const accessDay4 = await getSubscriptionAccess('shop_trial', day4)
+    expect(accessDay4.daysRemaining).toBe(3)
+    expect(accessDay4.allowed).toBe(true)
 
-    // 29 dias após a criação (1 dia restante)
-    const day29 = new Date(trialStart.getTime() + 29 * 24 * 60 * 60 * 1000)
-    const accessDay29 = await getSubscriptionAccess('shop_trial', day29)
-    expect(accessDay29.daysRemaining).toBe(1)
-    expect(accessDay29.allowed).toBe(true)
+    // 6 dias após a criação (1 dia restante)
+    const day6 = new Date(trialStart.getTime() + 6 * 24 * 60 * 60 * 1000)
+    const accessDay6 = await getSubscriptionAccess('shop_trial', day6)
+    expect(accessDay6.daysRemaining).toBe(1)
+    expect(accessDay6.allowed).toBe(true)
   })
 
   // ==========================================
@@ -381,23 +381,23 @@ describe('SISTEMA SAAS: TRIAL GRATUITO DE 30 DIAS & CONTROLE DE ACESSO', () => {
     const sub = await createTrialSubscriptionForBarbershop('shop_trial')
     const trialStart = new Date(sub.trialStart!)
 
-    // Dia 23: faltam 7 dias
-    const day23 = new Date(trialStart.getTime() + 23 * 24 * 60 * 60 * 1000)
-    const m7 = await checkTrialMilestones(sub.id, day23)
+    // Dia 0: faltam 7 dias
+    const day0 = new Date(trialStart.getTime())
+    const m7 = await checkTrialMilestones(sub.id, day0)
     expect(m7).toBe('TRIAL_7_DAYS_REMAINING')
 
     // Segunda checagem no mesmo dia não duplica evento
-    const m7Dup = await checkTrialMilestones(sub.id, day23)
+    const m7Dup = await checkTrialMilestones(sub.id, day0)
     expect(m7Dup).toBeNull()
 
-    // Dia 27: faltam 3 dias
-    const day27 = new Date(trialStart.getTime() + 27 * 24 * 60 * 60 * 1000)
-    const m3 = await checkTrialMilestones(sub.id, day27)
+    // Dia 4: faltam 3 dias
+    const day4 = new Date(trialStart.getTime() + 4 * 24 * 60 * 60 * 1000)
+    const m3 = await checkTrialMilestones(sub.id, day4)
     expect(m3).toBe('TRIAL_3_DAYS_REMAINING')
 
-    // Dia 29: falta 1 dia
-    const day29 = new Date(trialStart.getTime() + 29 * 24 * 60 * 60 * 1000)
-    const m1 = await checkTrialMilestones(sub.id, day29)
+    // Dia 6: falta 1 dia
+    const day6 = new Date(trialStart.getTime() + 6 * 24 * 60 * 60 * 1000)
+    const m1 = await checkTrialMilestones(sub.id, day6)
     expect(m1).toBe('TRIAL_1_DAY_REMAINING')
 
     // Notificações em memória para o ADMIN da barbearia
@@ -440,7 +440,7 @@ describe('SISTEMA SAAS: TRIAL GRATUITO DE 30 DIAS & CONTROLE DE ACESSO', () => {
     expect(dataAll).toHaveLength(2)
     const trialShopData = dataAll.find((s: any) => s.id === 'shop_trial')
     expect(trialShopData.trial.isTrial).toBe(true)
-    expect(trialShopData.trial.daysRemaining).toBe(30)
+    expect(trialShopData.trial.daysRemaining).toBe(7)
     expect(trialShopData.trial.status).toBe('TRIALING')
 
     // Requisição 2: Filtro ?status=TRIALING

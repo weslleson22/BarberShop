@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/api-auth'
-import { createPlan, getPlans } from '@/lib/billing/saas-billing'
+import { createPlan, getPlans, enrichPlanWithDiscount } from '@/lib/billing/saas-billing'
 import { createAuditLog } from '@/lib/audit-log'
 import { AuditAction, AuditEntity, Prisma } from '@prisma/client'
 import { listAbacateProducts } from '@/lib/billing/abacatepay-provider'
@@ -43,11 +43,11 @@ export async function GET(request: NextRequest) {
             ap.externalId === p.id ||
             ap.name?.toLowerCase() === p.name.toLowerCase()
         )
-        return {
+        return enrichPlanWithDiscount({
           ...p,
           isSyncedWithAbacate: Boolean(matchingProduct || p.providerProductId),
           abacateProductId: matchingProduct?.id || p.providerProductId || null,
-        }
+        })
       })
 
       return NextResponse.json(enriched)
@@ -224,9 +224,9 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const verifiedPlans = Array.from(validPlansMap.values()).sort(
-        (a, b) => Number(a.price) - Number(b.price)
-      )
+      const verifiedPlans = Array.from(validPlansMap.values())
+        .map(enrichPlanWithDiscount)
+        .sort((a, b) => Number(a.price) - Number(b.price))
 
       return NextResponse.json(verifiedPlans, {
         headers: {
@@ -251,10 +251,12 @@ export async function GET(request: NextRequest) {
           !discontinuedProductIds.has(p.providerProductId!) &&
           !discontinuedPlanIds.has(p.id)
       )
-      .map((p) => ({
-        ...p,
-        isSyncedWithAbacate: true,
-      }))
+      .map((p) =>
+        enrichPlanWithDiscount({
+          ...p,
+          isSyncedWithAbacate: true,
+        })
+      )
 
     return NextResponse.json(fallbackPlans, {
       headers: {
@@ -287,6 +289,8 @@ export async function POST(request: NextRequest) {
       cycleType = 'MONTHLY',
       durationDays,
       price,
+      originalPrice,
+      discountBadge,
       currency = 'BRL',
       billingInterval,
       trialDays,
@@ -344,6 +348,8 @@ export async function POST(request: NextRequest) {
       cycleType,
       durationDays: durationDays ? Number(durationDays) : undefined,
       price: planType === 'COURTESY' ? 0 : price,
+      originalPrice,
+      discountBadge,
       currency,
       billingInterval,
       trialDays: trialDays !== undefined ? Number(trialDays) : undefined,

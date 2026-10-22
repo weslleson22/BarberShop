@@ -31,6 +31,10 @@ interface Plan {
   slug: string
   description?: string
   price: number
+  originalPrice?: number | null
+  discountBadge?: string | null
+  discountPercent?: number
+  savingsAmount?: number
   currency: string
   billingInterval: string
   durationDays?: number
@@ -185,36 +189,14 @@ function AssinaturaContent() {
                 currentPeriodEnd: accData.trialEnd || accData.currentPeriodEnd,
                 trialStart: accData.trialStart,
                 trialEnd: accData.trialEnd,
-                durationDays: accData.isTrial ? 30 : 30,
-                planName: accData.plan?.name || (accData.isTrial ? 'Plano Trial Gratuito (30 dias)' : 'Plano Comercial Ativo'),
+                durationDays: accData.isTrial ? 7 : 30,
+                planName: accData.plan?.name || (accData.isTrial ? 'Plano Trial Gratuito (7 dias)' : 'Plano Comercial Ativo'),
                 plan: accData.plan ? { ...accData.plan, isActive: true, price: 0, currency: 'BRL', billingInterval: 'MONTHLY' } : undefined,
               } as any)
             }
           }
         } catch (accErr) {
           console.warn('Erro ao checar fallback de acesso:', accErr)
-        }
-      }
-
-      // Se a assinatura não estiver com status ACTIVE (ex: trial, expirada ou nova compra não sincronizada),
-      // realiza auto-recuperação consultando compras concluídas na AbacatePay
-      if (!loadedSubscription || loadedSubscription.status !== 'ACTIVE') {
-        try {
-          const syncRes = await fetch('/api/billing/checkout/confirm', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...headers },
-            credentials: 'include',
-            body: JSON.stringify({}),
-          })
-          if (syncRes.ok) {
-            const syncData = await syncRes.json()
-            if (syncData.success && syncData.subscription) {
-              loadedSubscription = syncData.subscription
-              setSubscription(syncData.subscription)
-            }
-          }
-        } catch (syncErr) {
-          console.warn('Tentativa de sincronização automática com AbacatePay:', syncErr)
         }
       }
 
@@ -483,7 +465,7 @@ function AssinaturaContent() {
                   )}
                 </div>
                 <h2 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
-                  {subscription?.planName || subscription?.plan?.name || (subscription?.status === 'TRIALING' ? 'Plano Trial Gratuito (30 dias)' : 'Sem plano contratado')}
+                  {subscription?.planName || subscription?.plan?.name || (subscription?.status === 'TRIALING' ? 'Plano Trial Gratuito (7 dias)' : 'Sem plano contratado')}
                 </h2>
                 {isCurrentPlanDiscontinued ? (
                   <p className="text-sm text-amber-300 max-w-2xl bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
@@ -656,8 +638,26 @@ function AssinaturaContent() {
                       <p className="text-xs text-muted-foreground mt-1.5 min-h-[32px]">{p.description || 'Gestão completa para barbearia'}</p>
 
                       <div className="mt-5 pb-5 border-b border-border">
-                        <span className="text-3xl font-extrabold text-foreground">{formatPrice(Number(p.price))}</span>
-                        <span className="text-xs text-muted-foreground">/{p.billingInterval === 'YEARLY' ? 'ano' : 'mês'}</span>
+                        {p.originalPrice && Number(p.originalPrice) > Number(p.price) && (
+                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                            <span className="text-xs text-muted-foreground font-medium">De:</span>
+                            <span className="text-sm text-muted-foreground line-through font-semibold decoration-red-500/80 decoration-2">
+                              {formatPrice(Number(p.originalPrice))}
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                              {p.discountBadge || `${p.discountPercent || Math.round(((Number(p.originalPrice) - Number(p.price)) / Number(p.originalPrice)) * 100)}% OFF`}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-extrabold text-foreground">{formatPrice(Number(p.price))}</span>
+                          <span className="text-xs text-muted-foreground">/{p.billingInterval === 'YEARLY' ? 'ano' : 'mês'}</span>
+                        </div>
+                        {p.originalPrice && Number(p.originalPrice) > Number(p.price) && (
+                          <span className="text-[11px] text-emerald-400 font-semibold block mt-1">
+                            Economia de {formatPrice(Number(p.originalPrice) - Number(p.price))} neste plano
+                          </span>
+                        )}
                         <span className="text-[11px] text-muted-foreground block mt-1">
                           {p.billingInterval === 'YEARLY' ? 'Vigência de 365 dias' : 'Vigência de 30 dias renováveis'}
                         </span>

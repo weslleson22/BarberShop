@@ -92,16 +92,12 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Se nenhum filtro estrito bateu, considera o checkout mais recente criado na loja (últimas 2 horas)
-    if (matchingCheckouts.length === 0 && checkouts.length > 0) {
-      const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000
-      const recents = checkouts.filter((c: any) => {
-        const t = c.createdAt ? new Date(c.createdAt).getTime() : 0
-        return t > twoHoursAgo
+    // Se nenhum checkout corresponder à barbearia, encerra sem alterar a assinatura
+    if (matchingCheckouts.length === 0) {
+      return NextResponse.json({
+        success: false,
+        message: 'Nenhum pagamento ou checkout correspondente encontrado para esta barbearia.',
       })
-      if (recents.length > 0) {
-        matchingCheckouts = recents
-      }
     }
 
     // Ordena do mais recente para o mais antigo

@@ -34,6 +34,10 @@ export interface PlanItem {
   cycleType: 'MONTHLY' | 'YEARLY' | 'CUSTOM'
   durationDays: number
   price: number | string
+  originalPrice?: number | string | null
+  discountBadge?: string | null
+  discountPercent?: number
+  savingsAmount?: number
   currency: string
   billingInterval: string
   trialDays?: number
@@ -86,6 +90,8 @@ export default function DeveloperPlansPage() {
     cycleType: 'MONTHLY' as 'MONTHLY' | 'YEARLY' | 'CUSTOM',
     durationDays: '30',
     price: '49.90',
+    originalPrice: '79.90',
+    discountBadge: '',
     status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE',
     trialDays: '0',
     features: 'Agendamento online, Gestão de profissionais, Relatórios financeiros, Página pública',
@@ -157,6 +163,8 @@ export default function DeveloperPlansPage() {
       cycleType: 'MONTHLY',
       durationDays: '30',
       price: '49.90',
+      originalPrice: '79.90',
+      discountBadge: '',
       status: 'ACTIVE',
       trialDays: '0',
       features: 'Agendamento online, Gestão de profissionais, Relatórios financeiros, Página pública',
@@ -167,7 +175,27 @@ export default function DeveloperPlansPage() {
   // Open Edit Modal
   const handleOpenEdit = (plan: PlanItem) => {
     setEditingPlan(plan)
-    const featuresStr = Array.isArray(plan.features) ? plan.features.join(', ') : ''
+    let featuresStr = ''
+    if (Array.isArray(plan.features)) {
+      featuresStr = plan.features.join(', ')
+    } else if (plan.features && typeof plan.features === 'object') {
+      if (Array.isArray(plan.features.items)) {
+        featuresStr = plan.features.items.join(', ')
+      }
+    }
+
+    const origPrice =
+      plan.originalPrice !== undefined && plan.originalPrice !== null
+        ? String(plan.originalPrice)
+        : (plan.features && typeof plan.features === 'object' && plan.features.originalPrice)
+        ? String(plan.features.originalPrice)
+        : ''
+
+    const discBadge =
+      plan.discountBadge ||
+      (plan.features && typeof plan.features === 'object' && plan.features.discountBadge) ||
+      ''
+
     setPlanForm({
       name: plan.name,
       slug: plan.slug,
@@ -176,6 +204,8 @@ export default function DeveloperPlansPage() {
       cycleType: plan.cycleType,
       durationDays: plan.durationDays ? String(plan.durationDays) : '30',
       price: plan.planType === 'COURTESY' ? '0' : String(plan.price),
+      originalPrice: plan.planType === 'COURTESY' ? '' : origPrice,
+      discountBadge: discBadge,
       status: plan.status,
       trialDays: plan.trialDays ? String(plan.trialDays) : '0',
       features: featuresStr || 'Agendamento online, Gestão de profissionais',
@@ -208,6 +238,8 @@ export default function DeveloperPlansPage() {
         cycleType: planForm.cycleType,
         durationDays: finalDuration,
         price: isCourtesy ? 0 : parseFloat(planForm.price),
+        originalPrice: isCourtesy || !planForm.originalPrice ? null : parseFloat(planForm.originalPrice),
+        discountBadge: isCourtesy || !planForm.discountBadge.trim() ? null : planForm.discountBadge.trim(),
         currency: 'BRL',
         status: planForm.status,
         isActive: planForm.status === 'ACTIVE',
@@ -630,11 +662,28 @@ export default function DeveloperPlansPage() {
                         </td>
 
                         {/* Preço Column */}
-                        <td className="py-4 px-4 text-right font-black text-white text-sm">
+                        <td className="py-4 px-4 text-right">
                           {isCourtesy ? (
-                            <span className="text-gray-300 font-bold">R$ 0,00</span>
+                            <span className="text-gray-300 font-bold text-sm">R$ 0,00</span>
                           ) : (
-                            formatPrice(plan.price)
+                            <div className="flex flex-col items-end">
+                              {plan.originalPrice && Number(plan.originalPrice) > Number(plan.price) && (
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                  <span className="text-[11px] text-gray-400 line-through font-normal">
+                                    De {formatPrice(plan.originalPrice)}
+                                  </span>
+                                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                    {plan.discountBadge || `-${Math.round(((Number(plan.originalPrice) - Number(plan.price)) / Number(plan.originalPrice)) * 100)}%`}
+                                  </span>
+                                </div>
+                              )}
+                              <span className="font-black text-white text-sm">
+                                {formatPrice(plan.price)}
+                              </span>
+                              <span className="text-[10px] text-gray-400">
+                                /{plan.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
+                              </span>
+                            </div>
                           )}
                         </td>
 
@@ -825,7 +874,7 @@ export default function DeveloperPlansPage() {
                 </div>
 
                 {/* Ciclo & Duração */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-white font-bold mb-1">Ciclo *</label>
                     <select
@@ -859,21 +908,123 @@ export default function DeveloperPlansPage() {
                       className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:bg-[#1f2937]"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-white font-bold mb-1">Preço (R$) *</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      required
-                      disabled={planForm.planType === 'COURTESY'}
-                      value={planForm.planType === 'COURTESY' ? '0' : planForm.price}
-                      onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
-                      placeholder="97.00"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:bg-[#1f2937]"
-                    />
+                {/* Bloco de Precificação & Desconto Estratégico */}
+                <div className="bg-[#030712] p-4 rounded-xl border border-[#374151] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5" />
+                      Precificação & Estratégia de Desconto
+                    </span>
+                    <span className="text-[11px] text-gray-400 font-medium">
+                      Exibido na Landing Page e no Checkout
+                    </span>
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Preço Atual com Desconto */}
+                    <div>
+                      <label className="block text-white font-bold mb-1 text-xs">
+                        Preço Atual c/ Desconto (R$) *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                        disabled={planForm.planType === 'COURTESY'}
+                        value={planForm.planType === 'COURTESY' ? '0' : planForm.price}
+                        onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
+                        placeholder="49.90"
+                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-[#374151] text-white font-semibold focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                      />
+                      <span className="text-[10px] text-emerald-400 block mt-1 font-medium">
+                        ✓ Valor efetivamente cobrado
+                      </span>
+                    </div>
+
+                    {/* Preço Original sem Desconto (Valor Riscado) */}
+                    <div>
+                      <label className="block text-white font-bold mb-1 text-xs">
+                        Preço Original s/ Desconto (R$)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        disabled={planForm.planType === 'COURTESY'}
+                        value={planForm.originalPrice}
+                        onChange={(e) => setPlanForm({ ...planForm, originalPrice: e.target.value })}
+                        placeholder="79.90 (opcional)"
+                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-[#374151] text-white font-semibold focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                      />
+                      <span className="text-[10px] text-gray-400 block mt-1">
+                        Aparecerá riscado (ex: ~De R$ 79,90~)
+                      </span>
+                    </div>
+
+                    {/* Selo/Badge de Desconto */}
+                    <div>
+                      <label className="block text-white font-bold mb-1 text-xs">
+                        Selo / Badge de Desconto
+                      </label>
+                      <input
+                        type="text"
+                        disabled={planForm.planType === 'COURTESY'}
+                        value={planForm.discountBadge}
+                        onChange={(e) => setPlanForm({ ...planForm, discountBadge: e.target.value })}
+                        placeholder="Ex: 38% OFF ou Oferta Especial"
+                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-[#374151] text-white font-semibold focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                      />
+                      <span className="text-[10px] text-gray-400 block mt-1">
+                        Se vazio, calcula % automático
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Prévia Visual do Desconto para o Cliente */}
+                  {planForm.planType === 'PAID' && (
+                    <div className="mt-2 p-3 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-xs">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-gray-300 font-medium">
+                          👁️ <strong>Prévia na Landing Page:</strong>
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {Number(planForm.originalPrice) > Number(planForm.price) && (
+                            <span className="text-slate-400 line-through text-xs font-semibold">
+                              De R$ {parseFloat(planForm.originalPrice || '0').toFixed(2).replace('.', ',')}
+                            </span>
+                          )}
+                          <span className="text-white font-black text-sm">
+                            Por R$ {parseFloat(planForm.price || '0').toFixed(2).replace('.', ',')}
+                            <span className="text-xs text-gray-300 font-normal">
+                              /{planForm.cycleType === 'YEARLY' ? 'ano' : 'mês'}
+                            </span>
+                          </span>
+                          {Number(planForm.originalPrice) > Number(planForm.price) && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                              {planForm.discountBadge.trim() ||
+                                `${Math.round(
+                                  ((Number(planForm.originalPrice) - Number(planForm.price)) /
+                                    Number(planForm.originalPrice)) *
+                                    100
+                                )}% OFF`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {Number(planForm.originalPrice) > Number(planForm.price) && (
+                        <div className="text-[11px] text-emerald-400 mt-1 font-medium">
+                          🎉 O cliente terá a percepção de economizar{' '}
+                          <strong>
+                            R$ {(Number(planForm.originalPrice) - Number(planForm.price)).toFixed(2).replace('.', ',')}
+                          </strong>{' '}
+                          ao contratar este plano com desconto!
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Descrição */}

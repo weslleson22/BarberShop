@@ -153,7 +153,7 @@ export default function TenantFeedbackModal({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-medium text-white tracking-wider uppercase bg-[#1f2937] px-2 py-0.5 rounded border border-[#374151]">
-                  CSAT & Validação • Piloto 30 Dias
+                  CSAT & Validação • Piloto 7 Dias
                 </span>
                 {barbershopName && (
                   <span className="text-[11px] font-medium text-white bg-[#030712] px-2 py-0.5 rounded-full border border-[#374151] flex items-center gap-1">
@@ -290,7 +290,7 @@ export default function TenantFeedbackModal({
             {/* Intenção de Continuar (3 Cards Interativos) */}
             <div className="p-4 bg-[#030712] rounded-xl border border-[#374151] space-y-2.5">
               <label className="block text-xs font-semibold text-white">
-                Pretende continuar utilizando após o período de teste de 30 dias?
+                Pretende continuar utilizando após o período de teste de 7 dias?
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-0.5">

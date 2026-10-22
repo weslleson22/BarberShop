@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
-import { updatePlan, deleteOrDeactivatePlan } from '@/lib/billing/saas-billing'
+import { updatePlan, deleteOrDeactivatePlan, enrichPlanWithDiscount } from '@/lib/billing/saas-billing'
 import { createAuditLog } from '@/lib/audit-log'
 import { AuditAction, AuditEntity } from '@prisma/client'
 
@@ -60,11 +60,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       (s: any) => s.status === 'ACTIVE' || s.status === 'TRIALING'
     ).length
 
-    return NextResponse.json({
+    return NextResponse.json(enrichPlanWithDiscount({
       ...plan,
       totalSubscriptionsCount: (plan.subscriptions || []).length,
       activeSubscriptionsCount: activeCount,
-    })
+    }))
   } catch (error) {
     console.error('Erro ao buscar plano:', error)
     return NextResponse.json({ error: 'Erro ao buscar detalhes do plano' }, { status: 500 })

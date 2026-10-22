@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
           trialStart: latestSub.trialStart ? new Date(latestSub.trialStart).toISOString() : null,
           trialEnd: latestSub.trialEnd ? new Date(latestSub.trialEnd).toISOString() : null,
           daysRemaining: isTrialExpired ? 0 : daysRemaining,
-          planName: latestSub.plan?.name || 'Trial Gratuito (30 dias)',
+          planName: latestSub.plan?.name || 'Trial Gratuito (7 dias)',
           status: effectiveStatus,
         }
       } else if (shop.contractExpiresAt) {
@@ -125,12 +125,12 @@ export async function GET(request: NextRequest) {
           trialStart: shop.createdAt ? new Date(shop.createdAt).toISOString() : null,
           trialEnd: expDate.toISOString(),
           daysRemaining: isExpired ? 0 : daysRemaining,
-          planName: 'Trial Gratuito (30 dias)',
+          planName: 'Trial Gratuito (7 dias)',
           status: isExpired ? 'EXPIRED' : 'TRIALING',
         }
       } else if (shop.createdAt) {
         const createdDate = new Date(shop.createdAt)
-        const calculatedEnd = new Date(createdDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+        const calculatedEnd = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000)
         const isExpired = now > calculatedEnd
         const daysRemaining = Math.max(0, Math.ceil((calculatedEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
         trial = {
@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
           trialStart: createdDate.toISOString(),
           trialEnd: calculatedEnd.toISOString(),
           daysRemaining: isExpired ? 0 : daysRemaining,
-          planName: 'Trial Gratuito (30 dias)',
+          planName: 'Trial Gratuito (7 dias)',
           status: isExpired ? 'EXPIRED' : (shop.isActive ? 'TRIALING' : 'SUSPENDED'),
         }
       }

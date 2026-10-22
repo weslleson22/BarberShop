@@ -22,10 +22,12 @@ export interface CreatePlanInput {
   cycleType?: CycleType
   durationDays?: number
   price: number | string | Prisma.Decimal
+  originalPrice?: number | string | Prisma.Decimal | null
+  discountBadge?: string | null
   currency?: string
   billingInterval?: BillingInterval
   trialDays?: number
-  features?: Record<string, any>
+  features?: Record<string, any> | string[]
   status?: PlanStatus
   isActive?: boolean
   provider?: string
@@ -40,10 +42,12 @@ export interface UpdatePlanInput {
   cycleType?: CycleType
   durationDays?: number
   price?: number | string | Prisma.Decimal
+  originalPrice?: number | string | Prisma.Decimal | null
+  discountBadge?: string | null
   currency?: string
   billingInterval?: BillingInterval
   trialDays?: number
-  features?: Record<string, any>
+  features?: Record<string, any> | string[]
   status?: PlanStatus
   isActive?: boolean
   provider?: string
@@ -220,6 +224,57 @@ export function calculatePeriodEnd(
 }
 
 /**
+ * Enriquece o plano com dados promocionais de desconto e valor sem desconto (cortado)
+ */
+export function enrichPlanWithDiscount(plan: any): any {
+  if (!plan) return plan
+  let originalPrice: number | null = null
+  let discountBadge: string | null = null
+  let featuresItems: string[] = []
+
+  const feat = plan.features
+  if (Array.isArray(feat)) {
+    featuresItems = feat
+  } else if (feat && typeof feat === 'object') {
+    if (Array.isArray(feat.items)) {
+      featuresItems = feat.items
+    }
+    if (feat.originalPrice !== undefined && feat.originalPrice !== null && feat.originalPrice !== '') {
+      originalPrice = Number(feat.originalPrice)
+    }
+    if (feat.discountBadge) {
+      discountBadge = String(feat.discountBadge).trim()
+    }
+  }
+
+  if (plan.originalPrice !== undefined && plan.originalPrice !== null && plan.originalPrice !== '') {
+    originalPrice = Number(plan.originalPrice)
+  }
+  if (plan.discountBadge) {
+    discountBadge = String(plan.discountBadge).trim()
+  }
+
+  const currentPrice = Number(plan.price) || 0
+  let discountPercent = 0
+  let savingsAmount = 0
+
+  if (originalPrice && originalPrice > currentPrice) {
+    savingsAmount = Number((originalPrice - currentPrice).toFixed(2))
+    discountPercent = Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
+  }
+
+  return {
+    ...plan,
+    price: plan.price,
+    originalPrice: originalPrice && originalPrice > 0 ? originalPrice : null,
+    discountBadge: discountBadge || (discountPercent > 0 ? `${discountPercent}% OFF` : null),
+    discountPercent,
+    savingsAmount,
+    features: featuresItems.length > 0 ? featuresItems : (Array.isArray(feat) ? feat : []),
+  }
+}
+
+/**
  * Criação de um novo Plano de Assinatura do SaaS
  */
 export async function createPlan(data: CreatePlanInput): Promise<Plan> {
@@ -259,6 +314,34 @@ export async function createPlan(data: CreatePlanInput): Promise<Plan> {
   const billingInterval: BillingInterval =
     data.billingInterval || (cycleType === 'YEARLY' ? 'YEARLY' : 'MONTHLY')
 
+  let featuresToStore: any = data.features ?? {}
+  const originalPriceVal =
+    data.originalPrice !== undefined && data.originalPrice !== null && data.originalPrice !== ''
+      ? Number(data.originalPrice)
+      : null
+  const discountBadgeVal =
+    data.discountBadge !== undefined && data.discountBadge !== null && data.discountBadge !== ''
+      ? String(data.discountBadge).trim()
+      : null
+
+  if (Array.isArray(featuresToStore)) {
+    if (originalPriceVal !== null || discountBadgeVal !== null) {
+      featuresToStore = {
+        items: featuresToStore,
+        originalPrice: originalPriceVal,
+        discountBadge: discountBadgeVal,
+      }
+    }
+  } else if (typeof featuresToStore === 'object' && featuresToStore !== null) {
+    featuresToStore = { ...featuresToStore }
+    if (originalPriceVal !== null) {
+      featuresToStore.originalPrice = originalPriceVal
+    }
+    if (discountBadgeVal !== null) {
+      featuresToStore.discountBadge = discountBadgeVal
+    }
+  }
+
   const created = await prisma.plan.create({
     data: {
       name: data.name,
@@ -275,7 +358,7 @@ export async function createPlan(data: CreatePlanInput): Promise<Plan> {
       isActive,
       provider: planType === 'COURTESY' ? 'NONE' : (data.provider || 'ABACATEPAY'),
       providerProductId: data.providerProductId,
-      features: (data.features as Prisma.InputJsonValue) || {},
+      features: (featuresToStore as Prisma.InputJsonValue) || {},
     },
   })
 
@@ -289,7 +372,7 @@ export async function createPlan(data: CreatePlanInput): Promise<Plan> {
     }
   }
 
-  return created
+  return enrichPlanWithDiscount(created)
 }
 
 /**
@@ -309,7 +392,45 @@ export async function updatePlan(planId: string, data: UpdatePlanInput): Promise
   if (data.name !== undefined) updateData.name = data.name
   if (data.slug !== undefined) updateData.slug = data.slug.toLowerCase().trim()
   if (data.description !== undefined) updateData.description = data.description
-  if (data.features !== undefined) updateData.features = data.features as Prisma.InputJsonValue
+
+  if (data.originalPrice !== undefined || data.discountBadge !== undefined || data.features !== undefined) {
+    let currentFeatures: any = data.features !== undefined ? data.features : existing.features
+
+    let originalPriceVal =
+      data.originalPrice !== undefined
+        ? (data.originalPrice !== null && data.originalPrice !== '' ? Number(data.originalPrice) : null)
+        : (currentFeatures && typeof currentFeatures === 'object' && !Array.isArray(currentFeatures) ? currentFeatures.originalPrice : null)
+
+    let discountBadgeVal =
+      data.discountBadge !== undefined
+        ? (data.discountBadge !== null && data.discountBadge !== '' ? String(data.discountBadge).trim() : null)
+        : (currentFeatures && typeof currentFeatures === 'object' && !Array.isArray(currentFeatures) ? currentFeatures.discountBadge : null)
+
+    if (Array.isArray(currentFeatures)) {
+      if (originalPriceVal !== null || discountBadgeVal !== null) {
+        updateData.features = {
+          items: currentFeatures,
+          originalPrice: originalPriceVal,
+          discountBadge: discountBadgeVal,
+        } as Prisma.InputJsonValue
+      } else {
+        updateData.features = currentFeatures as Prisma.InputJsonValue
+      }
+    } else if (typeof currentFeatures === 'object' && currentFeatures !== null) {
+      const merged = { ...currentFeatures }
+      if (originalPriceVal !== null) {
+        merged.originalPrice = originalPriceVal
+      } else if (data.originalPrice === null || data.originalPrice === '') {
+        delete merged.originalPrice
+      }
+      if (discountBadgeVal !== null) {
+        merged.discountBadge = discountBadgeVal
+      } else if (data.discountBadge === null || data.discountBadge === '') {
+        delete merged.discountBadge
+      }
+      updateData.features = merged as Prisma.InputJsonValue
+    }
+  }
 
   const planType: PlanType = data.planType || existing.planType
   if (data.planType !== undefined) updateData.planType = data.planType
@@ -360,10 +481,12 @@ export async function updatePlan(planId: string, data: UpdatePlanInput): Promise
   if (data.providerProductId !== undefined) updateData.providerProductId = data.providerProductId
   if (data.billingInterval !== undefined) updateData.billingInterval = data.billingInterval
 
-  return await prisma.plan.update({
+  const updated = await prisma.plan.update({
     where: { id: planId },
     data: updateData,
   })
+
+  return enrichPlanWithDiscount(updated)
 }
 
 /**
@@ -478,7 +601,7 @@ export async function getPlans(options: boolean | GetPlansFilters = true): Promi
     }
   }
 
-  return await prisma.plan.findMany({
+  const results = await prisma.plan.findMany({
     where,
     include: {
       _count: {
@@ -487,6 +610,8 @@ export async function getPlans(options: boolean | GetPlansFilters = true): Promi
     },
     orderBy: { price: 'asc' },
   })
+
+  return results.map(enrichPlanWithDiscount)
 }
 
 /**
@@ -1165,10 +1290,10 @@ export async function getSubscriptionHistory(barbershopId: string): Promise<Subs
 }
 
 // ==========================================
-// CONTROLE DE ACESSO, TRIAL DE 30 DIAS E AVISOS
+// CONTROLE DE ACESSO, TRIAL DE 7 DIAS E AVISOS
 // ==========================================
 
-export const DEFAULT_TRIAL_DAYS = 30
+export const DEFAULT_TRIAL_DAYS = 7
 
 export interface SubscriptionAccess {
   allowed: boolean
@@ -1184,6 +1309,7 @@ export interface SubscriptionAccess {
     | 'SUBSCRIPTION_CANCELED'
     | 'NO_SUBSCRIPTION'
   isTrial: boolean
+  isContracted?: boolean
   daysRemaining: number
   trialStart?: Date | null
   trialEnd?: Date | null
@@ -1223,13 +1349,6 @@ export async function createTrialSubscriptionForBarbershop(
   let trialPlan = await txClient.plan.findFirst({
     where: { slug: planSlug },
   })
-
-  if (!trialPlan) {
-    trialPlan = await txClient.plan.findFirst({
-      where: { isActive: true },
-      orderBy: { price: 'asc' },
-    })
-  }
 
   if (!trialPlan) {
     trialPlan = await txClient.plan.create({
@@ -1287,7 +1406,7 @@ export async function createTrialSubscriptionForBarbershop(
         planId: trialPlan.id,
         planSlug: trialPlan.slug,
         isTrial: true,
-        trialDays: DEFAULT_TRIAL_DAYS,
+        trialDays,
       } as Prisma.InputJsonValue,
     },
   })
@@ -1299,7 +1418,7 @@ export async function createTrialSubscriptionForBarbershop(
       payload: {
         trialStart: now.toISOString(),
         trialEnd: trialEnd.toISOString(),
-        trialDays: DEFAULT_TRIAL_DAYS,
+        trialDays,
       } as Prisma.InputJsonValue,
     },
   })
@@ -1334,49 +1453,65 @@ export async function getSubscriptionAccess(
   }
 
   if (!subscription) {
-    // Fallback legado se a barbearia tiver apenas contractExpiresAt ou estiver ativa sem tabela de subscriptions
+    // Fallback se a barbearia tiver apenas trialEndsAt/contractExpiresAt ou estiver ativa sem linha de subscription
     let shop: any = null
     try {
       if (txClient?.barbershop?.findUnique) {
         shop = await txClient.barbershop.findUnique({
           where: { id: barbershopId },
-          select: { contractExpiresAt: true, isActive: true },
+          select: { trialEndsAt: true, contractExpiresAt: true, isActive: true, createdAt: true },
         })
       }
       if (!shop && txClient?.barbershop?.findFirst) {
         shop = await txClient.barbershop.findFirst({
           where: { id: barbershopId },
-          select: { contractExpiresAt: true, isActive: true },
+          select: { trialEndsAt: true, contractExpiresAt: true, isActive: true, createdAt: true },
         })
       }
     } catch {}
 
-    if (shop?.contractExpiresAt && shop.isActive) {
-      const expDate = new Date(shop.contractExpiresAt)
-      if (currentDate <= expDate) {
-        const daysRemaining = Math.max(0, Math.ceil((expDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)))
+    const trialEnd = shop?.trialEndsAt
+      ? new Date(shop.trialEndsAt)
+      : shop?.contractExpiresAt
+      ? new Date(shop.contractExpiresAt)
+      : shop?.createdAt
+      ? new Date(new Date(shop.createdAt).getTime() + DEFAULT_TRIAL_DAYS * 24 * 60 * 60 * 1000)
+      : null
+
+    if (trialEnd && shop?.isActive) {
+      if (currentDate <= trialEnd) {
+        const daysRemaining = Math.max(0, Math.ceil((trialEnd.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)))
         return {
           allowed: true,
           canAccessOperations: true,
           canAccessBillingOnly: false,
-          status: 'ACTIVE',
-          reason: 'SUBSCRIPTION_ACTIVE',
-          isTrial: false,
+          status: 'TRIALING',
+          reason: 'TRIAL_ACTIVE',
+          isTrial: true,
+          isContracted: false,
           daysRemaining,
-          currentPeriodEnd: expDate,
-          message: 'Assinatura ativa',
+          trialEnd,
+          currentPeriodEnd: trialEnd,
+          message: `Período de teste gratuito ativo (${daysRemaining} dias restantes)`,
+          plan: {
+            id: 'trial_fallback',
+            name: `Plano Trial Gratuito (${DEFAULT_TRIAL_DAYS} dias)`,
+            slug: `trial-${DEFAULT_TRIAL_DAYS}-days`,
+          },
         }
-      }
-    } else if (shop?.isActive) {
-      return {
-        allowed: true,
-        canAccessOperations: true,
-        canAccessBillingOnly: false,
-        status: 'ACTIVE',
-        reason: 'SUBSCRIPTION_ACTIVE',
-        isTrial: false,
-        daysRemaining: 30,
-        message: 'Assinatura ativa',
+      } else {
+        return {
+          allowed: false,
+          canAccessOperations: false,
+          canAccessBillingOnly: true,
+          status: 'EXPIRED',
+          reason: 'TRIAL_EXPIRED',
+          isTrial: false,
+          isContracted: false,
+          daysRemaining: 0,
+          trialEnd,
+          message: `Seu período de teste gratuito de ${DEFAULT_TRIAL_DAYS} dias expirou. Escolha um plano para continuar operando.`,
+        }
       }
     }
 
@@ -1387,6 +1522,7 @@ export async function getSubscriptionAccess(
       status: 'NO_SUBSCRIPTION',
       reason: 'NO_SUBSCRIPTION',
       isTrial: false,
+      isContracted: false,
       daysRemaining: 0,
       message: 'Nenhuma assinatura ativa encontrada. Escolha um plano para começar.',
     }
@@ -1428,7 +1564,7 @@ export async function getSubscriptionAccess(
         daysRemaining: 0,
         trialStart,
         trialEnd,
-        message: 'Seu período de teste gratuito de 30 dias expirou. Escolha um plano para continuar operando.',
+        message: `Seu período de teste gratuito de ${DEFAULT_TRIAL_DAYS} dias expirou. Escolha um plano para continuar operando.`,
         plan: planInfo,
       }
     }
@@ -1444,6 +1580,7 @@ export async function getSubscriptionAccess(
       status: 'TRIALING',
       reason: 'TRIAL_ACTIVE',
       isTrial: true,
+      isContracted: false,
       daysRemaining,
       trialStart,
       trialEnd,
@@ -1456,6 +1593,10 @@ export async function getSubscriptionAccess(
 
   // 2. ACTIVE
   if (status === 'ACTIVE') {
+    // Verifica se é plano de teste / cortesia não contratado
+    const isTrialPlan = plan && (plan.slug?.startsWith('trial-') || Number(plan.price || 0) === 0 || subscription.planType === 'TRIAL')
+    const isContracted = !isTrialPlan && (Number(plan?.price || 0) > 0 || subscription.planType === 'PAID')
+
     if (currentPeriodEnd && currentDate > currentPeriodEnd) {
       // Regra 24: Expiração automática ao atingir término (endDate)
       try {
@@ -1486,6 +1627,7 @@ export async function getSubscriptionAccess(
         status: 'EXPIRED',
         reason: 'TRIAL_EXPIRED',
         isTrial: false,
+        isContracted: false,
         daysRemaining: 0,
         currentPeriodStart,
         currentPeriodEnd,
@@ -1503,13 +1645,14 @@ export async function getSubscriptionAccess(
       allowed: true,
       canAccessOperations: true,
       canAccessBillingOnly: false,
-      status: 'ACTIVE',
-      reason: 'SUBSCRIPTION_ACTIVE',
-      isTrial: false,
+      status: isTrialPlan ? 'TRIALING' : 'ACTIVE',
+      reason: isTrialPlan ? 'TRIAL_ACTIVE' : 'SUBSCRIPTION_ACTIVE',
+      isTrial: isTrialPlan,
+      isContracted,
       daysRemaining,
       currentPeriodStart,
       currentPeriodEnd,
-      message: 'Assinatura ativa',
+      message: isTrialPlan ? `Período de teste gratuito ativo (${daysRemaining} dias restantes)` : 'Assinatura ativa',
       plan: planInfo,
     }
   }
@@ -1689,7 +1832,7 @@ export async function checkTrialMilestones(
       },
       TRIAL_EXPIRED: {
         title: 'Período de teste gratuito expirou',
-        message: 'Seus 30 dias de teste gratuito terminaram. Contrate um plano para reativar os agendamentos.',
+        message: `Seus ${DEFAULT_TRIAL_DAYS} dias de teste gratuito terminaram. Contrate um plano para reativar os agendamentos.`,
       },
     }
 

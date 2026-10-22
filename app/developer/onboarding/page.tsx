@@ -709,7 +709,7 @@ export default function DeveloperOnboardingCockpitPage() {
                   <TableRow className="border-b border-[#374151] hover:bg-transparent">
                     <TableHead className="py-3.5 px-4 font-semibold text-white">Barbearia & Contato</TableHead>
                     <TableHead className="py-3.5 px-4 font-semibold text-white">Status Ciclo de Vida</TableHead>
-                    <TableHead className="py-3.5 px-4 font-semibold text-white">Trial (30 Dias)</TableHead>
+                    <TableHead className="py-3.5 px-4 font-semibold text-white">Trial (7 Dias)</TableHead>
                     <TableHead className="py-3.5 px-4 font-semibold text-white">Onboarding (12 Passos)</TableHead>
                     <TableHead className="py-3.5 px-4 font-semibold text-white">Ativação (1º Agend.)</TableHead>
                     <TableHead className="py-3.5 px-4 font-semibold text-white">Uso & Contadores</TableHead>

@@ -214,11 +214,11 @@ export function resolveTenantLifecycleStatus(shop: {
     return 'TRIAL'
   }
 
-  // Fallback baseado nos 30 dias de trial a partir da criação
+  // Fallback baseado nos 7 dias de trial a partir da criação
   if (shop.createdAt) {
     const createdDate = new Date(shop.createdAt)
-    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
-    if (now.getTime() - createdDate.getTime() > thirtyDaysMs) {
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+    if (now.getTime() - createdDate.getTime() > sevenDaysMs) {
       return 'CANCELED'
     }
     return 'TRIAL'

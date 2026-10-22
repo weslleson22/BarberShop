@@ -1306,7 +1306,7 @@ export default function DeveloperDashboardPage() {
                   }`}
                 >
                   <CalendarClock className="w-3.5 h-3.5" />
-                  <span>Em Trial (30 dias)</span>
+                  <span>Em Trial (7 dias)</span>
                   <Badge className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#d97706] text-white border-[#f59e0b]">
                     {trialingCount}
                   </Badge>
