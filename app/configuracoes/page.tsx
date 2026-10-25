@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -48,7 +48,7 @@ import {
   type DayOfWeekKey,
 } from '@/lib/operating-hours'
 
-export default function ConfiguracoesPage() {
+function ConfiguracoesContent() {
   const { user, updateUser } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -1886,5 +1886,19 @@ export default function ConfiguracoesPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function ConfiguracoesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+        </div>
+      }
+    >
+      <ConfiguracoesContent />
+    </Suspense>
   )
 }

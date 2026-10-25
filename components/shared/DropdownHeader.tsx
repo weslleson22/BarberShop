@@ -117,7 +117,7 @@ function HeaderContent({
   )
 }
 
-export default function DropdownHeader() {
+function DropdownHeaderInner() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
@@ -158,7 +158,7 @@ export default function DropdownHeader() {
       }
     }
     return { title: 'BarberShop', subtitle: 'Plataforma SaaS' }
-  }, [pathname, user?.role])
+  }, [pathname, user?.role, searchParams])
 
   return (
     <SidebarProvider defaultOpen={true} className="!min-h-0 !h-0 overflow-visible">
@@ -169,5 +169,13 @@ export default function DropdownHeader() {
         user={user}
       />
     </SidebarProvider>
+  )
+}
+
+export default function DropdownHeader() {
+  return (
+    <React.Suspense fallback={null}>
+      <DropdownHeaderInner />
+    </React.Suspense>
   )
 }
