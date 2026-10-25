@@ -76,24 +76,24 @@ interface ActionConfig {
 
 function getActionConfig(action: string): ActionConfig {
   if (action === "LOGIN")
-    return { dot:"bg-[#10b981]", text:"text-white font-bold", bg:"bg-[#059669]", border:"border-[#10b981]", icon:<Shield className="h-3.5 w-3.5 text-white"/>, label:"Entrou no sistema" };
+    return { dot:"bg-emerald-500", text:"text-emerald-600 dark:text-emerald-400 font-semibold", bg:"bg-emerald-500/10", border:"border-emerald-500/20", icon:<Shield className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"/>, label:"Entrou no sistema" };
   if (action === "LOGOUT")
-    return { dot:"bg-[#9ca3af]", text:"text-white font-bold", bg:"bg-[#374151]", border:"border-[#4b5563]", icon:<Shield className="h-3.5 w-3.5 text-white"/>, label:"Saiu do sistema" };
+    return { dot:"bg-muted-foreground", text:"text-muted-foreground font-semibold", bg:"bg-muted", border:"border-border", icon:<Shield className="h-3.5 w-3.5 text-muted-foreground"/>, label:"Saiu do sistema" };
   if (action === "LOGIN_FAILED")
-    return { dot:"bg-[#ef4444]", text:"text-white font-bold", bg:"bg-[#dc2626]", border:"border-[#ef4444]", icon:<XCircle className="h-3.5 w-3.5 text-white"/>, label:"Falha de autenticação" };
+    return { dot:"bg-destructive", text:"text-destructive font-semibold", bg:"bg-destructive/10", border:"border-destructive/20", icon:<XCircle className="h-3.5 w-3.5 text-destructive"/>, label:"Falha de autenticação" };
   if (action.includes("APPOINTMENT"))
-    return { dot:"bg-[#3b82f6]", text:"text-white font-bold", bg:"bg-[#2563eb]", border:"border-[#3b82f6]", icon:<Calendar className="h-3.5 w-3.5 text-white"/>, label: action.includes("CREATED") ? "Agendamento criado" : action.includes("CANCELLED") ? "Agendamento cancelado" : action.includes("COMPLETED") ? "Atendimento concluído" : "Agendamento atualizado" };
+    return { dot:"bg-blue-500", text:"text-blue-600 dark:text-blue-400 font-semibold", bg:"bg-blue-500/10", border:"border-blue-500/20", icon:<Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"/>, label: action.includes("CREATED") ? "Agendamento criado" : action.includes("CANCELLED") ? "Agendamento cancelado" : action.includes("COMPLETED") ? "Atendimento concluído" : "Agendamento atualizado" };
   if (action.includes("CLIENT"))
-    return { dot:"bg-[#8b5cf6]", text:"text-white font-bold", bg:"bg-[#7c3aed]", border:"border-[#8b5cf6]", icon:<User className="h-3.5 w-3.5 text-white"/>, label: action.includes("CREATED") ? "Cliente cadastrado" : action.includes("DELETED") ? "Cliente removido" : "Cliente atualizado" };
+    return { dot:"bg-purple-500", text:"text-purple-600 dark:text-purple-400 font-semibold", bg:"bg-purple-500/10", border:"border-purple-500/20", icon:<User className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400"/>, label: action.includes("CREATED") ? "Cliente cadastrado" : action.includes("DELETED") ? "Cliente removido" : "Cliente atualizado" };
   if (action.includes("SERVICE"))
-    return { dot:"bg-[#f59e0b]", text:"text-white font-bold", bg:"bg-[#d97706]", border:"border-[#f59e0b]", icon:<Scissors className="h-3.5 w-3.5 text-white"/>, label: action.includes("CREATED") ? "Serviço criado" : action.includes("DELETED") ? "Serviço removido" : "Serviço atualizado" };
+    return { dot:"bg-amber-500", text:"text-amber-600 dark:text-amber-400 font-semibold", bg:"bg-amber-500/10", border:"border-amber-500/20", icon:<Scissors className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400"/>, label: action.includes("CREATED") ? "Serviço criado" : action.includes("DELETED") ? "Serviço removido" : "Serviço atualizado" };
   if (action.includes("SUBSCRIPTION") || action.includes("TRIAL") || action.includes("PAYMENT"))
-    return { dot:"bg-[#f97316]", text:"text-white font-bold", bg:"bg-[#ea580c]", border:"border-[#f97316]", icon:<CreditCard className="h-3.5 w-3.5 text-white"/>, label: action.includes("PAYMENT_RECEIVED") ? "Pagamento recebido" : action.includes("PAYMENT_FAILED") ? "Pagamento falhou" : action.includes("TRIAL_STARTED") ? "Trial iniciado" : "Assinatura atualizada" };
+    return { dot:"bg-orange-500", text:"text-orange-600 dark:text-orange-400 font-semibold", bg:"bg-orange-500/10", border:"border-orange-500/20", icon:<CreditCard className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400"/>, label: action.includes("PAYMENT_RECEIVED") ? "Pagamento recebido" : action.includes("PAYMENT_FAILED") ? "Pagamento falhou" : action.includes("TRIAL_STARTED") ? "Trial iniciado" : "Assinatura atualizada" };
   if (action.includes("BARBERSHOP"))
-    return { dot:"bg-[#06b6d4]", text:"text-white font-bold", bg:"bg-[#0891b2]", border:"border-[#06b6d4]", icon:<Settings className="h-3.5 w-3.5 text-white"/>, label: action.includes("APPROVED") ? "Barbearia aprovada" : action.includes("SUSPENDED") ? "Barbearia suspensa" : "Barbearia criada" };
+    return { dot:"bg-cyan-500", text:"text-cyan-600 dark:text-cyan-400 font-semibold", bg:"bg-cyan-500/10", border:"border-cyan-500/20", icon:<Settings className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400"/>, label: action.includes("APPROVED") ? "Barbearia aprovada" : action.includes("SUSPENDED") ? "Barbearia suspensa" : "Barbearia criada" };
   if (action.includes("FAILED") || action.includes("ERROR"))
-    return { dot:"bg-[#ef4444]", text:"text-white font-bold", bg:"bg-[#dc2626]", border:"border-[#ef4444]", icon:<AlertTriangle className="h-3.5 w-3.5 text-white"/>, label:"Operação falhou" };
-  return { dot:"bg-[#6b7280]", text:"text-white font-bold", bg:"bg-[#1f2937]", border:"border-[#374151]", icon:<Activity className="h-3.5 w-3.5 text-white"/>, label: action.replace(/_/g," ").toLowerCase() };
+    return { dot:"bg-destructive", text:"text-destructive font-semibold", bg:"bg-destructive/10", border:"border-destructive/20", icon:<AlertTriangle className="h-3.5 w-3.5 text-destructive"/>, label:"Operação falhou" };
+  return { dot:"bg-muted-foreground", text:"text-muted-foreground font-semibold", bg:"bg-muted", border:"border-border", icon:<Activity className="h-3.5 w-3.5 text-muted-foreground"/>, label: action.replace(/_/g," ").toLowerCase() };
 }
 
 // ── Descrição legível para o Feed ───────────────────────────────
@@ -130,22 +130,22 @@ function UserAvatar({ user, size = "sm" }: { user: AuditLogEntry["user"]; size?:
   const dim = size === "sm" ? "h-7 w-7 text-[10px]" : "h-9 w-9 text-xs";
   if (!user) {
     return (
-      <div className={`${dim} rounded-full bg-[#1f2937] border border-[#374151] flex items-center justify-center shrink-0`}>
-        <Activity className="h-3.5 w-3.5 text-white" />
+      <div className={`${dim} rounded-full bg-muted border border-border flex items-center justify-center shrink-0`}>
+        <Activity className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
     );
   }
   const initials = user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
   const colors: Record<string, string> = {
-    DEVELOPER: "bg-[#7c3aed]",
-    ADMIN: "bg-[#d97706]",
-    BARBER: "bg-[#2563eb]",
-    RECEPTIONIST: "bg-[#059669]",
-    CLIENT: "bg-[#4b5563]",
+    DEVELOPER: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20",
+    ADMIN: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+    BARBER: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
+    RECEPTIONIST: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+    CLIENT: "bg-muted text-muted-foreground border border-border",
   };
-  const color = colors[user.role] ?? "bg-[#374151]";
+  const color = colors[user.role] ?? "bg-muted text-muted-foreground border border-border";
   return (
-    <div className={`${dim} rounded-full ${color} flex items-center justify-center shrink-0 font-bold text-white shadow-sm`}>
+    <div className={`${dim} rounded-full ${color} flex items-center justify-center shrink-0 font-semibold shadow-sm`}>
       {user.avatar
         ? <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
         : initials}
@@ -241,17 +241,17 @@ function getLogRequest(log: AuditLogEntry): { method: string; path: string; full
 function getMethodBadge(method: string) {
   switch (method) {
     case "GET":
-      return "bg-[#2563eb] text-white border-[#3b82f6]";
+      return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20";
     case "POST":
-      return "bg-[#059669] text-white border-[#10b981]";
+      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
     case "PUT":
-      return "bg-[#d97706] text-white border-[#f59e0b]";
+      return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
     case "PATCH":
-      return "bg-[#7c3aed] text-white border-[#8b5cf6]";
+      return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20";
     case "DELETE":
-      return "bg-[#dc2626] text-white border-[#ef4444]";
+      return "bg-destructive/10 text-destructive border border-destructive/20";
     default:
-      return "bg-[#1f2937] text-white border-[#374151]";
+      return "bg-muted text-muted-foreground border border-border";
   }
 }
 
@@ -267,13 +267,13 @@ function getLogStatus(log: AuditLogEntry): { code: number; text: string; color: 
   }
 
   if (code >= 200 && code < 300) {
-    return { code, text: `${code}`, color: "text-white font-bold", bg: "bg-[#059669]", border: "border-[#10b981]" };
+    return { code, text: `${code}`, color: "text-emerald-600 dark:text-emerald-400 font-semibold", bg: "bg-emerald-500/10", border: "border-emerald-500/20" };
   } else if (code >= 300 && code < 400) {
-    return { code, text: `${code}`, color: "text-white font-bold", bg: "bg-[#0891b2]", border: "border-[#06b6d4]" };
+    return { code, text: `${code}`, color: "text-cyan-600 dark:text-cyan-400 font-semibold", bg: "bg-cyan-500/10", border: "border-cyan-500/20" };
   } else if (code >= 400 && code < 500) {
-    return { code, text: `${code}`, color: "text-white font-bold", bg: "bg-[#d97706]", border: "border-[#f59e0b]" };
+    return { code, text: `${code}`, color: "text-amber-600 dark:text-amber-400 font-semibold", bg: "bg-amber-500/10", border: "border-amber-500/20" };
   } else {
-    return { code, text: `${code}`, color: "text-white font-bold", bg: "bg-[#dc2626]", border: "border-[#ef4444]" };
+    return { code, text: `${code}`, color: "text-destructive font-semibold", bg: "bg-destructive/10", border: "border-destructive/20" };
   }
 }
 
@@ -581,7 +581,7 @@ export default function AuditLogsPage() {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20 transition-colors">
       <DropdownHeader />
 
       <main className="w-full px-4 md:px-6 max-w-[1600px] mx-auto space-y-6 pt-4">
@@ -591,12 +591,12 @@ export default function AuditLogsPage() {
         {/* ── Header ──────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-4 pt-2">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2563eb] border border-[#3b82f6] shadow-sm">
-              <ClipboardList className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 shadow-xs">
+              <ClipboardList className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white">Audit Logs</h1>
-              <p className="text-xs text-white font-medium leading-none mt-1">
+              <h1 className="text-xl font-bold tracking-tight text-foreground">Audit Logs</h1>
+              <p className="text-xs text-muted-foreground font-normal leading-none mt-1">
                 Rastreamento e auditoria em tempo real de todas as ações
               </p>
             </div>
@@ -604,21 +604,21 @@ export default function AuditLogsPage() {
 
           <div className="flex items-center gap-2">
             {/* SSE status indicator */}
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border shadow-sm ${
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border shadow-xs ${
               sseStatus === "live"
-                ? "bg-[#059669] border-[#10b981] text-white"
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
                 : sseStatus === "connecting"
-                ? "bg-[#d97706] border-[#f59e0b] text-white"
+                ? "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400"
                 : sseStatus === "error"
-                ? "bg-[#dc2626] border-[#ef4444] text-white"
-                : "bg-[#111827] border-[#374151] text-white"
+                ? "bg-destructive/10 border-destructive/30 text-destructive"
+                : "bg-muted border-border text-muted-foreground"
             }`}>
               <span className={`h-2 w-2 rounded-full ${
-                sseStatus === "live" ? "bg-white" :
-                sseStatus === "connecting" ? "bg-white" :
-                sseStatus === "error" ? "bg-white" : "bg-gray-400"
+                sseStatus === "live" ? "bg-emerald-500" :
+                sseStatus === "connecting" ? "bg-amber-500" :
+                sseStatus === "error" ? "bg-destructive" : "bg-muted-foreground"
               }`} />
-              <Zap className="h-3.5 w-3.5 text-white" />
+              <Zap className="h-3.5 w-3.5" />
               {sseStatus === "live" ? "Ao Vivo (Polling 3s)" : sseStatus === "connecting" ? "Conectando..." : sseStatus === "error" ? "Reconectando" : "Offline"}
             </div>
 
@@ -626,7 +626,7 @@ export default function AuditLogsPage() {
               <button
                 onClick={() => fetchLogs(pagination.page)}
                 disabled={loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#111827] border border-[#374151] text-white hover:bg-[#1f2937] font-semibold transition-all shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-card border border-border text-card-foreground hover:bg-muted font-medium transition-all shadow-xs cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
                 Atualizar
@@ -636,34 +636,34 @@ export default function AuditLogsPage() {
         </div>
 
         {/* ── Tabs ────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 border-b border-[#374151] pb-3">
+        <div className="flex items-center gap-2 border-b border-border pb-3">
           <button
             onClick={() => setActiveTab("feed")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all border cursor-pointer ${
               activeTab === "feed"
-                ? "bg-[#2563eb] text-white border-[#3b82f6] shadow-sm"
-                : "bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]"
+                ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                : "bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground"
             }`}
           >
             <Activity className="h-4 w-4" />
             Feed de Atividades
             {newCount > 0 && (
-              <span className="flex h-4 min-w-[1.25rem] items-center justify-center rounded-full bg-[#dc2626] px-1 text-[10px] font-extrabold text-white">
+              <span className="flex h-4 min-w-[1.25rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                 {newCount > 99 ? "99+" : newCount}
               </span>
             )}
           </button>
           <button
             onClick={() => setActiveTab("logs")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all border cursor-pointer ${
               activeTab === "logs"
-                ? "bg-[#2563eb] text-white border-[#3b82f6] shadow-sm"
-                : "bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]"
+                ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                : "bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground"
             }`}
           >
             <ClipboardList className="h-4 w-4" />
             Logs do Sistema
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#030712] text-white font-mono border border-[#374151] font-bold">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-mono border border-border font-medium">
               {Math.max(pagination.total, displayLogs.length).toLocaleString("pt-BR")}
             </span>
           </button>
@@ -678,19 +678,19 @@ export default function AuditLogsPage() {
             <div ref={feedRef} className={`flex-1 min-w-0 ${selected ? "hidden md:block" : ""}`}>
               {/* Indicador topo */}
               {sseStatus === "live" && (
-                <div className="flex items-center gap-2 mb-3 text-xs text-white font-bold bg-[#111827] border border-[#374151] px-3 py-1.5 rounded-lg w-fit shadow-sm">
-                  <span className="h-2 w-2 rounded-full bg-[#10b981]" />
+                <div className="flex items-center gap-2 mb-3 text-xs text-emerald-700 dark:text-emerald-400 font-medium bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg w-fit shadow-xs">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   Atualizações automáticas ativas em tempo real
                 </div>
               )}
 
               {feed.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-[#374151] bg-[#111827] shadow-sm">
+                <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-border bg-card shadow-xs">
                   <div className="mb-4">
-                    <Activity className="h-10 w-10 text-white" />
+                    <Activity className="h-10 w-10 text-muted-foreground" />
                   </div>
-                  <p className="text-sm font-bold text-white">Aguardando atividades...</p>
-                  <p className="text-xs text-white mt-1.5 max-w-xs font-medium">
+                  <p className="text-sm font-semibold text-card-foreground">Aguardando atividades...</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 max-w-xs font-normal">
                     {sseStatus === "connecting"
                       ? "Estabelecendo conexão em tempo real com o servidor..."
                       : "Realize um login, cadastre um cliente ou faça uma operação para visualizar os eventos."}
@@ -707,72 +707,72 @@ export default function AuditLogsPage() {
                       <div
                         key={log.id}
                         onClick={() => setSelected(isSelected ? null : log)}
-                        className={`relative flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all shadow-sm ${
+                        className={`relative flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all shadow-xs ${
                           isSelected
-                            ? "border-[#2563eb] bg-[#1f2937]"
-                            : "border-[#374151] bg-[#111827] hover:bg-[#1f2937]"
+                            ? "border-primary bg-muted/60"
+                            : "border-border bg-card hover:bg-muted/40"
                         }`}
                       >
                         {/* Dot de linha do tempo */}
                         <div className="relative mt-1 shrink-0">
                           <UserAvatar user={log.user} size="sm" />
-                          <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-gray-950 ${cfg.dot}`} />
+                          <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${cfg.dot}`} />
                         </div>
 
                         {/* Conteúdo */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
                             {/* Nome do autor */}
-                            <span className="text-xs font-bold text-white truncate">
+                            <span className="text-xs font-semibold text-foreground truncate">
                               {log.user?.name ?? "Sistema"}
                             </span>
 
                             {/* Badge "Você" */}
                             {isCurrentUser && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#2563eb] text-white border border-[#3b82f6] leading-none">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20 leading-none">
                                 Você
                               </span>
                             )}
 
                             {/* Role badge */}
                             {log.user && (
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border leading-none ${cfg.bg} text-white ${cfg.border}`}>
+                              <span className={`text-[10px] font-medium px-2 py-0.5 rounded border leading-none ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                                 {log.user.role}
                               </span>
                             )}
 
                             {/* Tempo */}
-                            <span className="ml-auto text-xs text-white font-medium whitespace-nowrap shrink-0">
+                            <span className="ml-auto text-xs text-muted-foreground font-normal whitespace-nowrap shrink-0">
                               {formatFeedTime(log.createdAt)}
                             </span>
                           </div>
 
                           {/* Descrição legível */}
-                          <p className="text-xs text-white mt-1 leading-relaxed font-medium">
-                            <span className={`font-bold inline-flex items-center gap-1 ${cfg.bg} px-1.5 py-0.5 rounded text-[10px] text-white mr-1.5 border ${cfg.border}`}>
+                          <p className="text-xs text-foreground mt-1 leading-relaxed font-normal">
+                            <span className={`font-medium inline-flex items-center gap-1 ${cfg.bg} ${cfg.color} px-1.5 py-0.5 rounded text-[10px] mr-1.5 border ${cfg.border}`}>
                               {cfg.icon} {cfg.label}
                             </span>
                             {buildFeedDescription(log)}
                             {log.barbershop && (
-                              <span className="font-bold text-white"> · {log.barbershop.name}</span>
+                              <span className="font-semibold text-foreground"> · {log.barbershop.name}</span>
                             )}
                           </p>
 
                           {/* Metadados rápidos */}
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#030712] border border-[#374151] text-white">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-muted border border-border text-foreground">
                               <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
                               {log.action}
                             </span>
                             {!log.success && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-[#dc2626] border border-[#ef4444] text-white">
-                                <AlertTriangle className="h-3 w-3 text-white" />
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-destructive/10 border border-destructive/20 text-destructive">
+                                <AlertTriangle className="h-3 w-3" />
                                 Falha
                               </span>
                             )}
                             {log.ipAddress && (
-                              <span className="flex items-center gap-1 text-[10px] text-white font-mono bg-[#030712] border border-[#374151] px-2 py-0.5 rounded font-medium">
-                                <Globe className="h-3 w-3 text-white" />
+                              <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono bg-muted/50 border border-border px-2 py-0.5 rounded font-normal">
+                                <Globe className="h-3 w-3" />
                                 {log.ipAddress}
                               </span>
                             )}
@@ -815,10 +815,10 @@ export default function AuditLogsPage() {
                       setFilterEntity(pill.ent);
                       if (pill.q) setSearch(pill.q);
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-[#2563eb] border-[#3b82f6] text-white shadow-sm"
-                        : "bg-[#111827] border-[#374151] text-white hover:bg-[#1f2937]"
+                        ? "bg-primary border-primary text-primary-foreground shadow-xs"
+                        : "bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
                     {pill.label}
@@ -830,32 +830,32 @@ export default function AuditLogsPage() {
             {/* Filtros */}
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[240px]">
-                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white" />
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Buscar requisições, rotas, usuários..."
-                  className="w-full pl-9 pr-8 py-2 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white placeholder:text-gray-400 font-medium focus:outline-none focus:border-[#2563eb] transition-all"
+                  className="w-full pl-9 pr-8 py-2 bg-background border border-input rounded-lg text-xs text-foreground placeholder:text-muted-foreground font-normal focus:outline-none focus:ring-1 focus:ring-ring transition-all"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
                 {search && (
-                  <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white hover:text-gray-300" onClick={() => setSearch("")}>
+                  <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSearch("")}>
                     <X className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold border transition-all shadow-sm ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium border transition-all shadow-xs cursor-pointer ${
                   showFilters || activeFiltersCount > 0
-                    ? "bg-[#2563eb] border-[#3b82f6] text-white"
-                    : "bg-[#111827] border-[#374151] text-white hover:bg-[#1f2937]"
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "bg-card border-border text-card-foreground hover:bg-muted"
                 }`}
               >
-                <Filter className="h-3.5 w-3.5 text-white" />
+                <Filter className="h-3.5 w-3.5" />
                 Filtros
                 {activeFiltersCount > 0 && (
-                  <span className="ml-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[#dc2626] text-[10px] text-white font-extrabold px-1">
+                  <span className="ml-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground font-bold px-1">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -863,24 +863,24 @@ export default function AuditLogsPage() {
             </div>
 
             {showFilters && (
-              <div className="flex flex-wrap gap-4 p-4 rounded-xl border border-[#374151] bg-[#111827] shadow-sm">
+              <div className="flex flex-wrap gap-4 p-4 rounded-xl border border-border bg-card shadow-xs">
                 {[
                   { label:"Ação", value:filterAction, setter:setFilterAction, options:AUDIT_ACTIONS, width:"160px" },
                   { label:"Entidade", value:filterEntity, setter:setFilterEntity, options:AUDIT_ENTITIES, width:"140px" },
                 ].map(({ label, value, setter, options, width }) => (
                   <div key={label} className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase tracking-wider text-white font-bold">{label}</label>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</label>
                     <select value={value} onChange={(e) => setter(e.target.value)} style={{ minWidth: width }}
-                      className="text-xs bg-[#030712] border border-[#374151] rounded-md px-3 py-1.5 text-white font-semibold focus:outline-none focus:border-[#2563eb]">
+                      className="text-xs bg-background border border-input rounded-md px-3 py-1.5 text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer">
                       <option value="all">Todos</option>
                       {options.map(o => <option key={o} value={o}>{o}</option>)}
                     </select>
                   </div>
                 ))}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase tracking-wider text-white font-bold">Status</label>
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Status</label>
                   <select value={filterSuccess} onChange={(e) => setFilterSuccess(e.target.value)}
-                    className="text-xs bg-[#030712] border border-[#374151] rounded-md px-3 py-1.5 text-white font-semibold focus:outline-none focus:border-[#2563eb] min-w-[120px]">
+                    className="text-xs bg-background border border-input rounded-md px-3 py-1.5 text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring min-w-[120px] cursor-pointer">
                     <option value="all">Todos</option>
                     <option value="true">✅ Sucesso</option>
                     <option value="false">❌ Falha</option>
@@ -889,7 +889,7 @@ export default function AuditLogsPage() {
                 {activeFiltersCount > 0 && (
                   <div className="flex items-end">
                     <button onClick={() => { setFilterAction("all"); setFilterEntity("all"); setFilterSuccess("all"); }}
-                      className="text-xs text-white font-bold bg-[#dc2626] hover:bg-[#b91c1c] border border-[#ef4444] px-3 py-1.5 rounded-md transition-all shadow-sm">
+                      className="text-xs text-destructive-foreground font-medium bg-destructive hover:bg-destructive/90 px-3 py-1.5 rounded-md transition-all shadow-xs cursor-pointer">
                       Limpar Filtros
                     </button>
                   </div>
@@ -900,37 +900,37 @@ export default function AuditLogsPage() {
             {/* Layout dois painéis */}
             <div className="flex gap-3 items-start">
               {/* Tabela terminal */}
-              <div className={`flex-1 min-w-0 rounded-xl border border-[#374151] bg-[#030712] overflow-hidden flex flex-col shadow-sm ${selected ? "hidden md:flex" : ""}`}>
+              <div className={`flex-1 min-w-0 rounded-xl border border-border bg-card overflow-hidden flex flex-col shadow-xs ${selected ? "hidden md:flex" : ""}`}>
                 <div className="overflow-x-auto">
-                  <div className="grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-3 border-b border-[#374151] bg-[#111827]">
+                  <div className="grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-3 border-b border-border bg-muted/40">
                     {[
-                      { name: "Hora", icon: <Clock className="h-3 w-3 text-white" /> },
+                      { name: "Hora", icon: <Clock className="h-3 w-3 text-muted-foreground" /> },
                       { name: "Status" },
                       { name: "Request" },
                       { name: "Messages" },
                       { name: "Usuário" },
                       { name: "Origem / IP" },
                     ].map(h => (
-                      <span key={h.name} className="text-[10px] uppercase tracking-wider text-white font-bold flex items-center gap-1.5">
+                      <span key={h.name} className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
                         {h.icon}
                         {h.name}
                       </span>
                     ))}
                   </div>
-                  <div className="divide-y divide-[#1f2937]">
+                  <div className="divide-y divide-border">
                     {loading && displayLogs.length === 0 ? (
                       Array.from({ length: 10 }).map((_, i) => (
                         <div key={i} className="grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-2.5">
                           {Array.from({ length: 6 }).map((__, j) => (
-                            <div key={j} className="h-3.5 rounded bg-[#1f2937]" />
+                            <div key={j} className="h-3.5 rounded bg-muted animate-pulse" />
                           ))}
                         </div>
                       ))
                     ) : displayLogs.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-24 text-center">
-                        <Activity className="h-10 w-10 text-white mb-3" />
-                        <p className="text-sm font-bold text-white">Nenhum log encontrado</p>
-                        <p className="text-xs text-white mt-1 max-w-sm font-medium">
+                        <Activity className="h-10 w-10 text-muted-foreground mb-3" />
+                        <p className="text-sm font-semibold text-card-foreground">Nenhum log encontrado</p>
+                        <p className="text-xs text-muted-foreground mt-1 max-w-sm font-normal">
                           Navegue pelo sistema ou limpe os filtros para visualizar as requisições em tempo real.
                         </p>
                       </div>
@@ -947,15 +947,15 @@ export default function AuditLogsPage() {
                             key={log.id}
                             onClick={() => setSelected(isSelected ? null : log)}
                             className={`grid grid-cols-[125px_85px_240px_1fr_135px_110px] min-w-[980px] gap-2 px-4 py-2.5 cursor-pointer transition-colors text-[11px] font-mono items-center ${
-                              isSelected ? "bg-[#1e293b] border-l-4 border-l-[#2563eb]" : "hover:bg-[#111827] border-l-4 border-l-transparent"
+                              isSelected ? "bg-muted/80 border-l-4 border-l-primary" : "hover:bg-muted/50 border-l-4 border-l-transparent"
                             }`}
                           >
                             {/* Hora */}
-                            <span className="text-white font-medium whitespace-nowrap truncate">{formatTimestamp(log.createdAt)}</span>
+                            <span className="text-muted-foreground font-medium whitespace-nowrap truncate">{formatTimestamp(log.createdAt)}</span>
 
                             {/* Status */}
                             <span className="flex items-center gap-1">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border shadow-sm ${status.bg} ${status.color} ${status.border}`}>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border shadow-xs ${status.bg} ${status.color} ${status.border}`}>
                                 {status.text}
                               </span>
                             </span>
@@ -965,34 +965,34 @@ export default function AuditLogsPage() {
                               <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold border shrink-0 ${getMethodBadge(req.method)}`}>
                                 {req.method}
                               </span>
-                              <span className="text-white font-bold truncate text-[11px]" title={req.path}>
+                              <span className="text-foreground font-semibold truncate text-[11px]" title={req.path}>
                                 {req.path}
                               </span>
                             </div>
 
                             {/* Messages */}
                             <div className="min-w-0 pr-2">
-                              <span className={`truncate block text-[11px] ${msg.isError ? "text-white font-bold bg-[#dc2626] border border-[#ef4444] px-2 py-0.5 rounded" : "text-white font-medium"}`} title={msg.text}>
-                                {msg.isError && <span className="text-white mr-1">⚠</span>}
+                              <span className={`truncate block text-[11px] ${msg.isError ? "text-destructive font-semibold bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded" : "text-muted-foreground font-normal"}`} title={msg.text}>
+                                {msg.isError && <span className="mr-1">⚠</span>}
                                 {msg.text}
                               </span>
                             </div>
 
                             {/* Usuário */}
-                            <span className="text-white font-medium truncate flex items-center gap-1.5">
+                            <span className="text-foreground font-normal truncate flex items-center gap-1.5">
                               <span className="truncate">{log.user?.name ?? "sistema"}</span>
-                              {isCurrentUser && <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2563eb] text-white font-bold shrink-0 border border-[#3b82f6]">Você</span>}
+                              {isCurrentUser && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold shrink-0 border border-primary/20">Você</span>}
                             </span>
 
                             {/* Origem / IP */}
-                            <span className="text-white font-medium flex items-center gap-1 truncate text-[10px]">
+                            <span className="text-muted-foreground font-normal flex items-center gap-1 truncate text-[10px]">
                               {log.ipAddress ? (
                                 <>
-                                  <Globe className="h-3 w-3 shrink-0 text-white" />
+                                  <Globe className="h-3 w-3 shrink-0 text-muted-foreground" />
                                   <span className="truncate">{log.ipAddress}</span>
                                 </>
                               ) : log.barbershop?.slug ? (
-                                <span className="truncate font-bold">/{log.barbershop.slug}</span>
+                                <span className="truncate font-semibold text-foreground">/{log.barbershop.slug}</span>
                               ) : (
                                 "—"
                               )}
@@ -1013,14 +1013,14 @@ export default function AuditLogsPage() {
 
             {/* Paginação */}
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between text-xs text-white font-semibold pt-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground font-medium pt-1">
                 <span>Página {pagination.page} de {pagination.totalPages} — {pagination.total.toLocaleString("pt-BR")} registros</span>
                 <div className="flex gap-2">
-                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#374151] bg-[#111827] text-white hover:bg-[#1f2937] font-bold disabled:opacity-40 transition-all shadow-sm"
+                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-card-foreground hover:bg-muted font-medium disabled:opacity-40 transition-all shadow-xs cursor-pointer"
                     disabled={pagination.page <= 1 || loading} onClick={() => fetchLogs(pagination.page - 1)}>
                     <ChevronLeft className="h-3.5 w-3.5" /> Anterior
                   </button>
-                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#374151] bg-[#111827] text-white hover:bg-[#1f2937] font-bold disabled:opacity-40 transition-all shadow-sm"
+                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-card-foreground hover:bg-muted font-medium disabled:opacity-40 transition-all shadow-xs cursor-pointer"
                     disabled={pagination.page >= pagination.totalPages || loading} onClick={() => fetchLogs(pagination.page + 1)}>
                     Próxima <ChevronRight className="h-3.5 w-3.5" />
                   </button>
@@ -1054,73 +1054,73 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
   };
 
   return (
-    <div className="w-full md:w-[380px] lg:w-[420px] shrink-0 rounded-xl border border-[#374151] bg-[#111827] flex flex-col overflow-hidden shadow-2xl">
+    <div className="w-full md:w-[380px] lg:w-[420px] shrink-0 rounded-xl border border-border bg-card flex flex-col overflow-hidden shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#374151] bg-[#030712]">
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className={`p-2 rounded-lg ${cfg.bg} text-white border ${cfg.border} shadow-sm`}>
+          <span className={`p-2 rounded-lg ${cfg.bg} ${cfg.color} border ${cfg.border} shadow-xs`}>
             {cfg.icon}
           </span>
           <div className="min-w-0">
-            <h3 className="text-sm font-bold text-white truncate">{cfg.label}</h3>
-            <span className="text-[11px] font-mono text-white truncate block font-medium">{log.id}</span>
+            <h3 className="text-sm font-semibold text-card-foreground truncate">{cfg.label}</h3>
+            <span className="text-[11px] font-mono text-muted-foreground truncate block font-normal">{log.id}</span>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-md text-white hover:bg-[#374151] transition-colors"
+          className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
           title="Fechar detalhes"
         >
-          <X className="h-4 w-4 text-white" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-220px)] divide-y divide-[#1f2937] [&>*]:pt-3.5 [&>*:first-child]:pt-0">
+      <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-220px)] divide-y divide-border [&>*]:pt-3.5 [&>*:first-child]:pt-0">
         {/* Status e Ação */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className={`h-2.5 w-2.5 rounded-full ${cfg.dot}`} />
-            <span className="text-xs font-mono font-bold text-white">{log.action}</span>
+            <span className="text-xs font-mono font-semibold text-foreground">{log.action}</span>
           </div>
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold border shadow-sm ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold border shadow-xs ${
               log.success
-                ? "bg-[#059669] text-white border-[#10b981]"
-                : "bg-[#dc2626] text-white border-[#ef4444]"
+                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                : "bg-destructive/10 text-destructive border-destructive/20"
             }`}
           >
-            {log.success ? <CheckCircle2 className="h-3.5 w-3.5 text-white" /> : <XCircle className="h-3.5 w-3.5 text-white" />}
+            {log.success ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
             {getLogStatus(log).text}
           </span>
         </div>
 
         {/* Requisição HTTP */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
             Requisição (Request)
           </span>
-          <div className="p-3 rounded-lg bg-[#030712] border border-[#374151] space-y-2 text-xs font-mono shadow-sm">
+          <div className="p-3 rounded-lg bg-muted/40 border border-border space-y-2 text-xs font-mono shadow-xs">
             <div className="flex items-center gap-2">
               <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${getMethodBadge(getLogRequest(log).method)}`}>
                 {getLogRequest(log).method}
               </span>
-              <span className="text-white font-bold truncate select-all">{getLogRequest(log).path}</span>
+              <span className="text-foreground font-semibold truncate select-all">{getLogRequest(log).path}</span>
             </div>
-            <div className="text-[11px] text-white pt-2 border-t border-[#1f2937] flex justify-between items-center font-medium">
+            <div className="text-[11px] text-muted-foreground pt-2 border-t border-border flex justify-between items-center font-normal">
               <span>Status HTTP</span>
-              <span className={`font-bold ${getLogStatus(log).color}`}>{getLogStatus(log).code}</span>
+              <span className={`font-semibold ${getLogStatus(log).color}`}>{getLogStatus(log).code}</span>
             </div>
           </div>
         </div>
 
         {/* Mensagem / Detalhes */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
             Mensagem (Messages)
           </span>
-          <div className={`p-3 rounded-lg border text-xs leading-relaxed shadow-sm ${
-            getLogMessage(log).isError ? "bg-[#dc2626] border-[#ef4444] text-white font-mono font-bold" : "bg-[#030712] border-[#374151] text-white font-medium"
+          <div className={`p-3 rounded-lg border text-xs leading-relaxed shadow-xs ${
+            getLogMessage(log).isError ? "bg-destructive/10 border-destructive/20 text-destructive font-mono font-semibold" : "bg-muted/40 border-border text-foreground font-normal"
           }`}>
             {getLogMessage(log).text}
           </div>
@@ -1128,30 +1128,30 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
 
         {/* Usuário executor */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
             Usuário Executor
           </span>
           {log.user ? (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-[#030712] border border-[#374151] shadow-sm">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 border border-border shadow-xs">
               <UserAvatar user={log.user} size="sm" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-white truncate">{log.user.name}</span>
+                  <span className="text-xs font-semibold text-foreground truncate">{log.user.name}</span>
                   {isCurrentUser && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2563eb] text-white font-bold border border-[#3b82f6]">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold border border-primary/20">
                       Você
                     </span>
                   )}
                 </div>
-                <span className="text-[11px] text-white truncate block font-medium">{log.user.email}</span>
+                <span className="text-[11px] text-muted-foreground truncate block font-normal">{log.user.email}</span>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-[#1f2937] text-white font-mono border border-[#374151] font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground font-mono border border-border font-medium">
                 {log.user.role}
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-[#030712] border border-[#374151] text-xs text-white font-medium shadow-sm">
-              <Activity className="h-4 w-4 text-white" />
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/40 border border-border text-xs text-muted-foreground font-normal shadow-xs">
+              <Activity className="h-4 w-4" />
               <span>Ação do Sistema (Automático)</span>
             </div>
           )}
@@ -1159,29 +1159,29 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
 
         {/* Entidade Alvo */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
             Recurso / Entidade
           </span>
-          <div className="space-y-2 text-xs p-3 rounded-lg bg-[#030712] border border-[#374151] shadow-sm">
+          <div className="space-y-2 text-xs p-3 rounded-lg bg-muted/40 border border-border shadow-xs">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-white font-medium">Tipo</span>
-              <span className="font-mono text-white font-bold">{log.entity}</span>
+              <span className="text-muted-foreground font-normal">Tipo</span>
+              <span className="font-mono text-foreground font-semibold">{log.entity}</span>
             </div>
             {log.entityId && (
               <div className="flex justify-between items-center gap-2">
-                <span className="text-white font-medium">ID</span>
-                <span className="font-mono text-white text-[11px] font-bold truncate max-w-[200px]" title={log.entityId}>
+                <span className="text-muted-foreground font-normal">ID</span>
+                <span className="font-mono text-foreground text-[11px] font-semibold truncate max-w-[200px]" title={log.entityId}>
                   {log.entityId}
                 </span>
               </div>
             )}
             {log.barbershop && (
               <div className="flex justify-between items-center gap-2">
-                <span className="text-white font-medium">Barbearia</span>
-                <span className="text-white truncate font-bold">
+                <span className="text-muted-foreground font-normal">Barbearia</span>
+                <span className="text-foreground truncate font-semibold">
                   {log.barbershop.name}
                   {log.barbershop.slug && (
-                    <span className="text-white text-[11px] font-mono ml-1">
+                    <span className="text-muted-foreground text-[11px] font-mono ml-1">
                       (/{log.barbershop.slug})
                     </span>
                   )}
@@ -1193,37 +1193,37 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
 
         {/* Data e Hora */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
             Data e Hora
           </span>
-          <div className="space-y-2 text-xs p-3 rounded-lg bg-[#030712] border border-[#374151] shadow-sm">
+          <div className="space-y-2 text-xs p-3 rounded-lg bg-muted/40 border border-border shadow-xs">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-white font-medium">Horário</span>
-              <span className="font-mono text-white font-bold">{formatDateFull(log.createdAt)}</span>
+              <span className="text-muted-foreground font-normal">Horário</span>
+              <span className="font-mono text-foreground font-semibold">{formatDateFull(log.createdAt)}</span>
             </div>
             <div className="flex justify-between items-center gap-2">
-              <span className="text-white font-medium">Relativo</span>
-              <span className="text-white text-[11px] font-bold">{formatFeedTime(log.createdAt)}</span>
+              <span className="text-muted-foreground font-normal">Relativo</span>
+              <span className="text-foreground text-[11px] font-semibold">{formatFeedTime(log.createdAt)}</span>
             </div>
           </div>
         </div>
 
         {/* Contexto de Rede */}
         <div>
-          <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
             Contexto de Rede
           </span>
-          <div className="space-y-2.5 text-xs p-3 rounded-lg bg-[#030712] border border-[#374151] shadow-sm">
+          <div className="space-y-2.5 text-xs p-3 rounded-lg bg-muted/40 border border-border shadow-xs">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-white font-medium flex items-center gap-1.5">
-                <Globe className="h-3.5 w-3.5 text-white" /> IP
+              <span className="text-muted-foreground font-normal flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" /> IP
               </span>
-              <span className="font-mono text-white font-bold">{log.ipAddress ?? "—"}</span>
+              <span className="font-mono text-foreground font-semibold">{log.ipAddress ?? "—"}</span>
             </div>
             {log.userAgent && (
               <div>
-                <span className="text-white text-[10px] font-bold block mb-1">User Agent</span>
-                <div className="p-2.5 rounded bg-[#111827] border border-[#374151] text-[10px] font-mono text-white break-all leading-relaxed">
+                <span className="text-muted-foreground text-[10px] font-semibold block mb-1">User Agent</span>
+                <div className="p-2.5 rounded bg-muted/60 border border-border text-[10px] font-mono text-foreground break-all leading-relaxed">
                   {log.userAgent}
                 </div>
               </div>
@@ -1234,11 +1234,11 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
         {/* Erro (se houver) */}
         {!log.success && log.errorMessage && (
           <div>
-            <span className="text-[10px] uppercase tracking-wider text-white font-bold block mb-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">
               Mensagem de Erro
             </span>
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-[#dc2626] border border-[#ef4444] text-xs text-white font-mono font-bold shadow-sm">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-white mt-0.5" />
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive font-mono font-semibold shadow-xs">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <span className="break-all">{log.errorMessage}</span>
             </div>
           </div>
@@ -1248,18 +1248,18 @@ function DetailPanel({ log, onClose, currentUserId }: DetailPanelProps) {
         {log.metadata && Object.keys(log.metadata).length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] uppercase tracking-wider text-white font-bold">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                 Metadados (JSON)
               </span>
               <button
                 onClick={copyMetadata}
-                className="flex items-center gap-1.5 text-xs text-white font-bold bg-[#030712] border border-[#374151] hover:bg-[#1f2937] px-2.5 py-1 rounded transition-colors shadow-sm"
+                className="flex items-center gap-1.5 text-xs text-foreground font-medium bg-muted border border-border hover:bg-muted/80 px-2.5 py-1 rounded transition-colors shadow-xs cursor-pointer"
               >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-white" />}
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                 <span>{copied ? "Copiado!" : "Copiar"}</span>
               </button>
             </div>
-            <pre className="text-[11px] font-mono bg-[#030712] border border-[#374151] rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all text-white leading-relaxed max-h-56 shadow-sm">
+            <pre className="text-[11px] font-mono bg-muted/50 border border-border rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all text-foreground leading-relaxed max-h-56 shadow-xs">
               {JSON.stringify(log.metadata, null, 2)}
             </pre>
           </div>

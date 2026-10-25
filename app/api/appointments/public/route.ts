@@ -77,9 +77,18 @@ export async function GET(request: NextRequest) {
   }
 }
 
+import { checkRateLimit, getClientIp, rateLimitExceededResponse } from '@/lib/rate-limit'
+
 // POST - Criar agendamento público (sem autenticação)
 export async function POST(request: NextRequest) {
   try {
+    // Proteção contra ataques de exaustão de agenda e bots (máx 15 reservas / min por IP)
+    const clientIp = getClientIp(request)
+    const rateCheck = checkRateLimit(clientIp, { limit: 15, windowMs: 60 * 1000, prefix: 'pub_booking_ip' })
+    if (!rateCheck.success) {
+      return rateLimitExceededResponse(rateCheck.resetTime)
+    }
+
     const data = await request.json()
     const { clientId, barberId, serviceId, startTime, notes, isVip, barbershopId: bodyShopId, slug: bodySlug } = data
 

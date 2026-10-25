@@ -12,7 +12,6 @@ import PopularServices from '@/components/dashboard/PopularServices'
 import FinanceSummary from '@/components/dashboard/FinanceSummary'
 import RecentClients from '@/components/dashboard/RecentClients'
 import PublicLinkCard from '@/components/dashboard/PublicLinkCard'
-import TrialBanner from '@/components/dashboard/TrialBanner'
 import { getAuthHeaders } from '@/lib/utils'
 
 interface ClientAppointment {
@@ -122,34 +121,33 @@ function StaffDashboard() {
       <DropdownHeader />
 
       <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
-        <TrialBanner />
         <PublicLinkCard />
 
         <div className="mb-6 md:mb-8">
           <StatsCards />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-          <div className="lg:col-span-2">
-            <RevenueChart />
-          </div>
-          <div>
-            <TodayAppointments />
-          </div>
-          <div>
-            <PopularServices />
-          </div>
-          <div>
-            <RecentClients />
-          </div>
-          <div className="lg:col-span-2">
-            <FinanceSummary />
-          </div>
+        {/* 1. Agendamentos de Hoje (Visão Operacional do Dia) */}
+        <div>
+          <TodayAppointments />
+        </div>
+
+        {/* 2. Serviços Mais Procurados e Últimos Clientes (Alinhados Lado a Lado) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-stretch">
+          <PopularServices />
+          <RecentClients />
+        </div>
+
+        {/* 3. Faturamento e Resumo Financeiro (Alinhados Lado a Lado) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-stretch">
+          <RevenueChart />
+          <FinanceSummary />
         </div>
       </main>
     </div>
   )
 }
+
 
 import { useRouter } from 'next/navigation'
 
@@ -165,8 +163,8 @@ export default function DashboardPage() {
 
   if (authLoading || user?.role === 'DEVELOPER') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-950">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-400"></div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     )
   }

@@ -9,6 +9,7 @@ import CalendarView from '@/components/agenda/CalendarView'
 import AppointmentList from '@/components/agenda/AppointmentList'
 import AppointmentModal from '@/components/agenda/AppointmentModal'
 import AppointmentDetailsModal from '@/components/agenda/AppointmentDetailsModal'
+import { Calendar, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
 
 interface Appointment {
@@ -326,87 +327,89 @@ export default function AgendaPage() {
         
         {/* Conteúdo da Agenda */}
         <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
-              {/* Calendar View - 2 colunas */}
-              <div className="lg:col-span-2">
-                <CalendarView 
-                  onDateSelect={handleDateSelect} 
-                  onMonthSelect={handleMonthSelect}
-                  selectedDate={selectedDate} 
-                  isMonthView={datePeriod === 'month'}
-                />
-              </div>
-              
-              {/* Resumo do Período - 1 coluna (sem Faturamento, foco em agendamentos) */}
-              <div className="space-y-2 md:space-y-3">
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base md:text-lg font-bold text-white">Resumo: {getPeriodLabel()}</h3>
-                    {datePeriod !== 'all' && (
-                      <button
-                        type="button"
-                        onClick={() => setDatePeriod('all')}
-                        className="text-xs text-yellow-400 hover:text-yellow-300 underline"
-                      >
-                        Ver todos
-                      </button>
-                    )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            {/* Calendar View - Compacto na coluna lateral */}
+            <div className="lg:col-span-5">
+              <CalendarView 
+                onDateSelect={handleDateSelect} 
+                onMonthSelect={handleMonthSelect}
+                selectedDate={selectedDate} 
+                isMonthView={datePeriod === 'month'}
+              />
+            </div>
+            
+            {/* Resumo do Período - Adaptado ao tema */}
+            <div className="lg:col-span-7">
+              <div className="bg-card text-card-foreground border border-border rounded-xl p-4 shadow-sm space-y-3">
+                <div className="flex items-center justify-between pb-1 border-b border-border">
+                  <h3 className="text-sm sm:text-base font-bold text-foreground">
+                    Resumo: {getPeriodLabel()}
+                  </h3>
+                  {datePeriod !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => setDatePeriod('all')}
+                      className="text-xs text-primary hover:underline font-medium cursor-pointer"
+                    >
+                      Ver todos
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                  {/* Total */}
+                  <div className="bg-muted/40 border border-border rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total</p>
+                      <p className="text-xl sm:text-2xl font-bold text-foreground mt-0.5">{appointments.length}</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-md bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center">
+                      <Calendar className="w-4 h-4" />
+                    </div>
                   </div>
 
-                  <div className="space-y-3">
-                    {/* Total */}
-                    <div className="flex items-center justify-between py-2 border-b border-white/10">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-blue-400 text-xs font-bold">T</span>
-                        </div>
-                        <span className="text-white/80 text-sm">Total</span>
-                      </div>
-                      <span className="text-xl font-bold text-white">{appointments.length}</span>
-                    </div>
-
-                    {/* Pendentes e Confirmados */}
-                    <div className="flex items-center justify-between py-2 border-b border-white/10">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-yellow-400 text-xs font-bold">P</span>
-                        </div>
-                        <span className="text-white/80 text-sm">Pendentes / Confirmados</span>
-                      </div>
-                      <span className="text-lg font-bold text-yellow-400">
+                  {/* Pendentes e Confirmados */}
+                  <div className="bg-muted/40 border border-border rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pendentes</p>
+                      <p className="text-xl sm:text-2xl font-bold text-amber-500 mt-0.5">
                         {appointments.filter(a => a.status === 'PENDING' || a.status === 'CONFIRMED').length}
-                      </span>
+                      </p>
                     </div>
+                    <div className="w-8 h-8 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                  </div>
 
-                    {/* Concluídos */}
-                    <div className="flex items-center justify-between py-2 border-b border-white/10">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-green-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-green-400 text-xs font-bold">C</span>
-                        </div>
-                        <span className="text-white/80 text-sm">Concluídos</span>
-                      </div>
-                      <span className="text-lg font-bold text-green-400">
+                  {/* Concluídos */}
+                  <div className="bg-muted/40 border border-border rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Concluídos</p>
+                      <p className="text-xl sm:text-2xl font-bold text-emerald-500 mt-0.5">
                         {appointments.filter(a => a.status === 'COMPLETED').length}
-                      </span>
+                      </p>
                     </div>
+                    <div className="w-8 h-8 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
+                  </div>
 
-                    {/* Cancelados */}
-                    <div className="flex items-center justify-between py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-red-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-red-400 text-xs font-bold">X</span>
-                        </div>
-                        <span className="text-white/80 text-sm">Cancelados</span>
-                      </div>
-                      <span className="text-lg font-bold text-red-400">
+                  {/* Cancelados */}
+                  <div className="bg-muted/40 border border-border rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Cancelados</p>
+                      <p className="text-xl sm:text-2xl font-bold text-destructive mt-0.5">
                         {appointments.filter(a => a.status === 'CANCELLED').length}
-                      </span>
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 rounded-md bg-destructive/10 text-destructive border border-destructive/20 flex items-center justify-center">
+                      <XCircle className="w-4 h-4" />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
             {/* Appointments List */}
             <AppointmentList 

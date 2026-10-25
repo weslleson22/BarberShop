@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
-import { generateUniqueSlug, slugify } from '@/lib/tenant'
+import { generateUniqueSlug } from '@/lib/tenant'
+import { parseBarbershopMetadata, serializeBarbershopMetadata } from '@/lib/operating-hours'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// GET - Obter informações da barbearia do usuário autenticado (com auto-geração de slug se ausente)
+// GET - Obter informações da barbearia do usuário autenticado (com auto-geração de slug se ausente e horários)
 export async function GET(request: NextRequest) {
   try {
     const user = getAuthUser(request)
@@ -69,17 +70,31 @@ export async function GET(request: NextRequest) {
           updatedAt: true,
         },
       })
-      return NextResponse.json(updated)
+      const parsed = parseBarbershopMetadata(updated.description)
+      return NextResponse.json({
+        ...updated,
+        description: parsed.description,
+        operatingHours: parsed.operatingHours,
+        barberWorkDays: parsed.barberWorkDays,
+        expenses: parsed.expenses,
+      })
     }
 
-    return NextResponse.json(shop)
+    const parsed = parseBarbershopMetadata(shop.description)
+    return NextResponse.json({
+      ...shop,
+      description: parsed.description,
+      operatingHours: parsed.operatingHours,
+      barberWorkDays: parsed.barberWorkDays,
+      expenses: parsed.expenses,
+    })
   } catch (error) {
     console.error('Erro ao buscar dados da barbearia:', error)
     return NextResponse.json({ error: 'Erro ao buscar dados da barbearia' }, { status: 500 })
   }
 }
 
-// PATCH - Atualizar dados da barbearia e configurar slug exclusivo (ADMIN ou DEVELOPER)
+// PATCH - Atualizar dados da barbearia, horários de atendimento e slug exclusivo (ADMIN ou DEVELOPER)
 export async function PATCH(request: NextRequest) {
   try {
     const user = getAuthUser(request)
@@ -88,7 +103,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, description, logo, slug, barbershopId: requestedShopId } = body
+    const { name, phone, address, description, logo, slug, operatingHours, barberWorkDays, expenses, barbershopId: requestedShopId } = body
 
     let targetShopId = user.barbershopId
     if (user.role === 'DEVELOPER' && requestedShopId) {
@@ -104,8 +119,29 @@ export async function PATCH(request: NextRequest) {
     if (name !== undefined) updateData.name = name.trim()
     if (phone !== undefined) updateData.phone = phone ? phone.trim() : null
     if (address !== undefined) updateData.address = address ? address.trim() : null
-    if (description !== undefined) updateData.description = description ? description.trim() : null
     if (logo !== undefined) updateData.logo = logo ? logo.trim() : null
+
+    // Atualização controlada de descrição e/ou horários de funcionamento e despesas
+    if (description !== undefined || operatingHours !== undefined || barberWorkDays !== undefined || expenses !== undefined) {
+      const current = await prisma.barbershop.findUnique({
+        where: { id: targetShopId },
+        select: { description: true },
+      })
+      const parsedCurrent = parseBarbershopMetadata(current?.description)
+      const targetBio = description !== undefined ? (description ? description.trim() : '') : parsedCurrent.description
+      const targetHours = operatingHours !== undefined ? operatingHours : parsedCurrent.operatingHours
+      const targetBarberDays = barberWorkDays !== undefined ? barberWorkDays : parsedCurrent.barberWorkDays
+      const targetExpenses = expenses !== undefined ? expenses : parsedCurrent.expenses
+
+      updateData.description = serializeBarbershopMetadata(
+        targetBio,
+        targetHours,
+        targetBarberDays,
+        targetExpenses,
+        parsedCurrent.inventory,
+        parsedCurrent.stockMovements
+      )
+    }
 
     // Atualização e validação estrita de Slug com registro de redirect controlado
     if (slug !== undefined) {
@@ -131,7 +167,13 @@ export async function PATCH(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(updated)
+    const parsed = parseBarbershopMetadata(updated.description)
+    return NextResponse.json({
+      ...updated,
+      description: parsed.description,
+      operatingHours: parsed.operatingHours,
+      barberWorkDays: parsed.barberWorkDays,
+    })
   } catch (error) {
     console.error('Erro ao atualizar barbearia:', error)
     return NextResponse.json(

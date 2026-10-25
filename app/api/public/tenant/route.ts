@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolvePublicTenant } from '@/lib/tenant'
+import { parseBarbershopMetadata } from '@/lib/operating-hours'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -24,6 +25,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const parsed = parseBarbershopMetadata(tenant.description)
+
     return NextResponse.json({
       id: tenant.id,
       name: tenant.name,
@@ -33,7 +37,8 @@ export async function GET(request: NextRequest) {
       phone: tenant.phone,
       address: tenant.address,
       logo: tenant.logo,
-      description: tenant.description,
+      description: parsed.description,
+      operatingHours: parsed.operatingHours,
       status: tenant.status,
       isActive: tenant.isActive,
     })

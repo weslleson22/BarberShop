@@ -53,19 +53,16 @@ export async function POST(request: NextRequest) {
     // Gerar token seguro JWT assinado válido por 1 hora
     const resetToken = generatePasswordResetToken(user.id, user.email)
 
-    // Determinar URL base de redefinição
-    const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
-    const proto = request.headers.get('x-forwarded-proto') || (host && !host.includes('localhost') ? 'https' : 'http')
-    const derivedOrigin = host ? `${proto}://${host}` : null
-
-    const origin =
-      request.headers.get('origin') ||
-      derivedOrigin ||
-      (request.headers.get('referer') ? new URL(request.headers.get('referer')!).origin : null) ||
+    // Determinar URL base confiável de redefinição (Proteção contra Host Header Injection / Password Reset Poisoning)
+    // NUNCA confiar em x-forwarded-host ou headers arbitrários enviados pelo cliente para links de segurança
+    const trustedBaseUrl =
       process.env.NEXTAUTH_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
-      'http://localhost:3000'
+      (process.env.NODE_ENV === 'production'
+        ? 'https://barbershop.com.br'
+        : 'http://localhost:3000')
 
+    const origin = trustedBaseUrl.replace(/\/$/, '')
     const resetLink = `${origin}/reset-password?token=${encodeURIComponent(resetToken)}`
 
     // Envio do e-mail diretamente para a caixa de entrada do usuário

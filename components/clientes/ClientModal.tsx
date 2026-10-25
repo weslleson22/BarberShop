@@ -195,16 +195,16 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
-      <div className="modal-responsive bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
+      <div className="modal-responsive bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto shadow-2xl text-card-foreground">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-white">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
             {client ? 'Editar Cliente' : 'Novo Cliente'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
             aria-label="Fechar modal"
           >
             <X className="w-4 h-4 md:w-5 md:h-5" />
@@ -215,17 +215,17 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+            <label className="block text-foreground text-xs md:text-sm font-semibold mb-1.5 md:mb-2">
               Nome *
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-background border border-border rounded-lg md:rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-sm md:text-base font-medium"
                 placeholder="Ex: João Silva"
                 required
                 minLength={NAME_MIN}
@@ -233,10 +233,10 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
               />
             </div>
             <div className="flex items-center justify-between mt-1">
-              <p className="text-white/40 text-xs">
+              <p className="text-muted-foreground text-xs">
                 {NAME_MIN} a {NAME_MAX} caracteres (recomendado para nome completo)
               </p>
-              <p className="text-white/40 text-xs">
+              <p className="text-muted-foreground text-xs">
                 {formData.name.length}/{NAME_MAX}
               </p>
             </div>
@@ -244,44 +244,44 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
 
           {/* Phone */}
           <div>
-            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+            <label className="block text-foreground text-xs md:text-sm font-semibold mb-1.5 md:mb-2">
               Telefone *
             </label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-background border border-border rounded-lg md:rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-sm md:text-base font-medium"
                 placeholder="(00) 00000-0000"
                 required
                 maxLength={15}
               />
             </div>
             {formData.phone && !isPhoneValid ? (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-destructive text-xs mt-1">
                 Telefone incompleto. Informe DDD + número, formato (00) 00000-0000
               </p>
             ) : (
-              <p className="text-white/40 text-xs mt-1">Formato automático: (00) 00000-0000</p>
+              <p className="text-muted-foreground text-xs mt-1">Formato automático: (00) 00000-0000</p>
             )}
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+            <label className="block text-foreground text-xs md:text-sm font-semibold mb-1.5 md:mb-2">
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-background border border-border rounded-lg md:rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-sm md:text-base font-medium"
                 placeholder="nome@dominio.com"
                 maxLength={EMAIL_MAX}
                 inputMode="email"
@@ -289,32 +289,32 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
               />
             </div>
             {formData.email && !isEmailValid ? (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-destructive text-xs mt-1">
                 E-mail inválido. Use o formato nome@dominio.com
               </p>
             ) : (
-              <p className="text-white/40 text-xs mt-1">
+              <p className="text-muted-foreground text-xs mt-1">
                 Máscara: minúsculas, um @ e formato nome@dominio.com
               </p>
             )}
           </div>
 
           {/* Cliente VIP Toggle */}
-          <div className="flex items-center justify-between p-3 md:p-3.5 bg-gray-950 border border-amber-500/30 rounded-lg md:rounded-xl">
+          <div className="flex items-center justify-between p-3 md:p-3.5 bg-muted/40 border border-border rounded-lg md:rounded-xl">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-                <Crown className="w-4 h-4 text-amber-400" />
+                <Crown className="w-4 h-4 text-amber-500" />
               </div>
               <div>
-                <p className="text-white text-xs md:text-sm font-semibold flex items-center gap-1.5">
+                <p className="text-foreground text-xs md:text-sm font-semibold flex items-center gap-1.5">
                   Cliente VIP
                   {formData.isVip && (
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800/60">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                       Ativo
                     </span>
                   )}
                 </p>
-                <p className="text-white/50 text-[11px] md:text-xs">
+                <p className="text-muted-foreground text-[11px] md:text-xs">
                   Destacar cliente com atendimento prioritário e badge VIP na agenda
                 </p>
               </div>
@@ -327,26 +327,26 @@ export default function ClientModal({ isOpen, onClose, onSave, client }: ClientM
                 onChange={(e) => setFormData((prev) => ({ ...prev, isVip: e.target.checked }))}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              <div className="w-11 h-6 bg-muted-foreground/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
             </label>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 md:px-6 py-2.5 md:py-3 text-white/80 hover:text-white border border-white/20 rounded-lg md:rounded-xl hover:bg-white/10 transition-all text-sm md:text-base"
+              className="px-4 md:px-6 py-2.5 md:py-3 text-muted-foreground hover:text-foreground border border-border rounded-lg md:rounded-xl hover:bg-muted transition-colors text-sm md:text-base font-semibold"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || !isFormValid}
-              className="px-4 md:px-6 py-2.5 md:py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg md:rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+              className="px-4 md:px-6 py-2.5 md:py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg md:rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base shadow-sm"
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
               ) : (
                 <Save className="w-4 h-4" />
               )}

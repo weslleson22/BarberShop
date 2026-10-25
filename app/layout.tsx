@@ -55,13 +55,15 @@ export const viewport = {
   viewportFit: 'cover',
 }
 
+import { ThemeProvider } from '@/components/theme-provider'
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={`${roboto.variable} ${robotoMono.variable}`}>
+    <html lang="pt-BR" suppressHydrationWarning className={`${roboto.variable} ${robotoMono.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
@@ -71,17 +73,24 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="AgendaSaaS" />
         <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var dark=t==='dark'||(!t&&d)||(t==='system'&&d);var r=document.documentElement;if(dark){r.classList.add('dark');r.classList.remove('light');}else{r.classList.remove('dark');r.classList.add('light');}}catch(e){}})();`,
+          }}
+        />
       </head>
       <body className={`${roboto.className} font-sans`}>
-        <DatabaseProvider>
-          <AuthProvider>
-            <Suspense fallback={null}>
-              <NavigationTracker />
-            </Suspense>
-            {children}
-          </AuthProvider>
-        </DatabaseProvider>
-        <ServiceWorkerUpdater />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <DatabaseProvider>
+            <AuthProvider>
+              <Suspense fallback={null}>
+                <NavigationTracker />
+              </Suspense>
+              {children}
+            </AuthProvider>
+          </DatabaseProvider>
+          <ServiceWorkerUpdater />
+        </ThemeProvider>
       </body>
     </html>
   )

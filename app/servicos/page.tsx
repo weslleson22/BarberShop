@@ -202,14 +202,14 @@ export default function ServicosPage() {
       
       {/* Conteúdo Principal Padrão */}
       <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
           <div>
             <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
               <Scissors className="w-4 h-4" />
               <span>Catálogo & Preços</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Serviços</h1>
-            <p className="text-muted-foreground text-sm md:text-base mt-1">Gerencie todos os serviços oferecidos pela barbearia</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Serviços</h1>
+            <p className="text-muted-foreground text-xs md:text-sm mt-1">Gerencie todos os serviços oferecidos pela barbearia</p>
           </div>
           {canManageServices && (
             <button
@@ -218,9 +218,9 @@ export default function ServicosPage() {
                 setEditingService(null)
                 setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
               }}
-              className="bg-amber-500 hover:bg-amber-400 text-black px-4 md:px-5 py-2.5 rounded-xl transition-colors flex items-center font-semibold text-sm cursor-pointer"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 md:px-5 py-2.5 rounded-lg transition-all flex items-center font-semibold text-xs md:text-sm shadow-sm cursor-pointer"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-1.5" />
               Novo Serviço
             </button>
           )}
@@ -235,241 +235,238 @@ export default function ServicosPage() {
               placeholder="Buscar por nome ou descrição..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm"
             />
           </div>
         </div>
 
-          {/* Formulário de Adicionar/Editar */}
-          {showAddForm && (
-            <div className="mb-4 md:mb-6 bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
-              <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">
-                {editingService ? 'Editar Serviço' : 'Novo Serviço'}
-              </h3>
-          <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Nome *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  placeholder="Nome do serviço"
-                  required
-                />
+        {/* Formulário de Adicionar/Editar */}
+        {showAddForm && (
+          <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
+            <h3 className="text-lg md:text-xl font-bold text-foreground mb-4">
+              {editingService ? 'Editar Serviço' : 'Novo Serviço'}
+            </h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-foreground mb-1.5">
+                    Nome *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3.5 py-2 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm"
+                    placeholder="Nome do serviço"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-foreground mb-1.5">
+                    Descrição
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full px-3.5 py-2 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm"
+                    placeholder="Descrição do serviço"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-foreground mb-1.5">
+                    Preço (R$) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="w-full px-3.5 py-2 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-foreground mb-1.5">
+                    Duração (minutos) *
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    className="w-full px-3.5 py-2 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm"
+                    placeholder="30"
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Descrição
-                </label>
+              <div className="flex items-center">
                 <input
-                  type="text"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  placeholder="Descrição do serviço"
+                  type="checkbox"
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="w-4 h-4 rounded border-input text-primary focus:ring-ring accent-primary cursor-pointer"
                 />
-              </div>
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Preço (R$) *
+                <label htmlFor="isActive" className="ml-2 text-xs md:text-sm font-medium text-foreground cursor-pointer">
+                  Serviço ativo (disponível para agendamento)
                 </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  placeholder="0.00"
-                  required
-                />
               </div>
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Duração (minutos) *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  placeholder="30"
-                  required
-                />
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddForm(false)
+                    setEditingService(null)
+                    setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
+                  }}
+                  className="bg-card border border-border text-foreground px-4 py-2 rounded-lg hover:bg-muted transition-all font-medium text-xs md:text-sm cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2 rounded-lg transition-all font-semibold text-xs md:text-sm shadow-sm cursor-pointer"
+                >
+                  {editingService ? 'Atualizar' : 'Salvar'}
+                </button>
               </div>
-            </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="isActive" className="ml-2 text-xs md:text-sm text-gray-700">
-                Serviço ativo (disponível para agendamento)
-              </label>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <button
-                type="submit"
-                className="bg-amber-500 hover:bg-amber-400 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl transition-colors font-semibold text-sm md:text-base cursor-pointer"
-              >
-                {editingService ? 'Atualizar' : 'Salvar'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAddForm(false)
-                  setEditingService(null)
-                  setFormData({ name: '', description: '', price: '', duration: '', isActive: true })
-                }}
-                className="bg-white/10 border border-white/20 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl hover:bg-white/20 transition-all font-medium text-sm md:text-base"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+            </form>
+          </div>
+        )}
 
-      {/* Lista de Serviços em Cards */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
+        {/* Lista de Serviços em Cards */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400"></div>
+          <div className="flex items-center justify-center py-16 bg-card border border-border rounded-xl">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : filteredServices.length === 0 ? (
-          <div className="text-center py-8 md:py-12">
-            <Scissors className="w-10 h-10 md:w-12 md:h-12 text-white/40 mx-auto mb-3 md:mb-4" />
-            <p className="text-white text-base md:text-lg">Nenhum serviço encontrado</p>
-            <p className="text-white/60 text-xs md:text-sm mt-1 md:mt-2">
+          <div className="bg-card border border-border rounded-xl text-center py-12 px-4">
+            <Scissors className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-foreground font-semibold text-base">Nenhum serviço encontrado</p>
+            <p className="text-muted-foreground text-xs md:text-sm mt-1">
               {searchTerm ? 'Tente uma busca diferente' : 'Adicione seu primeiro serviço'}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredServices.map((service) => (
               <div 
                 key={service.id} 
-                className="bg-gray-950 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors cursor-pointer group flex flex-col h-full"
+                className="bg-card border border-border rounded-xl p-4 hover:border-primary/40 hover:shadow-sm transition-all flex flex-col h-full"
               >
-                {/* Header do Card - Nome */}
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0 text-black">
-                    <Scissors className="w-4 h-4 text-black" />
+                {/* Header do Card - Nome e Ícone */}
+                <div className="flex items-center space-x-2.5 mb-2">
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0 text-primary">
+                    <Scissors className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-sm md:text-base leading-tight" title={service.name}>{service.name}</h3>
+                    <h3 className="font-bold text-foreground text-sm md:text-base leading-tight truncate" title={service.name}>
+                      {service.name}
+                    </h3>
                   </div>
                 </div>
 
-                {/* Status do serviço - Acima da descrição */}
+                {/* Status do serviço */}
                 <div className="mb-2">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
                     service.isActive 
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
+                      : 'bg-destructive/10 text-destructive border-destructive/20'
                   }`}>
                     {service.isActive ? 'Ativo' : 'Inativo'}
                   </span>
                 </div>
                 
-                {/* Descrição - Altura fixa e alinhada */}
+                {/* Descrição */}
                 <div className="h-10 mb-3">
                   {service.description ? (
-                    <p className="text-white/70 text-xs leading-relaxed line-clamp-2 text-left" title={service.description}>
+                    <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 text-left" title={service.description}>
                       {service.description}
                     </p>
                   ) : (
-                    <p className="text-white/40 text-xs italic text-left">Sem descrição</p>
+                    <p className="text-muted-foreground/60 text-xs italic text-left">Sem descrição</p>
                   )}
                 </div>
 
-                {/* Informações principais - Duração e Preço - Alinhados */}
+                {/* Informações principais - Duração e Preço */}
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-2 flex flex-col justify-center">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                        <span className="text-white/50 text-[9px] font-semibold uppercase tracking-wider">Duração</span>
-                      </div>
+                  <div className="bg-muted/40 border border-border rounded-lg p-2.5 flex flex-col justify-center">
+                    <div className="flex items-center space-x-1 mb-1">
+                      <Clock className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                      <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">Duração</span>
                     </div>
-                    <p className="text-white font-bold text-sm text-right">
-                      {service.duration}<span className="text-[10px] font-normal text-white/60 ml-1">min</span>
+                    <p className="text-foreground font-bold text-sm text-right">
+                      {service.duration}<span className="text-[10px] font-normal text-muted-foreground ml-1">min</span>
                     </p>
                   </div>
-                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-2 flex flex-col justify-center">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <div className="flex items-center space-x-1">
-                        <DollarSign className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                        <span className="text-white/50 text-[9px] font-semibold uppercase tracking-wider">Preço</span>
-                      </div>
+                  <div className="bg-muted/40 border border-border rounded-lg p-2.5 flex flex-col justify-center">
+                    <div className="flex items-center space-x-1 mb-1">
+                      <DollarSign className="w-3 h-3 text-emerald-500 dark:text-emerald-400 flex-shrink-0" />
+                      <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">Preço</span>
                     </div>
-                    <p className="text-white font-bold text-sm text-right" title={formatCurrency(service.price)}>
+                    <p className="text-foreground font-bold text-sm text-right" title={formatCurrency(service.price)}>
                       {formatCurrency(service.price)}
                     </p>
                   </div>
                 </div>
 
-                {/* Botão principal - Alinhado na base */}
+                {/* Botão principal */}
                 {service.isActive ? (
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       router.push('/agendar?service=' + service.id)
                     }}
-                    className="w-full bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-lg transition-colors font-bold text-sm mb-3 mt-auto cursor-pointer"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-3 rounded-lg transition-all font-semibold text-xs md:text-sm mb-3 mt-auto cursor-pointer shadow-sm"
                   >
                     Agendar Agora
                   </button>
                 ) : (
-                  <div className="w-full py-2 text-center text-red-400/80 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-semibold mb-3 mt-auto">
+                  <div className="w-full py-2 text-center text-destructive bg-destructive/10 border border-destructive/20 rounded-lg text-xs font-semibold mb-3 mt-auto">
                     Serviço Desativado
                   </div>
                 )}
                 
                 {/* Ações de gerenciamento - Apenas para administradores */}
                 {canManageServices && (
-                  <div className="pt-3 border-t border-white/10 mt-auto">
+                  <div className="pt-3 border-t border-border mt-auto">
                     <div className="grid grid-cols-3 gap-1.5">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           handleEdit(service)
                         }}
-                        className="flex flex-col items-center justify-center px-1.5 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/30 transition-all group"
+                        className="flex flex-col items-center justify-center px-1.5 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-all cursor-pointer"
                         title="Editar serviço"
                       >
-                        <Edit className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 mb-0.5" />
-                        <span className="text-[9px] text-blue-400 group-hover:text-blue-300 font-medium">Editar</span>
+                        <Edit className="w-3.5 h-3.5 mb-0.5" />
+                        <span className="text-[10px] font-medium">Editar</span>
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           handleToggleActive(service.id, service.isActive)
                         }}
-                        className={`flex flex-col items-center justify-center px-1.5 py-2 border rounded-lg hover:bg-opacity-20 transition-all group ${
+                        className={`flex flex-col items-center justify-center px-1.5 py-1.5 border rounded-lg transition-all cursor-pointer ${
                           service.isActive 
-                            ? 'bg-yellow-500/10 border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/30' 
-                            : 'bg-green-500/10 border-green-500/20 hover:bg-green-500/20 hover:border-green-500/30'
+                            ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20' 
+                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
                         }`}
                         title={service.isActive ? 'Desativar serviço' : 'Ativar serviço'}
                       >
                         {service.isActive ? (
                           <>
-                            <EyeOff className="w-3.5 h-3.5 text-yellow-400 group-hover:text-yellow-300 mb-0.5" />
-                            <span className="text-[9px] text-yellow-400 group-hover:text-yellow-300 font-medium">Desativar</span>
+                            <EyeOff className="w-3.5 h-3.5 mb-0.5" />
+                            <span className="text-[10px] font-medium">Desativar</span>
                           </>
                         ) : (
                           <>
-                            <Eye className="w-3.5 h-3.5 text-green-400 group-hover:text-green-300 mb-0.5" />
-                            <span className="text-[9px] text-green-400 group-hover:text-green-300 font-medium">Ativar</span>
+                            <Eye className="w-3.5 h-3.5 mb-0.5" />
+                            <span className="text-[10px] font-medium">Ativar</span>
                           </>
                         )}
                       </button>
@@ -478,11 +475,11 @@ export default function ServicosPage() {
                           e.stopPropagation()
                           handleDelete(service.id)
                         }}
-                        className="flex flex-col items-center justify-center px-1.5 py-2 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 hover:border-red-500/30 transition-all group"
+                        className="flex flex-col items-center justify-center px-1.5 py-1.5 bg-destructive/10 border border-destructive/20 rounded-lg hover:bg-destructive/20 text-destructive transition-all cursor-pointer"
                         title="Excluir serviço"
                       >
-                        <Trash2 className="w-3.5 h-3.5 text-red-400 group-hover:text-red-300 mb-0.5" />
-                        <span className="text-[9px] text-red-400 group-hover:text-red-300 font-medium">Excluir</span>
+                        <Trash2 className="w-3.5 h-3.5 mb-0.5" />
+                        <span className="text-[10px] font-medium">Excluir</span>
                       </button>
                     </div>
                   </div>
@@ -491,74 +488,73 @@ export default function ServicosPage() {
             ))}
           </div>
         )}
-      </div>
 
-      {/* Resumo */}
-      {services.length > 0 && (
-        <div className="mt-6 md:mt-8 bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
-          <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Resumo de Serviços</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3 md:p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm text-white/60">Total de Serviços</p>
-                  <p className="text-xl md:text-2xl font-bold text-white">{services.length}</p>
-                </div>
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-400/20 rounded-lg flex items-center justify-center">
-                  <Scissors className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3 md:p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm text-white/60">Serviços Ativos</p>
-                  <p className="text-xl md:text-2xl font-bold text-white">
-                    {services.filter(s => s.isActive).length}
-                  </p>
-                </div>
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-green-400/20 rounded-lg flex items-center justify-center">
-                  <Eye className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
+        {/* Resumo */}
+        {services.length > 0 && (
+          <div className="pt-2">
+            <h3 className="text-base md:text-lg font-bold text-foreground mb-3">Resumo de Serviços</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+              <div className="bg-card border border-border rounded-xl p-3 md:p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Total de Serviços</p>
+                    <p className="text-xl md:text-2xl font-bold text-foreground mt-0.5">{services.length}</p>
+                  </div>
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                    <Scissors className="w-4 h-4 md:w-4.5 md:h-4.5" />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3 md:p-4">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-xs md:text-sm text-white/60">Preço Médio</p>
-                  <p className="text-lg md:text-xl font-bold text-white truncate">
-                    {(() => {
-                      if (services.length === 0) return formatCurrency(0)
-                      const totalPrice = services.reduce((sum, s) => {
-                        const price = typeof s.price === 'number' ? s.price : parseFloat(String(s.price))
-                        return sum + (isNaN(price) ? 0 : price)
-                      }, 0)
-                      const averagePrice = totalPrice / services.length
-                      return formatCurrency(averagePrice)
-                    })()}
-                  </p>
-                </div>
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+              <div className="bg-card border border-border rounded-xl p-3 md:p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Serviços Ativos</p>
+                    <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      {services.filter(s => s.isActive).length}
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <Eye className="w-4 h-4 md:w-4.5 md:h-4.5" />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3 md:p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm text-white/60">Total de Agendamentos</p>
-                  <p className="text-xl md:text-2xl font-bold text-white">
-                    {services.reduce((sum, s) => sum + (s._count?.appointments || 0), 0)}
-                  </p>
+              <div className="bg-card border border-border rounded-xl p-3 md:p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Preço Médio</p>
+                    <p className="text-lg md:text-xl font-bold text-foreground mt-0.5 truncate">
+                      {(() => {
+                        if (services.length === 0) return formatCurrency(0)
+                        const totalPrice = services.reduce((sum, s) => {
+                          const price = typeof s.price === 'number' ? s.price : parseFloat(String(s.price))
+                          return sum + (isNaN(price) ? 0 : price)
+                        }, 0)
+                        const averagePrice = totalPrice / services.length
+                        return formatCurrency(averagePrice)
+                      })()}
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
+                    <DollarSign className="w-4 h-4 md:w-4.5 md:h-4.5" />
+                  </div>
                 </div>
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-400/20 rounded-lg flex items-center justify-center">
-                  <Clock className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+              </div>
+              <div className="bg-card border border-border rounded-xl p-3 md:p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Agendamentos</p>
+                    <p className="text-xl md:text-2xl font-bold text-foreground mt-0.5">
+                      {services.reduce((sum, s) => sum + (s._count?.appointments || 0), 0)}
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <Clock className="w-4 h-4 md:w-4.5 md:h-4.5" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </main>
     </div>
   )

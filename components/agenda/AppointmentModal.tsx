@@ -506,16 +506,16 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom">
-      <div className="modal-responsive bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 md:p-6 safe-area-top safe-area-bottom backdrop-blur-sm animate-fadeIn">
+      <div className="modal-responsive bg-card text-card-foreground border border-border rounded-xl md:rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-white">
+        <div className="flex items-center justify-between mb-4 md:mb-6 pb-3 border-b border-border">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">
             {appointment ? 'Editar Agendamento' : 'Novo Agendamento'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all cursor-pointer"
             aria-label="Fechar modal"
           >
             <X className="w-4 h-4 md:w-5 md:h-5" />
@@ -526,11 +526,11 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Conflict Alert (HTTP 409) */}
           {conflictError && (
-            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3 text-amber-200">
-              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3 text-amber-700 dark:text-amber-300">
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div className="flex-1 text-sm">
-                <p className="font-semibold text-amber-300">Conflito de Horário</p>
-                <p className="text-amber-200/90 text-xs mt-0.5">{conflictError}</p>
+                <p className="font-semibold text-amber-600 dark:text-amber-300">Conflito de Horário</p>
+                <p className="text-xs mt-0.5">{conflictError}</p>
                 {selectedDate && formData.barberId && (
                   <button
                     type="button"
@@ -538,7 +538,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                       fetchAvailableSlots(selectedDate, formData.barberId, formData.serviceId)
                       setConflictError(null)
                     }}
-                    className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 transition-colors"
+                    className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 transition-colors cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     Atualizar horários disponíveis
@@ -550,15 +550,15 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
           {/* General Form Error */}
           {formError && !conflictError && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-between text-red-200 text-sm">
+            <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-xl flex items-center justify-between text-destructive text-sm">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-                <span className="text-xs">{formError}</span>
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+                <span className="text-xs font-medium">{formError}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setFormError(null)}
-                className="text-red-400 hover:text-red-200 text-xs ml-2"
+                className="text-destructive hover:opacity-80 text-xs ml-2 cursor-pointer"
               >
                 ✕
               </button>
@@ -569,18 +569,18 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           {!isClient && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-white/80 text-xs md:text-sm font-medium">
+                <label className="block text-foreground text-xs md:text-sm font-medium">
                   Cliente *
                 </label>
                 {!appointment && (
-                  <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5">
+                  <div className="flex items-center bg-muted border border-border rounded-lg p-0.5">
                     <button
                       type="button"
                       onClick={() => setClientMode('registered')}
-                      className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all ${
+                      className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
                         clientMode === 'registered'
-                          ? 'bg-yellow-400 text-black shadow-sm font-semibold'
-                          : 'text-white/60 hover:text-white'
+                          ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       Cadastrado
@@ -591,10 +591,10 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                         setClientMode('unregistered')
                         setFormData((prev) => ({ ...prev, clientId: '' }))
                       }}
-                      className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all ${
+                      className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
                         clientMode === 'unregistered'
-                          ? 'bg-yellow-400 text-black shadow-sm font-semibold'
-                          : 'text-white/60 hover:text-white'
+                          ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       Não Cadastrado
@@ -606,7 +606,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
               {clientMode === 'registered' ? (
                 <div ref={clientSearchRef} className="relative">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/40" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
                     <input
                       type="search"
                       value={clientQuery}
@@ -627,14 +627,14 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                         }
                       }}
                       onFocus={() => setShowClientResults(true)}
-                      className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                      className="w-full pl-9 md:pl-10 pr-4 py-2 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm"
                       placeholder="Buscar cliente por nome..."
                       autoComplete="off"
                     />
                   </div>
 
                   {showClientResults && (
-                    <div className="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg md:rounded-xl border border-white/10 bg-gray-900 shadow-xl">
+                    <div className="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-xl">
                       {filteredClients.length > 0 ? (
                         filteredClients.map((client) => (
                           <button
@@ -646,20 +646,20 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                               setIsVip(Boolean(client.isVip))
                               setShowClientResults(false)
                             }}
-                            className={`w-full text-left px-3 py-2.5 hover:bg-white/10 transition-all ${
-                              formData.clientId === client.id ? 'bg-yellow-400/10' : ''
+                            className={`w-full text-left px-3 py-2.5 hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer ${
+                              formData.clientId === client.id ? 'bg-accent/80' : ''
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <p className="text-white text-sm font-medium truncate">{client.name}</p>
+                              <p className="text-foreground text-sm font-medium truncate">{client.name}</p>
                               {Boolean(client.isVip) && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
-                                  <Crown className="w-2.5 h-2.5 text-yellow-400" />
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                  <Crown className="w-2.5 h-2.5" />
                                   VIP
                                 </span>
                               )}
                             </div>
-                            <p className="text-white/50 text-xs truncate">
+                            <p className="text-muted-foreground text-xs truncate">
                               {client.phone}
                               {client.email ? ` · ${client.email}` : ''}
                             </p>
@@ -667,7 +667,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                         ))
                       ) : (
                         <div className="p-3 text-center">
-                          <p className="text-white/50 text-xs">
+                          <p className="text-muted-foreground text-xs">
                             {clients.length === 0
                               ? 'Nenhum cliente cadastrado'
                               : 'Nenhum cliente encontrado'}
@@ -679,7 +679,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                               setClientMode('unregistered')
                               setUnregisteredName(clientQuery)
                             }}
-                            className="mt-2 text-xs text-yellow-400 hover:underline inline-flex items-center gap-1"
+                            className="mt-2 text-xs text-primary hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
                             <Plus className="w-3 h-3" />
                             Cadastrar como cliente não cadastrado
@@ -690,26 +690,26 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                   )}
 
                   {selectedClientRecord && (
-                    <div className="mt-2.5 p-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl">
+                    <div className="mt-2.5 p-3 bg-muted/40 border border-border rounded-lg">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-white text-xs md:text-sm font-semibold truncate">
+                            <span className="text-foreground text-xs md:text-sm font-semibold truncate">
                               {selectedClientRecord.name}
                             </span>
                             {Boolean(selectedClientRecord.isVip) && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
-                                <Crown className="w-2.5 h-2.5 text-yellow-400" />
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                <Crown className="w-2.5 h-2.5" />
                                 VIP
                               </span>
                             )}
                           </div>
-                          <p className="text-white/50 text-xs mt-0.5">{selectedClientRecord.phone}</p>
+                          <p className="text-muted-foreground text-xs mt-0.5">{selectedClientRecord.phone}</p>
                         </div>
                         {/* Toggle VIP para cliente selecionado */}
-                        <div className="flex items-center gap-2 pl-2 border-l border-white/10">
-                          <span className="text-xs text-white/70 flex items-center gap-1">
-                            <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                        <div className="flex items-center gap-2 pl-2 border-l border-border">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Crown className="w-3.5 h-3.5 text-amber-500" />
                             VIP:
                           </span>
                           <label className="relative inline-flex items-center cursor-pointer">
@@ -719,7 +719,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                               onChange={(e) => setIsVip(e.target.checked)}
                               className="sr-only peer"
                             />
-                            <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-400"></div>
+                            <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                           </label>
                         </div>
                       </div>
@@ -728,9 +728,9 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                 </div>
               ) : (
                 /* Cliente Não Cadastrado */
-                <div className="space-y-3 p-3.5 bg-white/[0.03] border border-white/10 rounded-lg md:rounded-xl">
+                <div className="space-y-3 p-3.5 bg-muted/30 border border-border rounded-lg">
                   <div>
-                    <label className="block text-white/70 text-xs font-medium mb-1">
+                    <label className="block text-foreground text-xs font-medium mb-1">
                       Nome Completo *
                     </label>
                     <input
@@ -738,13 +738,13 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                       value={unregisteredName}
                       onChange={(e) => setUnregisteredName(e.target.value)}
                       placeholder="Nome do cliente"
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-yellow-400/50"
+                      className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground text-xs md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-xs font-medium mb-1">
+                    <label className="block text-foreground text-xs font-medium mb-1">
                       Telefone com DDD *
                     </label>
                     <input
@@ -753,13 +753,13 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                       onChange={(e) => setUnregisteredPhone(maskPhone(e.target.value))}
                       placeholder="(00) 00000-0000"
                       maxLength={15}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-yellow-400/50"
+                      className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground text-xs md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-xs font-medium mb-1">
+                    <label className="block text-foreground text-xs font-medium mb-1">
                       E-mail (opcional)
                     </label>
                     <input
@@ -767,19 +767,19 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                       value={unregisteredEmail}
                       onChange={(e) => setUnregisteredEmail(e.target.value.toLowerCase().replace(/\s/g, ''))}
                       placeholder="cliente@email.com"
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-yellow-400/50"
+                      className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground text-xs md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
 
                   {/* Toggle VIP para cliente não cadastrado */}
-                  <div className="flex items-center justify-between p-2.5 bg-yellow-400/10 border border-yellow-400/20 rounded-lg mt-2">
+                  <div className="flex items-center justify-between p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg mt-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-md bg-yellow-400/20 flex items-center justify-center">
-                        <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                      <div className="w-6 h-6 rounded-md bg-amber-500/20 flex items-center justify-center">
+                        <Crown className="w-3.5 h-3.5 text-amber-500" />
                       </div>
                       <div>
-                        <p className="text-white text-xs font-semibold">Cliente VIP</p>
-                        <p className="text-white/50 text-[10px]">Marcar como cliente VIP prioritário</p>
+                        <p className="text-foreground text-xs font-semibold">Cliente VIP</p>
+                        <p className="text-muted-foreground text-[10px]">Marcar como cliente VIP prioritário</p>
                       </div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -789,7 +789,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                         onChange={(e) => setIsVip(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-400"></div>
+                      <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                   </div>
                 </div>
@@ -800,19 +800,19 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           {/* Client Info Display - Only for CLIENT */}
           {isClient && (
             <div>
-              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+              <label className="block text-foreground text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Cliente
               </label>
-              <div className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white">
+              <div className="w-full px-3 md:px-4 py-2.5 bg-muted/40 border border-border rounded-lg text-foreground">
                 <div className="flex items-center space-x-2 md:space-x-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-black font-bold text-xs md:text-sm">
+                  <div className="w-7 h-7 md:w-8 md:h-8 bg-primary/10 text-primary font-bold rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs md:text-sm">
                       {user?.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-white font-medium text-sm md:text-base truncate">{user?.name || 'Usuário'}</p>
-                    <p className="text-white/60 text-xs md:text-sm truncate">{user?.email || 'Email não informado'}</p>
+                    <p className="text-foreground font-medium text-sm md:text-base truncate">{user?.name || 'Usuário'}</p>
+                    <p className="text-muted-foreground text-xs md:text-sm truncate">{user?.email || 'Email não informado'}</p>
                   </div>
                 </div>
               </div>
@@ -821,19 +821,19 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
           {/* Service Selection */}
           <div>
-            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+            <label className="block text-foreground text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Serviço *
             </label>
             <select
               name="serviceId"
               value={formData.serviceId}
               onChange={handleInputChange}
-              className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+              className="w-full px-3 md:px-4 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm cursor-pointer"
               required
             >
-              <option value="" className="bg-gray-900">Selecione um serviço</option>
+              <option value="" className="bg-popover text-popover-foreground">Selecione um serviço</option>
               {services.map(service => (
-                <option key={service.id} value={service.id} className="bg-gray-900">
+                <option key={service.id} value={service.id} className="bg-popover text-popover-foreground">
                   {service.name} - {new Intl.NumberFormat('pt-BR', {
                     style: 'currency',
                     currency: 'BRL',
@@ -845,19 +845,19 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
           {/* Barber/Professional Selection */}
           <div>
-            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+            <label className="block text-foreground text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Profissional *
             </label>
             <select
               name="barberId"
               value={formData.barberId}
               onChange={handleInputChange}
-              className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+              className="w-full px-3 md:px-4 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm cursor-pointer"
               required
             >
-              <option value="" className="bg-gray-900">Selecione um profissional</option>
+              <option value="" className="bg-popover text-popover-foreground">Selecione um profissional</option>
               {barbers.map(barber => (
-                <option key={barber.id} value={barber.id} className="bg-gray-900">
+                <option key={barber.id} value={barber.id} className="bg-popover text-popover-foreground">
                   {barber.name}
                 </option>
               ))}
@@ -867,7 +867,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           {/* Date Selection */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+              <label className="block text-foreground text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Data *
               </label>
               <input
@@ -880,13 +880,13 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                     fetchAvailableSlots(e.target.value, formData.barberId)
                   }
                 }}
-                min={new Date().toISOString().split('T')[0]} // Prevent past dates
-                className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 md:px-4 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm"
                 required
               />
             </div>
             <div>
-              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+              <label className="block text-foreground text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Horário Término *
               </label>
               <input
@@ -894,10 +894,10 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                 name="endTime"
                 value={formData.endTime}
                 onChange={handleInputChange}
-                min={formData.startTime || new Date().toISOString().slice(0, 16)} // Must be after start time
-                className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm md:text-base"
+                min={formData.startTime || new Date().toISOString().slice(0, 16)}
+                className="w-full px-3 md:px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none transition-all text-xs md:text-sm cursor-not-allowed"
                 required
-                readOnly // Auto-calculated based on service duration
+                readOnly
               />
             </div>
           </div>
@@ -905,10 +905,10 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
           {/* Available Time Slots */}
           {selectedDate && formData.barberId && (
             <div>
-              <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+              <label className="block text-foreground text-xs md:text-sm font-medium mb-1.5 md:mb-2">
                 Horários Disponíveis *
               </label>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 md:gap-2 max-h-32 md:max-h-40 overflow-y-auto">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 max-h-32 md:max-h-40 overflow-y-auto p-1 border border-border rounded-lg bg-muted/20">
                 {availableSlots.length > 0 ? (
                   availableSlots.map((slot) => (
                     <button
@@ -929,22 +929,22 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
                           }))
                         }
                       }}
-                      className={`px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm rounded-lg border transition-all ${
+                      className={`px-2 py-1.5 text-xs rounded-md border transition-all cursor-pointer ${
                         formData.startTime === `${selectedDate}T${slot}:00`
-                          ? 'bg-yellow-400/20 border-yellow-400 text-yellow-400'
-                          : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white'
+                          ? 'bg-primary text-primary-foreground border-primary font-bold shadow-sm'
+                          : 'bg-card border-border text-foreground hover:bg-muted'
                       }`}
                     >
                       {slot}
                     </button>
                   ))
                 ) : (
-                  <div className="col-span-full text-center py-3 md:py-4">
-                    <p className="text-white/60 text-xs md:text-sm">Nenhum horário disponível</p>
+                  <div className="col-span-full text-center py-3">
+                    <p className="text-muted-foreground text-xs">Nenhum horário disponível</p>
                   </div>
                 )}
               </div>
-              <p className="text-white/40 text-xs mt-1.5 md:mt-2">
+              <p className="text-muted-foreground text-[11px] mt-1">
                 Horários de atendimento: 08:00 - 20:00 (intervalos de 30min)
               </p>
             </div>
@@ -952,7 +952,7 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
 
           {/* Notes */}
           <div>
-            <label className="block text-white/80 text-xs md:text-sm font-medium mb-1.5 md:mb-2">
+            <label className="block text-foreground text-xs md:text-sm font-medium mb-1.5 md:mb-2">
               Observações
             </label>
             <textarea
@@ -960,27 +960,27 @@ export default function AppointmentModal({ isOpen, onClose, onSave, appointment 
               value={formData.notes}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all resize-none text-sm md:text-base"
+              className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all resize-none text-xs md:text-sm"
               placeholder="Observações sobre o agendamento..."
             />
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 md:px-6 py-2.5 md:py-3 text-white/80 hover:text-white border border-white/20 rounded-lg md:rounded-xl hover:bg-white/10 transition-all text-sm md:text-base"
+              className="px-4 py-2 text-foreground border border-border rounded-lg hover:bg-muted transition-all text-xs md:text-sm cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 md:px-6 py-2.5 md:py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg md:rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 text-sm md:text-base"
+              className="px-5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50 text-xs md:text-sm shadow-sm cursor-pointer"
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
               ) : (
                 <Save className="w-4 h-4" />
               )}

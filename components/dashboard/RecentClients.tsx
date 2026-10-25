@@ -115,9 +115,9 @@ export default function RecentClients() {
 
   if (loading) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm">
         <div className="flex items-center justify-center h-24 md:h-32">
-          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-amber-400"></div>
+          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-primary"></div>
         </div>
       </div>
     )
@@ -126,96 +126,109 @@ export default function RecentClients() {
   const getStatusBadge = (client: Client) => {
     if (isReturningClient(client)) {
       return (
-        <span className="px-1.5 md:px-2 py-0.5 md:py-1 bg-blue-950 text-blue-400 border border-blue-800/60 rounded-lg text-xs font-medium">
+        <span className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full text-[10px] font-semibold">
           Recorrente
         </span>
       )
     }
     return (
-      <span className="px-1.5 md:px-2 py-0.5 md:py-1 bg-emerald-950 text-emerald-400 border border-emerald-800/60 rounded-lg text-xs font-medium">
+      <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-semibold">
         Novo
       </span>
     )
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <div>
-          <h3 className="text-lg md:text-xl font-semibold text-white">Últimos Clientes</h3>
-          <p className="text-gray-400 text-xs md:text-sm">Atividade recente</p>
-        </div>
-        <div className="flex items-center space-x-2 text-gray-400">
-          <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
-          <span className="text-xs md:text-sm">5 clientes</span>
-        </div>
-      </div>
-
-      <div className="space-y-2 md:space-y-3">
-        {clients.map((client) => (
-          <div
-            key={client.id}
-            className="flex items-center justify-between p-3 md:p-4 bg-gray-950 border border-gray-800 rounded-lg md:rounded-xl hover:bg-gray-800/50 transition-colors"
-          >
-            <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
-              {/* Avatar */}
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-black font-bold text-xs md:text-sm">{getInitials(client.name)}</span>
-              </div>
-
-              {/* Client Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-1.5 md:space-x-2 mb-1 flex-wrap gap-y-1">
-                  <p className="text-white font-medium text-sm md:text-base truncate">{client.name}</p>
-                  {Boolean(client.isVip) && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-950 text-amber-300 border border-amber-800/60 rounded-lg text-xs font-bold flex-shrink-0">
-                      <Crown className="w-3 h-3 text-amber-400" />
-                      VIP
-                    </span>
-                  )}
-                  {getStatusBadge(client)}
-                </div>
-                <div className="flex items-center space-x-2 md:space-x-4 text-white/60 text-xs md:text-sm">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    <span className="truncate">
-                      {client.lastAppointment 
-                        ? formatDate(client.lastAppointment.startTime) 
-                        : formatDate(client.createdAt)
-                      }
-                    </span>
-                  </div>
-                  {client.lastAppointment && (
-                    <span className="hidden sm:inline truncate">{client.lastAppointment.service}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Value */}
-            <div className="text-right flex-shrink-0 ml-2">
-              {client.lastAppointment ? (
-                <div className="flex flex-col items-end">
-                  <p className="text-yellow-400 font-semibold text-xs md:text-sm">{formatCurrency(client.lastAppointment.totalAmount)}</p>
-                  <p className="text-white/60 text-xs">{client._count?.appointments || 0} agend.</p>
-                </div>
-              ) : (
-                <p className="text-white font-semibold text-xs md:text-sm">{client._count?.appointments || 0} agend.</p>
-              )}
-            </div>
+    <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm flex flex-col justify-between h-full">
+      <div>
+        <div className="flex items-center justify-between mb-4 md:mb-5 pb-3 border-b border-border">
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight">Últimos Clientes</h3>
+            <p className="text-muted-foreground text-xs md:text-sm font-medium">Clientes com agendamentos recentes</p>
           </div>
-        ))}
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary rounded-full text-xs font-semibold shrink-0">
+            <Users className="w-3.5 h-3.5" />
+            <span>{clients.length} recentes</span>
+          </div>
+        </div>
+
+        {clients.length === 0 ? (
+          <div className="text-center py-10 px-4 bg-muted/30 border border-border rounded-xl">
+            <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-foreground font-semibold text-sm">Nenhum cliente cadastrado</p>
+            <p className="text-muted-foreground text-xs mt-1 max-w-xs mx-auto">
+              Os novos clientes atendidos aparecerão listados aqui.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2 md:space-y-2.5">
+            {clients.map((client) => (
+              <div
+                key={client.id}
+                className="flex items-center justify-between p-2.5 md:p-3 bg-background border border-border rounded-xl hover:border-primary/40 hover:shadow-xs transition-all"
+              >
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  {/* Avatar */}
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-primary font-bold text-xs">{getInitials(client.name)}</span>
+                  </div>
+
+                  {/* Client Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-1.5 mb-0.5 flex-wrap gap-y-0.5">
+                      <p className="text-foreground font-semibold text-xs md:text-sm truncate max-w-[130px] sm:max-w-none">{client.name}</p>
+                      {Boolean(client.isVip) && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-full text-[9px] font-bold flex-shrink-0">
+                          <Crown className="w-2.5 h-2.5 text-amber-500" />
+                          VIP
+                        </span>
+                      )}
+                      {getStatusBadge(client)}
+                    </div>
+                    <div className="flex items-center space-x-2 text-muted-foreground text-[11px]">
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-3 h-3 text-muted-foreground/70" />
+                        <span className="truncate">
+                          {client.lastAppointment 
+                            ? formatDate(client.lastAppointment.startTime) 
+                            : formatDate(client.createdAt)
+                          }
+                        </span>
+                      </div>
+                      {client.lastAppointment && (
+                        <span className="hidden sm:inline truncate border-l border-border/70 pl-2">{client.lastAppointment.service}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Value */}
+                <div className="text-right flex-shrink-0 ml-2">
+                  {client.lastAppointment ? (
+                    <div className="flex flex-col items-end">
+                      <p className="text-foreground font-bold text-xs">{formatCurrency(client.lastAppointment.totalAmount)}</p>
+                      <p className="text-muted-foreground text-[10px]">{client._count?.appointments || 0} agend.</p>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-xs">{client._count?.appointments || 0} agend.</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* View All Button */}
-      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
+      <div className="mt-4 pt-3 border-t border-border">
         <Link
           href="/clientes"
-          className="block w-full py-2.5 md:py-3 text-center text-yellow-400 hover:text-yellow-300 hover:bg-white/5 font-medium text-sm md:text-base rounded-lg transition-all"
+          className="block w-full py-2 text-center text-primary hover:text-primary/80 hover:bg-muted font-semibold text-xs md:text-sm rounded-lg transition-all"
         >
-          Ver todos os clientes
+          Ver Todos os Clientes &rarr;
         </Link>
       </div>
     </div>
   )
 }
+

@@ -48,7 +48,12 @@ export function getAbacateApiKey(): string {
  * Obtém o segredo de webhook configurado
  */
 export function getAbacateWebhookSecret(): string {
-  return process.env.ABACATEPAY_WEBHOOK_SECRET || 'barbershop_abacate_sec_2026'
+  const secret = process.env.ABACATEPAY_WEBHOOK_SECRET
+  if (!secret) {
+    console.error('[CRITICAL_SECURITY] ABACATEPAY_WEBHOOK_SECRET não configurado nas variáveis de ambiente!')
+    return ''
+  }
+  return secret
 }
 
 /**

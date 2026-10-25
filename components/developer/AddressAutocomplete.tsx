@@ -163,27 +163,27 @@ export default function AddressAutocomplete({
           autoComplete="off"
           className={
             className ||
-            'w-full pl-9 pr-10 py-2.5 bg-[#030712] border border-[#374151] rounded-lg text-sm text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 transition'
+            'w-full pl-9 pr-10 py-2.5 bg-background border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition'
           }
         />
 
         {isSearchingCep && (
-          <Loader2 className="w-4 h-4 text-amber-400 absolute right-3 top-1/2 -translate-y-1/2 animate-spin" />
+          <Loader2 className="w-4 h-4 text-primary absolute right-3 top-1/2 -translate-y-1/2 animate-spin" />
         )}
       </div>
 
       {/* Sugestão de busca por CEP detectado */}
       {detectedCep && (
-        <div className="mt-1 flex items-center justify-between px-3 py-1.5 bg-[#111827] border border-[#f59e0b] rounded-lg text-xs text-white">
-          <span className="flex items-center gap-1.5 font-bold">
-            <Search className="w-3.5 h-3.5 text-amber-400" />
+        <div className="mt-1 flex items-center justify-between px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-600 dark:text-amber-400">
+          <span className="flex items-center gap-1.5 font-medium">
+            <Search className="w-3.5 h-3.5" />
             CEP detectado: <strong>{detectedCep.slice(0, 5)}-{detectedCep.slice(5)}</strong>
           </span>
           <button
             type="button"
             onClick={() => handleFetchCep(detectedCep)}
             disabled={isSearchingCep}
-            className="px-2.5 py-1 bg-[#d97706] hover:bg-amber-600 text-white font-bold rounded-md transition text-xs border border-[#f59e0b]"
+            className="px-2.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md transition text-xs"
           >
             {isSearchingCep ? 'Buscando...' : 'Auto-completar'}
           </button>
@@ -192,16 +192,16 @@ export default function AddressAutocomplete({
 
       {/* Dropdown de cidades brasileiras */}
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-[#111827] border border-[#374151] rounded-xl shadow-2xl max-h-60 overflow-y-auto py-1 text-xs">
-          <div className="px-3.5 py-2 text-[10px] font-bold tracking-wide text-amber-400 bg-[#030712] border-b border-[#374151] flex items-center justify-between">
+        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-popover border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto py-1 text-xs text-popover-foreground">
+          <div className="px-3.5 py-2 text-[10px] font-semibold tracking-wide text-muted-foreground bg-muted/50 border-b border-border flex items-center justify-between">
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Base Oficial IBGE (5.571 municípios) &bull; {suggestions.length} encontrados
             </span>
-            <span className="text-[10px] text-gray-300 font-medium">Use ↑↓ e Enter</span>
+            <span className="text-[10px] text-muted-foreground font-normal">Use ↑↓ e Enter</span>
           </div>
 
-          <ul className="divide-y divide-[#374151]">
+          <ul className="divide-y divide-border">
             {suggestions.map((city, idx) => {
               const isSelected = idx === selectedIndex
               return (
@@ -213,20 +213,20 @@ export default function AddressAutocomplete({
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`px-3.5 py-2.5 flex items-center justify-between cursor-pointer transition ${
-                    isSelected ? 'bg-[#2563eb] text-white font-bold' : 'text-gray-200 hover:bg-[#1f2937] hover:text-white'
+                    isSelected ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-[#030712] border border-[#374151] flex items-center justify-center text-amber-400 shrink-0">
+                    <div className="w-6 h-6 rounded-md bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0">
                       <MapPin className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <span className="font-bold text-sm text-white">{city.nome}</span>
-                      <span className="text-gray-300 text-xs ml-1.5 font-medium">({city.uf})</span>
+                      <span className="font-semibold text-sm">{city.nome}</span>
+                      <span className={`text-xs ml-1.5 ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>({city.uf})</span>
                     </div>
                   </div>
 
-                  <span className="px-2 py-0.5 rounded bg-[#030712] border border-[#374151] text-[10px] font-mono text-amber-400 font-bold uppercase">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted border border-border text-muted-foreground'}`}>
                     {city.uf}
                   </span>
                 </li>

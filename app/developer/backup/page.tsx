@@ -185,7 +185,7 @@ export default function DeveloperBackupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20 transition-colors">
       <DropdownHeader
         title="Backup & Restore"
         subtitle="Disaster Recovery, snapshots diários e validação de integridade no Cloudflare R2"
@@ -193,16 +193,16 @@ export default function DeveloperBackupPage() {
 
       <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111827] border border-[#374151] p-6 rounded-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border p-6 rounded-xl shadow-xs">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary/10 text-primary font-semibold text-xs uppercase tracking-wider border border-primary/20">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Disaster Recovery & SRE
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white">Gestão de Backup & Restore</h1>
-            <p className="text-sm text-gray-200 mt-1 font-medium">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Gestão de Backup & Restore</h1>
+            <p className="text-sm text-muted-foreground mt-1 font-normal">
               Snapshots criptografados do banco de dados, integridade e teste de restauração em schemas isolados.
             </p>
           </div>
@@ -211,7 +211,7 @@ export default function DeveloperBackupPage() {
             <button
               onClick={fetchBackups}
               disabled={loading || isExecuting}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs md:text-sm font-bold rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white transition-all shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-medium rounded-lg border border-border bg-background hover:bg-muted text-foreground transition-all shadow-xs cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Atualizar
@@ -219,7 +219,7 @@ export default function DeveloperBackupPage() {
             <button
               onClick={handleCreateBackup}
               disabled={isExecuting || loading}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs md:text-sm font-bold rounded-lg bg-[#2563eb] hover:bg-blue-600 text-white border border-[#3b82f6] shadow-sm transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-medium rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs transition-all disabled:opacity-50 cursor-pointer"
             >
               <Database className="w-4 h-4" />
               <span>{isExecuting ? 'Gerando snapshot...' : 'Executar Backup Agora'}</span>
@@ -232,26 +232,26 @@ export default function DeveloperBackupPage() {
           <div
             className={`p-4 rounded-xl border text-sm flex items-start justify-between gap-3 ${
               feedback.type === 'success'
-                ? 'bg-[#059669] border-[#10b981] text-white'
-                : 'bg-[#dc2626] border-[#ef4444] text-white'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                : 'bg-destructive/10 border-destructive/30 text-destructive'
             }`}
           >
-            <div className="flex items-start gap-2.5 font-bold">
+            <div className="flex items-start gap-2.5 font-semibold">
               {feedback.type === 'success' ? (
-                <CheckCircle2 className="w-5 h-5 text-white shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
               ) : (
-                <AlertTriangle className="w-5 h-5 text-white shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
               )}
               <div>
-                <p className="font-extrabold">{feedback.message}</p>
+                <p className="font-bold">{feedback.message}</p>
                 {feedback.details && (
-                  <p className="text-xs mt-1 font-mono text-gray-200">
+                  <p className="text-xs mt-1 font-mono opacity-90">
                     Schema: {feedback.details.schema} | Registros: {feedback.details.totalRecords} | Tempo: {feedback.details.durationMs}ms
                   </p>
                 )}
               </div>
             </div>
-            <button onClick={() => setFeedback(null)} className="text-white hover:text-gray-200 text-sm font-bold px-2 py-1">
+            <button onClick={() => setFeedback(null)} className="hover:opacity-75 text-sm font-bold px-2 py-1 cursor-pointer">
               ✕
             </button>
           </div>
@@ -259,112 +259,112 @@ export default function DeveloperBackupPage() {
 
         {/* Overview Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-gray-300 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Último Backup</span>
-              <Clock className="w-4 h-4 text-blue-400" />
+          <div className="bg-card border border-border rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between text-muted-foreground mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Último Backup</span>
+              <Clock className="w-4 h-4 text-primary" />
             </div>
-            <div className="text-lg font-black text-white">
+            <div className="text-lg font-bold text-card-foreground">
               {data?.lastBackup ? formatDate(data.lastBackup.createdAt) : 'Nenhum'}
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <span className="inline-flex items-center gap-1.5 text-xs text-white bg-[#059669] px-2 py-0.5 rounded font-bold border border-[#10b981]">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-semibold border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Sucesso
               </span>
               {data?.lastBackup && (
-                <span className="text-xs text-gray-200 font-mono font-bold">
+                <span className="text-xs text-muted-foreground font-mono font-medium">
                   ({formatBytes(data.lastBackup.sizeBytes)})
                 </span>
               )}
             </div>
           </div>
 
-          <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-gray-300 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Backup Automático</span>
-              <RotateCcw className="w-4 h-4 text-blue-400" />
+          <div className="bg-card border border-border rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between text-muted-foreground mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Backup Automático</span>
+              <RotateCcw className="w-4 h-4 text-primary" />
             </div>
-            <div className="text-lg font-black text-white">Diário às 00:30</div>
-            <span className="text-xs text-gray-200 font-medium mt-2 block">
+            <div className="text-lg font-bold text-card-foreground">Diário às 00:30</div>
+            <span className="text-xs text-muted-foreground font-normal mt-2 block">
               Vercel Cron & node-cron ativo (00:30 BRT)
             </span>
           </div>
 
-          <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-gray-300 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Destino Cloud</span>
-              <Cloud className="w-4 h-4 text-blue-400" />
+          <div className="bg-card border border-border rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between text-muted-foreground mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Destino Cloud</span>
+              <Cloud className="w-4 h-4 text-primary" />
             </div>
-            <div className="text-lg font-black text-white">Cloudflare R2</div>
-            <span className="text-xs text-emerald-400 font-bold mt-2 block truncate" title={data?.bucket || 'barbershop-backups-prod'}>
+            <div className="text-lg font-bold text-card-foreground">Cloudflare R2</div>
+            <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-2 block truncate" title={data?.bucket || 'barbershop-backups-prod'}>
               Bucket: {data?.bucket || 'barbershop-backups-prod'}
             </span>
           </div>
 
-          <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-gray-300 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Metas RPO / RTO</span>
-              <Layers className="w-4 h-4 text-blue-400" />
+          <div className="bg-card border border-border rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between text-muted-foreground mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Metas RPO / RTO</span>
+              <Layers className="w-4 h-4 text-primary" />
             </div>
-            <div className="text-lg font-black text-white">RPO: {data?.targetRpoHours || 24}h</div>
-            <span className="text-xs text-gray-200 font-medium mt-2 block">
+            <div className="text-lg font-bold text-card-foreground">RPO: {data?.targetRpoHours || 24}h</div>
+            <span className="text-xs text-muted-foreground font-normal mt-2 block">
               RTO Alvo: &lt; {data?.targetRtoMinutes || 15} min (.sql.gz)
             </span>
           </div>
         </div>
 
         {/* Backups List Table */}
-        <div className="bg-[#111827] border border-[#374151] rounded-xl p-6 shadow-xl">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-xs">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-extrabold text-white">Histórico de Snapshots</h2>
-              <p className="text-sm text-gray-200 font-medium mt-0.5">Arquivos versionados armazenados no Cloudflare R2 com redundância e integridade.</p>
+              <h2 className="text-xl font-bold text-card-foreground">Histórico de Snapshots</h2>
+              <p className="text-sm text-muted-foreground font-normal mt-0.5">Arquivos versionados armazenados no Cloudflare R2 com redundância e integridade.</p>
             </div>
-            <FileArchive className="w-5 h-5 text-gray-300" />
+            <FileArchive className="w-5 h-5 text-muted-foreground" />
           </div>
 
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((n) => (
-                <div key={n} className="h-14 bg-[#030712] rounded-xl animate-pulse border border-[#374151]" />
+                <div key={n} className="h-14 bg-muted/50 rounded-xl animate-pulse border border-border" />
               ))}
             </div>
           ) : !data || data.backups.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-[#374151] rounded-xl bg-[#030712]">
-              <Database className="w-8 h-8 text-gray-400 mx-auto mb-2 opacity-70" />
-              <p className="text-sm font-bold text-white">Nenhum backup encontrado.</p>
-              <p className="text-xs text-gray-300 mt-0.5">Clique em &quot;Executar Backup Agora&quot; para criar o primeiro snapshot no Cloudflare R2.</p>
+            <div className="text-center py-12 border border-dashed border-border rounded-xl bg-muted/20">
+              <Database className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-70" />
+              <p className="text-sm font-semibold text-card-foreground">Nenhum backup encontrado.</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Clique em &quot;Executar Backup Agora&quot; para criar o primeiro snapshot no Cloudflare R2.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-[#374151] bg-[#1f2937] text-xs font-bold uppercase tracking-wider text-white">
-                    <th className="py-3.5 px-4 font-bold">Arquivo</th>
-                    <th className="py-3.5 px-3 font-bold">Data / Hora</th>
-                    <th className="py-3.5 px-3 font-bold">Tamanho</th>
-                    <th className="py-3.5 px-3 font-bold">Destino</th>
-                    <th className="py-3.5 px-3 font-bold">Status</th>
-                    <th className="py-3.5 px-4 text-right font-bold">Ações</th>
+                  <tr className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <th className="py-3.5 px-4 font-semibold">Arquivo</th>
+                    <th className="py-3.5 px-3 font-semibold">Data / Hora</th>
+                    <th className="py-3.5 px-3 font-semibold">Tamanho</th>
+                    <th className="py-3.5 px-3 font-semibold">Destino</th>
+                    <th className="py-3.5 px-3 font-semibold">Status</th>
+                    <th className="py-3.5 px-4 text-right font-semibold">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#374151]">
+                <tbody className="divide-y divide-border">
                   {data.backups.map((item) => (
-                    <tr key={item.filename} className="hover:bg-[#1f2937]/50 transition-colors">
-                      <td className="py-3.5 px-4 font-mono text-xs text-white font-bold">
+                    <tr key={item.filename} className="hover:bg-muted/50 transition-colors">
+                      <td className="py-3.5 px-4 font-mono text-xs text-foreground font-semibold">
                         {item.filename}
                       </td>
-                      <td className="py-3.5 px-3 text-gray-200 text-xs font-medium">{formatDate(item.createdAt)}</td>
-                      <td className="py-3.5 px-3 font-mono text-xs text-white font-bold">{formatBytes(item.sizeBytes)}</td>
+                      <td className="py-3.5 px-3 text-muted-foreground text-xs font-normal">{formatDate(item.createdAt)}</td>
+                      <td className="py-3.5 px-3 font-mono text-xs text-foreground font-semibold">{formatBytes(item.sizeBytes)}</td>
                       <td className="py-3.5 px-3">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold rounded bg-[#2563eb] text-white border border-[#3b82f6]">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold rounded bg-primary/10 text-primary border border-primary/20">
                           <Cloud className="w-3 h-3" />
                           {item.storage || 'Cloudflare R2'}
                         </span>
                       </td>
                       <td className="py-3.5 px-3">
-                        <span className="px-2.5 py-0.5 text-xs font-bold rounded bg-[#059669] text-white border border-[#10b981]">
+                        <span className="px-2.5 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                           ● Válido
                         </span>
                       </td>
@@ -372,7 +372,7 @@ export default function DeveloperBackupPage() {
                         <a
                           href={`/api/developer/backup?download=${encodeURIComponent(item.filename)}`}
                           download
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white transition-all shadow-sm"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-background hover:bg-muted text-foreground transition-all shadow-xs"
                           title="Baixar arquivo de backup"
                         >
                           <Download className="w-3.5 h-3.5" />
@@ -384,7 +384,7 @@ export default function DeveloperBackupPage() {
                             setConfirmationCode('')
                             setRestoreModalOpen(true)
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-[#f59e0b] bg-[#d97706] hover:bg-amber-600 text-white transition-all shadow-sm"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 transition-all shadow-xs cursor-pointer"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           Testar
@@ -400,40 +400,40 @@ export default function DeveloperBackupPage() {
 
         {/* Secure Restore Confirmation Modal */}
         {restoreModalOpen && selectedBackup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
-            <div className="bg-[#111827] border border-[#ef4444] rounded-2xl p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl text-white">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs">
+            <div className="bg-card border border-destructive/40 rounded-xl p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl text-card-foreground">
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-[#dc2626] text-white border border-[#ef4444] shrink-0">
+                <div className="p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 shrink-0">
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Confirmar Operação de Restauração</h3>
-                  <p className="text-xs text-gray-200 font-medium mt-1">
+                  <h3 className="text-lg font-bold text-card-foreground">Confirmar Operação de Restauração</h3>
+                  <p className="text-xs text-muted-foreground font-normal mt-1">
                     Esta operação valida e restaura os dados em um schema PostgreSQL isolado para auditoria e teste de integridade.
                   </p>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#030712] border border-[#374151] text-xs space-y-2 font-mono">
-                <div><strong className="text-white">Arquivo:</strong> {selectedBackup.filename}</div>
-                <div><strong className="text-white">Tamanho:</strong> {formatBytes(selectedBackup.sizeBytes)}</div>
-                <div><strong className="text-white">Criado em:</strong> {formatDate(selectedBackup.createdAt)}</div>
-                <div className="text-amber-400 font-sans font-bold pt-1">
+              <div className="p-4 rounded-xl bg-muted/40 border border-border text-xs space-y-2 font-mono">
+                <div><strong className="text-foreground">Arquivo:</strong> {selectedBackup.filename}</div>
+                <div><strong className="text-foreground">Tamanho:</strong> {formatBytes(selectedBackup.sizeBytes)}</div>
+                <div><strong className="text-foreground">Criado em:</strong> {formatDate(selectedBackup.createdAt)}</div>
+                <div className="text-amber-700 dark:text-amber-400 font-sans font-semibold pt-1">
                   ⚠️ Nenhuma credencial nem chave secreta é exposta nesta operação.
                 </div>
               </div>
 
               <form onSubmit={handleRestoreSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1.5">
-                    Digite exatamente <strong className="text-red-400 font-mono">RESTAURAR-BACKUP</strong> para liberar a execução:
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">
+                    Digite exatamente <strong className="text-destructive font-mono">RESTAURAR-BACKUP</strong> para liberar a execução:
                   </label>
                   <input
                     type="text"
                     value={confirmationCode}
                     onChange={(e) => setConfirmationCode(e.target.value)}
                     placeholder="RESTAURAR-BACKUP"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-mono text-sm focus:outline-none focus:border-red-500"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-input text-foreground font-mono text-sm focus:outline-none focus:ring-1 focus:ring-destructive"
                   />
                 </div>
 
@@ -444,17 +444,17 @@ export default function DeveloperBackupPage() {
                       setRestoreModalOpen(false)
                       setSelectedBackup(null)
                     }}
-                    className="px-4 py-2 text-xs md:text-sm rounded-xl border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white font-bold"
+                    className="px-4 py-2 text-xs md:text-sm rounded-lg border border-border bg-background hover:bg-muted text-foreground font-medium cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={confirmationCode !== 'RESTAURAR-BACKUP' || isRestoring}
-                    className="px-5 py-2 text-xs md:text-sm rounded-xl bg-[#dc2626] text-white font-bold hover:bg-red-600 border border-[#ef4444] transition-all disabled:opacity-40 flex items-center gap-2"
+                    className="px-5 py-2 text-xs md:text-sm rounded-lg bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 shadow-xs transition-all disabled:opacity-40 flex items-center gap-2 cursor-pointer"
                   >
                     {isRestoring ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
                     ) : (
                       <RotateCcw className="w-4 h-4" />
                     )}

@@ -502,7 +502,7 @@ function SubscriptionsContent({
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header com navegação do sistema */}
       <DropdownHeader />
 
@@ -512,8 +512,8 @@ function SubscriptionsContent({
           <div
             className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-2xl border text-sm font-bold flex items-center gap-2 ${
               toastMessage.type === 'success'
-                ? 'bg-[#059669] border-[#10b981] text-white'
-                : 'bg-[#dc2626] border-[#ef4444] text-white'
+                ? 'bg-emerald-600 border-emerald-500 text-white'
+                : 'bg-destructive border-destructive text-destructive-foreground'
             }`}
           >
             {toastMessage.type === 'success' ? (
@@ -526,19 +526,19 @@ function SubscriptionsContent({
         )}
 
         {/* Título & Ações Principais */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#374151] pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#2563eb] text-white border border-[#3b82f6]">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                 SaaS Revenue Hub
               </span>
-              <span className="text-xs text-white font-semibold">• Gestão de Recorrência</span>
+              <span className="text-xs text-muted-foreground font-medium">• Gestão de Recorrência</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-              <span className="p-1 rounded bg-[#059669] text-white"><Receipt className="w-6 h-6 stroke-[2.5]" /></span>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
+              <span className="p-1 rounded bg-emerald-600 text-white"><Receipt className="w-6 h-6 stroke-[2.5]" /></span>
               {pageTitle || 'Gestão de Assinaturas SaaS'}
             </h1>
-            <p className="text-sm text-white font-medium mt-1">
+            <p className="text-sm text-muted-foreground font-normal mt-1">
               {pageSubtitle ||
                 'Monitore assinaturas ativas, retenção, inadimplência e sincronização de pagamentos das barbearias.'}
             </p>
@@ -548,23 +548,23 @@ function SubscriptionsContent({
             <button
               onClick={handleSyncAbacate}
               disabled={syncing}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#111827] hover:bg-[#1f2937] border border-[#374151] text-white transition flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-60"
+              className="px-4 py-2.5 rounded-xl text-xs font-medium bg-card hover:bg-accent border border-border text-foreground transition flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-60"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-white ${syncing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${syncing ? 'animate-spin' : ''}`} />
               <span>{syncing ? 'Sincronizando...' : 'Sincronizar AbacatePay'}</span>
             </button>
 
             <button
               onClick={handleExportCSV}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#111827] hover:bg-[#1f2937] border border-[#374151] text-white transition flex items-center gap-2 shadow-sm cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-xs font-medium bg-card hover:bg-accent border border-border text-foreground transition flex items-center gap-2 shadow-sm cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+              <Download className="w-3.5 h-3.5 text-muted-foreground stroke-[2.5]" />
               <span>Exportar CSV</span>
             </button>
 
             <button
               onClick={() => setIsGrantModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#059669] hover:bg-[#047857] text-white transition flex items-center gap-2 shadow-md border border-[#10b981] cursor-pointer"
+              className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition flex items-center gap-2 shadow-sm border border-transparent cursor-pointer"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>+ Conceder Assinatura</span>
@@ -575,14 +575,14 @@ function SubscriptionsContent({
         {/* 5 Cards de Métricas Principais */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
           {/* MRR */}
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl p-4 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="bg-card border border-border rounded-xl p-4 shadow-sm relative overflow-hidden">
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-1">
               <span>MRR Recorrente</span>
-              <span className="p-1 rounded bg-[#059669] text-white"><DollarSign className="w-4 h-4 stroke-[2.5]" /></span>
+              <span className="p-1 rounded bg-emerald-600/10 text-emerald-600"><DollarSign className="w-4 h-4 stroke-[2.5]" /></span>
             </div>
-            <div className="text-xl md:text-2xl font-black text-white">{formatPrice(stats.mrr)}</div>
-            <div className="text-xs text-white mt-1 flex items-center gap-1 font-bold">
-              <TrendingUp className="w-3.5 h-3.5 text-[#059669]" />
+            <div className="text-xl md:text-2xl font-black text-foreground">{formatPrice(stats.mrr)}</div>
+            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 font-medium">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
               <span>Base mensal ativa</span>
             </div>
           </div>
@@ -590,18 +590,18 @@ function SubscriptionsContent({
           {/* Ativas */}
           <div
             onClick={() => setStatusFilter('ACTIVE')}
-            className={`border rounded-2xl p-4 shadow-sm cursor-pointer transition ${
+            className={`border rounded-xl p-4 shadow-sm cursor-pointer transition ${
               statusFilter === 'ACTIVE'
-                ? 'bg-[#059669] border-[#10b981]'
-                : 'bg-[#111827] border-[#374151] hover:bg-[#1f2937]'
+                ? 'bg-emerald-500/10 border-emerald-500/40 text-foreground'
+                : 'bg-card border-border hover:bg-accent/50 text-foreground'
             }`}
           >
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-1">
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-1">
               <span>Assinaturas Ativas</span>
-              <span className="p-1 rounded bg-[#059669] text-white"><CheckCircle2 className="w-4 h-4 stroke-[2.5]" /></span>
+              <span className="p-1 rounded bg-emerald-600/10 text-emerald-600"><CheckCircle2 className="w-4 h-4 stroke-[2.5]" /></span>
             </div>
-            <div className="text-xl md:text-2xl font-black text-white">{stats.activeCount}</div>
-            <div className="text-xs text-white font-medium mt-1">
+            <div className="text-xl md:text-2xl font-black text-foreground">{stats.activeCount}</div>
+            <div className="text-xs text-muted-foreground font-medium mt-1">
               {stats.totalCount > 0
                 ? `${Math.round((stats.activeCount / stats.totalCount) * 100)}% de conversão`
                 : 'Nenhuma ativa'}
@@ -611,35 +611,35 @@ function SubscriptionsContent({
           {/* Trialing */}
           <div
             onClick={() => setStatusFilter('TRIALING')}
-            className={`border rounded-2xl p-4 shadow-sm cursor-pointer transition ${
+            className={`border rounded-xl p-4 shadow-sm cursor-pointer transition ${
               statusFilter === 'TRIALING'
-                ? 'bg-[#d97706] border-[#f59e0b]'
-                : 'bg-[#111827] border-[#374151] hover:bg-[#1f2937]'
+                ? 'bg-amber-500/10 border-amber-500/40 text-foreground'
+                : 'bg-card border-border hover:bg-accent/50 text-foreground'
             }`}
           >
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-1">
-              <span>Em Período de Testes</span>
-              <span className="p-1 rounded bg-[#d97706] text-white"><Clock className="w-4 h-4 stroke-[2.5]" /></span>
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-1">
+              <span>Em Testes</span>
+              <span className="p-1 rounded bg-amber-500/10 text-amber-600"><Clock className="w-4 h-4 stroke-[2.5]" /></span>
             </div>
-            <div className="text-xl md:text-2xl font-black text-white">{stats.trialingCount}</div>
-            <div className="text-xs text-white font-medium mt-1">Em avaliação de 15 dias</div>
+            <div className="text-xl md:text-2xl font-black text-foreground">{stats.trialingCount}</div>
+            <div className="text-xs text-muted-foreground font-medium mt-1">Em avaliação de 15 dias</div>
           </div>
 
           {/* Vencidas / Past Due */}
           <div
             onClick={() => setStatusFilter('PAST_DUE')}
-            className={`border rounded-2xl p-4 shadow-sm cursor-pointer transition ${
+            className={`border rounded-xl p-4 shadow-sm cursor-pointer transition ${
               statusFilter === 'PAST_DUE'
-                ? 'bg-[#dc2626] border-[#ef4444]'
-                : 'bg-[#111827] border-[#374151] hover:bg-[#1f2937]'
+                ? 'bg-destructive/10 border-destructive/40 text-foreground'
+                : 'bg-card border-border hover:bg-accent/50 text-foreground'
             }`}
           >
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-1">
-              <span>Vencidas / Inadimplentes</span>
-              <span className="p-1 rounded bg-[#dc2626] text-white"><AlertTriangle className="w-4 h-4 stroke-[2.5]" /></span>
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-1">
+              <span>Vencidas</span>
+              <span className="p-1 rounded bg-destructive/10 text-destructive"><AlertTriangle className="w-4 h-4 stroke-[2.5]" /></span>
             </div>
-            <div className="text-xl md:text-2xl font-black text-white">{stats.pastDueCount}</div>
-            <div className="text-xs text-white font-bold mt-1">
+            <div className="text-xl md:text-2xl font-black text-foreground">{stats.pastDueCount}</div>
+            <div className="text-xs text-muted-foreground font-medium mt-1">
               {formatPrice(stats.pastDueAmount)} em risco
             </div>
           </div>
@@ -647,20 +647,20 @@ function SubscriptionsContent({
           {/* Suspensas / Canceladas */}
           <div
             onClick={() => setStatusFilter('SUSPENDED')}
-            className={`border rounded-2xl p-4 shadow-sm cursor-pointer transition ${
+            className={`border rounded-xl p-4 shadow-sm cursor-pointer transition ${
               statusFilter === 'SUSPENDED' || statusFilter === 'CANCELED'
-                ? 'bg-[#4b5563] border-[#6b7280]'
-                : 'bg-[#111827] border-[#374151] hover:bg-[#1f2937]'
+                ? 'bg-muted border-border text-foreground'
+                : 'bg-card border-border hover:bg-accent/50 text-foreground'
             }`}
           >
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-1">
-              <span>Suspensas / Canceladas</span>
-              <span className="p-1 rounded bg-[#4b5563] text-white"><ShieldAlert className="w-4 h-4 stroke-[2.5]" /></span>
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-1">
+              <span>Suspensas</span>
+              <span className="p-1 rounded bg-muted text-muted-foreground"><ShieldAlert className="w-4 h-4 stroke-[2.5]" /></span>
             </div>
-            <div className="text-xl md:text-2xl font-black text-white">
+            <div className="text-xl md:text-2xl font-black text-foreground">
               {stats.suspendedCount + stats.canceledCount}
             </div>
-            <div className="text-xs text-white font-medium mt-1">
+            <div className="text-xs text-muted-foreground font-medium mt-1">
               {stats.suspendedCount} susp. • {stats.canceledCount} canc.
             </div>
           </div>
@@ -669,91 +669,91 @@ function SubscriptionsContent({
         {/* Barra de Filtros, Abas & Busca */}
         <div className="space-y-4">
           {/* Abas Rápidas por Status */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#374151]">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-border">
             <button
               onClick={() => setStatusFilter('ALL')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
                 statusFilter === 'ALL'
-                  ? 'bg-[#2563eb] text-white border-[#3b82f6]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'bg-card text-foreground border-border hover:bg-accent'
               }`}
             >
               <span>Todas</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#030712] text-white border border-[#374151]">
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground border border-border">
                 {stats.totalCount}
               </span>
             </button>
 
             <button
               onClick={() => setStatusFilter('ACTIVE')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
                 statusFilter === 'ACTIVE'
-                  ? 'bg-[#059669] text-white border-[#10b981]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                  : 'bg-card text-foreground border-border hover:bg-accent'
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Ativas</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#030712] text-white border border-[#374151]">
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground border border-border">
                 {stats.activeCount}
               </span>
             </button>
 
             <button
               onClick={() => setStatusFilter('TRIALING')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
                 statusFilter === 'TRIALING'
-                  ? 'bg-[#d97706] text-white border-[#f59e0b]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
+                  ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                  : 'bg-card text-foreground border-border hover:bg-accent'
               }`}
             >
               <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Em Trial</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#030712] text-white border border-[#374151]">
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground border border-border">
                 {stats.trialingCount}
               </span>
             </button>
 
             <button
               onClick={() => setStatusFilter('PAST_DUE')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
                 statusFilter === 'PAST_DUE'
-                  ? 'bg-[#dc2626] text-white border-[#ef4444]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
+                  ? 'bg-destructive text-destructive-foreground border-destructive shadow-sm'
+                  : 'bg-card text-foreground border-border hover:bg-accent'
               }`}
             >
               <AlertTriangle className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Vencidas / Inadimplentes</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#030712] text-white border border-[#374151]">
+              <span>Vencidas</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground border border-border">
                 {stats.pastDueCount}
               </span>
             </button>
 
             <button
               onClick={() => setStatusFilter('SUSPENDED')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
                 statusFilter === 'SUSPENDED'
-                  ? 'bg-[#ea580c] text-white border-[#f97316]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
+                  ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
+                  : 'bg-card text-foreground border-border hover:bg-accent'
               }`}
             >
               <ShieldAlert className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Suspensas</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#030712] text-white border border-[#374151]">
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground border border-border">
                 {stats.suspendedCount}
               </span>
             </button>
 
             <button
               onClick={() => setStatusFilter('CANCELED')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer border ${
                 statusFilter === 'CANCELED'
-                  ? 'bg-[#4b5563] text-white border-[#6b7280]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
+                  ? 'bg-muted-foreground text-background border-muted-foreground shadow-sm'
+                  : 'bg-card text-foreground border-border hover:bg-accent'
               }`}
             >
               <span>Canceladas</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#030712] text-white border border-[#374151]">
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground border border-border">
                 {stats.canceledCount}
               </span>
             </button>
@@ -763,18 +763,18 @@ function SubscriptionsContent({
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
             {/* Input de Busca */}
             <div className="md:col-span-5 relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Buscar por barbearia, slug, e-mail do admin..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-[#030712] border border-[#374151] rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder:text-gray-400 font-medium focus:outline-none focus:border-[#2563eb]"
+                className="w-full bg-background border border-border rounded-xl pl-9 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white hover:opacity-80"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -786,11 +786,11 @@ function SubscriptionsContent({
               <select
                 value={planFilter}
                 onChange={(e) => setPlanFilter(e.target.value)}
-                className="w-full bg-[#030712] border border-[#374151] rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-[#2563eb]"
+                className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="ALL" className="bg-[#111827] text-white">Todos os Planos</option>
+                <option value="ALL">Todos os Planos</option>
                 {plans.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-[#111827] text-white">
+                  <option key={p.id} value={p.id}>
                     {p.name} ({formatPrice(Number(p.price))})
                   </option>
                 ))}
@@ -802,35 +802,35 @@ function SubscriptionsContent({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-full bg-[#030712] border border-[#374151] rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-[#2563eb]"
+                className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="NEWEST" className="bg-[#111827] text-white">Mais Recentes</option>
-                <option value="EXPIRATION" className="bg-[#111827] text-white">Vencimento Mais Próximo</option>
-                <option value="PRICE_DESC" className="bg-[#111827] text-white">Maior Valor</option>
-                <option value="NAME" className="bg-[#111827] text-white">Nome da Barbearia (A-Z)</option>
+                <option value="NEWEST">Mais Recentes</option>
+                <option value="EXPIRATION">Vencimento Mais Próximo</option>
+                <option value="PRICE_DESC">Maior Valor</option>
+                <option value="NAME">Nome da Barbearia (A-Z)</option>
               </select>
             </div>
 
             {/* Contagem */}
-            <div className="md:col-span-1 text-right text-xs text-white font-bold">
+            <div className="md:col-span-1 text-right text-xs text-muted-foreground font-medium">
               {filteredSubscriptions.length} {filteredSubscriptions.length === 1 ? 'item' : 'itens'}
             </div>
           </div>
         </div>
 
         {/* Tabela de Assinaturas */}
-        <div className="bg-[#111827] border border-[#374151] rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
           {loading ? (
             <div className="p-8 space-y-4">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-16 bg-[#030712] rounded-xl border border-[#374151]" />
+                <div key={i} className="h-16 bg-muted/40 rounded-xl border border-border animate-pulse" />
               ))}
             </div>
           ) : filteredSubscriptions.length === 0 ? (
             <div className="text-center py-16 px-4">
-              <Receipt className="w-12 h-12 text-white/40 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-white">Nenhuma assinatura encontrada</h3>
-              <p className="text-xs text-white font-medium mt-1 max-w-md mx-auto">
+              <Receipt className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-foreground">Nenhuma assinatura encontrada</h3>
+              <p className="text-xs text-muted-foreground font-normal mt-1 max-w-md mx-auto">
                 Não há assinaturas cadastradas correspondentes ao filtro atual ({statusFilter}). Altere os filtros
                 ou conceda uma nova assinatura.
               </p>
@@ -841,13 +841,13 @@ function SubscriptionsContent({
                     setSearchTerm('')
                     setPlanFilter('ALL')
                   }}
-                  className="px-4 py-2 text-xs font-bold rounded-lg bg-[#1f2937] text-white border border-[#4b5563] hover:bg-[#374151] cursor-pointer"
+                  className="px-4 py-2 text-xs font-medium rounded-lg bg-secondary text-secondary-foreground border border-border hover:bg-accent cursor-pointer"
                 >
                   Limpar Filtros
                 </button>
                 <button
                   onClick={() => setIsGrantModalOpen(true)}
-                  className="px-4 py-2 text-xs rounded-lg bg-[#059669] text-white font-bold hover:bg-[#047857] border border-[#10b981] cursor-pointer"
+                  className="px-4 py-2 text-xs rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 cursor-pointer shadow-sm"
                 >
                   Conceder Assinatura
                 </button>
@@ -857,42 +857,42 @@ function SubscriptionsContent({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#374151] bg-[#030712] text-white font-bold uppercase text-[11px]">
-                    <th className="py-3.5 px-4 font-bold">Barbearia / Empresa</th>
-                    <th className="py-3.5 px-4 font-bold">Plano Contratado</th>
-                    <th className="py-3.5 px-4 font-bold">Valor & Ciclo</th>
-                    <th className="py-3.5 px-4 font-bold">Status</th>
-                    <th className="py-3.5 px-4 font-bold">Vigência / Vencimento</th>
-                    <th className="py-3.5 px-4 font-bold">Provedor</th>
-                    <th className="py-3.5 px-4 text-right font-bold">Ações de Gestão</th>
+                  <tr className="border-b border-border bg-muted/40 text-muted-foreground font-semibold uppercase text-[11px]">
+                    <th className="py-3.5 px-4">Barbearia / Empresa</th>
+                    <th className="py-3.5 px-4">Plano Contratado</th>
+                    <th className="py-3.5 px-4">Valor & Ciclo</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4">Vigência / Vencimento</th>
+                    <th className="py-3.5 px-4">Provedor</th>
+                    <th className="py-3.5 px-4 text-right">Ações de Gestão</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#374151] bg-[#111827] text-white">
+                <tbody className="divide-y divide-border bg-card text-card-foreground">
                   {filteredSubscriptions.map((sub) => {
                     const priceVal = Number(sub.plan?.price ?? sub.price ?? 0)
                     const diffDays = getDaysDiff(sub.currentPeriodEnd || sub.trialEnd)
 
                     return (
-                      <tr key={sub.id} className="hover:bg-[#1f2937] transition-colors">
+                      <tr key={sub.id} className="hover:bg-muted/40 transition-colors">
                         {/* Barbearia */}
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-[#059669] border border-[#10b981] flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                               <Building2 className="w-4 h-4 stroke-[2.5]" />
                             </div>
                             <div className="min-w-0">
-                              <div className="font-bold text-white truncate flex items-center gap-1.5">
+                              <div className="font-semibold text-foreground truncate flex items-center gap-1.5">
                                 <span>{sub.barbershop?.name || 'Barbearia'}</span>
                               </div>
-                              <div className="flex items-center gap-2 mt-0.5 text-xs text-white">
-                                <span className="font-mono text-white font-bold bg-[#030712] px-2 py-0.5 rounded border border-[#374151]">
+                              <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                <span className="font-mono text-muted-foreground font-medium bg-muted/50 px-2 py-0.5 rounded border border-border">
                                   /b/{sub.barbershop?.slug || sub.barbershop?.id}
                                 </span>
                                 {sub.barbershop?.slug && (
                                   <Link
                                     href={`/b/${sub.barbershop.slug}`}
                                     target="_blank"
-                                    className="text-white hover:text-[#3b82f6]"
+                                    className="text-muted-foreground hover:text-primary"
                                     title="Abrir página pública"
                                   >
                                     <ExternalLink className="w-3.5 h-3.5" />
@@ -900,7 +900,7 @@ function SubscriptionsContent({
                                 )}
                               </div>
                               {sub.barbershop?.email && (
-                                <div className="text-[11px] text-white font-medium truncate mt-0.5">
+                                <div className="text-[11px] text-muted-foreground font-normal truncate mt-0.5">
                                   {sub.barbershop.email}
                                 </div>
                               )}
@@ -910,12 +910,12 @@ function SubscriptionsContent({
 
                         {/* Plano */}
                         <td className="py-4 px-4">
-                          <div className="font-bold text-white">
+                          <div className="font-semibold text-foreground">
                             {sub.plan?.name || sub.planName || 'Plano Padrão'}
                           </div>
-                          <div className="text-[11px] text-white font-semibold mt-0.5">
+                          <div className="text-[11px] text-muted-foreground font-normal mt-0.5">
                             {sub.plan?.planType === 'COURTESY' ? (
-                              <span className="text-white bg-[#d97706] px-2 py-0.5 rounded font-bold">★ Cortesia Developer</span>
+                              <span className="text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded font-medium">★ Cortesia Developer</span>
                             ) : (
                               <span>Plano Comercial SaaS</span>
                             )}
@@ -924,8 +924,8 @@ function SubscriptionsContent({
 
                         {/* Valor & Ciclo */}
                         <td className="py-4 px-4">
-                          <div className="font-bold text-white text-sm">{formatPrice(priceVal)}</div>
-                          <div className="text-xs text-white font-medium">
+                          <div className="font-semibold text-foreground text-sm">{formatPrice(priceVal)}</div>
+                          <div className="text-xs text-muted-foreground font-normal">
                             {sub.plan?.billingInterval === 'YEARLY'
                               ? 'Cobrança Anual'
                               : sub.plan?.billingInterval === 'QUARTERLY'
@@ -937,38 +937,38 @@ function SubscriptionsContent({
                         {/* Status Badge */}
                         <td className="py-4 px-4">
                           {sub.status === 'ACTIVE' && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#059669] text-white border border-[#10b981]">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                               <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
                               <span>Ativa</span>
                             </div>
                           )}
 
                           {sub.status === 'TRIALING' && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b]">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20">
                               <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
                               <span>Trial ({diffDays !== null ? `${diffDays}d` : '-'})</span>
                             </div>
                           )}
 
                           {(sub.status === 'PAST_DUE' || sub.status === 'EXPIRED') && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#dc2626] text-white border border-[#ef4444]">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-destructive/10 text-destructive border border-destructive/20">
                               <AlertTriangle className="w-3.5 h-3.5 stroke-[2.5]" />
                               <span>Vencida</span>
                               {diffDays !== null && diffDays < 0 && (
-                                <span className="text-[11px] font-bold">({Math.abs(diffDays)}d atraso)</span>
+                                <span className="text-[11px] font-semibold">({Math.abs(diffDays)}d atraso)</span>
                               )}
                             </div>
                           )}
 
                           {sub.status === 'SUSPENDED' && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#ea580c] text-white border border-[#f97316]">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/10 text-orange-600 border border-orange-500/20">
                               <ShieldAlert className="w-3.5 h-3.5 stroke-[2.5]" />
                               <span>Suspensa</span>
                             </div>
                           )}
 
                           {sub.status === 'CANCELED' && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#4b5563] text-white border border-[#6b7280]">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border">
                               <span>Cancelada</span>
                             </div>
                           )}
@@ -976,17 +976,17 @@ function SubscriptionsContent({
 
                         {/* Vigência / Vencimento */}
                         <td className="py-4 px-4">
-                          <div className="text-white font-bold text-xs">
+                          <div className="text-foreground font-semibold text-xs">
                             {formatDate(sub.currentPeriodEnd || sub.trialEnd)}
                           </div>
-                          <div className="text-[11px] text-white font-semibold mt-0.5">
+                          <div className="text-[11px] text-muted-foreground font-normal mt-0.5">
                             {diffDays !== null ? (
                               diffDays > 0 ? (
-                                <span className="text-white">{diffDays} dias restantes</span>
+                                <span className="text-muted-foreground">{diffDays} dias restantes</span>
                               ) : diffDays === 0 ? (
-                                <span className="text-[#f59e0b] font-bold">Vence hoje!</span>
+                                <span className="text-amber-600 font-semibold">Vence hoje!</span>
                               ) : (
-                                <span className="text-[#ef4444] font-bold">{Math.abs(diffDays)} dias em atraso</span>
+                                <span className="text-destructive font-semibold">{Math.abs(diffDays)} dias em atraso</span>
                               )
                             ) : (
                               'Sem data limite'
@@ -997,7 +997,7 @@ function SubscriptionsContent({
                         {/* Provedor */}
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-1.5">
-                            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#030712] text-white border border-[#374151]">
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted text-foreground border border-border">
                               {sub.provider === 'ABACATEPAY'
                                 ? 'AbacatePay'
                                 : sub.provider === 'NONE'
@@ -1008,12 +1008,12 @@ function SubscriptionsContent({
                           {sub.providerCustomerId && (
                             <button
                               onClick={() => handleCopy(sub.providerCustomerId!, sub.id)}
-                              className="text-xs font-mono text-white hover:text-[#3b82f6] flex items-center gap-1 mt-1 cursor-pointer"
+                              className="text-xs font-mono text-muted-foreground hover:text-foreground flex items-center gap-1 mt-1 cursor-pointer"
                               title="Copiar ID do cliente"
                             >
                               <span>{sub.providerCustomerId.slice(0, 14)}...</span>
                               {copiedId === sub.id ? (
-                                <Check className="w-3 h-3 text-[#059669]" />
+                                <Check className="w-3 h-3 text-emerald-600" />
                               ) : (
                                 <Copy className="w-3 h-3" />
                               )}
@@ -1027,7 +1027,7 @@ function SubscriptionsContent({
                             {/* Ver Faturas */}
                             <button
                               onClick={() => setSelectedSubForInvoices(sub)}
-                              className="p-2 rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                              className="p-2 rounded-lg bg-card hover:bg-accent text-foreground border border-border transition cursor-pointer shadow-sm"
                               title="Ver Faturas e Histórico"
                             >
                               <FileText className="w-3.5 h-3.5" />
@@ -1039,7 +1039,7 @@ function SubscriptionsContent({
                                 setSelectedSubForExtend(sub)
                                 setExtendDaysInput(15)
                               }}
-                              className="px-3 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white border border-[#10b981] transition text-xs font-bold cursor-pointer"
+                              className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition text-xs font-semibold cursor-pointer"
                               title="Conceder dias extras de vigência"
                             >
                               + Dias
@@ -1051,10 +1051,10 @@ function SubscriptionsContent({
                                 setSelectedSubForStatus(sub)
                                 setNewStatusInput(sub.status)
                               }}
-                              className="p-2 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6] transition cursor-pointer"
+                              className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition cursor-pointer"
                               title="Mudar Status Operacional"
                             >
-                              <ArrowUpDown className="w-3.5 h-3.5 stroke-[2.5]" />
+                              <ArrowUpDown className="w-3.5 h-3.5 stroke-[2]" />
                             </button>
                           </div>
                         </td>
@@ -1070,29 +1070,29 @@ function SubscriptionsContent({
 
       {/* Modal: Faturas e Histórico da Assinatura */}
       {selectedSubForInvoices && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative space-y-6">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border text-card-foreground rounded-xl w-full max-w-2xl p-6 shadow-2xl relative space-y-6">
             <button
               onClick={() => setSelectedSubForInvoices(null)}
-              className="absolute top-4 right-4 p-2 rounded-lg text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563]"
+              className="absolute top-4 right-4 p-2 rounded-lg text-muted-foreground hover:text-foreground bg-muted hover:bg-accent border border-border transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#059669] text-white border border-[#10b981]">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                   Faturas & Invoices
                 </span>
-                <span className="text-xs text-white font-mono">
+                <span className="text-xs text-muted-foreground font-mono">
                   ID: {selectedSubForInvoices.id}
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="p-1 rounded bg-[#059669] text-white"><Receipt className="w-5 h-5 stroke-[2.5]" /></span>
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <span className="p-1 rounded bg-emerald-600 text-white"><Receipt className="w-5 h-5 stroke-[2.5]" /></span>
                 {selectedSubForInvoices.barbershop?.name || 'Assinatura'}
               </h2>
-              <p className="text-xs text-white font-medium mt-1">
+              <p className="text-xs text-muted-foreground font-normal mt-1">
                 Plano: {selectedSubForInvoices.plan?.name || selectedSubForInvoices.planName} •{' '}
                 {formatPrice(Number(selectedSubForInvoices.plan?.price ?? selectedSubForInvoices.price ?? 0))}
               </p>
@@ -1100,23 +1100,23 @@ function SubscriptionsContent({
 
             {/* Invoices List */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">
                 Faturas Geradas ({selectedSubForInvoices.invoices?.length || 0})
               </h3>
 
               {!selectedSubForInvoices.invoices || selectedSubForInvoices.invoices.length === 0 ? (
-                <div className="text-center py-8 border border-dashed border-[#374151] rounded-xl text-xs text-white font-medium">
+                <div className="text-center py-8 border border-dashed border-border rounded-xl text-xs text-muted-foreground font-normal">
                   Nenhuma fatura registrada nesta assinatura ainda.
                 </div>
               ) : (
-                <div className="divide-y divide-[#374151] border border-[#374151] rounded-xl overflow-hidden bg-[#030712]">
+                <div className="divide-y divide-border border border-border rounded-xl overflow-hidden bg-muted/30">
                   {selectedSubForInvoices.invoices.map((inv) => (
                     <div key={inv.id} className="p-3.5 flex items-center justify-between text-xs">
                       <div>
-                        <div className="font-bold text-white text-sm">
+                        <div className="font-semibold text-foreground text-sm">
                           {formatPrice(Number(inv.amount))}
                         </div>
-                        <div className="text-xs text-white font-medium mt-0.5">
+                        <div className="text-xs text-muted-foreground font-normal mt-0.5">
                           Vencimento: {formatDate(inv.dueDate)}{' '}
                           {inv.paidAt && `• Pago em ${formatDate(inv.paidAt)}`}
                         </div>
@@ -1124,15 +1124,15 @@ function SubscriptionsContent({
 
                       <div className="flex items-center gap-2">
                         {inv.status === 'PAID' ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#059669] text-white border border-[#10b981]">
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                             Paga
                           </span>
                         ) : inv.status === 'OPEN' ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b]">
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20">
                             Aberta
                           </span>
                         ) : (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#1f2937] text-white border border-[#374151]">
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border">
                             {inv.status}
                           </span>
                         )}
@@ -1146,27 +1146,27 @@ function SubscriptionsContent({
             {/* Eventos da Máquina de Estados */}
             {selectedSubForInvoices.events && selectedSubForInvoices.events.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">
                   Linha do Tempo (Eventos)
                 </h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                   {selectedSubForInvoices.events.map((ev) => (
                     <div
                       key={ev.id}
-                      className="text-xs p-2.5 rounded-lg bg-[#030712] border border-[#374151] flex items-center justify-between"
+                      className="text-xs p-2.5 rounded-lg bg-muted/40 border border-border flex items-center justify-between"
                     >
-                      <span className="font-mono text-white font-bold">{ev.type}</span>
-                      <span className="text-white font-medium">{formatDate(ev.createdAt)}</span>
+                      <span className="font-mono text-foreground font-medium">{ev.type}</span>
+                      <span className="text-muted-foreground font-normal">{formatDate(ev.createdAt)}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            <div className="flex justify-end pt-3 border-t border-[#374151]">
+            <div className="flex justify-end pt-3 border-t border-border">
               <button
                 onClick={() => setSelectedSubForInvoices(null)}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] cursor-pointer"
+                className="px-5 py-2.5 rounded-xl text-xs font-medium bg-secondary text-secondary-foreground hover:bg-accent border border-border cursor-pointer transition-colors"
               >
                 Fechar
               </button>
@@ -1177,30 +1177,30 @@ function SubscriptionsContent({
 
       {/* Modal: Estender Vigência / Conceder Carência */}
       {selectedSubForExtend && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl w-full max-w-md p-6 shadow-2xl relative space-y-5">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border text-card-foreground rounded-xl w-full max-w-md p-6 shadow-2xl relative space-y-5">
             <button
               onClick={() => setSelectedSubForExtend(null)}
-              className="absolute top-4 right-4 p-2 rounded-lg text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563]"
+              className="absolute top-4 right-4 p-2 rounded-lg text-muted-foreground hover:text-foreground bg-muted hover:bg-accent border border-border transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div>
-              <div className="flex items-center gap-1.5 text-white text-xs font-bold mb-1">
-                <span className="p-1 rounded bg-[#059669] text-white"><Clock className="w-3.5 h-3.5 stroke-[2.5]" /></span>
+              <div className="flex items-center gap-1.5 text-foreground text-xs font-semibold mb-1">
+                <span className="p-1 rounded bg-emerald-600 text-white"><Clock className="w-3.5 h-3.5 stroke-[2.5]" /></span>
                 <span>Extensão de Vigência Comercial</span>
               </div>
-              <h2 className="text-lg font-bold text-white mt-1">
+              <h2 className="text-lg font-bold text-foreground mt-1">
                 Estender Prazo: {selectedSubForExtend.barbershop?.name}
               </h2>
-              <p className="text-xs text-white font-medium mt-1">
+              <p className="text-xs text-muted-foreground font-normal mt-1">
                 Adicione dias extras de contrato ou carência à assinatura desta barbearia.
               </p>
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs text-white font-bold block">
+              <label className="text-xs text-foreground font-semibold block">
                 Quantidade de dias adicionais:
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -1209,10 +1209,10 @@ function SubscriptionsContent({
                     key={days}
                     type="button"
                     onClick={() => setExtendDaysInput(days)}
-                    className={`py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                    className={`py-2 rounded-xl text-xs font-medium border transition cursor-pointer ${
                       extendDaysInput === days
-                        ? 'bg-[#059669] text-white border-[#10b981]'
-                        : 'bg-[#030712] border-[#374151] text-white hover:bg-[#1f2937]'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : 'bg-muted/50 border-border text-foreground hover:bg-accent'
                     }`}
                   >
                     +{days} Dias
@@ -1226,24 +1226,24 @@ function SubscriptionsContent({
                 max="365"
                 value={extendDaysInput}
                 onChange={(e) => setExtendDaysInput(Number(e.target.value))}
-                className="w-full bg-[#030712] border border-[#374151] rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#059669]"
+                className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder="Ou digite o número de dias..."
               />
             </div>
 
-            <div className="bg-[#030712] p-3 rounded-xl border border-[#374151] text-xs text-white font-medium">
+            <div className="bg-muted/40 p-3 rounded-xl border border-border text-xs text-muted-foreground font-normal">
               Vigência atual termina em:{' '}
-              <span className="text-white font-bold">
+              <span className="text-foreground font-semibold">
                 {formatDate(selectedSubForExtend.currentPeriodEnd || selectedSubForExtend.trialEnd)}
               </span>
               . Com a extensão, o status será reativado caso estivesse vencida.
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-[#374151]">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <button
                 type="button"
                 onClick={() => setSelectedSubForExtend(null)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] cursor-pointer"
+                className="px-4 py-2.5 rounded-xl text-xs font-medium bg-secondary text-secondary-foreground hover:bg-accent border border-border cursor-pointer transition-colors"
               >
                 Cancelar
               </button>
@@ -1251,7 +1251,7 @@ function SubscriptionsContent({
                 type="button"
                 onClick={handleExtendSubscription}
                 disabled={isExtending || extendDaysInput <= 0}
-                className="px-5 py-2.5 rounded-xl text-xs bg-[#059669] hover:bg-[#047857] text-white font-bold border border-[#10b981] cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl text-xs bg-primary text-primary-foreground font-medium hover:bg-primary/90 border border-transparent cursor-pointer disabled:opacity-50 shadow-sm"
               >
                 {isExtending ? 'Salvando...' : 'Confirmar Extensão'}
               </button>
@@ -1262,48 +1262,48 @@ function SubscriptionsContent({
 
       {/* Modal: Alterar Status Operacional */}
       {selectedSubForStatus && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl w-full max-w-md p-6 shadow-2xl relative space-y-5">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border text-card-foreground rounded-xl w-full max-w-md p-6 shadow-2xl relative space-y-5">
             <button
               onClick={() => setSelectedSubForStatus(null)}
-              className="absolute top-4 right-4 p-2 rounded-lg text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563]"
+              className="absolute top-4 right-4 p-2 rounded-lg text-muted-foreground hover:text-foreground bg-muted hover:bg-accent border border-border transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div>
-              <div className="flex items-center gap-1.5 text-white text-xs font-bold mb-1">
-                <span className="p-1 rounded bg-[#2563eb] text-white"><ArrowUpDown className="w-3.5 h-3.5 stroke-[2.5]" /></span>
+              <div className="flex items-center gap-1.5 text-foreground text-xs font-semibold mb-1">
+                <span className="p-1 rounded bg-primary text-primary-foreground"><ArrowUpDown className="w-3.5 h-3.5 stroke-[2.5]" /></span>
                 <span>Gestão de Ciclo de Vida</span>
               </div>
-              <h2 className="text-lg font-bold text-white mt-1">
+              <h2 className="text-lg font-bold text-foreground mt-1">
                 Alterar Status: {selectedSubForStatus.barbershop?.name}
               </h2>
-              <p className="text-xs text-white font-medium mt-1">
+              <p className="text-xs text-muted-foreground font-normal mt-1">
                 Atualize o estado da assinatura. Mudanças para Ativa liberam o acesso do estabelecimento.
               </p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs text-white font-bold block">Novo Status:</label>
+              <label className="text-xs text-foreground font-semibold block">Novo Status:</label>
               <select
                 value={newStatusInput}
                 onChange={(e) => setNewStatusInput(e.target.value)}
-                className="w-full bg-[#030712] border border-[#374151] rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-[#2563eb]"
+                className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="ACTIVE" className="bg-[#111827] text-white">ACTIVE (Ativa - Acesso Total)</option>
-                <option value="TRIALING" className="bg-[#111827] text-white">TRIALING (Período de Testes)</option>
-                <option value="PAST_DUE" className="bg-[#111827] text-white">PAST_DUE (Vencida / Inadimplente)</option>
-                <option value="SUSPENDED" className="bg-[#111827] text-white">SUSPENDED (Suspensa)</option>
-                <option value="CANCELED" className="bg-[#111827] text-white">CANCELED (Cancelada)</option>
+                <option value="ACTIVE">ACTIVE (Ativa - Acesso Total)</option>
+                <option value="TRIALING">TRIALING (Período de Testes)</option>
+                <option value="PAST_DUE">PAST_DUE (Vencida / Inadimplente)</option>
+                <option value="SUSPENDED">SUSPENDED (Suspensa)</option>
+                <option value="CANCELED">CANCELED (Cancelada)</option>
               </select>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-[#374151]">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <button
                 type="button"
                 onClick={() => setSelectedSubForStatus(null)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] cursor-pointer"
+                className="px-4 py-2.5 rounded-xl text-xs font-medium bg-secondary text-secondary-foreground hover:bg-accent border border-border cursor-pointer transition-colors"
               >
                 Cancelar
               </button>
@@ -1311,7 +1311,7 @@ function SubscriptionsContent({
                 type="button"
                 onClick={handleUpdateStatus}
                 disabled={isUpdatingStatus}
-                className="px-5 py-2.5 rounded-xl text-xs bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold border border-[#3b82f6] cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-medium border border-transparent cursor-pointer disabled:opacity-50 shadow-sm"
               >
                 {isUpdatingStatus ? 'Atualizando...' : 'Salvar Alteração'}
               </button>
@@ -1322,40 +1322,40 @@ function SubscriptionsContent({
 
       {/* Modal: Conceder Assinatura Manual / Cortesia */}
       {isGrantModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl w-full max-w-lg p-6 shadow-2xl relative space-y-5">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border text-card-foreground rounded-xl w-full max-w-lg p-6 shadow-2xl relative space-y-5">
             <button
               onClick={() => setIsGrantModalOpen(false)}
-              className="absolute top-4 right-4 p-2 rounded-lg text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563]"
+              className="absolute top-4 right-4 p-2 rounded-lg text-muted-foreground hover:text-foreground bg-muted hover:bg-accent border border-border transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div>
-              <div className="flex items-center gap-1.5 text-white text-xs font-bold mb-1">
-                <span className="p-1 rounded bg-[#059669] text-white"><Plus className="w-3.5 h-3.5 stroke-[2.5]" /></span>
+              <div className="flex items-center gap-1.5 text-foreground text-xs font-semibold mb-1">
+                <span className="p-1 rounded bg-primary text-primary-foreground"><Plus className="w-3.5 h-3.5 stroke-[2.5]" /></span>
                 <span>Nova Vinculação de Plano</span>
               </div>
-              <h2 className="text-xl font-bold text-white mt-1">Conceder Assinatura Manual</h2>
-              <p className="text-xs text-white font-medium mt-1">
+              <h2 className="text-xl font-bold text-foreground mt-1">Conceder Assinatura Manual</h2>
+              <p className="text-xs text-muted-foreground font-normal mt-1">
                 Atribua um plano de assinatura comercial ou cortesia para qualquer estabelecimento.
               </p>
             </div>
 
             <form onSubmit={handleGrantSubscription} className="space-y-4">
               <div>
-                <label className="text-xs text-white font-bold block mb-1.5">
+                <label className="text-xs text-foreground font-semibold block mb-1.5">
                   Barbearia / Estabelecimento:
                 </label>
                 <select
                   value={grantShopId}
                   onChange={(e) => setGrantShopId(e.target.value)}
                   required
-                  className="w-full bg-[#030712] border border-[#374151] rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-[#2563eb]"
+                  className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                 >
-                  <option value="" className="bg-[#111827] text-white">Selecione o estabelecimento...</option>
+                  <option value="">Selecione o estabelecimento...</option>
                   {barbershops.map((shop) => (
-                    <option key={shop.id} value={shop.id} className="bg-[#111827] text-white">
+                    <option key={shop.id} value={shop.id}>
                       {shop.name} ({shop.slug ? `/b/${shop.slug}` : shop.email})
                     </option>
                   ))}
@@ -1363,18 +1363,18 @@ function SubscriptionsContent({
               </div>
 
               <div>
-                <label className="text-xs text-white font-bold block mb-1.5">
+                <label className="text-xs text-foreground font-semibold block mb-1.5">
                   Plano SaaS a Conceder:
                 </label>
                 <select
                   value={grantPlanId}
                   onChange={(e) => setGrantPlanId(e.target.value)}
                   required
-                  className="w-full bg-[#030712] border border-[#374151] rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-[#2563eb]"
+                  className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                 >
-                  <option value="" className="bg-[#111827] text-white">Selecione o plano...</option>
+                  <option value="">Selecione o plano...</option>
                   {plans.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-[#111827] text-white">
+                    <option key={p.id} value={p.id}>
                       {p.name} — {formatPrice(Number(p.price))} ({p.billingInterval}){' '}
                       {p.planType === 'COURTESY' ? '★ CORTESIA' : ''}
                     </option>
@@ -1383,7 +1383,7 @@ function SubscriptionsContent({
               </div>
 
               <div>
-                <label className="text-xs text-white font-bold block mb-1.5">
+                <label className="text-xs text-foreground font-semibold block mb-1.5">
                   Observações / Justificativa (Opcional):
                 </label>
                 <textarea
@@ -1391,22 +1391,22 @@ function SubscriptionsContent({
                   onChange={(e) => setGrantNotes(e.target.value)}
                   rows={2}
                   placeholder="Ex: Concessão especial de parceria, upgrade manual ou cortesia de onboarding..."
-                  className="w-full bg-[#030712] border border-[#374151] rounded-xl px-3 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-[#2563eb] placeholder:text-gray-400"
+                  className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-foreground font-normal focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#374151]">
+              <div className="flex justify-end gap-2 pt-3 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setIsGrantModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-xs font-medium bg-secondary text-secondary-foreground hover:bg-accent border border-border cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isGranting}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#059669] hover:bg-[#047857] text-white border border-[#10b981] cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 border border-transparent cursor-pointer disabled:opacity-50 shadow-sm"
                 >
                   {isGranting ? 'Concedendo...' : 'Conceder Assinatura'}
                 </button>
@@ -1421,14 +1421,14 @@ function SubscriptionsContent({
 
 function SubscriptionsLoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-8 space-y-6">
-      <div className="h-10 w-64 bg-[#111827] border border-[#374151] rounded-xl" />
+    <div className="min-h-screen bg-background text-foreground p-8 space-y-6">
+      <div className="h-10 w-64 bg-card border border-border rounded-xl animate-pulse" />
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-24 bg-[#111827] border border-[#374151] rounded-2xl" />
+          <div key={i} className="h-24 bg-card border border-border rounded-xl animate-pulse" />
         ))}
       </div>
-      <div className="h-96 bg-[#111827] border border-[#374151] rounded-2xl" />
+      <div className="h-96 bg-card border border-border rounded-xl animate-pulse" />
     </div>
   )
 }

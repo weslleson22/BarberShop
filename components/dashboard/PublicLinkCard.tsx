@@ -77,41 +77,41 @@ export default function PublicLinkCard() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gray-900 border border-gray-800 p-5 md:p-6 mb-6">
+    <div className="relative overflow-hidden rounded-xl bg-card border border-border p-5 md:p-6 mb-6 shadow-sm">
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
         <div className="space-y-1.5 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-950 text-amber-400 border border-amber-800/60">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
               Link Oficial da Barbearia
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-950 text-emerald-400 border border-emerald-800/60">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               Ativo
             </span>
           </div>
 
-          <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-            <Globe className="w-5 h-5 text-amber-400 shrink-0" />
+          <h2 className="text-lg md:text-xl font-bold text-foreground flex items-center gap-2 tracking-tight">
+            <Globe className="w-5 h-5 text-amber-500 shrink-0" />
             <span>Página Pública de Agendamentos</span>
           </h2>
 
-          <p className="text-xs md:text-sm text-gray-400 max-w-2xl leading-relaxed">
+          <p className="text-xs md:text-sm text-muted-foreground max-w-2xl leading-relaxed">
             Seus clientes podem visualizar serviços, escolher barbeiros e agendar horários em tempo real através deste link exclusivo.
           </p>
 
           {/* URL Box */}
           <div className="pt-2 flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-950 border border-gray-800 text-xs md:text-sm font-mono text-amber-300 max-w-full overflow-x-auto">
-              <span className="text-gray-500 select-none">{origin}/b/</span>
-              <span className="font-bold text-white underline decoration-amber-500/50 underline-offset-4">{slug}</span>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-muted/50 border border-border text-xs md:text-sm font-mono text-foreground max-w-full overflow-x-auto">
+              <span className="text-muted-foreground select-none">{origin}/b/</span>
+              <span className="font-bold text-primary underline decoration-primary/40 underline-offset-4">{slug}</span>
             </div>
 
             <button
               type="button"
               onClick={handleCopy}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer ${
                 copied
-                  ? 'bg-emerald-500 text-black border border-emerald-400'
-                  : 'bg-amber-400 hover:bg-amber-500 text-black border border-amber-300'
+                  ? 'bg-emerald-600 text-white border border-emerald-600'
+                  : 'bg-primary hover:bg-primary/90 text-primary-foreground'
               }`}
             >
               {copied ? (
@@ -131,16 +131,16 @@ export default function PublicLinkCard() {
               href={`/b/${slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10 transition-all"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-card hover:bg-muted text-foreground border border-border transition-colors shadow-sm"
             >
               <span>Abrir Página</span>
-              <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
             </a>
 
             {user?.role === 'ADMIN' && (
               <Link
                 href="/configuracoes?tab=barbershop"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-gray-400 hover:text-amber-400 hover:bg-amber-500/5 transition-all ml-auto"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ml-auto"
                 title="Personalizar slug nas configurações"
               >
                 <Settings className="w-3.5 h-3.5" />

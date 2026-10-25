@@ -47,55 +47,102 @@ export async function GET(request: NextRequest) {
       where.role = roleParam
     }
 
-    const users = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        barbershopId: true,
-        barbershop: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-        isActive: true,
-        createdAt: true,
-        avatar: true,
-        phone: true,
-        bio: true,
-        specialties: true,
-      },
-      orderBy: [
-        { name: 'asc' },
-        { createdAt: 'desc' },
-      ],
-    })
+    // Correção preventiva para bancos PostgreSQL em produção: preenche specialties nulo com array vazio
+    try {
+      if (typeof (prisma as any).$executeRawUnsafe === 'function') {
+        await (prisma as any).$executeRawUnsafe(`UPDATE users SET specialties = ARRAY[]::text[] WHERE specialties IS NULL;`)
+      }
+    } catch {
+      // Ignora silenciosamente caso o banco de dados não seja Postgres ou tabela ainda não migrada
+    }
 
-    // Sanitização para garantir serialização JSON uniforme sem dados corrompidos
-    const serializedUsers = users.map((u) => ({
-      id: u.id,
-      name: u.name || 'Sem Nome',
-      email: u.email,
-      role: u.role,
-      barbershopId: u.barbershopId,
-      barbershop: u.barbershop
-        ? {
-            id: u.barbershop.id,
-            name: u.barbershop.name,
-            slug: u.barbershop.slug,
-          }
-        : null,
-      isActive: Boolean(u.isActive),
-      createdAt: u.createdAt ? u.createdAt.toISOString() : new Date().toISOString(),
-      avatar: u.avatar || null,
-      phone: u.phone || null,
-      bio: u.bio || null,
-      specialties: Array.isArray(u.specialties) ? u.specialties : [],
-    }))
+    let users: any[] = []
+    try {
+      users = await prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          barbershopId: true,
+          barbershop: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+          isActive: true,
+          createdAt: true,
+          avatar: true,
+          phone: true,
+          bio: true,
+          specialties: true,
+        },
+        orderBy: [
+          { name: 'asc' },
+          { createdAt: 'desc' },
+        ],
+      })
+    } catch (primaryErr) {
+      console.warn('[API /api/users GET] Consulta completa falhou. Executando consulta de contingência resiliente sem campos opcionais:', primaryErr)
+      // Fallback resiliente: remove specialties e bio da seleção para contornar qualquer inconsistência de tipo no banco de produção
+      users = await prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          barbershopId: true,
+          barbershop: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+          isActive: true,
+          createdAt: true,
+          avatar: true,
+          phone: true,
+        },
+        orderBy: [
+          { createdAt: 'desc' },
+        ],
+      })
+    }
+
+    // Sanitização para garantir serialização JSON uniforme sem dados corrompidos ou payloads excessivos
+    const serializedUsers = users.map((u) => {
+      // Se avatar for base64 excessivamente grande (acima de 350KB), previne estouro do limite de payload serverless
+      let safeAvatar = u.avatar || null
+      if (safeAvatar && typeof safeAvatar === 'string' && safeAvatar.startsWith('data:') && safeAvatar.length > 350000) {
+        safeAvatar = null
+      }
+
+      return {
+        id: u.id,
+        name: u.name || 'Sem Nome',
+        email: u.email || '',
+        role: u.role || 'CLIENT',
+        barbershopId: u.barbershopId || null,
+        barbershop: u.barbershop
+          ? {
+              id: u.barbershop.id,
+              name: u.barbershop.name || 'Barbearia',
+              slug: u.barbershop.slug || '',
+            }
+          : null,
+        isActive: Boolean(u.isActive),
+        createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString(),
+        avatar: safeAvatar,
+        phone: u.phone || null,
+        bio: u.bio || null,
+        specialties: Array.isArray(u.specialties) ? u.specialties : [],
+      }
+    })
 
     return NextResponse.json(serializedUsers, {
       headers: {

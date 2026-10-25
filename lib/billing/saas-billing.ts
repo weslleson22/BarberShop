@@ -1438,11 +1438,24 @@ export async function getSubscriptionAccess(
   let subscription: any = null
   try {
     if (txClient?.subscription?.findFirst) {
+      // 1. Prioriza assinatura ativa contratada
       subscription = await txClient.subscription.findFirst({
-        where: { barbershopId },
+        where: {
+          barbershopId,
+          status: 'ACTIVE',
+        },
         include: { plan: true },
         orderBy: { createdAt: 'desc' },
       })
+
+      // 2. Se não houver ACTIVE, busca a mais recente (TRIALING, PAST_DUE, etc.)
+      if (!subscription) {
+        subscription = await txClient.subscription.findFirst({
+          where: { barbershopId },
+          include: { plan: true },
+          orderBy: { createdAt: 'desc' },
+        })
+      }
     }
   } catch (err: any) {
     if (err?.code === 'P2021' || err?.message?.includes('does not exist')) {
@@ -1529,7 +1542,9 @@ export async function getSubscriptionAccess(
   }
 
   const { status, trialStart, trialEnd, currentPeriodStart, currentPeriodEnd, plan } = subscription
-  const planInfo = plan ? { id: plan.id, name: plan.name, slug: plan.slug } : null
+  const planInfo = plan
+    ? { id: plan.id, name: plan.name, slug: plan.slug, price: Number(plan.price || 0) }
+    : null
 
   // 1. TRIALING
   if (status === 'TRIALING') {

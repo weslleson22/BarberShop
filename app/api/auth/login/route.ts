@@ -8,8 +8,17 @@ import { notifyFailedPasswordAttempt } from '@/lib/external-notifications'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+import { checkRateLimit, getClientIp, rateLimitExceededResponse } from '@/lib/rate-limit'
+
 export async function POST(request: NextRequest) {
   try {
+    // Proteção contra ataques de Força Bruta e Credential Stuffing (máx 10 tentativas / min por IP)
+    const clientIp = getClientIp(request)
+    const rateCheck = checkRateLimit(clientIp, { limit: 10, windowMs: 60 * 1000, prefix: 'login_ip' })
+    if (!rateCheck.success) {
+      return rateLimitExceededResponse(rateCheck.resetTime)
+    }
+
     const { email, password } = await request.json()
 
     if (!email || !password) {

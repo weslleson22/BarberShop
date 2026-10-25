@@ -49,52 +49,54 @@ export default function RevenueChart() {
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
+    <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
-          <h3 className="text-lg md:text-xl font-semibold text-white">Faturamento</h3>
-          <p className="text-gray-400 text-xs md:text-sm">Receita dos últimos 7 dias</p>
+          <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight">Faturamento</h3>
+          <p className="text-muted-foreground text-xs md:text-sm font-medium">Receita dos últimos 7 dias</p>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full"></div>
-          <span className="text-white/60 text-xs md:text-sm">{formatCurrency(totalRevenue)}</span>
+          <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-emerald-500 rounded-full"></div>
+          <span className="text-foreground font-semibold text-xs md:text-sm">{formatCurrency(totalRevenue)}</span>
         </div>
       </div>
       
       <div className="h-48 md:h-64">
         {loading ? (
-          <div className="flex items-center justify-center h-full text-white/60 text-sm">Carregando dados...</div>
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm font-medium">Carregando dados...</div>
         ) : data.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-white/60 text-sm">Sem dados de faturamento</div>
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm font-medium">Sem dados de faturamento</div>
         ) : (
-          <NoSSR fallback={<div className="flex items-center justify-center h-full text-white/60 text-sm">Carregando gráfico...</div>}>
+          <NoSSR fallback={<div className="flex items-center justify-center h-full text-muted-foreground text-sm font-medium">Carregando gráfico...</div>}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#D4AF37" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#d97706" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#d97706" stopOpacity={0.0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-border" />
                 <XAxis 
                   dataKey="name" 
-                  stroke="rgba(255,255,255,0.3)"
+                  stroke="currentColor"
+                  className="text-muted-foreground"
                   fontSize={10}
                   tick={{ fontSize: 10 }}
                 />
                 <YAxis 
-                  stroke="rgba(255,255,255,0.3)"
+                  stroke="currentColor"
+                  className="text-muted-foreground"
                   fontSize={10}
                   tick={{ fontSize: 10 }}
                   tickFormatter={(value) => `R$ ${(value/1000)}k`}
                 />
                 <Tooltip 
                   contentStyle={{
-                    backgroundColor: 'rgba(13, 19, 36, 0.9)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    backgroundColor: 'hsl(var(--card))',
+                    borderColor: 'hsl(var(--border))',
                     borderRadius: '8px',
-                    color: '#fff',
+                    color: 'hsl(var(--foreground))',
                     fontSize: '12px'
                   }}
                   formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Receita']}
@@ -102,7 +104,7 @@ export default function RevenueChart() {
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="#D4AF37"
+                  stroke="#d97706"
                   strokeWidth={2}
                   fill="url(#colorRevenue)"
                 />

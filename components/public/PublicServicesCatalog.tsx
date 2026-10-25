@@ -24,6 +24,7 @@ import {
   CalendarCheck,
   FileText
 } from 'lucide-react'
+import { WeekOperatingHours, getDayOperatingHours, isBarberWorkingOnDay } from '@/lib/operating-hours'
 
 export interface ServiceItem {
   id: string
@@ -61,6 +62,8 @@ interface PublicServicesCatalogProps {
   tenantName: string
   tenantAddress?: string | null
   tenantPhone?: string | null
+  operatingHours?: WeekOperatingHours | null
+  barberWorkDays?: Record<string, string[]>
 }
 
 const WEEKDAYS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
@@ -97,6 +100,8 @@ export default function PublicServicesCatalog({
   tenantName,
   tenantAddress,
   tenantPhone,
+  operatingHours,
+  barberWorkDays = {},
 }: PublicServicesCatalogProps) {
   // Estado do Wizard de Agendamento
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -232,8 +237,36 @@ export default function PublicServicesCatalog({
     if (!activeDate) return []
 
     const [year, month, day] = activeDate.split('-').map(Number)
+    const slotDate = new Date(year, month - 1, day, 12, 0, 0)
+    const dayConfig = getDayOperatingHours(operatingHours, slotDate)
+
+    // Se a barbearia estiver fechada neste dia
+    if (!dayConfig.isOpen) {
+      return []
+    }
+
+    // Se um barbeiro específico estiver selecionado e não atender neste dia
+    if (selectedBarber && !isBarberWorkingOnDay(selectedBarber.id, barberWorkDays, slotDate)) {
+      return []
+    }
+
     const now = new Date()
-    const isToday = now.getFullYear() === year && now.getMonth() + 1 === month && now.getDate() === day
+    const isToday =
+      now.getFullYear() === year && now.getMonth() + 1 === month && now.getDate() === day
+
+    const [openH, openM] = dayConfig.open.split(':').map(Number)
+    const [closeH, closeM] = dayConfig.close.split(':').map(Number)
+    const openTotalMinutes = openH * 60 + openM
+    const closeTotalMinutes = closeH * 60 + closeM
+
+    let breakStartMinutes = -1
+    let breakEndMinutes = -1
+    if (dayConfig.hasBreak && dayConfig.breakStart && dayConfig.breakEnd) {
+      const [bsH, bsM] = dayConfig.breakStart.split(':').map(Number)
+      const [beH, beM] = dayConfig.breakEnd.split(':').map(Number)
+      breakStartMinutes = bsH * 60 + bsM
+      breakEndMinutes = beH * 60 + beM
+    }
 
     // Lista de barbeiros a checar (se foi selecionado um específico ou todos)
     const targetBarbers = selectedBarber ? [selectedBarber] : barbers
@@ -244,63 +277,77 @@ export default function PublicServicesCatalog({
       assignedBarber?: BarberItem
     }> = []
 
-    // Grade de 08:00 às 20:00 (intervalos de 30 min)
-    for (let hour = 8; hour < 20; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-        const slotStart = new Date(year, month - 1, day, hour, minute, 0, 0)
-        const duration = selectedService?.duration || 30
-        const slotEnd = new Date(slotStart.getTime() + duration * 60 * 1000)
+    // Grade dinâmica respeitando abertura e fechamento
+    for (
+      let currentMinutes = openTotalMinutes;
+      currentMinutes < closeTotalMinutes;
+      currentMinutes += 30
+    ) {
+      if (
+        dayConfig.hasBreak &&
+        breakStartMinutes >= 0 &&
+        breakEndMinutes > breakStartMinutes &&
+        currentMinutes >= breakStartMinutes &&
+        currentMinutes < breakEndMinutes
+      ) {
+        continue
+      }
 
-        // Se for hoje e já passou o horário
-        if (isToday && slotStart <= now) {
-          continue
+      const hour = Math.floor(currentMinutes / 60)
+      const minute = currentMinutes % 60
+      const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+      const slotStart = new Date(year, month - 1, day, hour, minute, 0, 0)
+      const duration = selectedService?.duration || 30
+      const slotEnd = new Date(slotStart.getTime() + duration * 60 * 1000)
+
+      // Se for hoje e já passou o horário
+      if (isToday && slotStart <= now) {
+        continue
+      }
+
+      // Verifica se há pelo menos um barbeiro livre neste horário
+      let freeBarber: BarberItem | undefined = undefined
+
+      for (const b of targetBarbers) {
+        const barberApts = appointments.filter((apt) => {
+          if (apt.barberId !== b.id) return false
+          const aptDate = new Date(apt.startTime)
+          return (
+            aptDate.getFullYear() === year &&
+            aptDate.getMonth() + 1 === month &&
+            aptDate.getDate() === day
+          )
+        })
+
+        const hasConflict = barberApts.some((apt) => {
+          const aptStart = new Date(apt.startTime)
+          const aptDur = apt.service?.duration || 30
+          const aptEnd = new Date(aptStart.getTime() + aptDur * 60 * 1000)
+
+          return (
+            (slotStart >= aptStart && slotStart < aptEnd) ||
+            (slotEnd > aptStart && slotEnd <= aptEnd) ||
+            (slotStart <= aptStart && slotEnd >= aptEnd)
+          )
+        })
+
+        if (!hasConflict) {
+          freeBarber = b
+          break
         }
+      }
 
-        // Verifica se há pelo menos um barbeiro livre neste horário
-        let freeBarber: BarberItem | undefined = undefined
-
-        for (const b of targetBarbers) {
-          const barberApts = appointments.filter((apt) => {
-            if (apt.barberId !== b.id) return false
-            const aptDate = new Date(apt.startTime)
-            return (
-              aptDate.getFullYear() === year &&
-              aptDate.getMonth() + 1 === month &&
-              aptDate.getDate() === day
-            )
-          })
-
-          const hasConflict = barberApts.some((apt) => {
-            const aptStart = new Date(apt.startTime)
-            const aptDur = apt.service?.duration || 30
-            const aptEnd = new Date(aptStart.getTime() + aptDur * 60 * 1000)
-
-            return (
-              (slotStart >= aptStart && slotStart < aptEnd) ||
-              (slotEnd > aptStart && slotEnd <= aptEnd) ||
-              (slotStart <= aptStart && slotEnd >= aptEnd)
-            )
-          })
-
-          if (!hasConflict) {
-            freeBarber = b
-            break
-          }
-        }
-
-        if (freeBarber) {
-          slots.push({
-            time: timeStr,
-            available: true,
-            assignedBarber: freeBarber,
-          })
-        }
+      if (freeBarber) {
+        slots.push({
+          time: timeStr,
+          available: true,
+          assignedBarber: freeBarber,
+        })
       }
     }
 
     return slots
-  }, [activeDate, selectedBarber, barbers, appointments, selectedService])
+  }, [activeDate, selectedBarber, barbers, appointments, selectedService, operatingHours])
 
   // 4. Submissão e Conclusão do Agendamento
   const handleConfirmBooking = async (e: React.FormEvent) => {
@@ -444,24 +491,24 @@ export default function PublicServicesCatalog({
       <section className="scroll-mt-10" id="catalogo-servicos">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold tracking-wide uppercase">
+            <div className="flex items-center gap-2 text-primary text-sm font-semibold tracking-wide uppercase">
               <Scissors className="w-4 h-4" />
               Catálogo de Serviços
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
               Serviços Disponíveis
             </h2>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Escolha o serviço desejado para selecionar o especialista, dia, horário e concluir seu agendamento instantaneamente.
             </p>
           </div>
-          <span className="text-xs text-gray-400 bg-gray-800/80 px-3 py-1.5 rounded-lg border border-gray-700 self-start sm:self-auto shrink-0">
+          <span className="text-xs text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border self-start sm:self-auto shrink-0">
             {services.length} serviços cadastrados
           </span>
         </div>
 
         {services.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-gray-900/60 border border-gray-800 text-center text-gray-400">
+          <div className="p-8 rounded-2xl bg-muted/30 border border-border text-center text-muted-foreground">
             Nenhum serviço disponível no momento para esta unidade.
           </div>
         ) : (
@@ -470,27 +517,27 @@ export default function PublicServicesCatalog({
               <div
                 key={service.id}
                 onClick={() => handleSelectService(service)}
-                className="group relative flex flex-col justify-between p-6 rounded-2xl bg-gray-900 border border-gray-800 hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/5 transition-all cursor-pointer transform hover:-translate-y-1"
+                className="group relative flex flex-col justify-between p-6 rounded-2xl bg-card border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer transform hover:-translate-y-1 shadow-sm"
               >
                 <div>
                   <div className="flex items-start justify-between gap-4 mb-3">
-                    <h3 className="font-bold text-lg text-white group-hover:text-amber-400 transition-colors">
+                    <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
                       {service.name}
                     </h3>
-                    <span className="text-lg font-black text-amber-400 whitespace-nowrap bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                    <span className="text-lg font-black text-primary whitespace-nowrap bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">
                       {formatPrice(service.price)}
                     </span>
                   </div>
                   {service.description && (
-                    <p className="text-xs text-gray-400 mb-4 line-clamp-2">
+                    <p className="text-xs text-muted-foreground mb-4 line-clamp-2">
                       {service.description}
                     </p>
                   )}
                 </div>
 
-                <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between text-xs">
-                  <span className="inline-flex items-center gap-1.5 text-gray-300">
-                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <div className="pt-4 border-t border-border flex items-center justify-between text-xs">
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
                     {service.duration} minutos
                   </span>
 
@@ -500,7 +547,7 @@ export default function PublicServicesCatalog({
                       e.stopPropagation()
                       handleSelectService(service)
                     }}
-                    className="inline-flex items-center gap-1.5 font-bold text-xs bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-2 rounded-xl transition-all shadow-md group-hover:scale-105"
+                    className="inline-flex items-center gap-1.5 font-bold text-xs bg-primary hover:bg-primary/90 text-primary-foreground px-3.5 py-2 rounded-xl transition-all shadow-sm group-hover:scale-105"
                   >
                     <span>Selecionar e Agendar</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -516,24 +563,24 @@ export default function PublicServicesCatalog({
       {/* MODAL WIZARD: ESPECIALISTA -> HORÁRIO -> DADOS -> CONCLUÍDO */}
       {/* ============================================================== */}
       {isModalOpen && selectedService && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in overflow-y-auto">
-          <div className="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col my-8 max-h-[92vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in overflow-y-auto">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col my-8 max-h-[92vh] text-foreground">
             
             {/* Header do Wizard */}
-            <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between bg-gray-950/60 sticky top-0 z-10">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/40 sticky top-0 z-10">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                   <CalendarCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-base">Agendamento Online</h3>
-                  <p className="text-xs text-gray-400">{tenantName}</p>
+                  <h3 className="font-bold text-foreground text-base">Agendamento Online</h3>
+                  <p className="text-xs text-muted-foreground">{tenantName}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition cursor-pointer"
+                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -541,33 +588,33 @@ export default function PublicServicesCatalog({
 
             {/* Stepper Progress Bar */}
             {step < 4 && (
-              <div className="px-6 pt-4 pb-2 bg-gray-950/40 border-b border-gray-800/60">
+              <div className="px-6 pt-4 pb-2 bg-muted/20 border-b border-border">
                 <div className="flex items-center justify-between text-xs font-semibold mb-2">
-                  <span className={step >= 1 ? 'text-amber-400' : 'text-gray-500'}>
+                  <span className={step >= 1 ? 'text-primary' : 'text-muted-foreground'}>
                     1. Especialista
                   </span>
-                  <span className={step >= 2 ? 'text-amber-400' : 'text-gray-500'}>
+                  <span className={step >= 2 ? 'text-primary' : 'text-muted-foreground'}>
                     2. Horário
                   </span>
-                  <span className={step >= 3 ? 'text-amber-400' : 'text-gray-500'}>
+                  <span className={step >= 3 ? 'text-primary' : 'text-muted-foreground'}>
                     3. Confirmação
                   </span>
                 </div>
-                <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
                   <div
-                    className="bg-amber-400 h-full transition-all duration-300"
+                    className="bg-primary h-full transition-all duration-300"
                     style={{ width: `${(step / 3) * 100}%` }}
                   />
                 </div>
 
                 {/* Resumo do Serviço selecionado no topo do modal */}
-                <div className="mt-3 py-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-xs">
+                <div className="mt-3 py-2 px-3 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <Scissors className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="font-bold text-white">{selectedService.name}</span>
-                    <span className="text-gray-400">• {selectedService.duration} min</span>
+                    <Scissors className="w-3.5 h-3.5 text-primary" />
+                    <span className="font-bold text-foreground">{selectedService.name}</span>
+                    <span className="text-muted-foreground">• {selectedService.duration} min</span>
                   </div>
-                  <span className="font-extrabold text-amber-400">
+                  <span className="font-extrabold text-primary">
                     {formatPrice(selectedService.price)}
                   </span>
                 </div>
@@ -589,10 +636,10 @@ export default function PublicServicesCatalog({
               {step === 1 && (
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-sm sm:text-base font-bold text-white">
+                    <h4 className="text-sm sm:text-base font-bold text-foreground">
                       Com qual especialista você deseja ser atendido?
                     </h4>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       Selecione seu profissional favorito ou opte pelo primeiro horário disponível.
                     </p>
                   </div>
@@ -601,16 +648,16 @@ export default function PublicServicesCatalog({
                     {/* Opção Qualquer Especialista */}
                     <div
                       onClick={() => handleSelectBarber(null, true)}
-                      className="p-4 rounded-2xl border border-gray-800 bg-gray-800/40 hover:bg-gray-800 hover:border-amber-500/60 transition-all cursor-pointer flex items-center gap-3.5 group"
+                      className="p-4 rounded-2xl border border-border bg-card hover:bg-muted/60 hover:border-primary/50 transition-all cursor-pointer flex items-center gap-3.5 group shadow-sm"
                     >
-                      <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform shrink-0">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform shrink-0">
                         <Sparkles className="w-6 h-6" />
                       </div>
                       <div>
-                        <div className="font-bold text-sm text-white group-hover:text-amber-400 transition-colors">
+                        <div className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">
                           Primeiro Disponível
                         </div>
-                        <div className="text-[11px] text-gray-400 mt-0.5">
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
                           Maior flexibilidade de horários livres
                         </div>
                       </div>
@@ -621,24 +668,24 @@ export default function PublicServicesCatalog({
                       <div
                         key={barber.id}
                         onClick={() => handleSelectBarber(barber, false)}
-                        className="p-4 rounded-2xl border border-gray-800 bg-gray-800/40 hover:bg-gray-800 hover:border-amber-500/60 transition-all cursor-pointer flex items-center gap-3.5 group"
+                        className="p-4 rounded-2xl border border-border bg-card hover:bg-muted/60 hover:border-primary/50 transition-all cursor-pointer flex items-center gap-3.5 group shadow-sm"
                       >
                         {barber.avatar ? (
                           <img
                             src={barber.avatar}
                             alt={barber.name}
-                            className="w-12 h-12 rounded-2xl object-cover border border-amber-500/30 group-hover:scale-105 transition-transform shrink-0"
+                            className="w-12 h-12 rounded-2xl object-cover border border-primary/30 group-hover:scale-105 transition-transform shrink-0"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-2xl bg-gray-700 flex items-center justify-center text-amber-400 font-bold text-base shrink-0">
+                          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-base shrink-0">
                             <User className="w-6 h-6" />
                           </div>
                         )}
                         <div className="overflow-hidden">
-                          <div className="font-bold text-sm text-white group-hover:text-amber-400 transition-colors truncate">
+                          <div className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                             {barber.name}
                           </div>
-                          <div className="text-[11px] text-gray-400 truncate">
+                          <div className="text-[11px] text-muted-foreground truncate">
                             {barber.bio || 'Barbeiro Profissional'}
                           </div>
                         </div>
@@ -655,12 +702,12 @@ export default function PublicServicesCatalog({
                 <div className="space-y-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm sm:text-base font-bold text-white">
+                      <h4 className="text-sm sm:text-base font-bold text-foreground">
                         Escolha a data e o horário
                       </h4>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Especialista:{' '}
-                        <span className="text-amber-400 font-semibold">
+                        <span className="text-primary font-semibold">
                           {selectedBarber ? selectedBarber.name : 'Primeiro Disponível'}
                         </span>
                       </p>
@@ -669,7 +716,7 @@ export default function PublicServicesCatalog({
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="text-xs text-gray-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
                       Trocar profissional
@@ -678,12 +725,15 @@ export default function PublicServicesCatalog({
 
                   {/* Carrossel de Datas dos Próximos 14 Dias */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-2">
+                    <label className="block text-xs font-semibold text-foreground mb-2">
                       1. Selecione o Dia:
                     </label>
-                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-800">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted">
                       {daysList.map((day) => {
                         const isSelected = activeDate === day.dateStr
+                        const dayConfig = getDayOperatingHours(operatingHours, day.dateObj)
+                        const isBarberAvailable = selectedBarber ? isBarberWorkingOnDay(selectedBarber.id, barberWorkDays, day.dateObj) : true
+                        const isClosedDay = !dayConfig.isOpen || !isBarberAvailable
                         return (
                           <button
                             key={day.dateStr}
@@ -694,16 +744,22 @@ export default function PublicServicesCatalog({
                             }}
                             className={`flex flex-col items-center justify-center min-w-[70px] py-3 px-2 rounded-2xl border transition-all cursor-pointer shrink-0 ${
                               isSelected
-                                ? 'bg-amber-500 text-black font-extrabold border-amber-400 shadow-lg shadow-amber-500/20'
-                                : 'bg-gray-800/80 border-gray-700/80 text-gray-300 hover:bg-gray-800 hover:border-gray-600'
+                                ? 'bg-primary text-primary-foreground font-extrabold border-primary shadow-sm'
+                                : isClosedDay
+                                ? 'bg-muted/20 border-border text-muted-foreground/50 opacity-50 hover:opacity-75'
+                                : 'bg-muted/40 border-border text-foreground hover:bg-muted hover:border-primary/50'
                             }`}
                           >
                             <span className="text-[10px] uppercase font-bold tracking-wider">
                               {day.dayOfWeek}
                             </span>
                             <span className="text-lg font-black my-0.5">{day.dayNumber}</span>
-                            <span className="text-[9px] uppercase font-semibold">
-                              {day.monthStr}
+                            <span
+                              className={`text-[9px] uppercase font-semibold ${
+                                isClosedDay ? 'text-rose-500/80' : ''
+                              }`}
+                            >
+                              {isClosedDay ? 'Fechado' : day.monthStr}
                             </span>
                           </button>
                         )
@@ -713,13 +769,25 @@ export default function PublicServicesCatalog({
 
                   {/* Grade de Horários Livres */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-2">
+                    <label className="block text-xs font-semibold text-foreground mb-2">
                       2. Selecione o Horário Disponível:
                     </label>
 
                     {availableSlots.length === 0 ? (
-                      <div className="p-6 rounded-2xl bg-gray-800/40 border border-gray-800 text-center text-xs text-gray-400">
-                        Nenhum horário livre encontrado para este dia. Por favor, selecione outra data acima.
+                      <div className="p-6 rounded-2xl bg-muted/40 border border-border text-center text-xs text-muted-foreground">
+                        {(() => {
+                          const [y, m, d] = activeDate.split('-').map(Number)
+                          const checkDate = new Date(y, m - 1, d, 12, 0, 0)
+                          const dayConfig = getDayOperatingHours(operatingHours, checkDate)
+                          const isBarberAvailable = selectedBarber ? isBarberWorkingOnDay(selectedBarber.id, barberWorkDays, checkDate) : true
+                          if (!dayConfig.isOpen) {
+                            return 'Barbearia fechada neste dia da semana. Por favor, selecione outra data acima com atendimento ativo.'
+                          }
+                          if (!isBarberAvailable) {
+                            return `${selectedBarber?.name.split(' ')[0]} não está disponível para atendimentos neste dia da semana. Selecione outra data acima.`
+                          }
+                          return 'Nenhum horário livre encontrado para este dia com o profissional selecionado. Por favor, selecione outra data acima.'
+                        })()}
                       </div>
                     ) : (
                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-56 overflow-y-auto pr-1">
@@ -732,11 +800,11 @@ export default function PublicServicesCatalog({
                               onClick={() => handleSelectTime(slot.time, activeDate)}
                               className={`py-2.5 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1 cursor-pointer ${
                                 isSelected
-                                  ? 'bg-amber-500 text-black border-amber-400 shadow-md'
-                                  : 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 hover:border-amber-500/50 hover:text-white'
+                                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                  : 'bg-muted/40 border-border text-foreground hover:bg-muted hover:border-primary/50'
                               }`}
                             >
-                              <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                              <Clock className="w-3 h-3 text-primary shrink-0" />
                               <span>{slot.time}</span>
                             </button>
                           )
@@ -754,17 +822,17 @@ export default function PublicServicesCatalog({
                 <form onSubmit={handleConfirmBooking} className="space-y-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm sm:text-base font-bold text-white">
+                      <h4 className="text-sm sm:text-base font-bold text-foreground">
                         Confirmar dados e informações de agendamento
                       </h4>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Confira o resumo do seu atendimento e informe seus dados para conclusão imediata.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      className="text-xs text-gray-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
                       Alterar horário
@@ -772,22 +840,22 @@ export default function PublicServicesCatalog({
                   </div>
 
                   {/* Card de Resumo Completo */}
-                  <div className="p-4 rounded-2xl bg-gray-800/70 border border-gray-700 space-y-3">
-                    <div className="flex items-center justify-between border-b border-gray-700/70 pb-3">
+                  <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-3">
+                    <div className="flex items-center justify-between border-b border-border pb-3">
                       <div>
-                        <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                           Serviço
                         </span>
-                        <div className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
-                          <Scissors className="w-4 h-4 text-amber-400" />
+                        <div className="font-bold text-foreground text-sm sm:text-base flex items-center gap-2">
+                          <Scissors className="w-4 h-4 text-primary" />
                           {selectedService.name}
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                           Valor
                         </span>
-                        <div className="font-extrabold text-amber-400 text-base">
+                        <div className="font-extrabold text-primary text-base">
                           {formatPrice(selectedService.price)}
                         </div>
                       </div>
@@ -795,23 +863,23 @@ export default function PublicServicesCatalog({
 
                     <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
                       <div>
-                        <span className="text-gray-400 block text-[11px]">Especialista</span>
-                        <span className="font-bold text-gray-200 flex items-center gap-1.5 mt-0.5">
-                          <User className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-muted-foreground block text-[11px]">Especialista</span>
+                        <span className="font-bold text-foreground flex items-center gap-1.5 mt-0.5">
+                          <User className="w-3.5 h-3.5 text-primary" />
                           {selectedBarber ? selectedBarber.name : 'Primeiro Disponível'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400 block text-[11px]">Data & Horário</span>
-                        <span className="font-bold text-gray-200 flex items-center gap-1.5 mt-0.5">
-                          <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-muted-foreground block text-[11px]">Data & Horário</span>
+                        <span className="font-bold text-foreground flex items-center gap-1.5 mt-0.5">
+                          <Calendar className="w-3.5 h-3.5 text-primary" />
                           {formatDateFriendly(activeDate)} às {selectedTime}
                         </span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-gray-400 block text-[11px]">Localização</span>
-                        <span className="font-medium text-gray-300 flex items-center gap-1.5 mt-0.5">
-                          <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="text-muted-foreground block text-[11px]">Localização</span>
+                        <span className="font-medium text-foreground flex items-center gap-1.5 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                           {tenantAddress || tenantName}
                         </span>
                       </div>
@@ -821,57 +889,57 @@ export default function PublicServicesCatalog({
                   {/* Formulário de Identificação do Cliente */}
                   <div className="space-y-3.5">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                      <label className="block text-xs font-semibold text-foreground mb-1.5">
                         Seu Nome Completo *
                       </label>
                       <div className="relative">
-                        <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <User className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
                           required
                           placeholder="Ex: Carlos Eduardo Silva"
                           value={clientName}
                           onChange={(e) => setClientName(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-amber-400 transition"
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                      <label className="block text-xs font-semibold text-foreground mb-1.5">
                         WhatsApp para Confirmação *
                       </label>
                       <div className="relative">
-                        <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <Phone className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="tel"
                           required
                           placeholder="(11) 98765-4321"
                           value={clientPhone}
                           onChange={(e) => handlePhoneChange(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-amber-400 transition font-mono"
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition font-mono"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                      <label className="block text-xs font-semibold text-foreground mb-1.5">
                         E-mail (Opcional)
                       </label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <Mail className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="email"
                           placeholder="seu.email@exemplo.com"
                           value={clientEmail}
                           onChange={(e) => setClientEmail(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-amber-400 transition"
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                      <label className="block text-xs font-semibold text-foreground mb-1.5">
                         Observações / Detalhes (Opcional)
                       </label>
                       <input
@@ -879,34 +947,34 @@ export default function PublicServicesCatalog({
                         placeholder="Ex: Prefiro acabamento navalhado, disfarçado alto..."
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-amber-400 transition"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition"
                       />
                     </div>
                   </div>
 
                   {/* Botões do Rodapé de Confirmação */}
-                  <div className="pt-4 border-t border-gray-800 flex items-center justify-end gap-3">
+                  <div className="pt-4 border-t border-border flex items-center justify-end gap-3">
                     <button
                       type="button"
                       onClick={() => setStep(2)}
                       disabled={loading}
-                      className="px-4 py-2.5 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
                     >
                       Voltar
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full sm:w-auto px-7 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="w-full sm:w-auto px-7 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       {loading ? (
                         <>
-                          <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                          <RefreshCw className="w-4 h-4 animate-spin text-primary-foreground" />
                           <span>Concluindo agendamento...</span>
                         </>
                       ) : (
                         <>
-                          <Check className="w-4 h-4 text-black stroke-[3]" />
+                          <Check className="w-4 h-4 text-primary-foreground stroke-[3]" />
                           <span>Concluir Agendamento</span>
                         </>
                       )}
@@ -920,49 +988,49 @@ export default function PublicServicesCatalog({
               {/* ============================================================== */}
               {step === 4 && completedAppointment && (
                 <div className="text-center py-6 space-y-6 animate-in zoom-in-95">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 mx-auto shadow-lg shadow-emerald-500/20 animate-bounce">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto shadow-sm">
                     <CheckCircle2 className="w-9 h-9" />
                   </div>
 
                   <div>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
                       Agendamento Confirmado
                     </span>
-                    <h4 className="text-2xl font-black text-white mt-2">
+                    <h4 className="text-2xl font-black text-foreground mt-2">
                       Tudo pronto para seu atendimento!
                     </h4>
-                    <p className="text-xs sm:text-sm text-gray-400 mt-1 max-w-md mx-auto">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md mx-auto">
                       Seu horário foi reservado no sistema da {tenantName}. Um lembrete foi enviado para o seu WhatsApp.
                     </p>
                   </div>
 
                   {/* Resumo do Voucher Concluído */}
-                  <div className="p-5 rounded-2xl bg-gray-800/80 border border-gray-700 text-left max-w-md mx-auto space-y-3 shadow-md">
-                    <div className="flex items-center justify-between border-b border-gray-700 pb-2.5">
-                      <span className="font-bold text-white text-sm">
+                  <div className="p-5 rounded-2xl bg-muted/40 border border-border text-left max-w-md mx-auto space-y-3 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-border pb-2.5">
+                      <span className="font-bold text-foreground text-sm">
                         {completedAppointment.service.name}
                       </span>
-                      <span className="font-extrabold text-amber-400 text-sm">
+                      <span className="font-extrabold text-primary text-sm">
                         {formatPrice(completedAppointment.service.price)}
                       </span>
                     </div>
 
-                    <div className="text-xs space-y-1.5 text-gray-300">
+                    <div className="text-xs space-y-1.5 text-muted-foreground">
                       <div className="flex items-center gap-2">
-                        <User className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Profissional: <strong>{completedAppointment.barber.name}</strong></span>
+                        <User className="w-3.5 h-3.5 text-primary" />
+                        <span>Profissional: <strong className="text-foreground">{completedAppointment.barber.name}</strong></span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Data: <strong>{formatDateFriendly(completedAppointment.dateStr)} às {completedAppointment.timeStr}</strong></span>
+                        <Calendar className="w-3.5 h-3.5 text-primary" />
+                        <span>Data: <strong className="text-foreground">{formatDateFriendly(completedAppointment.dateStr)} às {completedAppointment.timeStr}</strong></span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Local: {tenantAddress || tenantName}</span>
+                        <MapPin className="w-3.5 h-3.5 text-primary" />
+                        <span>Local: <span className="text-foreground">{tenantAddress || tenantName}</span></span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Cliente: {completedAppointment.clientName} ({completedAppointment.clientPhone})</span>
+                        <Phone className="w-3.5 h-3.5 text-primary" />
+                        <span>Cliente: <span className="text-foreground">{completedAppointment.clientName} ({completedAppointment.clientPhone})</span></span>
                       </div>
                     </div>
                   </div>
@@ -985,9 +1053,9 @@ export default function PublicServicesCatalog({
                       href={getGoogleCalendarUrl()}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white text-xs font-semibold transition cursor-pointer"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-muted hover:bg-muted/80 border border-border text-foreground text-xs font-semibold transition cursor-pointer"
                     >
-                      <CalendarCheck className="w-4 h-4 text-amber-400" />
+                      <CalendarCheck className="w-4 h-4 text-primary" />
                       <span>Adicionar ao Google Agenda</span>
                     </a>
 
@@ -997,7 +1065,7 @@ export default function PublicServicesCatalog({
                         setIsModalOpen(false)
                         setStep(1)
                       }}
-                      className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition cursor-pointer shadow-md"
+                      className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition cursor-pointer shadow-sm"
                     >
                       Concluir
                     </button>

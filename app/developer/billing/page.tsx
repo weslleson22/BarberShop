@@ -28,6 +28,17 @@ import {
   Trash2,
   AlertCircle
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
 
 interface SubscriptionItem {
   id: string
@@ -170,163 +181,169 @@ function DeveloperBillingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
 
       <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#374151] pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div>
-            <div className="flex items-center gap-2 text-white text-xs font-bold uppercase tracking-wider mb-1.5">
-              <span className="p-1 rounded bg-[#2563eb] text-white"><CreditCard className="w-3.5 h-3.5" /></span>
-              <span>SaaS Billing & Revenue</span>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Badge variant="outline" className="text-primary bg-primary/10 border-primary/20 text-xs font-semibold gap-1.5">
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>SaaS Billing & Revenue</span>
+              </Badge>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white">Faturamento & Cobranças da Plataforma</h1>
-            <p className="text-sm md:text-base text-white font-medium mt-1">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Faturamento & Cobranças da Plataforma</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-1">
               Visão macro de receita recorrente (MRR), assinaturas ativas, trials e faturas emitidas.
             </p>
           </div>
 
-          <button
+          <Button
             onClick={loadBillingData}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs md:text-sm font-bold rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6] transition cursor-pointer self-start sm:self-auto"
+            className="gap-2 shadow-sm self-start sm:self-auto"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             <span>Atualizar dados</span>
-          </button>
+          </Button>
         </div>
 
         {/* Global Financial Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-2">
-              <span>MRR Estimado</span>
-              <span className="p-1 rounded bg-[#059669] text-white"><DollarSign className="w-4 h-4 stroke-[2.5]" /></span>
-            </div>
-            <div className="text-3xl font-extrabold text-white">{formatPrice(mrr)}</div>
-            <span className="text-xs text-white font-bold mt-2 block">
-              {activeSubs.length} assinaturas ativas pagantes
-            </span>
-          </div>
+          <Card className="border-border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-2">
+                <span>MRR Estimado</span>
+                <span className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <DollarSign className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">{formatPrice(mrr)}</div>
+              <span className="text-xs text-muted-foreground font-medium mt-1.5 block">
+                {activeSubs.length} assinaturas ativas pagantes
+              </span>
+            </CardContent>
+          </Card>
 
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-2">
-              <span>Receita Total Recebida</span>
-              <span className="p-1 rounded bg-[#2563eb] text-white"><TrendingUp className="w-4 h-4 stroke-[2.5]" /></span>
-            </div>
-            <div className="text-3xl font-extrabold text-white">{formatPrice(totalRevenue)}</div>
-            <span className="text-xs text-white font-bold mt-2 block">
-              {paidInvoices.length} faturas liquidadas
-            </span>
-          </div>
+          <Card className="border-border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-2">
+                <span>Receita Total Recebida</span>
+                <span className="p-1.5 rounded-md bg-primary/10 text-primary">
+                  <TrendingUp className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">{formatPrice(totalRevenue)}</div>
+              <span className="text-xs text-muted-foreground font-medium mt-1.5 block">
+                {paidInvoices.length} faturas liquidadas
+              </span>
+            </CardContent>
+          </Card>
 
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-2">
-              <span>Contas em Trial</span>
-              <span className="p-1 rounded bg-[#d97706] text-white"><Clock className="w-4 h-4 stroke-[2.5]" /></span>
-            </div>
-            <div className="text-3xl font-extrabold text-white">{trialingSubs.length}</div>
-            <span className="text-xs text-white font-bold mt-2 block">
-              Período de 30 dias ativo
-            </span>
-          </div>
+          <Card className="border-border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-2">
+                <span>Contas em Trial</span>
+                <span className="p-1.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Clock className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">{trialingSubs.length}</div>
+              <span className="text-xs text-muted-foreground font-medium mt-1.5 block">
+                Período de 30 dias ativo
+              </span>
+            </CardContent>
+          </Card>
 
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-white text-xs font-bold uppercase tracking-wider mb-2">
-              <span>Inadimplentes (Past Due)</span>
-              <span className="p-1 rounded bg-[#dc2626] text-white"><AlertTriangle className="w-4 h-4 stroke-[2.5]" /></span>
-            </div>
-            <div className="text-3xl font-extrabold text-white">{pastDueSubs.length}</div>
-            <span className="text-xs text-white font-bold mt-2 block">
-              Requer atenção operacional
-            </span>
-          </div>
+          <Card className="border-border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between text-muted-foreground text-xs font-medium uppercase tracking-wider mb-2">
+                <span>Inadimplentes (Past Due)</span>
+                <span className="p-1.5 rounded-md bg-destructive/10 text-destructive">
+                  <AlertTriangle className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">{pastDueSubs.length}</div>
+              <span className="text-xs text-muted-foreground font-medium mt-1.5 block">
+                Requer atenção operacional
+              </span>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center justify-between border-b border-[#374151] pb-4 gap-4 flex-wrap">
+        <div className="flex items-center justify-between border-b border-border pb-4 gap-4 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            <button
+            <Button
+              variant={activeTab === 'cobrancas' ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('cobrancas')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border ${
-                activeTab === 'cobrancas'
-                  ? 'bg-[#2563eb] text-white border-[#3b82f6]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
-              }`}
+              className="gap-1.5 h-9"
             >
-              <CreditCard className="w-3.5 h-3.5 stroke-[2.5]" />
+              <CreditCard className="w-3.5 h-3.5" />
               <span>Cobranças Gateway</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={activeTab === 'produtos' ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('produtos')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border ${
-                activeTab === 'produtos'
-                  ? 'bg-[#2563eb] text-white border-[#3b82f6]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
-              }`}
+              className="gap-1.5 h-9"
             >
-              <Package className="w-3.5 h-3.5 stroke-[2.5]" />
+              <Package className="w-3.5 h-3.5" />
               <span>Produtos & Planos</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={activeTab === 'clientes' ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('clientes')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border ${
-                activeTab === 'clientes'
-                  ? 'bg-[#2563eb] text-white border-[#3b82f6]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
-              }`}
+              className="gap-1.5 h-9"
             >
-              <Users className="w-3.5 h-3.5 stroke-[2.5]" />
+              <Users className="w-3.5 h-3.5" />
               <span>Clientes Gateway</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={activeTab === 'subscriptions' ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('subscriptions')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border ${
-                activeTab === 'subscriptions'
-                  ? 'bg-[#2563eb] text-white border-[#3b82f6]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
-              }`}
+              className="gap-1.5 h-9"
             >
-              <Receipt className="w-3.5 h-3.5 stroke-[2.5]" />
+              <Receipt className="w-3.5 h-3.5" />
               <span>Assinaturas SaaS ({subscriptions.length})</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={activeTab === 'invoices' ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('invoices')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border ${
-                activeTab === 'invoices'
-                  ? 'bg-[#2563eb] text-white border-[#3b82f6]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
-              }`}
+              className="gap-1.5 h-9"
             >
-              <FileText className="w-3.5 h-3.5 stroke-[2.5]" />
+              <FileText className="w-3.5 h-3.5" />
               <span>Faturas & Invoices ({invoices.length})</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant={activeTab === 'checkout' ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('checkout')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border ${
-                activeTab === 'checkout'
-                  ? 'bg-[#059669] text-white border-[#10b981]'
-                  : 'bg-[#111827] text-white border-[#374151] hover:bg-[#1f2937]'
-              }`}
+              className="gap-1.5 h-9"
             >
-              <Sliders className="w-3.5 h-3.5 stroke-[2.5]" />
+              <Sliders className="w-3.5 h-3.5" />
               <span>Personalizar Checkout</span>
-            </button>
+            </Button>
           </div>
 
           {activeTab === 'subscriptions' && (
             <div className="flex items-center gap-2">
-              <label className="text-xs text-white font-bold">Filtro:</label>
+              <label className="text-xs text-muted-foreground font-medium">Filtro:</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-xs bg-[#111827] border border-[#374151] rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-[#2563eb]"
+                className="text-xs bg-background border border-border rounded-lg px-3 py-2 text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="ALL">Todos os status</option>
                 <option value="ACTIVE">Ativos</option>
@@ -352,189 +369,205 @@ function DeveloperBillingContent() {
 
         {/* Subscriptions Table */}
         {activeTab === 'subscriptions' && (
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl p-6 md:p-8 shadow-sm">
-            {loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className="h-14 bg-[#030712] rounded-xl border border-[#374151]" />
-                ))}
-              </div>
-            ) : filteredSubscriptions.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-[#374151] rounded-xl">
-                <Users className="w-8 h-8 text-white mx-auto mb-2 opacity-50" />
-                <p className="text-sm font-bold text-white">Nenhuma assinatura encontrada no filtro atual.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-[#374151] bg-[#030712] text-xs text-white uppercase tracking-wider font-bold">
-                      <th className="py-3 px-4 font-bold">Barbearia</th>
-                      <th className="py-3 px-4 font-bold">Plano</th>
-                      <th className="py-3 px-4 font-bold">Valor / Ciclo</th>
-                      <th className="py-3 px-4 font-bold">Status</th>
-                      <th className="py-3 px-4 font-bold">Trial / Fim Período</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#374151] bg-[#111827] text-white">
-                    {filteredSubscriptions.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-[#1f2937] transition-colors">
-                        <td className="py-3.5 px-4">
-                          <div className="font-bold text-white text-xs md:text-sm">
-                            {sub.barbershop?.name || 'Barbearia'}
-                          </div>
-                          <div className="text-xs text-white font-mono mt-0.5">
-                            /b/{sub.barbershop?.slug || sub.barbershop?.id}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 text-xs text-white font-bold">
-                          {sub.plan?.name || 'Plano Padrão'}
-                        </td>
-                        <td className="py-3.5 px-4 text-xs text-white font-bold">
-                          {formatPrice(Number(sub.plan?.price || 0))}
-                          <span className="text-[11px] text-white font-medium ml-1">
-                            /{sub.plan?.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          {sub.status === 'ACTIVE' ? (
-                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#059669] text-white border border-[#10b981]">
-                              Ativo
+          <Card className="shadow-sm">
+            <CardContent className="p-6">
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="h-14 bg-muted/40 rounded-xl border border-border animate-pulse" />
+                  ))}
+                </div>
+              ) : filteredSubscriptions.length === 0 ? (
+                <div className="text-center py-12 border border-dashed border-border rounded-xl">
+                  <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                  <p className="text-sm font-medium text-muted-foreground">Nenhuma assinatura encontrada no filtro atual.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30">
+                        <TableHead className="font-semibold text-xs uppercase">Barbearia</TableHead>
+                        <TableHead className="font-semibold text-xs uppercase">Plano</TableHead>
+                        <TableHead className="font-semibold text-xs uppercase">Valor / Ciclo</TableHead>
+                        <TableHead className="font-semibold text-xs uppercase">Status</TableHead>
+                        <TableHead className="font-semibold text-xs uppercase">Trial / Fim Período</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSubscriptions.map((sub) => (
+                        <TableRow key={sub.id}>
+                          <TableCell>
+                            <div className="font-semibold text-foreground text-sm">
+                              {sub.barbershop?.name || 'Barbearia'}
+                            </div>
+                            <div className="text-xs text-muted-foreground font-mono mt-0.5">
+                              /b/{sub.barbershop?.slug || sub.barbershop?.id}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-foreground font-medium">
+                            {sub.plan?.name || 'Plano Padrão'}
+                          </TableCell>
+                          <TableCell className="text-xs text-foreground font-medium">
+                            {formatPrice(Number(sub.plan?.price || 0))}
+                            <span className="text-[11px] text-muted-foreground font-normal ml-1">
+                              /{sub.plan?.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
                             </span>
-                          ) : sub.status === 'TRIALING' ? (
-                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#d97706] text-white border border-[#f59e0b]">
-                              Trial
-                            </span>
-                          ) : sub.status === 'PAST_DUE' ? (
-                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#dc2626] text-white border border-[#ef4444]">
-                              Past Due
-                            </span>
-                          ) : (
-                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#1f2937] text-white border border-[#374151]">
-                              {sub.status}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-xs text-white font-bold">
-                          {formatDate(sub.trialEnd || sub.currentPeriodEnd)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                          </TableCell>
+                          <TableCell>
+                            {sub.status === 'ACTIVE' ? (
+                              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs font-semibold">
+                                Ativo
+                              </Badge>
+                            ) : sub.status === 'TRIALING' ? (
+                              <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs font-semibold">
+                                Trial
+                              </Badge>
+                            ) : sub.status === 'PAST_DUE' ? (
+                              <Badge variant="destructive" className="text-xs font-semibold">
+                                Inadimplente
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs font-semibold">
+                                {sub.status}
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground font-normal">
+                            {formatDate(sub.trialEnd || sub.currentPeriodEnd)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Invoices Table */}
         {activeTab === 'invoices' && (
           <div className="space-y-4">
             {/* Aviso e atalho para gestão de produtos */}
-            <div className="bg-[#111827] border border-[#374151] rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5 text-white font-semibold">
-                <span className="p-1 rounded bg-[#059669] text-white"><Package className="w-4 h-4 shrink-0" /></span>
+            <Card className="p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 text-foreground font-medium">
+                <span className="p-1 rounded bg-primary/10 text-primary"><Package className="w-4 h-4 shrink-0" /></span>
                 <span>
                   Procurando os produtos e planos da <strong>AbacatePay</strong> para criar ou <strong>excluir</strong>?
                 </span>
               </div>
-              <button
+              <Button
                 type="button"
+                size="sm"
                 onClick={() => setActiveTab('produtos')}
-                className="px-4 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 border border-[#10b981]"
+                className="gap-1.5 shrink-0 h-9"
               >
                 <Package className="w-3.5 h-3.5" />
                 <span>Gerenciar Produtos na AbacatePay</span>
-              </button>
-            </div>
+              </Button>
+            </Card>
 
-            <div className="bg-[#111827] border border-[#374151] rounded-2xl p-6 md:p-8 shadow-sm">
-              {loading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((n) => (
-                    <div key={n} className="h-14 bg-[#030712] rounded-xl border border-[#374151]" />
-                  ))}
-                </div>
-              ) : invoices.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-[#374151] rounded-xl">
-                  <FileText className="w-8 h-8 text-white mx-auto mb-2 opacity-50" />
-                  <p className="text-sm font-bold text-white">Nenhuma fatura registrada na plataforma.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-[#374151] bg-[#030712] text-xs text-white uppercase tracking-wider font-bold">
-                        <th className="py-3 px-4 font-bold">Barbearia</th>
-                        <th className="py-3 px-4 font-bold"># Sequência</th>
-                        <th className="py-3 px-4 font-bold">Valor</th>
-                        <th className="py-3 px-4 font-bold">Status</th>
-                        <th className="py-3 px-4 font-bold">Vencimento</th>
-                        <th className="py-3 px-4 font-bold">Pagamento</th>
-                        <th className="py-3 px-4 font-bold text-right">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#374151] bg-[#111827] text-white">
-                    {invoices.map((inv, idx) => (
-                      <tr key={inv.id} className="hover:bg-[#1f2937] transition-colors">
-                        <td className="py-3.5 px-4 text-xs font-bold text-white">
-                          {inv.barbershop?.name || 'Barbearia'}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-xs text-white font-bold">
-                          #{String(idx + 1).padStart(3, '0')}
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-white text-xs">
-                          {formatPrice(Number(inv.amount))}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          {inv.status === 'PAID' ? (
-                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#059669] text-white border border-[#10b981]">
-                              Pago
-                            </span>
-                          ) : inv.status === 'PENDING' ? (
-                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#d97706] text-white border border-[#f59e0b]">
-                              Pendente
-                            </span>
-                          ) : (
-                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#dc2626] text-white border border-[#ef4444]">
-                              {inv.status}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-xs text-white font-medium">{formatDate(inv.dueDate)}</td>
-                        <td className="py-3.5 px-4 text-xs text-white font-medium">{formatDate(inv.paidAt)}</td>
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {inv.hostedInvoiceUrl ? (
-                              <a
-                                href={inv.hostedInvoiceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs text-white font-bold bg-[#2563eb] hover:bg-[#1d4ed8] px-3 py-1.5 rounded-lg border border-[#3b82f6]"
-                              >
-                                <span>Recibo</span>
-                                <ExternalLink className="w-3 h-3 stroke-[2.5]" />
-                              </a>
-                            ) : null}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteInvoice(inv.id)}
-                              className="p-1.5 rounded-lg text-white bg-[#dc2626] hover:bg-[#b91c1c] border border-[#ef4444] transition cursor-pointer"
-                              title="Excluir fatura"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+            <Card className="shadow-sm">
+              <CardContent className="p-6">
+                {loading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((n) => (
+                      <div key={n} className="h-14 bg-muted/40 rounded-xl border border-border animate-pulse" />
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                  </div>
+                ) : invoices.length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-border rounded-xl">
+                    <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                    <p className="text-sm font-medium text-muted-foreground">Nenhuma fatura registrada na plataforma.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30">
+                          <TableHead className="font-semibold text-xs uppercase">Barbearia</TableHead>
+                          <TableHead className="font-semibold text-xs uppercase"># Sequência</TableHead>
+                          <TableHead className="font-semibold text-xs uppercase">Valor</TableHead>
+                          <TableHead className="font-semibold text-xs uppercase">Status</TableHead>
+                          <TableHead className="font-semibold text-xs uppercase">Vencimento</TableHead>
+                          <TableHead className="font-semibold text-xs uppercase">Pagamento</TableHead>
+                          <TableHead className="font-semibold text-xs uppercase text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {invoices.map((inv, idx) => (
+                          <TableRow key={inv.id}>
+                            <TableCell className="text-xs font-semibold text-foreground">
+                              {inv.barbershop?.name || 'Barbearia'}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs text-muted-foreground">
+                              #{String(idx + 1).padStart(3, '0')}
+                            </TableCell>
+                            <TableCell className="font-semibold text-foreground text-xs">
+                              {formatPrice(Number(inv.amount))}
+                            </TableCell>
+                            <TableCell>
+                              {inv.status === 'PAID' ? (
+                                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs font-semibold">
+                                  Pago
+                                </Badge>
+                              ) : inv.status === 'PENDING' ? (
+                                <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs font-semibold">
+                                  Pendente
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive" className="text-xs font-semibold">
+                                  {inv.status}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground font-normal">
+                              {formatDate(inv.dueDate)}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground font-normal">
+                              {formatDate(inv.paidAt)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {inv.hostedInvoiceUrl ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                    className="h-8 gap-1 text-xs"
+                                  >
+                                    <a
+                                      href={inv.hostedInvoiceUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <span>Recibo</span>
+                                      <ExternalLink className="w-3 h-3 stroke-[2.5]" />
+                                    </a>
+                                  </Button>
+                                ) : null}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteInvoice(inv.id)}
+                                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                  title="Excluir fatura"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      )}
+        )}
       </main>
     </div>
   )

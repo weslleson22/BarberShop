@@ -173,7 +173,7 @@ export default function DeveloperReportsPage() {
     : []
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors">
       <DropdownHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 space-y-8">
@@ -181,14 +181,14 @@ export default function DeveloperReportsPage() {
         <RealtimeNavTabs activeTab="reports" />
 
         {/* Barra Superior de Filtro de Período e Exportação */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#111827] border border-[#374151]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl bg-card border border-border shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#2563eb] text-white flex items-center justify-center font-bold">
-              <BarChart3 className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+              <BarChart3 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">Estatísticas Consolidadas</h3>
-              <p className="text-xs text-white font-medium mt-0.5">
+              <h3 className="font-semibold text-card-foreground text-base">Estatísticas Consolidadas</h3>
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">
                 Visualizando métricas consolidadas dos últimos {days} dias
               </p>
             </div>
@@ -196,7 +196,7 @@ export default function DeveloperReportsPage() {
 
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             {/* Seletor de Período */}
-            <div className="flex items-center gap-1 bg-[#030712] p-1 rounded-xl border border-[#374151] text-xs">
+            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border text-xs">
               {[
                 { label: '7 dias', val: 7 },
                 { label: '14 dias', val: 14 },
@@ -207,10 +207,10 @@ export default function DeveloperReportsPage() {
                   key={p.val}
                   type="button"
                   onClick={() => setDays(p.val)}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-md font-medium text-xs transition cursor-pointer ${
                     days === p.val
-                      ? 'bg-[#2563eb] text-white border border-[#1d4ed8]'
-                      : 'text-white hover:bg-[#1f2937]'
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                   {p.label}
@@ -223,9 +223,9 @@ export default function DeveloperReportsPage() {
               type="button"
               onClick={handleExportJSON}
               disabled={!data || loading}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold border border-[#1d4ed8] transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium shadow-xs transition cursor-pointer disabled:opacity-50"
             >
-              <Download className="w-3.5 h-3.5 text-white" />
+              <Download className="w-3.5 h-3.5" />
               <span>Exportar Dados</span>
             </button>
 
@@ -234,123 +234,123 @@ export default function DeveloperReportsPage() {
               type="button"
               onClick={() => fetchReports(days)}
               disabled={loading}
-              className="p-2 rounded-xl bg-[#1f2937] hover:bg-[#374151] text-white border border-[#374151] transition cursor-pointer"
+              className="p-2 rounded-lg bg-background hover:bg-muted text-foreground border border-border transition cursor-pointer"
               title="Recarregar dados"
             >
-              <RefreshCw className={`w-4 h-4 text-white ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-[#7f1d1d] border-2 border-[#ef4444] text-white text-xs font-bold flex items-center gap-2">
-            <XCircle className="w-5 h-5 text-white shrink-0" />
+          <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-center gap-2">
+            <XCircle className="w-5 h-5 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {/* KPI Cards de Resumo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Ações no Sistema
               </span>
-              <div className="w-9 h-9 rounded-xl bg-[#2563eb] text-white flex items-center justify-center font-bold">
-                <Activity className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                <Activity className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">
+              <span className="text-3xl font-bold text-card-foreground">
                 {data?.totals.periodLogsCount.toLocaleString('pt-BR') ?? '0'}
               </span>
-              <span className="text-xs text-white font-bold bg-[#2563eb] px-2 py-0.5 rounded">no período</span>
+              <span className="text-xs text-blue-700 dark:text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">no período</span>
             </div>
-            <p className="text-xs text-white font-medium mt-1">Registros processados pela auditoria</p>
+            <p className="text-xs text-muted-foreground font-normal mt-1">Registros processados pela auditoria</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Agendamentos ({days}d)
               </span>
-              <div className="w-9 h-9 rounded-xl bg-[#059669] text-white flex items-center justify-center font-bold">
-                <Calendar className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <Calendar className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">
+              <span className="text-3xl font-bold text-card-foreground">
                 {data?.totals.periodAppointmentsCount.toLocaleString('pt-BR') ?? '0'}
               </span>
-              <span className="text-xs text-white font-bold bg-[#059669] px-2 py-0.5 rounded">
+              <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                 {data?.statusCounts.COMPLETED ?? 0} concluídos
               </span>
             </div>
-            <p className="text-xs text-white font-medium mt-1">Total de reservas geradas no período</p>
+            <p className="text-xs text-muted-foreground font-normal mt-1">Total de reservas geradas no período</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Taxa de Conclusão
               </span>
-              <div className="w-9 h-9 rounded-xl bg-[#059669] text-white flex items-center justify-center font-bold">
-                <CheckCircle2 className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">
+              <span className="text-3xl font-bold text-card-foreground">
                 {data?.totals.completionRate ?? 0}%
               </span>
-              <span className="text-xs text-white font-bold bg-[#059669] px-2 py-0.5 rounded flex items-center gap-0.5">
-                <TrendingUp className="w-3.5 h-3.5 text-white" /> Eficiência
+              <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-0.5 border border-emerald-500/20">
+                <TrendingUp className="w-3.5 h-3.5" /> Eficiência
               </span>
             </div>
-            <p className="text-xs text-white font-medium mt-1">Agendamentos realizados com sucesso</p>
+            <p className="text-xs text-muted-foreground font-normal mt-1">Agendamentos realizados com sucesso</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Base Total Cadastrada
               </span>
-              <div className="w-9 h-9 rounded-xl bg-[#7c3aed] text-white flex items-center justify-center font-bold">
-                <Users className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                <Users className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">
+              <span className="text-3xl font-bold text-card-foreground">
                 {data?.totals.totalClients.toLocaleString('pt-BR') ?? '0'}
               </span>
-              <span className="text-xs text-white font-bold bg-[#7c3aed] px-2 py-0.5 rounded">clientes</span>
+              <span className="text-xs text-purple-700 dark:text-purple-400 font-semibold bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">clientes</span>
             </div>
-            <p className="text-xs text-white font-medium mt-1">
+            <p className="text-xs text-muted-foreground font-normal mt-1">
               {data?.totals.totalBarbershops ?? 0} barbearias ativas
             </p>
           </div>
         </div>
 
         {/* Gráfico 1: Evolução Diária de Atividade e Agendamentos */}
-        <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151] space-y-4">
+        <div className="p-6 rounded-xl bg-card border border-border shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-white" />
+              <h3 className="font-semibold text-card-foreground text-base flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary" />
                 Evolução Diária de Atividade na Plataforma
               </h3>
-              <p className="text-xs text-white font-medium mt-0.5">
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">
                 Comparativo de novos agendamentos vs ações auditadas por dia
               </p>
             </div>
-            <div className="flex items-center gap-4 text-xs font-bold">
-              <span className="inline-flex items-center gap-1.5 text-white">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span> Agendamentos
+            <div className="flex items-center gap-4 text-xs font-medium">
+              <span className="inline-flex items-center gap-1.5 text-foreground">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Agendamentos
               </span>
-              <span className="inline-flex items-center gap-1.5 text-white">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span> Concluídos
+              <span className="inline-flex items-center gap-1.5 text-foreground">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Concluídos
               </span>
-              <span className="inline-flex items-center gap-1.5 text-white">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span> Ações Globais
+              <span className="inline-flex items-center gap-1.5 text-foreground">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Ações Globais
               </span>
             </div>
           </div>
@@ -373,15 +373,15 @@ export default function DeveloperReportsPage() {
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                  <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 11, fill: '#ffffff' }} />
-                  <YAxis stroke="#9ca3af" tick={{ fontSize: 11, fill: '#ffffff' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="opacity-15" vertical={false} />
+                  <XAxis dataKey="date" stroke="currentColor" className="text-muted-foreground opacity-60" tick={{ fontSize: 11 }} />
+                  <YAxis stroke="currentColor" className="text-muted-foreground opacity-60" tick={{ fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#111827',
-                      borderColor: '#374151',
+                      backgroundColor: 'var(--card)',
+                      borderColor: 'var(--border)',
                       borderRadius: '0.75rem',
-                      color: '#fff',
+                      color: 'var(--foreground)',
                       fontSize: '12px',
                     }}
                   />
@@ -412,7 +412,7 @@ export default function DeveloperReportsPage() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-xs text-white font-medium">
+              <div className="h-full flex items-center justify-center text-xs text-muted-foreground font-normal">
                 Sem dados suficientes no período para exibir o gráfico
               </div>
             )}
@@ -422,13 +422,13 @@ export default function DeveloperReportsPage() {
         {/* Linha com 2 Gráficos: Horários de Pico & Distribuição de Status */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Gráfico 2: Horários de Maior Pico (08h às 22h) */}
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151] space-y-4">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs space-y-4">
             <div>
-              <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <Clock className="w-4 h-4 text-white" />
+              <h3 className="font-semibold text-card-foreground text-base flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
                 Horários de Pico de Atendimento (08h às 22h)
               </h3>
-              <p className="text-xs text-white font-medium mt-0.5">
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">
                 Volume de agendamentos concentrados por hora do dia
               </p>
             </div>
@@ -437,15 +437,15 @@ export default function DeveloperReportsPage() {
               {mounted && data?.hourlyCounts && data.hourlyCounts.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.hourlyCounts} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                    <XAxis dataKey="hour" stroke="#9ca3af" tick={{ fontSize: 10, fill: '#ffffff' }} />
-                    <YAxis stroke="#9ca3af" tick={{ fontSize: 10, fill: '#ffffff' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="opacity-15" vertical={false} />
+                    <XAxis dataKey="hour" stroke="currentColor" className="text-muted-foreground opacity-60" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="currentColor" className="text-muted-foreground opacity-60" tick={{ fontSize: 10 }} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#111827',
-                        borderColor: '#374151',
+                        backgroundColor: 'var(--card)',
+                        borderColor: 'var(--border)',
                         borderRadius: '0.75rem',
-                        color: '#fff',
+                        color: 'var(--foreground)',
                         fontSize: '12px',
                       }}
                     />
@@ -453,7 +453,7 @@ export default function DeveloperReportsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-xs text-white font-medium">
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground font-normal">
                   Sem dados de horários no período
                 </div>
               )}
@@ -461,13 +461,13 @@ export default function DeveloperReportsPage() {
           </div>
 
           {/* Gráfico 3: Funil de Conversão e Status dos Agendamentos */}
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151] space-y-4">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs space-y-4">
             <div>
-              <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <PieIcon className="w-4 h-4 text-white" />
+              <h3 className="font-semibold text-card-foreground text-base flex items-center gap-2">
+                <PieIcon className="w-4 h-4 text-primary" />
                 Distribuição por Status de Agendamento
               </h3>
-              <p className="text-xs text-white font-medium mt-0.5">
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">
                 Proporção de reservas concluídas, pendentes e canceladas
               </p>
             </div>
@@ -491,39 +491,39 @@ export default function DeveloperReportsPage() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#111827',
-                        borderColor: '#374151',
+                        backgroundColor: 'var(--card)',
+                        borderColor: 'var(--border)',
                         borderRadius: '0.75rem',
-                        color: '#fff',
+                        color: 'var(--foreground)',
                         fontSize: '12px',
                       }}
                     />
                     <Legend
                       wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
-                      formatter={(val) => <span className="text-white font-bold">{val}</span>}
+                      formatter={(val) => <span className="text-foreground font-medium">{val}</span>}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="text-xs text-white font-medium">Nenhum agendamento registrado no período</div>
+                <div className="text-xs text-muted-foreground font-normal">Nenhum agendamento registrado no período</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Top Barbearias mais Engajadas */}
-        <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151] space-y-4">
+        <div className="p-6 rounded-xl bg-card border border-border shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-white" />
+              <h3 className="font-semibold text-card-foreground text-base flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
                 Top Estabelecimentos por Volume de Atendimento
               </h3>
-              <p className="text-xs text-white font-medium mt-0.5">
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">
                 Ranking das unidades mais ativas no período selecionado
               </p>
             </div>
-            <span className="text-xs text-white bg-[#1f2937] px-3 py-1 rounded-lg border border-[#374151] font-bold">
+            <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-lg border border-border font-medium">
               {data?.topBarbershops.length ?? 0} unidades ranqueadas
             </span>
           </div>
@@ -533,24 +533,24 @@ export default function DeveloperReportsPage() {
               {data.topBarbershops.map((shop, idx) => (
                 <div
                   key={shop.name + idx}
-                  className="p-4 rounded-xl bg-[#030712] border border-[#374151] space-y-2"
+                  className="p-4 rounded-xl bg-muted/40 border border-border space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white bg-[#2563eb] px-2 py-0.5 rounded">#{idx + 1}</span>
-                    <span className="text-xs bg-[#059669] text-white px-2 py-0.5 rounded font-bold border border-[#10b981]">
+                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">#{idx + 1}</span>
+                    <span className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded font-semibold border border-emerald-500/20">
                       {shop.completed} concluídos
                     </span>
                   </div>
-                  <h4 className="font-bold text-white text-sm truncate">{shop.name}</h4>
-                  <div className="flex items-center justify-between text-xs text-white pt-1 border-t border-[#374151]">
-                    <span className="font-medium text-white">Total Reservas:</span>
-                    <span className="font-bold text-white">{shop.appointments}</span>
+                  <h4 className="font-semibold text-foreground text-sm truncate">{shop.name}</h4>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
+                    <span className="font-normal">Total Reservas:</span>
+                    <span className="font-semibold text-foreground">{shop.appointments}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-xs text-white font-medium">
+            <div className="py-8 text-center text-xs text-muted-foreground font-normal">
               Nenhuma atividade registrada para estabelecimentos no período selecionado.
             </div>
           )}

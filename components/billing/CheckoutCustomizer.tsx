@@ -8,18 +8,21 @@ import {
   Save,
   RefreshCw,
   Eye,
-  Shield,
   Smartphone,
   MapPin,
   FileText,
   CreditCard,
   QrCode,
-  Barcode,
-  ExternalLink
+  Barcode
 } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
 import AbacateCheckout, { CheckoutProduct } from './AbacateCheckout'
 import { CheckoutCustomizationConfig, DEFAULT_CHECKOUT_CONFIG } from '@/lib/billing/checkout-config'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 
 const COLOR_PRESETS = [
   { name: 'AbacatePay (Padrão)', value: '#84cc16' },
@@ -107,46 +110,51 @@ export default function CheckoutCustomizer() {
   }
 
   return (
-    <div className="space-y-6 text-white">
+    <div className="space-y-6">
       {/* Header com Ações */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111827] border border-[#374151] p-6 rounded-xl">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 rounded-lg bg-[#059669] text-white border border-[#10b981]">
-              <Sliders className="w-4 h-4" />
-            </span>
-            <h2 className="text-xl font-extrabold text-white">Personalizar Checkout AbacatePay</h2>
+      <Card className="p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                <Sliders className="w-4 h-4" />
+              </span>
+              <h2 className="text-xl font-bold text-foreground">Personalizar Checkout AbacatePay</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Ajuste a identidade visual, etapas e campos exibidos aos seus clientes na hora de pagar.
+            </p>
           </div>
-          <p className="text-sm text-gray-200 mt-1 font-medium">
-            Ajuste a identidade visual, etapas e campos exibidos aos seus clientes na hora de pagar.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={fetchConfig}
-            disabled={loading}
-            className="py-2.5 px-4 rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'text-white'}`} />
-            <span>Restaurar</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={fetchConfig}
+              disabled={loading}
+              className="gap-2 h-9"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-primary' : ''}`} />
+              <span>Restaurar</span>
+            </Button>
 
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="py-2.5 px-5 rounded-lg bg-[#059669] hover:bg-emerald-600 text-white border border-[#10b981] text-xs font-bold flex items-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
-          >
-            {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>Salvar Personalização</span>
-          </button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleSave}
+              disabled={saving}
+              className="gap-2 h-9"
+            >
+              {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span>Salvar Personalização</span>
+            </Button>
+          </div>
         </div>
-      </div>
+      </Card>
 
       {successMessage && (
-        <div className="p-4 rounded-xl bg-[#059669] border border-[#10b981] text-white flex items-center gap-3 text-sm font-bold">
+        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center gap-3 text-sm font-medium">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>{successMessage}</span>
         </div>
@@ -155,229 +163,222 @@ export default function CheckoutCustomizer() {
       {/* Grid: Controles de Customização (Esquerda) + Preview ao Vivo (Direita) */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* Painel de Controles */}
-        <div className="xl:col-span-5 space-y-6 bg-[#111827] border border-[#374151] p-6 rounded-xl shadow-xl">
-          <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-            <Palette className="w-4 h-4 text-emerald-400" />
-            <span>Configurações Visuais</span>
-          </h3>
+        <Card className="xl:col-span-5 p-6 shadow-sm space-y-6">
+          <div className="flex items-center gap-2">
+            <Palette className="w-4 h-4 text-primary" />
+            <h3 className="text-base font-semibold text-foreground">Configurações Visuais</h3>
+          </div>
 
           {/* Tema Padrão */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-200 uppercase tracking-wider block">Tema Padrão do Checkout</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+              Tema Padrão do Checkout
+            </label>
             <div className="grid grid-cols-2 gap-3">
-              <button
+              <Button
                 type="button"
+                variant={config.theme === 'LIGHT' ? 'default' : 'outline'}
                 onClick={() => {
                   setConfig({ ...config, theme: 'LIGHT' })
                   setPreviewTheme('LIGHT')
                 }}
-                className={`p-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  config.theme === 'LIGHT'
-                    ? 'border-[#3b82f6] bg-[#2563eb] text-white'
-                    : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
-                }`}
+                className="h-10 text-xs font-semibold"
               >
                 <span>☀️ Claro (Light)</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant={config.theme === 'DARK' ? 'default' : 'outline'}
                 onClick={() => {
                   setConfig({ ...config, theme: 'DARK' })
                   setPreviewTheme('DARK')
                 }}
-                className={`p-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  config.theme === 'DARK'
-                    ? 'border-[#3b82f6] bg-[#2563eb] text-white'
-                    : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
-                }`}
+                className="h-10 text-xs font-semibold"
               >
                 <span>🌙 Escuro (Dark)</span>
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Cor de Destaque */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-200 uppercase tracking-wider block">Cor de Destaque dos Botões</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+              Cor de Destaque dos Botões
+            </label>
             <div className="grid grid-cols-3 gap-2">
-              {COLOR_PRESETS.map((color) => (
-                <button
-                  key={color.value}
-                  type="button"
-                  onClick={() => setConfig({ ...config, accentColor: color.value })}
-                  className={`p-2.5 rounded-lg border text-[11px] font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                    config.accentColor === color.value
-                      ? 'border-white bg-[#1f2937] text-white shadow-md'
-                      : 'border-[#374151] bg-[#030712] text-gray-200 hover:border-[#4b5563]'
-                  }`}
-                >
-                  <span
-                    className="w-3.5 h-3.5 rounded-full shrink-0 shadow-inner"
-                    style={{ backgroundColor: color.value }}
-                  />
-                  <span className="truncate text-white font-bold">{color.name.split(' ')[0]}</span>
-                </button>
-              ))}
+              {COLOR_PRESETS.map((color) => {
+                const isSelected = config.accentColor === color.value
+                return (
+                  <Button
+                    key={color.value}
+                    type="button"
+                    variant={isSelected ? 'default' : 'outline'}
+                    onClick={() => setConfig({ ...config, accentColor: color.value })}
+                    className="h-9 px-2.5 justify-start gap-2 text-[11px]"
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs border border-white/20"
+                      style={{ backgroundColor: color.value }}
+                    />
+                    <span className="truncate">{color.name.split(' ')[0]}</span>
+                  </Button>
+                )
+              })}
             </div>
           </div>
 
           {/* Nome da Loja */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-200 uppercase tracking-wider block">Nome de Exibição da Loja</label>
-            <input
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+              Nome de Exibição da Loja
+            </label>
+            <Input
               type="text"
               value={config.storeName}
               onChange={(e) => setConfig({ ...config, storeName: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-sm text-white font-medium focus:outline-none focus:border-blue-500"
+              className="h-10"
             />
           </div>
 
           {/* Selo de Garantia */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-200 uppercase tracking-wider block">Texto do Selo de Segurança</label>
-            <input
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+              Texto do Selo de Segurança
+            </label>
+            <Input
               type="text"
               value={config.guaranteeBadgeText}
               onChange={(e) => setConfig({ ...config, guaranteeBadgeText: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-sm text-white font-medium focus:outline-none focus:border-blue-500"
+              className="h-10"
             />
           </div>
 
-          <div className="h-[1px] bg-[#374151] my-4" />
+          <Separator />
 
           {/* Campos Obrigatórios / Exibidos */}
-          <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-            <FileText className="w-4 h-4 text-emerald-400" />
-            <span>Campos do Formulário</span>
-          </h3>
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-primary" />
+            <h3 className="text-base font-semibold text-foreground">Campos do Formulário</h3>
+          </div>
 
-          <div className="space-y-3">
-            <label className="flex items-center justify-between p-3.5 rounded-xl border border-[#374151] bg-[#030712] cursor-pointer hover:bg-[#1f2937]/50 transition-colors">
+          <div className="space-y-2.5">
+            <label className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors cursor-pointer">
               <div className="flex items-center gap-2.5">
-                <MapPin className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-bold text-white">Exigir Endereço Completo (Passo 2)</span>
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-foreground">Exigir Endereço Completo (Passo 2)</span>
               </div>
               <input
                 type="checkbox"
                 checked={config.showAddress}
                 onChange={(e) => setConfig({ ...config, showAddress: e.target.checked })}
-                className="w-4 h-4 rounded text-emerald-500 accent-emerald-500"
+                className="w-4 h-4 rounded text-primary accent-primary cursor-pointer"
               />
             </label>
 
-            <label className="flex items-center justify-between p-3.5 rounded-xl border border-[#374151] bg-[#030712] cursor-pointer hover:bg-[#1f2937]/50 transition-colors">
+            <label className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors cursor-pointer">
               <div className="flex items-center gap-2.5">
-                <FileText className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-bold text-white">Solicitar CPF / CNPJ</span>
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-foreground">Solicitar CPF / CNPJ</span>
               </div>
               <input
                 type="checkbox"
                 checked={config.showTaxId}
                 onChange={(e) => setConfig({ ...config, showTaxId: e.target.checked })}
-                className="w-4 h-4 rounded text-emerald-500 accent-emerald-500"
+                className="w-4 h-4 rounded text-primary accent-primary cursor-pointer"
               />
             </label>
 
-            <label className="flex items-center justify-between p-3.5 rounded-xl border border-[#374151] bg-[#030712] cursor-pointer hover:bg-[#1f2937]/50 transition-colors">
+            <label className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors cursor-pointer">
               <div className="flex items-center gap-2.5">
-                <Smartphone className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-bold text-white">Solicitar Telefone de Contato</span>
+                <Smartphone className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-foreground">Solicitar Telefone de Contato</span>
               </div>
               <input
                 type="checkbox"
                 checked={config.showPhone}
                 onChange={(e) => setConfig({ ...config, showPhone: e.target.checked })}
-                className="w-4 h-4 rounded text-emerald-500 accent-emerald-500"
+                className="w-4 h-4 rounded text-primary accent-primary cursor-pointer"
               />
             </label>
           </div>
 
-          <div className="h-[1px] bg-[#374151] my-4" />
+          <Separator />
 
           {/* Métodos de Pagamento Permitidos */}
-          <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-emerald-400" />
-            <span>Métodos de Pagamento Aceitos</span>
-          </h3>
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-primary" />
+            <h3 className="text-base font-semibold text-foreground">Métodos de Pagamento Aceitos</h3>
+          </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <button
+            <Button
               type="button"
+              variant={config.acceptedMethods.includes('PIX') ? 'default' : 'outline'}
               onClick={() => toggleMethod('PIX')}
-              className={`p-3 rounded-lg border text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                config.acceptedMethods.includes('PIX')
-                  ? 'border-[#10b981] bg-[#059669] text-white'
-                  : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
-              }`}
+              className="h-16 flex-col gap-1.5"
             >
               <QrCode className="w-5 h-5" />
-              <span>PIX</span>
-            </button>
+              <span className="text-xs">PIX</span>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant={config.acceptedMethods.includes('CREDIT_CARD') ? 'default' : 'outline'}
               onClick={() => toggleMethod('CREDIT_CARD')}
-              className={`p-3 rounded-lg border text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                config.acceptedMethods.includes('CREDIT_CARD')
-                  ? 'border-[#10b981] bg-[#059669] text-white'
-                  : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
-              }`}
+              className="h-16 flex-col gap-1.5"
             >
               <CreditCard className="w-5 h-5" />
-              <span>Cartão</span>
-            </button>
+              <span className="text-xs">Cartão</span>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant={config.acceptedMethods.includes('BOLETO') ? 'default' : 'outline'}
               onClick={() => toggleMethod('BOLETO')}
-              className={`p-3 rounded-lg border text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                config.acceptedMethods.includes('BOLETO')
-                  ? 'border-[#10b981] bg-[#059669] text-white'
-                  : 'border-[#4b5563] bg-[#1f2937] text-white hover:bg-[#374151]'
-              }`}
+              className="h-16 flex-col gap-1.5"
             >
               <Barcode className="w-5 h-5" />
-              <span>Boleto</span>
-            </button>
+              <span className="text-xs">Boleto</span>
+            </Button>
           </div>
-        </div>
+        </Card>
 
         {/* Live Preview do Checkout Interativo (Direita) */}
         <div className="xl:col-span-7 space-y-4">
-          <div className="flex items-center justify-between px-2">
+          <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm font-extrabold text-white">Live Preview em Tempo Real</span>
+              <Eye className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">Live Preview em Tempo Real</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-200 font-bold hidden sm:inline">Visualizar como:</span>
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-[#111827] border border-[#374151]">
-                <button
+              <span className="text-xs text-muted-foreground font-medium hidden sm:inline">Visualizar como:</span>
+              <div className="flex items-center gap-1 p-1 rounded-lg border border-border bg-card">
+                <Button
                   type="button"
+                  variant={previewTheme === 'LIGHT' ? 'default' : 'ghost'}
+                  size="sm"
                   onClick={() => setPreviewTheme('LIGHT')}
-                  className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                    previewTheme === 'LIGHT' ? 'bg-[#2563eb] text-white border border-[#3b82f6]' : 'text-gray-300 hover:text-white'
-                  }`}
+                  className="h-7 text-xs px-2.5"
                 >
                   Claro
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant={previewTheme === 'DARK' ? 'default' : 'ghost'}
+                  size="sm"
                   onClick={() => setPreviewTheme('DARK')}
-                  className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                    previewTheme === 'DARK' ? 'bg-[#2563eb] text-white border border-[#3b82f6]' : 'text-gray-300 hover:text-white'
-                  }`}
+                  className="h-7 text-xs px-2.5"
                 >
                   Escuro
-                </button>
+                </Button>
               </div>
             </div>
           </div>
 
           {/* O componente de checkout real rodando com os parâmetros ao vivo */}
-          <div className="p-4 sm:p-6 rounded-2xl bg-[#030712] border border-[#374151] shadow-xl">
+          <div className="p-4 sm:p-6 rounded-2xl border border-border bg-card/60 backdrop-blur-sm shadow-sm">
             <AbacateCheckout
               key={`${previewTheme}-${config.accentColor}-${config.showAddress}`}
               product={sampleProduct}

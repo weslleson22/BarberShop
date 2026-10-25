@@ -52,7 +52,7 @@ export default function RealtimeNavTabs({ activeTab }: RealtimeNavTabsProps) {
   ]
 
   return (
-    <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-[#111827] border border-[#374151]">
+    <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-card border border-border shadow-sm">
       {tabs.map((tab) => {
         const Icon = tab.icon
         const isActive = currentTab === tab.id
@@ -62,10 +62,10 @@ export default function RealtimeNavTabs({ activeTab }: RealtimeNavTabsProps) {
             key={tab.id}
             type="button"
             onClick={() => router.push(tab.url)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer border ${
               isActive
-                ? 'bg-[#2563eb] text-white border border-[#1d4ed8]'
-                : 'text-white hover:bg-[#1f2937]'
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/60'
             }`}
           >
             <Icon className="w-4 h-4" />

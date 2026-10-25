@@ -271,7 +271,7 @@ export function NotificationsSettingsView({
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors">
       <DropdownHeader
         title="Notificações & Alertas Integrados"
         subtitle="Configuração de canais Telegram e E-mail para novos cadastros, falhas de senha e status"
@@ -281,25 +281,25 @@ export function NotificationsSettingsView({
         {/* Banner de Feedback no Topo */}
         {feedback && (
           <div
-            className={`p-4 rounded-xl border-2 flex items-start justify-between ${
+            className={`p-4 rounded-xl border flex items-start justify-between ${
               feedback.type === 'success'
-                ? 'bg-[#064e3b] border-[#10b981] text-white'
-                : 'bg-[#7f1d1d] border-[#ef4444] text-white'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                : 'bg-destructive/10 border-destructive/30 text-destructive'
             }`}
           >
             <div className="flex items-start gap-3">
               {feedback.type === 'success' ? (
-                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-white" />
+                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
               ) : (
-                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-white" />
+                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
               )}
-              <div className="text-xs sm:text-sm font-bold whitespace-pre-line leading-relaxed text-white">
+              <div className="text-xs sm:text-sm font-semibold whitespace-pre-line leading-relaxed">
                 {feedback.message}
               </div>
             </div>
             <button
               onClick={() => setFeedback(null)}
-              className="text-xs font-bold text-white shrink-0 ml-4 px-3 py-1 bg-[#1f2937] border border-[#374151] rounded-lg hover:bg-[#374151] cursor-pointer"
+              className="text-xs font-semibold shrink-0 ml-4 px-3 py-1 bg-background border border-border rounded-lg hover:bg-muted cursor-pointer"
             >
               Fechar
             </button>
@@ -307,14 +307,14 @@ export function NotificationsSettingsView({
         )}
 
         {/* Navegação por Subitens / Abas */}
-        <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-[#111827] border border-[#374151]">
+        <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-card border border-border shadow-xs">
           <button
             type="button"
             onClick={() => handleTabChange('all')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
               activeTab === 'all'
-                ? 'bg-[#2563eb] text-white border border-[#1d4ed8]'
-                : 'text-white hover:bg-[#1f2937]'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             <Sliders className="w-4 h-4" />
@@ -324,10 +324,10 @@ export function NotificationsSettingsView({
           <button
             type="button"
             onClick={() => handleTabChange('telegram')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
               activeTab === 'telegram'
-                ? 'bg-[#2563eb] text-white border border-[#1d4ed8]'
-                : 'text-white hover:bg-[#1f2937]'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             <Send className="w-4 h-4" />
@@ -337,10 +337,10 @@ export function NotificationsSettingsView({
           <button
             type="button"
             onClick={() => handleTabChange('email')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
               activeTab === 'email'
-                ? 'bg-[#059669] text-white border border-[#047857]'
-                : 'text-white hover:bg-[#1f2937]'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             <Mail className="w-4 h-4" />
@@ -350,15 +350,15 @@ export function NotificationsSettingsView({
           <button
             type="button"
             onClick={() => handleTabChange('history')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
               activeTab === 'history'
-                ? 'bg-[#374151] text-white border border-[#4b5563]'
-                : 'text-white hover:bg-[#1f2937]'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             <Clock className="w-4 h-4" />
             <span>Histórico</span>
-            <span className="text-[10px] bg-[#030712] text-white font-bold px-2 py-0.5 rounded-full border border-[#4b5563]">
+            <span className="text-[10px] bg-muted text-muted-foreground font-semibold px-2 py-0.5 rounded-full border border-border">
               {recentAlerts.length}
             </span>
           </button>
@@ -370,15 +370,15 @@ export function NotificationsSettingsView({
               
               {/* CANAL 1: TELEGRAM BOT */}
               {(activeTab === 'all' || activeTab === 'telegram') && (
-                <div id="telegram" className="p-6 rounded-2xl bg-[#111827] border border-[#374151] space-y-5">
-                  <div className="flex items-center justify-between border-b border-[#374151] pb-4">
+                <div id="telegram" className="p-6 rounded-xl bg-card border border-border shadow-xs space-y-5">
+                  <div className="flex items-center justify-between border-b border-border pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#2563eb] flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
                         <Send className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-white text-base">Canal Telegram Bot</h3>
-                        <p className="text-xs text-white font-normal">Receba notificações instantâneas no seu celular</p>
+                        <h3 className="font-semibold text-card-foreground text-base">Canal Telegram Bot</h3>
+                        <p className="text-xs text-muted-foreground font-normal">Receba notificações instantâneas no seu celular</p>
                       </div>
                     </div>
 
@@ -390,7 +390,7 @@ export function NotificationsSettingsView({
                     onChange={(e) => setSettings({ ...settings, telegramEnabled: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-[#374151] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2563eb]"></div>
+                  <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
 
@@ -398,21 +398,21 @@ export function NotificationsSettingsView({
               <div className="space-y-4">
                 {/* Informações do Bot Detectado */}
                 {botInfo?.ok && botInfo.username && (
-                  <div className="p-4 rounded-xl bg-[#1f2937] border border-[#374151] flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#2563eb] text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="p-4 rounded-xl bg-muted/40 border border-border flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white">Bot Conectado:</span>
-                        <span className="font-mono text-white font-bold bg-[#2563eb] px-2.5 py-0.5 rounded-md border border-[#3b82f6]">
+                        <span className="font-semibold text-foreground">Bot Conectado:</span>
+                        <span className="font-mono text-primary font-semibold bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20">
                           @{botInfo.username}
                         </span>
                       </div>
-                      <p className="text-white font-medium">
+                      <p className="text-foreground font-medium">
                         Para receber os alertas no grupo <strong>suporte barbershop</strong>:
                       </p>
-                      <ol className="list-decimal list-inside text-white space-y-1 pl-1 font-normal">
+                      <ol className="list-decimal list-inside text-muted-foreground space-y-1 pl-1 font-normal">
                         <li>Abra o grupo <strong>suporte barbershop</strong> no Telegram</li>
                         <li>Adicione <strong>@{botInfo.username}</strong> como membro do grupo</li>
                         <li>Promova o bot para <strong>Administrador</strong></li>
@@ -422,7 +422,7 @@ export function NotificationsSettingsView({
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1.5">
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">
                     Telegram Bot Token:
                   </label>
                   <input
@@ -430,16 +430,16 @@ export function NotificationsSettingsView({
                     placeholder="Ex: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
                     value={settings.telegramBotToken}
                     onChange={(e) => setSettings({ ...settings, telegramBotToken: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-bold text-white">
+                    <label className="block text-xs font-semibold text-foreground">
                       Chat ID / ID do Grupo ou Canal:
                     </label>
-                    <span className="text-xs text-white font-medium font-mono">
+                    <span className="text-xs text-muted-foreground font-normal font-mono">
                       Aceita link do Telegram Web ou ID numérico
                     </span>
                   </div>
@@ -456,10 +456,10 @@ export function NotificationsSettingsView({
                       }
                       setSettings({ ...settings, telegramChatId: val })
                     }}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
                   />
                   {settings.telegramChatId && settings.telegramChatId.startsWith('-100') && (
-                    <p className="text-xs text-emerald-400 font-bold mt-1.5 flex items-center gap-1">
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-1.5 flex items-center gap-1">
                       <Check className="w-3.5 h-3.5" /> Formato de Supergrupo/Canal Telegram verificado ({settings.telegramChatId})
                     </p>
                   )}
@@ -469,25 +469,25 @@ export function NotificationsSettingsView({
                 <button
                   type="button"
                   onClick={() => setShowTelegramHelp(!showTelegramHelp)}
-                  className="text-xs text-white font-bold underline hover:text-blue-300 inline-flex items-center gap-1 cursor-pointer"
+                  className="text-xs text-primary font-semibold underline hover:opacity-80 inline-flex items-center gap-1 cursor-pointer"
                 >
                   <HelpCircle className="w-3.5 h-3.5" />
                   <span>{showTelegramHelp ? 'Ocultar instruções de configuração' : 'Como configurar Grupo e Bot no Telegram?'}</span>
                 </button>
 
                 {showTelegramHelp && (
-                  <div className="p-4 rounded-xl bg-[#0b0f19] border border-[#374151] space-y-3 text-xs text-white leading-relaxed">
-                    <p className="font-bold text-white text-sm">Configuração para Grupos (Ex: suporte barbershop):</p>
-                    <ol className="list-decimal list-inside space-y-1.5 text-white">
+                  <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3 text-xs text-foreground leading-relaxed">
+                    <p className="font-semibold text-foreground text-sm">Configuração para Grupos (Ex: suporte barbershop):</p>
+                    <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
                       <li>Abra o grupo <strong>suporte barbershop</strong> no Telegram.</li>
-                      <li>Clique em <strong>Adicionar Membro</strong> e procure pelo bot (ex: <code className="bg-[#1f2937] px-2 py-0.5 rounded border border-[#374151] font-mono">@{botInfo?.username || 'seubot'}</code>).</li>
+                      <li>Clique em <strong>Adicionar Membro</strong> e procure pelo bot (ex: <code className="bg-muted px-2 py-0.5 rounded border border-border font-mono text-foreground">@{botInfo?.username || 'seubot'}</code>).</li>
                       <li>Vá em <strong>Editar Grupo &gt; Administradores &gt; Adicionar Administrador</strong> e selecione o bot.</li>
-                      <li>Cole o Chat ID <code className="bg-[#1f2937] px-2 py-0.5 rounded border border-[#374151] font-mono">-1005501250394</code> (ou o link do Telegram Web) no campo acima.</li>
+                      <li>Cole o Chat ID <code className="bg-muted px-2 py-0.5 rounded border border-border font-mono text-foreground">-1005501250394</code> (ou o link do Telegram Web) no campo acima.</li>
                       <li>Clique em <strong>Testar Conexão com Bot</strong> para confirmar o recebimento!</li>
                     </ol>
 
-                    <div className="pt-2 border-t border-[#374151] text-xs text-white">
-                      <strong>Nota:</strong> Em supergrupos do Telegram, a API oficial exige o prefixo <code className="bg-[#1f2937] px-1.5 py-0.5 rounded font-mono">-100</code> antes dos dígitos do ID. Nosso sistema já adiciona isso automaticamente para você.
+                    <div className="pt-2 border-t border-border text-xs text-muted-foreground">
+                      <strong>Nota:</strong> Em supergrupos do Telegram, a API oficial exige o prefixo <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-foreground">-100</code> antes dos dígitos do ID. Nosso sistema já adiciona isso automaticamente para você.
                     </div>
                   </div>
                 )}
@@ -497,7 +497,7 @@ export function NotificationsSettingsView({
                     type="button"
                     onClick={() => handleTestTelegram('TELEGRAM')}
                     disabled={testingTelegram}
-                    className="w-full py-2.5 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#1d4ed8] text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {testingTelegram ? (
                       <>
@@ -517,7 +517,7 @@ export function NotificationsSettingsView({
                       type="button"
                       onClick={() => handleTestTelegram('TEST_COMPANY')}
                       disabled={testingTelegram}
-                      className="py-2.5 px-3 rounded-xl bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      className="py-2.5 px-3 rounded-lg bg-background hover:bg-muted text-foreground border border-border text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       <span>💈</span>
                       <span>Simular Nova Empresa</span>
@@ -526,7 +526,7 @@ export function NotificationsSettingsView({
                       type="button"
                       onClick={() => handleTestTelegram('TEST_CLIENT')}
                       disabled={testingTelegram}
-                      className="py-2.5 px-3 rounded-xl bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      className="py-2.5 px-3 rounded-lg bg-background hover:bg-muted text-foreground border border-border text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       <span>👤</span>
                       <span>Simular Novo Cliente</span>
@@ -539,15 +539,15 @@ export function NotificationsSettingsView({
 
               {/* CANAL 2: E-MAIL (GMAIL SMTP / RESEND) */}
               {(activeTab === 'all' || activeTab === 'email') && (
-                <div id="email" className="p-6 rounded-2xl bg-[#111827] border border-[#374151] space-y-5">
-                  <div className="flex items-center justify-between border-b border-[#374151] pb-4">
+                <div id="email" className="p-6 rounded-xl bg-card border border-border shadow-xs space-y-5">
+                  <div className="flex items-center justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#059669] flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base">Canal de E-mail (SMTP / Resend)</h3>
-                    <p className="text-xs text-white font-normal">Recuperação de senhas e e-mails de boas-vindas</p>
+                    <h3 className="font-semibold text-card-foreground text-base">Canal de E-mail (SMTP / Resend)</h3>
+                    <p className="text-xs text-muted-foreground font-normal">Recuperação de senhas e e-mails de boas-vindas</p>
                   </div>
                 </div>
 
@@ -559,17 +559,17 @@ export function NotificationsSettingsView({
                     onChange={(e) => setSettings({ ...settings, emailEnabled: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-[#374151] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#059669]"></div>
+                  <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                 </label>
               </div>
 
               {/* Seletor de Provedor de E-mail (EMAIL_PROVIDER) */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-bold text-white">
+                  <label className="block text-xs font-semibold text-foreground">
                     Provedor de Envio (EMAIL_PROVIDER):
                   </label>
-                  <span className="text-xs font-mono text-white font-bold bg-[#374151] px-2.5 py-1 rounded border border-[#4b5563]">
+                  <span className="text-xs font-mono text-muted-foreground font-medium bg-muted px-2.5 py-1 rounded border border-border">
                     EMAIL_PROVIDER=&quot;{settings.emailProvider}&quot;
                   </span>
                 </div>
@@ -577,10 +577,10 @@ export function NotificationsSettingsView({
                   <button
                     type="button"
                     onClick={() => setSettings({ ...settings, emailProvider: 'smtp' })}
-                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-lg border text-xs font-medium transition flex items-center justify-center gap-2 cursor-pointer ${
                       settings.emailProvider === 'smtp'
-                        ? 'bg-[#059669] border-[#10b981] text-white'
-                        : 'bg-[#1f2937] border-[#374151] text-white hover:bg-[#374151]'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     <span>📬 Gmail SMTP (Recomendado)</span>
@@ -588,16 +588,16 @@ export function NotificationsSettingsView({
                   <button
                     type="button"
                     onClick={() => setSettings({ ...settings, emailProvider: 'resend' })}
-                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-lg border text-xs font-medium transition flex items-center justify-center gap-2 cursor-pointer ${
                       settings.emailProvider === 'resend'
-                        ? 'bg-[#059669] border-[#10b981] text-white'
-                        : 'bg-[#1f2937] border-[#374151] text-white hover:bg-[#374151]'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     <span>⚡ Resend API</span>
                   </button>
                 </div>
-                <p className="text-xs text-white mt-2 leading-relaxed">
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                   {settings.emailProvider === 'smtp'
                     ? 'O Gmail SMTP envia diretamente para qualquer e-mail (Gmail, Hotmail, Outlook) sem restrições de sandbox.'
                     : 'A Resend API exige que você verifique um domínio próprio na Resend para enviar e-mails para clientes externos.'}
@@ -609,30 +609,30 @@ export function NotificationsSettingsView({
                 <div className="space-y-4 pt-1">
                   {/* SMTP_USER */}
                   <div>
-                    <label className="block text-xs font-bold text-white mb-1.5 flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-foreground mb-1.5 flex items-center justify-between">
                       <span>E-mail do Usuário SMTP (SMTP_USER):</span>
-                      <span className="text-xs text-white font-medium font-mono">Conta Google / Gmail</span>
+                      <span className="text-xs text-muted-foreground font-normal font-mono">Conta Google / Gmail</span>
                     </label>
                     <input
                       type="email"
                       placeholder="seu-email@gmail.com"
                       value={settings.smtpUser}
                       onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#059669] font-mono"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
                     />
                   </div>
 
                   {/* SMTP_PASS */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-bold text-white">
+                      <label className="block text-xs font-semibold text-foreground">
                         Senha de App do Google (SMTP_PASS):
                       </label>
                       <a
                         href="https://myaccount.google.com/apppasswords"
                         target="_blank"
                         rel="noreferrer"
-                        className="text-xs text-white font-bold hover:text-emerald-300 underline inline-flex items-center gap-1"
+                        className="text-xs text-primary font-semibold hover:underline inline-flex items-center gap-1"
                       >
                         <span>Gerar Senha de App (16 letras)</span>
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -644,15 +644,15 @@ export function NotificationsSettingsView({
                         placeholder="Ex: abcd efgh ijkl mnop (ou 16 letras sem espaços)"
                         value={settings.smtpPass}
                         onChange={(e) => setSettings({ ...settings, smtpPass: e.target.value })}
-                        className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#059669] font-mono tracking-wider"
+                        className="w-full pl-3.5 pr-10 py-2.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono tracking-wider"
                       />
                       <button
                         type="button"
                         onClick={() => setShowSmtpPass(!showSmtpPass)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-white hover:text-emerald-400 cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
                         title={showSmtpPass ? 'Ocultar Senha' : 'Ver Senha'}
                       >
-                        {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-white" />}
+                        {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
@@ -660,7 +660,7 @@ export function NotificationsSettingsView({
                   {/* SMTP_HOST e SMTP_PORT */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-white mb-1 font-mono">
+                      <label className="block text-xs font-semibold text-foreground mb-1 font-mono">
                         Servidor (SMTP_HOST):
                       </label>
                       <input
@@ -668,11 +668,11 @@ export function NotificationsSettingsView({
                         placeholder="smtp.gmail.com"
                         value={settings.smtpHost || 'smtp.gmail.com'}
                         onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white font-mono"
+                        className="w-full px-3 py-2 rounded-lg bg-background border border-input text-xs text-foreground font-mono"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-white mb-1 font-mono">
+                      <label className="block text-xs font-semibold text-foreground mb-1 font-mono">
                         Porta SSL (SMTP_PORT):
                       </label>
                       <input
@@ -680,18 +680,18 @@ export function NotificationsSettingsView({
                         placeholder="465"
                         value={settings.smtpPort || 465}
                         onChange={(e) => setSettings({ ...settings, smtpPort: Number(e.target.value) })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white font-mono"
+                        className="w-full px-3 py-2 rounded-lg bg-background border border-input text-xs text-foreground font-mono"
                       />
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-[#0b0f19] border border-[#374151] text-xs text-white space-y-2 leading-relaxed">
-                    <div className="flex items-center gap-2 text-white font-bold">
-                      <Info className="w-4 h-4 text-emerald-400" />
+                  <div className="p-4 rounded-xl bg-muted/40 border border-border text-xs text-foreground space-y-2 leading-relaxed">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Info className="w-4 h-4 text-primary" />
                       <span>Instruções para obter a Senha de App do Google:</span>
                     </div>
-                    <ol className="list-decimal list-inside space-y-1.5 text-white">
-                      <li>Acesse <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="text-white font-bold underline hover:text-emerald-300">myaccount.google.com/apppasswords</a> conectado no e-mail <strong>{settings.smtpUser || 'seu-email@gmail.com'}</strong>.</li>
+                    <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
+                      <li>Acesse <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="text-primary font-semibold underline">myaccount.google.com/apppasswords</a> conectado no e-mail <strong>{settings.smtpUser || 'seu-email@gmail.com'}</strong>.</li>
                       <li>Dê um nome para a senha (ex: <strong>BarberShop</strong>) e clique em <strong>Criar</strong>.</li>
                       <li>O Google exibirá um código de 16 letras (ex: <code>abcd efgh ijkl mnop</code>).</li>
                       <li>Copie e cole esse código no campo <strong>SMTP_PASS</strong> acima e clique no botão de teste abaixo.</li>
@@ -704,7 +704,7 @@ export function NotificationsSettingsView({
               {settings.emailProvider === 'resend' && (
                 <div className="space-y-4 pt-1">
                   <div>
-                    <label className="block text-xs font-bold text-white mb-1.5">
+                    <label className="block text-xs font-semibold text-foreground mb-1.5">
                       Resend API Key (RESEND_API_KEY):
                     </label>
                     <input
@@ -712,16 +712,16 @@ export function NotificationsSettingsView({
                       placeholder="Ex: re_12345678_abcdefghijklmnopqrstuvwxyz"
                       value={settings.resendApiKey}
                       onChange={(e) => setSettings({ ...settings, resendApiKey: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#059669] font-mono"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-bold text-white">
+                      <label className="block text-xs font-semibold text-foreground">
                         Remetente Oficial (EMAIL_FROM):
                       </label>
-                      <span className="text-xs text-white font-medium font-mono">
+                      <span className="text-xs text-muted-foreground font-normal font-mono">
                         Requer domínio verificado na Resend
                       </span>
                     </div>
@@ -730,7 +730,7 @@ export function NotificationsSettingsView({
                       placeholder="BarberShop Alertas <onboarding@resend.dev>"
                       value={settings.emailFrom}
                       onChange={(e) => setSettings({ ...settings, emailFrom: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#059669] font-mono"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
                     />
                   </div>
                 </div>
@@ -738,16 +738,16 @@ export function NotificationsSettingsView({
 
               {/* E-mail de destino padrão de alertas / teste */}
               <div>
-                <label className="block text-xs font-bold text-white mb-1.5 flex items-center justify-between">
+                <label className="block text-xs font-semibold text-foreground mb-1.5 flex items-center justify-between">
                   <span>E-mail de Destino para Teste (ALERT_EMAIL_TO):</span>
-                  <span className="text-xs text-white font-medium font-mono">Onde receber o e-mail de teste</span>
+                  <span className="text-xs text-muted-foreground font-normal font-mono">Onde receber o e-mail de teste</span>
                 </label>
                 <input
                   type="email"
                   placeholder="Ex: swdevelopmentsuporte@gmail.com"
                   value={settings.alertEmailTo}
                   onChange={(e) => setSettings({ ...settings, alertEmailTo: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#059669]"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
 
@@ -756,7 +756,7 @@ export function NotificationsSettingsView({
                   type="button"
                   onClick={handleTestEmail}
                   disabled={testingEmail}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#059669] hover:bg-[#047857] text-white border border-[#047857] text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {testingEmail ? (
                     <>
@@ -776,14 +776,14 @@ export function NotificationsSettingsView({
           </div>
 
           {/* GATILHOS DE EVENTOS ATIVOS */}
-          <div className={`p-6 rounded-2xl bg-[#111827] border border-[#374151] space-y-5 ${activeTab !== 'all' ? 'max-w-4xl mx-auto' : ''}`}>
+          <div className={`p-6 rounded-xl bg-card border border-border shadow-xs space-y-5 ${activeTab !== 'all' ? 'max-w-4xl mx-auto' : ''}`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#2563eb] text-white flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
                 <Bell className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-base">Gatilhos de Notificação Automáticos</h3>
-                <p className="text-xs text-white font-normal">
+                <h3 className="font-semibold text-card-foreground text-base">Gatilhos de Notificação Automáticos</h3>
+                <p className="text-xs text-muted-foreground font-normal">
                   Selecione quais ocorrências do sistema devem disparar alertas para os canais ativados:
                 </p>
               </div>
@@ -791,48 +791,48 @@ export function NotificationsSettingsView({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
               {/* Evento 1 */}
-              <label className="flex items-start gap-3 p-4 rounded-xl bg-[#0b0f19] border border-[#374151] hover:border-[#4b5563] cursor-pointer transition">
+              <label className="flex items-start gap-3 p-4 rounded-xl bg-muted/40 border border-border hover:border-border/80 cursor-pointer transition">
                 <input
                   type="checkbox"
                   checked={settings.notifyOnNewRegistration}
                   onChange={(e) => setSettings({ ...settings, notifyOnNewRegistration: e.target.checked })}
-                  className="mt-1 h-5 w-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-900"
+                  className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
                 />
                 <div>
-                  <span className="font-bold text-white text-sm block mb-1">Novos Cadastros</span>
-                  <span className="text-xs text-white font-normal leading-relaxed block">
+                  <span className="font-semibold text-foreground text-sm block mb-1">Novos Cadastros</span>
+                  <span className="text-xs text-muted-foreground font-normal leading-relaxed block">
                     Notificar sempre que um novo cliente ou barbearia se cadastrar na plataforma.
                   </span>
                 </div>
               </label>
 
               {/* Evento 2 */}
-              <label className="flex items-start gap-3 p-4 rounded-xl bg-[#0b0f19] border border-[#374151] hover:border-[#4b5563] cursor-pointer transition">
+              <label className="flex items-start gap-3 p-4 rounded-xl bg-muted/40 border border-border hover:border-border/80 cursor-pointer transition">
                 <input
                   type="checkbox"
                   checked={settings.notifyOnPasswordError}
                   onChange={(e) => setSettings({ ...settings, notifyOnPasswordError: e.target.checked })}
-                  className="mt-1 h-5 w-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-900"
+                  className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
                 />
                 <div>
-                  <span className="font-bold text-white text-sm block mb-1">Erros de Senha & Segurança</span>
-                  <span className="text-xs text-white font-normal leading-relaxed block">
+                  <span className="font-semibold text-foreground text-sm block mb-1">Erros de Senha & Segurança</span>
+                  <span className="text-xs text-muted-foreground font-normal leading-relaxed block">
                     Alertar em tempo real sobre tentativas de login com senha incorreta ou suspeitas.
                   </span>
                 </div>
               </label>
 
               {/* Evento 3 */}
-              <label className="flex items-start gap-3 p-4 rounded-xl bg-[#0b0f19] border border-[#374151] hover:border-[#4b5563] cursor-pointer transition">
+              <label className="flex items-start gap-3 p-4 rounded-xl bg-muted/40 border border-border hover:border-border/80 cursor-pointer transition">
                 <input
                   type="checkbox"
                   checked={settings.notifyOnStatusChange}
                   onChange={(e) => setSettings({ ...settings, notifyOnStatusChange: e.target.checked })}
-                  className="mt-1 h-5 w-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-900"
+                  className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
                 />
                 <div>
-                  <span className="font-bold text-white text-sm block mb-1">Status & Reset de Trial</span>
-                  <span className="text-xs text-white font-normal leading-relaxed block">
+                  <span className="font-semibold text-foreground text-sm block mb-1">Status & Reset de Trial</span>
+                  <span className="text-xs text-muted-foreground font-normal leading-relaxed block">
                     Notificar aprovações, suspensões, bloqueios e renovações/reset de período de teste.
                   </span>
                 </div>
@@ -843,7 +843,7 @@ export function NotificationsSettingsView({
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs border border-[#1d4ed8] transition cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
               >
                 {saving ? (
                   <>
@@ -864,15 +864,15 @@ export function NotificationsSettingsView({
 
         {/* FEED DE ÚLTIMOS ALERTAS DISPARADOS */}
         {(activeTab === 'all' || activeTab === 'history') && (
-          <div id="history" className={`p-6 rounded-2xl bg-[#111827] border border-[#374151] space-y-4 ${activeTab === 'history' ? 'max-w-5xl mx-auto' : ''}`}>
+          <div id="history" className={`p-6 rounded-xl bg-card border border-border shadow-xs space-y-4 ${activeTab === 'history' ? 'max-w-5xl mx-auto' : ''}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#374151] text-white flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center font-bold">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-white text-base">Histórico de Alertas Disparados</h3>
-                  <span className="text-xs bg-[#374151] px-2.5 py-0.5 rounded-full text-white font-bold border border-[#4b5563]">
+                  <h3 className="font-semibold text-card-foreground text-base">Histórico de Alertas Disparados</h3>
+                  <span className="text-xs bg-muted px-2.5 py-0.5 rounded-full text-muted-foreground font-medium border border-border">
                   {recentAlerts.length}
                 </span>
               </div>
@@ -880,7 +880,7 @@ export function NotificationsSettingsView({
             <button
               type="button"
               onClick={fetchSettings}
-              className="p-2 text-white hover:text-white bg-[#1f2937] hover:bg-[#374151] rounded-lg border border-[#374151] cursor-pointer"
+              className="p-2 text-foreground hover:bg-muted rounded-lg border border-border transition cursor-pointer"
               title="Recarregar histórico"
             >
               <RefreshCw className="w-4 h-4" />
@@ -888,28 +888,28 @@ export function NotificationsSettingsView({
           </div>
 
           {recentAlerts.length === 0 ? (
-            <div className="py-12 text-center text-xs text-white font-medium">
+            <div className="py-12 text-center text-xs text-muted-foreground font-normal">
               Nenhum alerta foi disparado recentemente.
             </div>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
               {recentAlerts.map((alert) => (
-                <div key={alert.id} className="p-3.5 rounded-xl bg-[#0b0f19] border border-[#374151] flex items-start justify-between gap-4 text-xs">
+                <div key={alert.id} className="p-3.5 rounded-xl bg-muted/40 border border-border flex items-start justify-between gap-4 text-xs">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       {formatEventBadge(alert.eventType)}
-                      <span className="font-bold text-white">{alert.title}</span>
+                      <span className="font-semibold text-foreground">{alert.title}</span>
                     </div>
-                    <p className="text-white font-normal">{alert.message}</p>
+                    <p className="text-muted-foreground font-normal">{alert.message}</p>
                     {alert.error && (
-                      <span className="text-xs text-red-400 block font-mono font-bold">{alert.error}</span>
+                      <span className="text-xs text-destructive block font-mono font-semibold">{alert.error}</span>
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="text-xs text-white font-medium block">
+                    <span className="text-xs text-muted-foreground font-normal block">
                       {new Date(alert.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </span>
-                    <span className={`text-xs font-bold inline-block px-2 py-0.5 rounded mt-1 ${alert.status === 'SUCCESS' ? 'bg-[#059669] text-white' : 'bg-[#dc2626] text-white'}`}>
+                    <span className={`text-xs font-semibold inline-block px-2 py-0.5 rounded mt-1 ${alert.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' : 'bg-destructive/10 text-destructive border border-destructive/20'}`}>
                       {alert.status === 'SUCCESS' ? 'Disparado' : 'Falhou'}
                     </span>
                   </div>

@@ -234,33 +234,33 @@ export default function OnlineUsersPage() {
     switch (role) {
       case 'DEVELOPER':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#7c3aed] text-white border border-[#6d28d9]">
-            <Shield className="w-3 h-3 text-white" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+            <Shield className="w-3 h-3 text-purple-600 dark:text-purple-400" />
             Developer
           </span>
         )
       case 'ADMIN':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#d97706] text-white border border-[#b45309]">
-            <Building2 className="w-3 h-3 text-white" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <Building2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />
             Administrador
           </span>
         )
       case 'BARBER':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#2563eb] text-white border border-[#1d4ed8]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
             Barbeiro
           </span>
         )
       case 'CLIENT':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#059669] text-white border border-[#047857]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             Cliente
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#374151] text-white border border-[#4b5563]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-muted text-muted-foreground border border-border">
             {role}
           </span>
         )
@@ -270,16 +270,16 @@ export default function OnlineUsersPage() {
   const getDeviceIcon = (deviceType: string) => {
     switch (deviceType) {
       case 'Mobile':
-        return <Smartphone className="w-3.5 h-3.5 text-white" />
+        return <Smartphone className="w-3.5 h-3.5 text-muted-foreground" />
       case 'Tablet':
-        return <Tablet className="w-3.5 h-3.5 text-white" />
+        return <Tablet className="w-3.5 h-3.5 text-muted-foreground" />
       default:
-        return <Laptop className="w-3.5 h-3.5 text-white" />
+        return <Laptop className="w-3.5 h-3.5 text-muted-foreground" />
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors">
       <DropdownHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 space-y-8">
@@ -289,23 +289,23 @@ export default function OnlineUsersPage() {
         {/* Banner de Feedback */}
         {feedbackMessage && (
           <div
-            className={`p-4 rounded-xl border-2 flex items-center justify-between ${
+            className={`p-4 rounded-xl border flex items-center justify-between ${
               feedbackMessage.type === 'success'
-                ? 'bg-[#064e3b] border-[#10b981] text-white'
-                : 'bg-[#7f1d1d] border-[#ef4444] text-white'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                : 'bg-destructive/10 border-destructive/30 text-destructive'
             }`}
           >
             <div className="flex items-center gap-3">
               {feedbackMessage.type === 'success' ? (
-                <CheckCircle2 className="w-5 h-5 shrink-0 text-white" />
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
               ) : (
-                <AlertTriangle className="w-5 h-5 shrink-0 text-white" />
+                <AlertTriangle className="w-5 h-5 shrink-0" />
               )}
-              <span className="text-sm font-bold text-white">{feedbackMessage.text}</span>
+              <span className="text-sm font-semibold">{feedbackMessage.text}</span>
             </div>
             <button
               onClick={() => setFeedbackMessage(null)}
-              className="text-xs font-bold text-white px-3 py-1 bg-[#1f2937] border border-[#374151] rounded-lg hover:bg-[#374151] cursor-pointer"
+              className="text-xs font-semibold px-3 py-1 bg-background border border-border rounded-lg hover:bg-muted cursor-pointer"
             >
               Fechar
             </button>
@@ -313,17 +313,17 @@ export default function OnlineUsersPage() {
         )}
 
         {/* Top Control Bar: Status + Interval Selector + Manual Refresh */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#111827] border border-[#374151]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl bg-card border border-border shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="w-3.5 h-3.5 rounded-full bg-[#10b981] shrink-0"></div>
+            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shrink-0"></div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base text-white">Telemetria de Presença Ativa</span>
-                <span className="text-xs font-bold font-mono text-white bg-[#059669] px-2.5 py-0.5 rounded-md border border-[#10b981]">
+                <span className="font-bold text-base text-card-foreground">Telemetria de Presença Ativa</span>
+                <span className="text-xs font-semibold font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                   AO VIVO
                 </span>
               </div>
-              <p className="text-xs text-white font-medium mt-0.5">
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">
                 Última sincronização: {lastRefreshedAt.toLocaleTimeString('pt-BR')}
               </p>
             </div>
@@ -331,9 +331,9 @@ export default function OnlineUsersPage() {
 
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             {/* Seletor de Intervalo de Atualização */}
-            <div className="flex items-center gap-1.5 bg-[#030712] p-1 rounded-xl border border-[#374151] text-xs">
-              <span className="text-white px-2 flex items-center gap-1 text-xs font-bold">
-                <Clock className="w-3.5 h-3.5 text-white" /> Atualização:
+            <div className="flex items-center gap-1.5 bg-muted/50 p-1 rounded-lg border border-border text-xs">
+              <span className="text-muted-foreground px-2 flex items-center gap-1 text-xs font-medium">
+                <Clock className="w-3.5 h-3.5" /> Atualização:
               </span>
               {[
                 { label: '5s', val: 5 },
@@ -345,10 +345,10 @@ export default function OnlineUsersPage() {
                   key={item.label}
                   type="button"
                   onClick={() => setAutoRefreshInterval(item.val)}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer ${
+                  className={`px-3 py-1 rounded-md font-medium text-xs transition cursor-pointer ${
                     autoRefreshInterval === item.val
-                      ? 'bg-[#2563eb] text-white border border-[#1d4ed8]'
-                      : 'text-white hover:bg-[#1f2937]'
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                   {item.label}
@@ -361,9 +361,9 @@ export default function OnlineUsersPage() {
               type="button"
               onClick={() => fetchOnlineUsers(false)}
               disabled={refreshing}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold border border-[#1d4ed8] transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium shadow-xs transition cursor-pointer disabled:opacity-50"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-white ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               <span>Atualizar Agora</span>
             </button>
           </div>
@@ -372,117 +372,117 @@ export default function OnlineUsersPage() {
         {/* Métricas Principais (Cards de KPI) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Card 1: Online Agora */}
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Online Agora (&lt; 3m)
               </span>
-              <div className="w-10 h-10 rounded-xl bg-[#059669] text-white flex items-center justify-center font-bold">
-                <Wifi className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <Wifi className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              <span className="text-3xl sm:text-4xl font-bold text-card-foreground tracking-tight">
                 {data?.stats.totalOnline ?? 0}
               </span>
-              <span className="text-xs text-white font-bold bg-[#059669] px-2 py-0.5 rounded">
+              <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
                 Em tempo real
               </span>
             </div>
-            <p className="text-xs text-white font-medium mt-2">
+            <p className="text-xs text-muted-foreground font-normal mt-2">
               Dispositivos ativos conectados neste instante
             </p>
           </div>
 
           {/* Card 2: Sessões Recentes */}
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Ativos Recentes (&lt; 15m)
               </span>
-              <div className="w-10 h-10 rounded-xl bg-[#d97706] text-white flex items-center justify-center font-bold">
-                <Activity className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                <Activity className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              <span className="text-3xl sm:text-4xl font-bold text-card-foreground tracking-tight">
                 {data?.stats.totalActive ?? 0}
               </span>
-              <span className="text-xs text-white font-bold bg-[#d97706] px-2 py-0.5 rounded">
+              <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
                 {data?.stats.totalIdle ?? 0} ausentes
               </span>
             </div>
-            <p className="text-xs text-white font-medium mt-2">
+            <p className="text-xs text-muted-foreground font-normal mt-2">
               Usuários conectados na janela de 15 minutos
             </p>
           </div>
 
           {/* Card 3: Barbearias com Acesso Simultâneo */}
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Barbearias Conectadas
               </span>
-              <div className="w-10 h-10 rounded-xl bg-[#2563eb] text-white flex items-center justify-center font-bold">
-                <Building2 className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                <Building2 className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              <span className="text-3xl sm:text-4xl font-bold text-card-foreground tracking-tight">
                 {data?.stats.uniqueTenants ?? 0}
               </span>
-              <span className="text-xs text-white font-bold bg-[#2563eb] px-2 py-0.5 rounded">
+              <span className="text-xs text-blue-700 dark:text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md">
                 unidades SaaS
               </span>
             </div>
-            <p className="text-xs text-white font-medium mt-2">
+            <p className="text-xs text-muted-foreground font-normal mt-2">
               Estabelecimentos com membros da equipe online
             </p>
           </div>
 
           {/* Card 4: Distribuição de Perfis */}
-          <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]">
+          <div className="p-6 rounded-xl bg-card border border-border shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Distribuição de Perfis
               </span>
-              <div className="w-10 h-10 rounded-xl bg-[#7c3aed] text-white flex items-center justify-center font-bold">
-                <Users className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                <Users className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center justify-between bg-[#030712] px-2.5 py-1.5 rounded-lg border border-[#374151]">
-                <span className="text-white font-medium">Admins:</span>
-                <span className="font-bold text-white bg-[#d97706] px-1.5 py-0.5 rounded">{data?.stats.rolesCount.ADMIN ?? 0}</span>
+              <div className="flex items-center justify-between bg-muted/40 px-2.5 py-1.5 rounded-lg border border-border">
+                <span className="text-muted-foreground font-medium">Admins:</span>
+                <span className="font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">{data?.stats.rolesCount.ADMIN ?? 0}</span>
               </div>
-              <div className="flex items-center justify-between bg-[#030712] px-2.5 py-1.5 rounded-lg border border-[#374151]">
-                <span className="text-white font-medium">Barbeiros:</span>
-                <span className="font-bold text-white bg-[#2563eb] px-1.5 py-0.5 rounded">{data?.stats.rolesCount.BARBER ?? 0}</span>
+              <div className="flex items-center justify-between bg-muted/40 px-2.5 py-1.5 rounded-lg border border-border">
+                <span className="text-muted-foreground font-medium">Barbeiros:</span>
+                <span className="font-bold text-blue-700 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">{data?.stats.rolesCount.BARBER ?? 0}</span>
               </div>
-              <div className="flex items-center justify-between bg-[#030712] px-2.5 py-1.5 rounded-lg border border-[#374151]">
-                <span className="text-white font-medium">Clientes:</span>
-                <span className="font-bold text-white bg-[#059669] px-1.5 py-0.5 rounded">{data?.stats.rolesCount.CLIENT ?? 0}</span>
+              <div className="flex items-center justify-between bg-muted/40 px-2.5 py-1.5 rounded-lg border border-border">
+                <span className="text-muted-foreground font-medium">Clientes:</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">{data?.stats.rolesCount.CLIENT ?? 0}</span>
               </div>
-              <div className="flex items-center justify-between bg-[#030712] px-2.5 py-1.5 rounded-lg border border-[#374151]">
-                <span className="text-white font-medium">Devs:</span>
-                <span className="font-bold text-white bg-[#7c3aed] px-1.5 py-0.5 rounded">{data?.stats.rolesCount.DEVELOPER ?? 0}</span>
+              <div className="flex items-center justify-between bg-muted/40 px-2.5 py-1.5 rounded-lg border border-border">
+                <span className="text-muted-foreground font-medium">Devs:</span>
+                <span className="font-bold text-purple-700 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">{data?.stats.rolesCount.DEVELOPER ?? 0}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filtros e Busca */}
-        <div className="p-5 rounded-2xl bg-[#111827] border border-[#374151] space-y-4">
+        <div className="p-5 rounded-xl bg-card border border-border shadow-xs space-y-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Input de Busca */}
             <div className="relative w-full md:w-96">
-              <Search className="w-4 h-4 text-white absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Buscar por nome, email, barbearia, IP ou página..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#2563eb] transition"
+                className="w-full pl-10 pr-4 py-2 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition"
               />
             </div>
 
@@ -492,7 +492,7 @@ export default function OnlineUsersPage() {
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className="px-3 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white font-bold focus:outline-none focus:border-[#2563eb] cursor-pointer"
+                className="px-3 py-2 rounded-lg bg-background border border-input text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
               >
                 <option value="ALL">Todos os Perfis</option>
                 <option value="ADMIN">Apenas Administradores</option>
@@ -505,7 +505,7 @@ export default function OnlineUsersPage() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white font-bold focus:outline-none focus:border-[#2563eb] cursor-pointer"
+                className="px-3 py-2 rounded-lg bg-background border border-input text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
               >
                 <option value="ALL">Todos os Status</option>
                 <option value="ONLINE">Apenas Online (&lt; 3m)</option>
@@ -516,7 +516,7 @@ export default function OnlineUsersPage() {
               <select
                 value={selectedDevice}
                 onChange={(e) => setSelectedDevice(e.target.value)}
-                className="px-3 py-2.5 rounded-xl bg-[#030712] border border-[#4b5563] text-xs text-white font-bold focus:outline-none focus:border-[#2563eb] cursor-pointer"
+                className="px-3 py-2 rounded-lg bg-background border border-input text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
               >
                 <option value="ALL">Todos Dispositivos</option>
                 <option value="Desktop">Desktop / Computador</option>
@@ -528,12 +528,12 @@ export default function OnlineUsersPage() {
         </div>
 
         {/* Tabela de Usuários Conectados */}
-        <div className="rounded-2xl bg-[#111827] border border-[#374151] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#374151] flex items-center justify-between">
+        <div className="rounded-xl bg-card border border-border shadow-xs overflow-hidden">
+          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-white" />
-              <h3 className="font-bold text-white text-base">Lista de Sessões Conectadas</h3>
-              <span className="text-xs bg-[#1f2937] px-2.5 py-0.5 rounded-full text-white font-bold border border-[#4b5563]">
+              <Users className="w-5 h-5 text-muted-foreground" />
+              <h3 className="font-semibold text-card-foreground text-base">Lista de Sessões Conectadas</h3>
+              <span className="text-xs bg-muted px-2.5 py-0.5 rounded-full text-muted-foreground font-medium border border-border">
                 {filteredUsers.length} encontradas
               </span>
             </div>
@@ -541,14 +541,14 @@ export default function OnlineUsersPage() {
 
           {loading ? (
             <div className="py-20 text-center space-y-3">
-              <RefreshCw className="w-8 h-8 text-white animate-spin mx-auto" />
-              <p className="text-xs text-white font-medium">Carregando telemetria em tempo real...</p>
+              <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
+              <p className="text-xs text-muted-foreground font-medium">Carregando telemetria em tempo real...</p>
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="py-20 text-center space-y-3">
-              <Users className="w-10 h-10 text-white mx-auto" />
-              <h4 className="font-bold text-white text-base">Nenhum usuário online encontrado</h4>
-              <p className="text-xs text-white font-normal max-w-sm mx-auto">
+              <Users className="w-10 h-10 text-muted-foreground mx-auto" />
+              <h4 className="font-semibold text-card-foreground text-base">Nenhum usuário online encontrado</h4>
+              <p className="text-xs text-muted-foreground font-normal max-w-sm mx-auto">
                 {searchTerm || selectedRole !== 'ALL' || selectedStatus !== 'ALL'
                   ? 'Nenhum usuário corresponde aos filtros aplicados.'
                   : 'Nenhuma sessão ativa foi detectada na plataforma no momento.'}
@@ -558,7 +558,7 @@ export default function OnlineUsersPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-[#374151] bg-[#030712] text-white uppercase font-bold text-[10px] tracking-wider">
+                  <tr className="border-b border-border bg-muted/40 text-muted-foreground uppercase font-semibold text-[10px] tracking-wider">
                     <th className="py-3 px-4">Usuário</th>
                     <th className="py-3 px-4">Perfil</th>
                     <th className="py-3 px-4">Barbearia / Estabelecimento</th>
@@ -568,13 +568,13 @@ export default function OnlineUsersPage() {
                     <th className="py-3 px-4 text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#374151]">
+                <tbody className="divide-y divide-border">
                   {filteredUsers.map((item) => {
                     const isOnline = item.status === 'ONLINE'
                     return (
                       <tr
                         key={item.userId + item.sessionId}
-                        className="hover:bg-[#1f2937] transition-colors"
+                        className="hover:bg-muted/50 transition-colors"
                       >
                         {/* Coluna 1: Usuário */}
                         <td className="py-3.5 px-4">
@@ -584,25 +584,25 @@ export default function OnlineUsersPage() {
                                 <img
                                   src={item.avatar}
                                   alt={item.name}
-                                  className="w-9 h-9 rounded-full object-cover border border-[#4b5563]"
+                                  className="w-9 h-9 rounded-full object-cover border border-border"
                                 />
                               ) : (
-                                <div className="w-9 h-9 rounded-full bg-[#1f2937] border border-[#4b5563] flex items-center justify-center font-bold text-xs text-white">
+                                <div className="w-9 h-9 rounded-full bg-muted border border-border flex items-center justify-center font-bold text-xs text-foreground">
                                   {item.name.slice(0, 2).toUpperCase()}
                                 </div>
                               )}
                               <span
-                                className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#111827] ${
-                                  isOnline ? 'bg-[#10b981]' : 'bg-[#d97706]'
+                                className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background ${
+                                  isOnline ? 'bg-emerald-500' : 'bg-amber-500'
                                 }`}
                                 title={isOnline ? 'Online agora' : 'Ausente (idle)'}
                               />
                             </div>
                             <div>
-                              <div className="font-bold text-white text-sm">
+                              <div className="font-semibold text-foreground text-sm">
                                 {item.name}
                               </div>
-                              <div className="text-[11px] text-white font-mono">
+                              <div className="text-[11px] text-muted-foreground font-mono">
                                 {item.email}
                               </div>
                             </div>
@@ -617,8 +617,8 @@ export default function OnlineUsersPage() {
                         {/* Coluna 3: Barbearia */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-2">
-                            <Building2 className="w-3.5 h-3.5 text-white shrink-0" />
-                            <span className="font-medium text-white truncate max-w-[180px]">
+                            <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            <span className="font-medium text-foreground truncate max-w-[180px]">
                               {item.barbershopName}
                             </span>
                           </div>
@@ -626,7 +626,7 @@ export default function OnlineUsersPage() {
                             <Link
                               href={`/b/${item.barbershopSlug}`}
                               target="_blank"
-                              className="text-xs text-blue-400 hover:text-blue-300 font-bold inline-flex items-center gap-1 mt-0.5"
+                              className="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1 mt-0.5"
                             >
                               <span>/b/{item.barbershopSlug}</span>
                               <ExternalLink className="w-2.5 h-2.5" />
@@ -636,18 +636,18 @@ export default function OnlineUsersPage() {
 
                         {/* Coluna 4: Página Atual */}
                         <td className="py-3.5 px-4 font-mono text-[11px]">
-                          <span className="bg-[#030712] px-2 py-1 rounded-md border border-[#4b5563] text-white">
+                          <span className="bg-muted px-2 py-1 rounded-md border border-border text-foreground">
                             {item.currentPath}
                           </span>
                         </td>
 
                         {/* Coluna 5: Dispositivo & IP */}
                         <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-1.5 font-bold text-white">
+                          <div className="flex items-center gap-1.5 font-medium text-foreground">
                             {getDeviceIcon(item.deviceType)}
                             <span>{item.deviceType}</span>
                           </div>
-                          <div className="text-[10px] text-white font-mono mt-0.5">
+                          <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
                             IP: {item.ipAddress}
                           </div>
                         </td>
@@ -657,14 +657,14 @@ export default function OnlineUsersPage() {
                           <div className="flex items-center gap-1.5">
                             <span
                               className={`w-2 h-2 rounded-full ${
-                                isOnline ? 'bg-[#10b981]' : 'bg-[#d97706]'
+                                isOnline ? 'bg-emerald-500' : 'bg-amber-500'
                               }`}
                             />
-                            <span className="font-bold text-white">
+                            <span className="font-semibold text-foreground">
                               {formatSecondsAgo(item.secondsSinceLastActive)}
                             </span>
                           </div>
-                          <div className="text-[10px] text-white mt-0.5 font-medium">
+                          <div className="text-[10px] text-muted-foreground mt-0.5 font-normal">
                             Sessão ativa: {formatDuration(Date.now() - item.connectedAt)}
                           </div>
                         </td>
@@ -674,10 +674,10 @@ export default function OnlineUsersPage() {
                           <button
                             type="button"
                             onClick={() => setUserToDisconnect(item)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#dc2626] hover:bg-[#b91c1c] text-white border border-[#b91c1c] text-xs font-bold transition cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground text-xs font-medium transition cursor-pointer"
                             title="Desconectar sessão deste usuário remotamente"
                           >
-                            <LogOut className="w-3.5 h-3.5 text-white" />
+                            <LogOut className="w-3.5 h-3.5" />
                             <span>Desconectar</span>
                           </button>
                         </td>
@@ -693,28 +693,28 @@ export default function OnlineUsersPage() {
 
       {/* Modal de Confirmação para Desconectar Usuário */}
       {userToDisconnect && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-          <div className="bg-[#111827] border border-[#374151] w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs">
+          <div className="bg-card border border-border w-full max-w-md rounded-xl p-6 shadow-xl space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#dc2626] text-white flex items-center justify-center font-bold shrink-0">
-                <ShieldAlert className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center font-bold shrink-0">
+                <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-white text-base">Desconectar Sessão</h4>
-                <p className="text-xs text-white font-normal">Confirmação administrativa</p>
+                <h4 className="font-semibold text-card-foreground text-base">Desconectar Sessão</h4>
+                <p className="text-xs text-muted-foreground font-normal">Confirmação administrativa</p>
               </div>
             </div>
 
-            <p className="text-xs text-white leading-relaxed font-normal">
+            <p className="text-xs text-card-foreground leading-relaxed font-normal">
               Você tem certeza que deseja encerrar remotamente a sessão do usuário{' '}
-              <strong className="text-white font-bold">{userToDisconnect.name}</strong> ({userToDisconnect.email})?
+              <strong className="font-semibold">{userToDisconnect.name}</strong> ({userToDisconnect.email})?
               O usuário será imediatamente deslogado da plataforma na próxima requisição.
             </p>
 
-            <div className="p-3 rounded-xl bg-[#030712] border border-[#374151] text-xs space-y-1.5">
-              <div><span className="text-white font-medium">Perfil:</span> <span className="font-bold text-white bg-[#d97706] px-2 py-0.5 rounded ml-1">{userToDisconnect.role}</span></div>
-              <div><span className="text-white font-medium">Barbearia:</span> <span className="font-bold text-white ml-1">{userToDisconnect.barbershopName}</span></div>
-              <div><span className="text-white font-medium">Endereço IP:</span> <span className="font-mono text-white ml-1 font-bold">{userToDisconnect.ipAddress}</span></div>
+            <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs space-y-1.5">
+              <div><span className="text-muted-foreground font-medium">Perfil:</span> <span className="font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded ml-1 border border-amber-500/20">{userToDisconnect.role}</span></div>
+              <div><span className="text-muted-foreground font-medium">Barbearia:</span> <span className="font-semibold text-foreground ml-1">{userToDisconnect.barbershopName}</span></div>
+              <div><span className="text-muted-foreground font-medium">Endereço IP:</span> <span className="font-mono text-foreground ml-1 font-semibold">{userToDisconnect.ipAddress}</span></div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -722,7 +722,7 @@ export default function OnlineUsersPage() {
                 type="button"
                 onClick={() => setUserToDisconnect(null)}
                 disabled={disconnecting}
-                className="px-4 py-2 rounded-xl bg-[#1f2937] hover:bg-[#374151] text-white text-xs font-bold border border-[#374151] transition cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-background hover:bg-muted text-foreground text-xs font-medium border border-border transition cursor-pointer"
               >
                 Cancelar
               </button>
@@ -730,16 +730,16 @@ export default function OnlineUsersPage() {
                 type="button"
                 onClick={handleConfirmDisconnect}
                 disabled={disconnecting}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white text-xs font-bold border border-[#b91c1c] transition cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground text-xs font-medium shadow-xs transition cursor-pointer disabled:opacity-50"
               >
                 {disconnecting ? (
                   <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                     <span>Desconectando...</span>
                   </>
                 ) : (
                   <>
-                    <LogOut className="w-3.5 h-3.5 text-white" />
+                    <LogOut className="w-3.5 h-3.5" />
                     <span>Sim, Desconectar</span>
                   </>
                 )}

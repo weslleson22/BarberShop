@@ -1,18 +1,56 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { User, Plus, Search, Edit, Trash2, Eye, EyeOff, Shield, Camera, Building2, Crown, X, Check, AlertCircle, RefreshCw } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import {
+  User as UserIcon,
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff,
+  Shield,
+  Camera,
+  Building2,
+  Crown,
+  X,
+  Check,
+  AlertCircle,
+  RefreshCw,
+  Users,
+  Briefcase,
+  UserCheck,
+} from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
 import { maskPhone, maskName, maskEmail, getAuthHeaders } from '@/lib/utils'
 import type { UserRole } from '@/lib/roles'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface User {
   id: string
   name: string
   email: string
-  phone?: string
+  phone?: string | null
   role: UserRole
   isActive: boolean
   createdAt: string
@@ -20,8 +58,9 @@ interface User {
   barbershop?: {
     id: string
     name: string
+    slug?: string
   } | null
-  avatar?: string
+  avatar?: string | null
   bio?: string | null
   specialties?: string[]
 }
@@ -49,9 +88,11 @@ export default function UsuariosPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedShopFilter, setSelectedShopFilter] = useState<string>('all')
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>('all')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -80,7 +121,7 @@ export default function UsuariosPage() {
         router.push('/login')
         return
       }
-      
+
       // Apenas ADMIN e DEVELOPER podem acessar página de usuários
       if (user.role !== 'ADMIN' && user.role !== 'DEVELOPER') {
         console.log('USUÁRIOS: Usuário sem permissão - Role:', user.role, '- Redirecionando')
@@ -95,37 +136,39 @@ export default function UsuariosPage() {
     if (mounted && !authLoading && user && (user.role === 'ADMIN' || user.role === 'DEVELOPER')) {
       fetchUsers()
     }
-  }, [mounted, authLoading, user?.id, user?.role, selectedShopFilter])
-
-  // Aguardar autenticação
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
+  }, [mounted, authLoading, user?.id, user?.role, selectedShopFilter, selectedRoleFilter])
 
   const fetchUsers = async () => {
     try {
       setLoading(true)
       setErrorMessage(null)
-      console.log('=== BUSCANDO USUÁRIOS DO PRISMA COM AUTH HEADERS ===')
 
       let url = '/api/users'
-      if (user?.role === 'DEVELOPER' && selectedShopFilter && selectedShopFilter !== 'all') {
-        url += `?barbershopId=${encodeURIComponent(selectedShopFilter)}`
+      const queryParams = new URLSearchParams()
+
+      if (user?.role === 'DEVELOPER') {
+        if (selectedShopFilter && selectedShopFilter !== 'all') {
+          queryParams.set('barbershopId', selectedShopFilter)
+        }
       }
-      
+
+      if (selectedRoleFilter && selectedRoleFilter !== 'all') {
+        queryParams.set('role', selectedRoleFilter)
+      }
+
+      const qs = queryParams.toString()
+      if (qs) {
+        url += `?${qs}`
+      }
+
       const response = await fetch(url, {
         headers: getAuthHeaders(),
         credentials: 'include',
         cache: 'no-store',
       })
-      
+
       if (response.ok) {
         const data = await response.json()
-        console.log('Usuários recebidos do Prisma:', data)
         setUsers(Array.isArray(data) ? data : [])
       } else {
         const errData = await response.json().catch(() => ({}))
@@ -169,7 +212,7 @@ export default function UsuariosPage() {
         }
       }
     } catch (error: any) {
-      console.error('Error ao buscar usuários do Prisma:', error)
+      console.error('Erro ao buscar usuários do Prisma:', error)
       setErrorMessage(error?.message || 'Erro de conexão com o servidor')
       setUsers([])
     } finally {
@@ -195,7 +238,7 @@ export default function UsuariosPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.name || !formData.email || (!editingUser && !formData.password)) {
       alert('Nome, email e senha são obrigatórios')
       return
@@ -208,18 +251,16 @@ export default function UsuariosPage() {
 
     try {
       const operation = editingUser ? 'ATUALIZAR' : 'CRIAR'
-      console.log(`=== ${operation} USUÁRIO NO PRISMA ===`)
-      
       const method = editingUser ? 'PUT' : 'POST'
       const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users'
-      
+
       const payload: any = {
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
+        phone: formData.phone || null,
         role: formData.role,
         isActive: formData.isActive,
-        avatar: avatarPreview || formData.avatar,
+        avatar: avatarPreview || formData.avatar || null,
         bio: formData.bio || null,
         specialties: formData.specialties || [],
       }
@@ -233,7 +274,7 @@ export default function UsuariosPage() {
       } else if (user?.role === 'DEVELOPER') {
         payload.barbershopId = formData.barbershopId || null
       }
-      
+
       const response = await fetch(url, {
         method: method,
         headers: {
@@ -243,13 +284,10 @@ export default function UsuariosPage() {
         credentials: 'include',
         body: JSON.stringify(payload),
       })
-      
+
       if (response.ok) {
-        const result = await response.json()
-        console.log(`Usuário ${operation.toLowerCase()} com sucesso:`, result)
-        
         await fetchUsers()
-        
+
         // Resetar formulário
         setFormData({
           name: '',
@@ -268,34 +306,31 @@ export default function UsuariosPage() {
         setAvatarFile(null)
         setShowAddForm(false)
         setEditingUser(null)
-        
+
         alert(`Usuário ${editingUser ? 'atualizado' : 'criado'} com sucesso!`)
       } else {
-        const error = await response.json()
-        console.error(`Erro ao ${operation.toLowerCase()} usuário:`, error)
+        const error = await response.json().catch(() => ({}))
         alert(error.error || `Erro ao ${operation.toLowerCase()} usuário`)
       }
     } catch (error) {
-      console.error('Error na operação CRUD:', error)
+      console.error('Erro na operação CRUD:', error)
       alert('Erro na operação com o servidor')
     }
   }
 
   const handleEdit = (u: User) => {
-    console.log('=== EDITAR USUÁRIO DO PRISMA ===', u)
-    
     setEditingUser(u)
     setFormData({
-      name: u.name,
-      email: u.email,
+      name: u.name || '',
+      email: u.email || '',
       phone: u.phone || '',
       role: u.role,
       barbershopId: u.barbershopId || '',
       password: '',
-      isActive: u.isActive,
+      isActive: Boolean(u.isActive),
       avatar: u.avatar || '',
       bio: u.bio || '',
-      specialties: u.specialties || [],
+      specialties: Array.isArray(u.specialties) ? u.specialties : [],
     })
     setCustomSpecialtyInput('')
     setAvatarPreview(u.avatar || '')
@@ -309,13 +344,21 @@ export default function UsuariosPage() {
       const reader = new FileReader()
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string)
-        setFormData({ ...formData, avatar: reader.result as string })
+        setFormData((prev) => ({ ...prev, avatar: reader.result as string }))
       }
       reader.readAsDataURL(file)
     }
   }
 
   const handleToggleActive = async (userId: string, currentStatus: boolean) => {
+    const nextStatus = !currentStatus
+    setTogglingId(userId)
+
+    // Atualização otimista imediata na interface
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, isActive: nextStatus } : u))
+    )
+
     try {
       const response = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
@@ -324,18 +367,26 @@ export default function UsuariosPage() {
           ...getAuthHeaders(),
         },
         credentials: 'include',
-        body: JSON.stringify({ isActive: !currentStatus }),
+        body: JSON.stringify({ isActive: nextStatus }),
       })
-      
-      if (response.ok) {
-        await fetchUsers()
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Erro ao atualizar usuário')
+
+      if (!response.ok) {
+        // Reverter atualização otimista em caso de erro da API
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, isActive: currentStatus } : u))
+        )
+        const error = await response.json().catch(() => ({}))
+        alert(error.error || 'Erro ao atualizar disponibilidade')
       }
     } catch (error) {
-      console.error('Error toggling user:', error)
-      alert('Erro ao atualizar usuário')
+      // Reverter atualização otimista em caso de erro de conexão
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, isActive: currentStatus } : u))
+      )
+      console.error('Error toggling user availability:', error)
+      alert('Erro de conexão ao atualizar disponibilidade')
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -350,12 +401,12 @@ export default function UsuariosPage() {
         headers: getAuthHeaders(),
         credentials: 'include',
       })
-      
+
       if (response.ok) {
         await fetchUsers()
         alert('Usuário excluído com sucesso!')
       } else {
-        const error = await response.json()
+        const error = await response.json().catch(() => ({}))
         alert(error.error || 'Erro ao excluir usuário')
       }
     } catch (error) {
@@ -364,54 +415,69 @@ export default function UsuariosPage() {
     }
   }
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.phone && user.phone.includes(searchTerm))
-  )
+  // Filtragem ultra-defensiva contra valores nulos ou corrompidos
+  const filteredUsers = users.filter((u) => {
+    if (!u) return false
+    const term = searchTerm.toLowerCase().trim()
+    const name = (u.name || '').toLowerCase()
+    const email = (u.email || '').toLowerCase()
+    const phone = u.phone ? String(u.phone) : ''
+    const shopName = (u.barbershop?.name || '').toLowerCase()
 
-  console.log('Total de usuários:', users.length)
-  console.log('Termo de busca:', searchTerm)
-  console.log('Usuários filtrados:', filteredUsers.length)
+    const matchesSearch =
+      !term ||
+      name.includes(term) ||
+      email.includes(term) ||
+      phone.includes(term) ||
+      shopName.includes(term)
 
-  const getRoleColor = (role: string) => {
+    const matchesRole =
+      selectedRoleFilter === 'all' || u.role === selectedRoleFilter
+
+    return matchesSearch && matchesRole
+  })
+
+  const getRoleBadge = (role: string) => {
     switch (role) {
       case 'DEVELOPER':
-        return 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+        return (
+          <Badge variant="outline" className="border-amber-500/30 text-amber-500 dark:text-amber-400 bg-amber-500/10 font-medium">
+            <Crown className="w-3 h-3 mr-1" /> Desenvolvedor
+          </Badge>
+        )
       case 'ADMIN':
-        return 'bg-purple-100 text-purple-800'
+        return (
+          <Badge variant="secondary" className="font-medium">
+            <Shield className="w-3 h-3 mr-1" /> Administrador
+          </Badge>
+        )
       case 'BARBER':
-        return 'bg-blue-100 text-blue-800'
+        return (
+          <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10 font-medium">
+            <Briefcase className="w-3 h-3 mr-1" /> Barbeiro / Equipe
+          </Badge>
+        )
       case 'RECEPTIONIST':
-        return 'bg-yellow-100 text-yellow-800'
+        return (
+          <Badge variant="outline" className="font-medium">
+            Recepcionista
+          </Badge>
+        )
       case 'CLIENT':
-        return 'bg-green-100 text-green-800'
+        return (
+          <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-medium">
+            <UserCheck className="w-3 h-3 mr-1" /> Cliente
+          </Badge>
+        )
       default:
-        return 'bg-gray-100 text-gray-800'
+        return <Badge variant="outline">{role}</Badge>
     }
   }
 
-  const getRoleText = (role: string) => {
-    switch (role) {
-      case 'DEVELOPER':
-        return 'Desenvolvedor'
-      case 'ADMIN':
-        return 'Administrador'
-      case 'BARBER':
-        return 'Profissional / Barbeiro'
-      case 'RECEPTIONIST':
-        return 'Recepcionista'
-      case 'CLIENT':
-        return 'Cliente'
-      default:
-        return role
-    }
-  }
-
-  if (!mounted) {
+  if (authLoading || !mounted) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     )
   }
@@ -420,27 +486,27 @@ export default function UsuariosPage() {
     <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
-      
+
       {/* Conteúdo Principal Padrão */}
       <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
         {/* Top Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div>
             {user?.role === 'DEVELOPER' ? (
-              <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  DEVELOPER ADMIN
-                </span>
-                <span className="text-muted-foreground">/</span>
-                <span className="text-muted-foreground">Gestão Global de Acessos</span>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Badge variant="outline" className="border-amber-500/30 text-amber-500 dark:text-amber-400 bg-amber-500/10 font-semibold tracking-wide text-xs">
+                  <Crown className="w-3 h-3 mr-1" /> DEVELOPER ADMIN
+                </Badge>
+                <span className="text-muted-foreground text-xs">/</span>
+                <span className="text-muted-foreground text-xs font-medium">Gestão Global de Acessos</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
-                <Shield className="w-4 h-4" />
-                <span>Gestão da Equipe</span>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Shield className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Gestão da Equipe</span>
               </div>
             )}
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               {user?.role === 'DEVELOPER' ? 'Usuários da Plataforma' : 'Equipe & Usuários'}
             </h1>
             <p className="text-muted-foreground text-sm md:text-base mt-1">
@@ -449,19 +515,29 @@ export default function UsuariosPage() {
                 : 'Gerencie os usuários e profissionais com acesso à sua barbearia.'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchUsers()}
+              disabled={loading}
+              title="Recarregar lista"
+              className="h-10"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button
               onClick={() => {
                 setShowAddForm(true)
                 setEditingUser(null)
-                setFormData({ 
-                  name: '', 
-                  email: '', 
-                  phone: '', 
-                  role: user?.role === 'DEVELOPER' ? 'DEVELOPER' : 'BARBER', 
-                  barbershopId: '', 
-                  password: '', 
-                  isActive: true, 
+                setFormData({
+                  name: '',
+                  email: '',
+                  phone: '',
+                  role: user?.role === 'DEVELOPER' ? 'DEVELOPER' : 'BARBER',
+                  barbershopId: '',
+                  password: '',
+                  isActive: true,
                   avatar: '',
                   bio: '',
                   specialties: [],
@@ -470,34 +546,36 @@ export default function UsuariosPage() {
                 setAvatarPreview('')
                 setAvatarFile(null)
               }}
-              className="bg-amber-500 hover:bg-amber-400 text-black px-4 md:px-5 py-2.5 rounded-xl transition-colors flex items-center font-semibold text-sm cursor-pointer"
+              size="default"
+              className="gap-2"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               Novo Usuário
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Barra de Filtros e Busca */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className={`relative ${user?.role === 'DEVELOPER' ? 'md:col-span-2' : 'md:col-span-3'}`}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Busca por Texto */}
+          <div className="relative sm:col-span-2">
             <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <input
+            <Input
               type="text"
-              placeholder="Buscar por nome, email ou telefone..."
+              placeholder="Buscar por nome, email, telefone ou unidade..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
+              className="pl-10 h-10"
             />
           </div>
 
-          {/* Filtro por Empresa/Estabelecimento para DEVELOPER */}
+          {/* Filtro por Barbearia/Unidade para DEVELOPER */}
           {user?.role === 'DEVELOPER' && (
             <div className="relative">
               <select
                 value={selectedShopFilter}
                 onChange={(e) => setSelectedShopFilter(e.target.value)}
-                className="w-full px-3 md:px-4 py-2.5 bg-card border border-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm cursor-pointer"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 <option value="all">🏢 Todas as Barbearias / Unidades</option>
                 {barbershops.map((shop) => (
@@ -508,547 +586,586 @@ export default function UsuariosPage() {
               </select>
             </div>
           )}
-        </div>
 
-      {/* Alerta de Erro com Botão de Tentar Novamente */}
-      {errorMessage && (
-        <div className="mb-4 p-4 rounded-xl bg-red-900/30 border border-red-500/30 flex items-center justify-between gap-4 text-red-300 animate-in fade-in">
-          <div className="flex items-center gap-2 text-sm">
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => fetchUsers()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-white text-xs font-semibold transition shrink-0 cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Tentar novamente
-          </button>
-        </div>
-      )}
-
-      {/* Formulário de Adicionar/Editar */}
-      {showAddForm && (
-        <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
-          <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-foreground">
-            {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-            {/* Avatar Upload */}
-            <div>
-              <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                Foto de Perfil
-              </label>
-              <div className="flex items-center space-x-4">
-                <div className="relative w-16 h-16 md:w-20 md:h-20 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center justify-center overflow-hidden">
-                  {avatarPreview ? (
-                    <img 
-                      src={avatarPreview} 
-                      alt="Avatar preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-amber-400 font-bold text-xl md:text-2xl">
-                      {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
-                    </span>
-                  )}
-                  <label className="absolute bottom-0 right-0 bg-amber-500 hover:bg-amber-400 rounded-full p-1.5 cursor-pointer transition-colors">
-                    <Camera className="w-3 h-3 md:w-4 md:h-4 text-black" />
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                    />
-                  </label>
-                </div>
-                <div>
-                  <p className="text-white/60 text-xs md:text-sm mb-1">Clique na câmera para alterar</p>
-                  <p className="text-white/40 text-xs">PNG, JPG até 5MB</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Nome *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: maskName(e.target.value) })}
-                  maxLength={50}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  placeholder="Nome completo"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: maskEmail(e.target.value) })}
-                  maxLength={80}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  placeholder="email@exemplo.com"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Telefone
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
-                  maxLength={15}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  placeholder="(00) 00000-0000"
-                />
-              </div>
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Função *
-                </label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  required
-                >
-                  <option value="" className="bg-gray-900">Selecione...</option>
-                  {user?.role === 'DEVELOPER' && (
-                    <option value="DEVELOPER" className="bg-gray-900 text-amber-400 font-medium">👑 Desenvolvedor (Plataforma)</option>
-                  )}
-                  <option value="ADMIN" className="bg-gray-900">Administrador</option>
-                  <option value="BARBER" className="bg-gray-900">Profissional / Barbeiro</option>
-                  <option value="RECEPTIONIST" className="bg-gray-900">Recepcionista</option>
-                  <option value="CLIENT" className="bg-gray-900">Cliente</option>
-                </select>
-              </div>
-
-              {/* Se o criador for Desenvolvedor e a função criada NÃO for DEVELOPER, selecionar a unidade/barbearia */}
-              {user?.role === 'DEVELOPER' && formData.role !== 'DEVELOPER' && (
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5 flex items-center gap-1.5">
-                    <Building2 className="w-4 h-4 text-yellow-400" />
-                    Unidade / Barbearia vinculada *
-                  </label>
-                  <select
-                    value={formData.barbershopId}
-                    onChange={(e) => setFormData({ ...formData, barbershopId: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                    required
-                  >
-                    <option value="" className="bg-gray-900">Selecione a barbearia do usuário...</option>
-                    {barbershops.map((shop) => (
-                      <option key={shop.id} value={shop.id} className="bg-gray-900">
-                        {shop.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-white/40 mt-1">
-                    Como desenvolvedor, você pode atribuir colaboradores para qualquer barbearia cadastrada.
-                  </p>
-                </div>
+          {/* Filtro por Função / Role */}
+          <div className="relative">
+            <select
+              value={selectedRoleFilter}
+              onChange={(e) => setSelectedRoleFilter(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            >
+              <option value="all">👥 Todas as Funções</option>
+              {user?.role === 'DEVELOPER' && (
+                <option value="DEVELOPER">👑 Desenvolvedores</option>
               )}
+              <option value="ADMIN">Administradores</option>
+              <option value="BARBER">Barbeiros / Equipe</option>
+              <option value="RECEPTIONIST">Recepcionistas</option>
+              <option value="CLIENT">Clientes</option>
+            </select>
+          </div>
+        </div>
 
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-white/80 mb-1 md:mb-1.5">
-                  Senha
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-sm md:text-base"
-                  placeholder={editingUser ? "Deixe em branco para manter atual" : "Digite uma senha"}
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="h-4 w-4 text-yellow-400 focus:ring-yellow-400/50 border-white/6 rounded bg-white/5"
-                />
-                <label htmlFor="isActive" className="ml-2 block text-xs md:text-sm text-white/80">
-                  Usuário ativo
-                </label>
-              </div>
+        {/* Alerta de Erro com Botão de Tentar Novamente */}
+        {errorMessage && (
+          <div className="p-4 rounded-lg bg-destructive/15 border border-destructive/30 flex items-center justify-between gap-4 text-destructive animate-in fade-in">
+            <div className="flex items-center gap-2 text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fetchUsers()}
+              className="shrink-0 gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Tentar novamente
+            </Button>
+          </div>
+        )}
 
-              {/* Seção de Perfil do Profissional (Descrição e Serviços/Especialidades) */}
-              {formData.role === 'BARBER' && (
-                <div className="md:col-span-2 mt-2 pt-4 border-t border-white/10 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-amber-400" />
-                    <h4 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">
-                      Perfil do Profissional (Visível no Agendamento)
-                    </h4>
+        {/* Formulário de Adicionar/Editar Usuário */}
+        {showAddForm && (
+          <Card className="border-border shadow-sm animate-in fade-in">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl">
+                {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
+              </CardTitle>
+              <CardDescription>
+                {editingUser
+                  ? 'Atualize os dados e privilégios de acesso do usuário selecionado.'
+                  : 'Cadastre um novo membro de equipe, administrador ou usuário da plataforma.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Avatar Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Foto de Perfil
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="relative w-16 h-16 md:w-20 md:h-20 bg-muted border border-border rounded-full flex items-center justify-center overflow-hidden">
+                      {avatarPreview ? (
+                        <img
+                          src={avatarPreview}
+                          alt="Avatar preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-primary font-bold text-xl md:text-2xl">
+                          {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
+                        </span>
+                      )}
+                      <label className="absolute bottom-0 right-0 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-1.5 cursor-pointer transition-colors shadow-sm">
+                        <Camera className="w-3.5 h-3.5" />
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleAvatarChange}
+                        />
+                      </label>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs md:text-sm">Clique no ícone de câmera para selecionar</p>
+                      <p className="text-muted-foreground/60 text-xs">PNG, JPG de até 3MB</p>
+                    </div>
                   </div>
+                </div>
 
-                  {/* Descrição / Bio */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs md:text-sm font-medium text-white/80 mb-1.5">
-                      Descrição / Apresentação Profissional
+                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                      Nome Completo *
                     </label>
-                    <textarea
-                      rows={3}
-                      value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      placeholder="Ex: Especialista em cortes modernos, visagismo masculino, barba modelada e barboterapia completa."
-                      className="w-full px-3 md:px-4 py-2.5 bg-white/5 border border-white/6 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all text-xs md:text-sm resize-none"
+                    <Input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: maskName(e.target.value) })}
+                      maxLength={50}
+                      placeholder="Ex: Carlos Silva"
+                      required
                     />
-                    <p className="text-[11px] text-white/40 mt-1">
-                      Esta descrição será exibida no card do profissional para os clientes durante o agendamento.
-                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                      Email *
+                    </label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: maskEmail(e.target.value) })}
+                      maxLength={80}
+                      placeholder="carlos@exemplo.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                      Telefone
+                    </label>
+                    <Input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                      maxLength={15}
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                      Função no Sistema *
+                    </label>
+                    <select
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      required
+                    >
+                      {user?.role === 'DEVELOPER' && (
+                        <option value="DEVELOPER">👑 Desenvolvedor (Plataforma Global)</option>
+                      )}
+                      <option value="ADMIN">Administrador da Unidade</option>
+                      <option value="BARBER">Profissional / Barbeiro</option>
+                      <option value="RECEPTIONIST">Recepcionista</option>
+                      <option value="CLIENT">Cliente</option>
+                    </select>
                   </div>
 
-                  {/* Especialidades / Serviços */}
-                  <div>
-                    <label className="block text-xs md:text-sm font-medium text-white/80 mb-1.5">
-                      Serviços & Especialidades que o Profissional Realiza
-                    </label>
+                  {/* Seleção de Barbearia para DEVELOPER quando a função não é global */}
+                  {user?.role === 'DEVELOPER' && formData.role !== 'DEVELOPER' && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                        <Building2 className="w-4 h-4 text-primary" />
+                        Unidade / Barbearia Vinculada *
+                      </label>
+                      <select
+                        value={formData.barbershopId}
+                        onChange={(e) => setFormData({ ...formData, barbershopId: e.target.value })}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        required
+                      >
+                        <option value="">Selecione a barbearia do usuário...</option>
+                        {barbershops.map((shop) => (
+                          <option key={shop.id} value={shop.id}>
+                            {shop.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Como Desenvolvedor, você pode atribuir administradores e profissionais a qualquer unidade da plataforma.
+                      </p>
+                    </div>
+                  )}
 
-                    {/* Sugestões de Serviços para selecionar */}
-                    <div className="mb-3">
-                      <p className="text-xs text-white/60 mb-2">Clique para selecionar os serviços prestados:</p>
-                      <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
-                        {allSuggestedSpecialties.map((item) => {
-                          const isSelected = formData.specialties.includes(item)
-                          return (
-                            <button
-                              key={item}
-                              type="button"
-                              onClick={() => {
-                                if (isSelected) {
-                                  setFormData({
-                                    ...formData,
-                                    specialties: formData.specialties.filter((s) => s !== item),
-                                  })
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    specialties: [...formData.specialties, item],
-                                  })
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                      Senha {editingUser ? '(Opcional)' : '*'}
+                    </label>
+                    <Input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder={editingUser ? 'Deixe em branco para manter a atual' : 'Defina uma senha segura'}
+                      required={!editingUser}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-6">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      className="h-4 w-4 rounded border-input text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <label htmlFor="isActive" className="text-sm font-medium text-foreground cursor-pointer">
+                      Usuário ativo com permissão de login
+                    </label>
+                  </div>
+
+                  {/* Seção de Perfil do Profissional (Descrição e Serviços/Especialidades) */}
+                  {formData.role === 'BARBER' && (
+                    <div className="md:col-span-2 pt-4 border-t border-border space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-primary" />
+                        <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                          Perfil do Profissional (Exibido no Agendamento)
+                        </h4>
+                      </div>
+
+                      {/* Descrição / Bio */}
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">
+                          Apresentação Profissional / Bio
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={formData.bio}
+                          onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                          placeholder="Ex: Especialista em cortes modernos, visagismo masculino, barba modelada e barboterapia completa."
+                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
+                        />
+                      </div>
+
+                      {/* Especialidades / Serviços */}
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">
+                          Especialidades e Serviços Realizados
+                        </label>
+
+                        {/* Sugestões de Serviços para selecionar */}
+                        <div className="mb-3">
+                          <p className="text-xs text-muted-foreground mb-2">Clique para selecionar os serviços prestados:</p>
+                          <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                            {allSuggestedSpecialties.map((item) => {
+                              const isSelected = formData.specialties.includes(item)
+                              return (
+                                <button
+                                  key={item}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setFormData({
+                                        ...formData,
+                                        specialties: formData.specialties.filter((s) => s !== item),
+                                      })
+                                    } else {
+                                      setFormData({
+                                        ...formData,
+                                        specialties: [...formData.specialties, item],
+                                      })
+                                    }
+                                  }}
+                                  className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                                    isSelected
+                                      ? 'bg-primary text-primary-foreground border-primary'
+                                      : 'bg-muted/50 text-foreground border-border hover:bg-muted'
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-3 h-3" />}
+                                  {item}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Campo para adicionar nova especialidade personalizada */}
+                        <div className="border border-border rounded-lg p-3 bg-muted/20">
+                          <label className="block text-xs text-muted-foreground mb-1.5">
+                            Não encontrou na lista? Adicione uma especialidade personalizada:
+                          </label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="text"
+                              value={customSpecialtyInput}
+                              onChange={(e) => setCustomSpecialtyInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  handleAddCustomSpecialty()
                                 }
                               }}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
-                                isSelected
-                                  ? 'bg-amber-950/60 text-amber-300 border-amber-800/60'
-                                  : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white'
-                              }`}
+                              placeholder="Ex: Barboterapia com Ozônio, Platinado..."
+                              className="h-9 text-xs"
+                            />
+                            <Button
+                              type="button"
+                              onClick={handleAddCustomSpecialty}
+                              size="sm"
+                              className="h-9 gap-1"
                             >
-                              {isSelected && <Check className="w-3 h-3 text-amber-400" />}
-                              {item}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Campo para adicionar nova especialidade personalizada */}
-                    <div className="bg-white/[0.02] border border-white/6 rounded-lg p-3">
-                      <label className="block text-xs text-white/70 mb-1.5">
-                        Não encontrou o serviço na lista? Adicione uma especialidade personalizada:
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={customSpecialtyInput}
-                          onChange={(e) => setCustomSpecialtyInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault()
-                              handleAddCustomSpecialty()
-                            }
-                          }}
-                          placeholder="Ex: Barboterapia com Ozônio, Platinado, Barba Terapia..."
-                          className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/30 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddCustomSpecialty}
-                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          Adicionar
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Tags selecionadas ativas */}
-                    {formData.specialties.length > 0 && (
-                      <div className="mt-3">
-                        <span className="text-xs text-white/60 block mb-1.5">
-                          Especialidades vinculadas ({formData.specialties.length}):
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {formData.specialties.map((spec) => (
-                            <span
-                              key={spec}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-950/60 text-amber-300 border border-amber-800/60"
-                            >
-                              <span>{spec}</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setFormData({
-                                    ...formData,
-                                    specialties: formData.specialties.filter((s) => s !== spec),
-                                  })
-                                }
-                                className="hover:text-red-400 transition-colors p-0.5 rounded-full hover:bg-white/10"
-                                title="Remover especialidade"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
+                              <Plus className="w-3.5 h-3.5" />
+                              Adicionar
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4 md:mt-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAddForm(false)
-                  setEditingUser(null)
-                  setFormData({
-                    name: '',
-                    email: '',
-                    phone: '',
-                    role: 'BARBER',
-                    barbershopId: '',
-                    password: '',
-                    isActive: true,
-                    avatar: '',
-                    bio: '',
-                    specialties: [],
-                  })
-                  setCustomSpecialtyInput('')
-                  setAvatarPreview('')
-                  setAvatarFile(null)
-                }}
-                className="px-4 py-2 md:px-4 md:py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all text-sm md:text-base"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 md:px-4 md:py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-colors text-sm md:text-base cursor-pointer"
-              >
-                {editingUser ? 'Atualizar' : 'Cadastrar'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
-      {/* Lista de Usuários */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-        {filteredUsers.length === 0 ? (
-          <div className="text-center py-8 md:py-12">
-            <User className="w-10 h-10 md:w-12 md:h-12 text-white/40 mx-auto mb-3 md:mb-4" />
-            <p className="text-white/60 text-base md:text-lg">Nenhum usuário encontrado</p>
-            <p className="text-white/40 text-xs md:text-sm mt-1 md:mt-2">
-              {searchTerm ? 'Tente uma busca diferente' : 'Adicione seu primeiro usuário'}
-            </p>
-          </div>
-        ) : (
-          <div className="table-responsive">
-            <table className="w-full">
-              <thead className="bg-muted/40 border-b border-border">
-                <tr>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Usuário
-                  </th>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden sm:table-cell">
-                    Função
-                  </th>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden md:table-cell">
-                    Telefone
-                  </th>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden sm:table-cell">
-                    Status
-                  </th>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider hidden md:table-cell">
-                    Data de Cadastro
-                  </th>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/6">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400" />
-                        <span className="text-white/60 text-sm">Carregando usuários da plataforma...</span>
+                        {/* Tags selecionadas ativas */}
+                        {formData.specialties.length > 0 && (
+                          <div className="mt-3">
+                            <span className="text-xs text-muted-foreground block mb-1.5">
+                              Especialidades vinculadas ({formData.specialties.length}):
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {formData.specialties.map((spec) => (
+                                <Badge
+                                  key={spec}
+                                  variant="secondary"
+                                  className="gap-1.5 py-1 px-2.5 text-xs font-medium"
+                                >
+                                  <span>{spec}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setFormData({
+                                        ...formData,
+                                        specialties: formData.specialties.filter((s) => s !== spec),
+                                      })
+                                    }
+                                    className="hover:text-destructive transition-colors"
+                                    title="Remover especialidade"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </td>
-                  </tr>
-                ) : filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-white/50 text-sm">
-                      {errorMessage
-                        ? 'Nenhum usuário pôde ser listado no momento.'
-                        : 'Nenhum usuário encontrado com os filtros aplicados.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-white/5">
-                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2.5 pt-3 border-t border-border">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowAddForm(false)
+                      setEditingUser(null)
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit">
+                    {editingUser ? 'Salvar Alterações' : 'Cadastrar Usuário'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabela de Usuários */}
+        <Card className="border-border shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead>Usuário</TableHead>
+                <TableHead className="hidden sm:table-cell">Função</TableHead>
+                {user?.role === 'DEVELOPER' && (
+                  <TableHead className="hidden md:table-cell">Unidade / Barbearia</TableHead>
+                )}
+                <TableHead className="hidden md:table-cell">Telefone</TableHead>
+                <TableHead className="hidden sm:table-cell">Status</TableHead>
+                <TableHead className="hidden lg:table-cell">Cadastro</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={user?.role === 'DEVELOPER' ? 7 : 6}
+                    className="py-16 text-center"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                      <span className="text-muted-foreground text-sm">Carregando usuários da plataforma...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={user?.role === 'DEVELOPER' ? 7 : 6}
+                    className="py-16 text-center"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <UserIcon className="w-10 h-10 text-muted-foreground/40 mb-1" />
+                      <p className="text-foreground font-medium">Nenhum usuário encontrado</p>
+                      <p className="text-muted-foreground text-xs md:text-sm">
+                        {searchTerm
+                          ? 'Tente ajustar os filtros ou o termo de busca pesquisado.'
+                          : 'Nenhum usuário cadastrado com os critérios selecionados.'}
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map((u) => (
+                  <TableRow key={u.id} className="hover:bg-muted/50 transition-colors">
+                    {/* Usuário (Foto, Nome, Email) */}
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 overflow-hidden text-primary font-semibold text-xs">
                           {u.avatar ? (
-                            <img 
-                              src={u.avatar} 
+                            <img
+                              src={u.avatar}
                               alt={u.name}
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-amber-400 font-bold text-xs md:text-sm">
-                              {u.name.charAt(0).toUpperCase()}
-                            </span>
+                            <span>{(u.name || 'U').charAt(0).toUpperCase()}</span>
                           )}
                         </div>
-                        <div className="ml-2 md:ml-4 min-w-0">
-                          <div className="text-xs md:text-sm font-medium text-white truncate flex items-center gap-1.5">
-                            <span>{u.name}</span>
-                            {u.role === 'DEVELOPER' ? (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                <Crown className="w-3 h-3 text-amber-400" /> Global
-                              </span>
-                            ) : u.barbershop?.name ? (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/10 text-white/70 border border-white/10">
-                                <Building2 className="w-3 h-3 text-yellow-400" /> {u.barbershop.name}
-                              </span>
-                            ) : null}
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm text-foreground truncate flex items-center gap-1.5">
+                            <span>{u.name || 'Sem Nome'}</span>
+                            {u.role === 'DEVELOPER' && (
+                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-500/30 text-amber-500 dark:text-amber-400 bg-amber-500/10">
+                                Global
+                              </Badge>
+                            )}
                           </div>
-                          <div className="text-xs md:text-sm text-white/60 truncate hidden sm:block">{u.email}</div>
+                          <div className="text-xs text-muted-foreground truncate">{u.email || '-'}</div>
+                          {user?.role === 'DEVELOPER' && (
+                            <div className="text-[10px] text-muted-foreground font-mono mt-0.5">ID: {u.id}</div>
+                          )}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden sm:table-cell">
-                      <div className="flex items-center">
-                        <Shield className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/40 mr-1.5 md:mr-2" />
-                        <span className={`inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(u.role)}`}>
-                          {getRoleText(u.role)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
-                      {u.phone ? (
-                        <span className="text-xs md:text-sm text-white">{u.phone}</span>
-                      ) : (
-                        <span className="text-xs md:text-sm text-white/40">Não informado</span>
-                      )}
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden sm:table-cell">
-                      <span className={`inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        u.isActive 
-                          ? 'bg-green-400/20 text-green-400 border border-green-400/30' 
-                          : 'bg-red-400/20 text-red-400 border border-red-400/30'
-                      }`}>
+                    </TableCell>
+
+                    {/* Função */}
+                    <TableCell className="hidden sm:table-cell py-3">
+                      {getRoleBadge(u.role)}
+                    </TableCell>
+
+                    {/* Barbearia / Unidade (para DEVELOPER) */}
+                    {user?.role === 'DEVELOPER' && (
+                      <TableCell className="hidden md:table-cell py-3">
+                        {u.role === 'DEVELOPER' ? (
+                          <span className="text-xs text-muted-foreground italic">Todas as unidades</span>
+                        ) : u.barbershop?.name ? (
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                            <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            <span className="truncate max-w-[180px]">{u.barbershop.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">Sem vínculo</span>
+                        )}
+                      </TableCell>
+                    )}
+
+                    {/* Telefone */}
+                    <TableCell className="hidden md:table-cell py-3 text-xs text-muted-foreground">
+                      {u.phone || '-'}
+                    </TableCell>
+
+                    {/* Status */}
+                    <TableCell className="hidden sm:table-cell py-3">
+                      <Badge
+                        variant={u.isActive ? 'outline' : 'secondary'}
+                        className={
+                          u.isActive
+                            ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                            : 'opacity-70'
+                        }
+                      >
                         {u.isActive ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden md:table-cell">
-                      <span className="text-xs md:text-sm text-white/60">
-                        {new Date(u.createdAt).toLocaleDateString('pt-BR')}
-                      </span>
-                    </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm font-medium">
-                      <div className="flex space-x-1.5 md:space-x-2">
-                        <button
+                      </Badge>
+                    </TableCell>
+
+                    {/* Data de Cadastro */}
+                    <TableCell className="hidden lg:table-cell py-3 text-xs text-muted-foreground">
+                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-BR') : '-'}
+                    </TableCell>
+
+                    {/* Ações */}
+                    <TableCell className="text-right py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(u)}
-                          className="text-blue-400 hover:text-blue-300 p-1.5 md:p-2 rounded-lg hover:bg-blue-500/10 transition-all"
                           title="Editar"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         >
-                          <Edit className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(u.id, u.isActive)}
-                          className={u.isActive ? 'text-yellow-400 hover:text-yellow-300 p-1.5 md:p-2 rounded-lg hover:bg-yellow-500/10 transition-all' : 'text-green-400 hover:text-green-300 p-1.5 md:p-2 rounded-lg hover:bg-green-500/10 transition-all'}
-                          title={u.isActive ? 'Desativar' : 'Ativar'}
-                        >
-                          {u.isActive ? <EyeOff className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Eye className="w-3.5 h-3.5 md:w-4 md:h-4" />}
-                        </button>
-                        <button
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleDelete(u.id)}
-                          className="text-red-400 hover:text-red-300 p-1.5 md:p-2 rounded-lg hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Excluir"
                           disabled={
-                            u.id === user?.id || 
-                            (u.role === 'DEVELOPER' && filteredUsers.filter(item => item.role === 'DEVELOPER').length === 1) ||
-                            (u.role === 'ADMIN' && filteredUsers.filter(item => item.role === 'ADMIN').length === 1)
+                            u.id === user?.id ||
+                            (u.role === 'DEVELOPER' && filteredUsers.filter((item) => item.role === 'DEVELOPER').length === 1) ||
+                            (u.role === 'ADMIN' && filteredUsers.filter((item) => item.role === 'ADMIN').length === 1)
                           }
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive disabled:opacity-30"
                         >
-                          <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                        </button>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
-                )))}
-              </tbody>
-            </table>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+
+        {/* Resumo de Usuários no Padrão shadcn Metric Cards */}
+        {users.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+            <Card className="border-border">
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1">
+                  <Users className="w-3.5 h-3.5" /> Total Geral
+                </p>
+                <p className="text-2xl font-bold tracking-tight text-foreground">{users.length}</p>
+              </CardContent>
+            </Card>
+
+            {user?.role === 'DEVELOPER' && (
+              <Card className="border-border">
+                <CardContent className="p-4">
+                  <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1">
+                    <Crown className="w-3.5 h-3.5 text-amber-500" /> Desenvolvedores
+                  </p>
+                  <p className="text-2xl font-bold tracking-tight text-amber-500 dark:text-amber-400">
+                    {users.filter((u) => u.role === 'DEVELOPER').length}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="border-border">
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1">
+                  <Shield className="w-3.5 h-3.5 text-primary" /> Administradores
+                </p>
+                <p className="text-2xl font-bold tracking-tight text-foreground">
+                  {users.filter((u) => u.role === 'ADMIN').length}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border">
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1">
+                  <Briefcase className="w-3.5 h-3.5 text-primary" /> Barbeiros / Equipe
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold tracking-tight text-foreground">
+                    {users.filter((u) => u.role === 'BARBER').length}
+                  </p>
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                    ({users.filter((u) => u.role === 'BARBER' && u.isActive).length} disponíveis)
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border">
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1">
+                  <UserCheck className="w-3.5 h-3.5 text-emerald-500" /> Clientes
+                </p>
+                <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+                  {users.filter((u) => u.role === 'CLIENT').length}
+                </p>
+              </CardContent>
+            </Card>
           </div>
         )}
-      </div>
-
-      {/* Resumo */}
-      {users.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
-          <h3 className="text-base md:text-lg font-semibold text-foreground mb-3 md:mb-4">Resumo de Usuários</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-            <div>
-              <p className="text-xs md:text-sm text-white/60">Total de Usuários</p>
-              <p className="text-xl md:text-2xl font-bold text-white">{users.length}</p>
-            </div>
-            {user?.role === 'DEVELOPER' && (
-              <div>
-                <p className="text-xs md:text-sm text-white/60">Desenvolvedores</p>
-                <p className="text-xl md:text-2xl font-bold text-amber-400">
-                  {users.filter(u => u.role === 'DEVELOPER').length}
-                </p>
-              </div>
-            )}
-            <div>
-              <p className="text-xs md:text-sm text-white/60">Administradores</p>
-              <p className="text-xl md:text-2xl font-bold text-purple-400">
-                {users.filter(u => u.role === 'ADMIN').length}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs md:text-sm text-white/60">Profissionais</p>
-              <p className="text-xl md:text-2xl font-bold text-blue-400">
-                {users.filter(u => u.role === 'BARBER').length}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs md:text-sm text-white/60">Clientes</p>
-              <p className="text-xl md:text-2xl font-bold text-green-400">
-                {users.filter(u => u.role === 'CLIENT').length}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
       </main>
     </div>
   )

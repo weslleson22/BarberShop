@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import DropdownHeader from '@/components/shared/DropdownHeader'
@@ -45,7 +45,6 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
   CardFooter,
 } from '@/components/ui/card'
@@ -159,9 +158,12 @@ const initialMetrics: PlatformMetrics = {
   },
 }
 
-export default function DeveloperDashboardPage() {
+function DeveloperDashboardContent() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const statusParam = searchParams?.get('status')
+  const actionParam = searchParams?.get('action') || searchParams?.get('novo') || searchParams?.get('modal')
 
   const [barbershops, setBarbershops] = useState<BarbershopData[]>([])
   const [metrics, setMetrics] = useState<PlatformMetrics>(initialMetrics)
@@ -284,29 +286,25 @@ export default function DeveloperDashboardPage() {
   }, [user, loading, router])
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const searchParams = new URLSearchParams(window.location.search)
-      const statusParam = searchParams.get('status')
-      if (statusParam === 'APPROVED' || statusParam === 'ACTIVE') {
-        setFilterTab('ACTIVE')
-      } else if (statusParam === 'PENDING') {
-        setFilterTab('PENDING')
-      } else if (statusParam === 'SUSPENDED') {
-        setFilterTab('SUSPENDED')
-      } else if (statusParam === 'CANCELLED' || statusParam === 'CANCELED') {
-        setFilterTab('CANCELLED')
-      }
-
-      if (
-        searchParams.get('action') === 'new' ||
-        searchParams.get('novo') === 'true' ||
-        searchParams.get('modal') === 'true'
-      ) {
-        setFormError(null)
-        setIsAddModalOpen(true)
-      }
+    if (statusParam === 'APPROVED' || statusParam === 'ACTIVE') {
+      setFilterTab('ACTIVE')
+    } else if (statusParam === 'PENDING') {
+      setFilterTab('PENDING')
+    } else if (statusParam === 'SUSPENDED') {
+      setFilterTab('SUSPENDED')
+    } else if (statusParam === 'CANCELLED' || statusParam === 'CANCELED') {
+      setFilterTab('CANCELLED')
+    } else if (statusParam === 'ALL') {
+      setFilterTab('ALL')
     }
-  }, [])
+  }, [statusParam])
+
+  useEffect(() => {
+    if (actionParam === 'new' || actionParam === 'true') {
+      setFormError(null)
+      setIsAddModalOpen(true)
+    }
+  }, [actionParam])
 
   const loadData = async () => {
     setIsLoading(true)
@@ -472,10 +470,13 @@ export default function DeveloperDashboardPage() {
   const getContractStatus = (contractExpiresAt: string | null) => {
     if (!contractExpiresAt) {
       return {
-        label: 'Vitalício',
-        color: 'bg-[#059669] text-white border border-[#10b981]',
+        label: 'Contrato Vitalício',
+        badgeText: 'Vitalício',
+        variant: 'secondary' as const,
+        color: 'border-border text-muted-foreground bg-muted',
         isExpired: false,
         daysRemaining: null,
+        formattedDate: null,
       }
     }
 
@@ -483,27 +484,37 @@ export default function DeveloperDashboardPage() {
     const expDate = new Date(contractExpiresAt)
     const diffTime = expDate.getTime() - now.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const formattedDate = expDate.toLocaleDateString('pt-BR')
 
     if (diffDays < 0) {
       return {
-        label: `Expirado (${expDate.toLocaleDateString('pt-BR')})`,
-        color: 'bg-[#dc2626] text-white border border-[#ef4444]',
+        label: `Expirado em ${formattedDate}`,
+        badgeText: 'Expirado',
+        variant: 'destructive' as const,
+        color: 'border-destructive/30 text-destructive bg-destructive/10',
         isExpired: true,
         daysRemaining: diffDays,
+        formattedDate,
       }
     } else if (diffDays <= 15) {
       return {
-        label: `Expira em ${diffDays}d (${expDate.toLocaleDateString('pt-BR')})`,
-        color: 'bg-[#d97706] text-white border border-[#f59e0b]',
+        label: `Expira em ${diffDays}d (${formattedDate})`,
+        badgeText: `${diffDays}d restantes`,
+        variant: 'outline' as const,
+        color: 'border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10',
         isExpired: false,
         daysRemaining: diffDays,
+        formattedDate,
       }
     } else {
       return {
-        label: `Até ${expDate.toLocaleDateString('pt-BR')}`,
-        color: 'bg-[#2563eb] text-white border border-[#3b82f6]',
+        label: `Válido até ${formattedDate}`,
+        badgeText: 'Ativo',
+        variant: 'outline' as const,
+        color: 'border-border text-foreground bg-muted/40',
         isExpired: false,
         daysRemaining: diffDays,
+        formattedDate,
       }
     }
   }
@@ -846,85 +857,78 @@ export default function DeveloperDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
 
       <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-8">
         {/* Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#374151] pb-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6 mb-8">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-lg text-xs font-bold bg-[#2563eb] text-white border border-[#3b82f6] shadow-sm">
-                DEVELOPER ADMIN
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                Gestão da Plataforma SaaS
-              </h1>
-            </div>
-            <p className="text-white text-sm mt-1 font-medium">
-              Painel técnico de controle de tenants, isolamento multi-tenant e administração da plataforma.
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+              Gestão da Plataforma SaaS
+            </h1>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <Link
-              href="/developer/billing"
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#111827] hover:bg-[#1f2937] text-white font-bold border border-[#374151] rounded-lg text-sm transition-colors shadow-sm"
-            >
-              <CreditCard className="h-4 w-4 text-white" />
-              <span>Faturamento & Gateway</span>
-            </Link>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Button variant="outline" size="sm" asChild className="gap-2 text-xs">
+              <Link href="/developer/billing">
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                <span>Faturamento & Gateway</span>
+              </Link>
+            </Button>
 
-            <Link
-              href="/developer/onboarding"
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#111827] hover:bg-[#1f2937] text-white font-bold border border-[#374151] rounded-lg text-sm transition-colors shadow-sm"
-            >
-              <Users className="h-4 w-4 text-white" />
-              <span>Cockpit Onboarding</span>
-            </Link>
+            <Button variant="outline" size="sm" asChild className="gap-2 text-xs">
+              <Link href="/developer/onboarding">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span>Cockpit Onboarding</span>
+              </Link>
+            </Button>
 
-            <button
+            <Button
+              size="sm"
               onClick={() => {
                 setFormError(null)
                 setIsAddModalOpen(true)
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-sm border border-[#10b981] transition-colors cursor-pointer shadow-sm"
+              className="gap-1.5 text-xs font-medium"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
-              Nova Empresa
-            </button>
+              <span>Nova Empresa</span>
+            </Button>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={loadData}
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#111827] border border-[#374151] hover:bg-[#1f2937] rounded-lg text-sm font-bold transition text-white shadow-sm"
+              className="gap-2 text-xs"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </button>
+              <span>Atualizar</span>
+            </Button>
           </div>
         </div>
 
         {/* Feedback Alert */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-xl flex items-center justify-between gap-3 border shadow-sm ${
+            className={`mb-6 p-4 rounded-lg flex items-center justify-between gap-3 border shadow-sm ${
               message.type === 'success'
-                ? 'bg-[#059669] border-[#10b981] text-white font-bold'
-                : 'bg-[#dc2626] border-[#ef4444] text-white font-bold'
+                ? 'bg-muted/80 border-border text-foreground'
+                : 'bg-destructive/10 border-destructive/20 text-destructive'
             }`}
           >
             <div className="flex items-center gap-3">
               {message.type === 'success' ? (
-                <CheckCircle2 className="h-5 w-5 text-white shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
               ) : (
-                <AlertTriangle className="h-5 w-5 text-white shrink-0" />
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
               )}
-              <span className="text-sm font-bold">{message.text}</span>
+              <span className="text-sm font-medium">{message.text}</span>
             </div>
             <button
               onClick={() => setMessage(null)}
-              className="text-white hover:text-gray-200 transition"
+              className="text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Fechar mensagem"
             >
               <X className="h-4 w-4" />
@@ -933,43 +937,34 @@ export default function DeveloperDashboardPage() {
         )}
 
         {/* Hub de Faturamento, Gateway, Planos & Assinaturas */}
-        <div className="bg-[#111827] border border-[#374151] rounded-xl p-6 space-y-4 shadow-sm">
+        <Card className="bg-card text-card-foreground border-border shadow-sm p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#059669] border border-[#10b981] text-white text-xs font-bold uppercase tracking-wider mb-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-medium uppercase tracking-wider mb-2 border border-border">
                 <CreditCard className="w-3.5 h-3.5" />
                 <span>Gestão Financeira SaaS</span>
               </div>
-              <h2 className="text-xl font-bold text-white">Faturamento & Planos</h2>
-              <p className="text-xs text-white font-medium mt-1">
-                Controle direto de assinaturas das barbearias, cobranças geradas e planos cadastrados.
-              </p>
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">Faturamento & Planos</h2>
             </div>
-            <Link
-              href="/developer/billing"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs border border-[#10b981] transition-colors self-start sm:self-auto cursor-pointer shadow-sm"
-            >
-              <span>Abrir Faturamento Completo</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
+            <Button variant="outline" size="sm" asChild className="gap-1.5 self-start sm:self-auto text-xs">
+              <Link href="/developer/billing">
+                <span>Abrir Faturamento Completo</span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+              </Link>
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
             {/* Card 1: Cobranças Gateway */}
             <Link
               href="/developer/billing?tab=cobrancas"
-              className="bg-[#030712] border border-[#374151] hover:border-[#4b5563] p-4 rounded-xl transition-colors flex flex-col justify-between cursor-pointer shadow-sm"
+              className="bg-muted/30 border border-border hover:bg-muted/60 p-4 rounded-lg transition-colors flex flex-col justify-between shadow-none"
             >
-              <div className="flex items-center justify-between text-white mb-2">
-                <span className="text-xs font-bold">Cobranças Gateway</span>
-                <span className="p-1 rounded bg-[#059669] text-white border border-[#10b981]">
-                  <CreditCard className="w-3.5 h-3.5" />
-                </span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-foreground">Cobranças Gateway</span>
+                <CreditCard className="w-4 h-4 text-muted-foreground" />
               </div>
-              <div className="text-xs text-white font-medium leading-relaxed">
-                Histórico de cobranças, links de checkout e liquidações PIX/Cartão.
-              </div>
-              <span className="text-[11px] text-white font-bold mt-3 flex items-center gap-1 underline">
+              <span className="text-[11px] text-primary font-medium mt-3 flex items-center gap-1 hover:underline">
                 Acessar cobranças →
               </span>
             </Link>
@@ -977,18 +972,15 @@ export default function DeveloperDashboardPage() {
             {/* Card 2: Assinaturas SaaS */}
             <Link
               href="/developer/subscriptions"
-              className="bg-[#030712] border border-[#374151] hover:border-[#4b5563] p-4 rounded-xl transition-colors flex flex-col justify-between cursor-pointer shadow-sm"
+              className="bg-muted/30 border border-border hover:bg-muted/60 p-4 rounded-lg transition-colors flex flex-col justify-between shadow-none"
             >
-              <div className="flex items-center justify-between text-white mb-2">
-                <span className="text-xs font-bold">Assinaturas SaaS</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[#2563eb] text-white border border-[#3b82f6] font-mono font-bold">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-foreground">Assinaturas SaaS</span>
+                <Badge variant="secondary" className="text-[10px] font-normal">
                   {barbershops.filter(b => b.subscriptionStatus === 'ACTIVE' || b.isActive).length} ativas
-                </span>
+                </Badge>
               </div>
-              <div className="text-xs text-white font-medium leading-relaxed">
-                Status das assinaturas, vigências, renovações e inadimplência.
-              </div>
-              <span className="text-[11px] text-white font-bold mt-3 flex items-center gap-1 underline">
+              <span className="text-[11px] text-primary font-medium mt-3 flex items-center gap-1 hover:underline">
                 Ver assinaturas →
               </span>
             </Link>
@@ -996,18 +988,13 @@ export default function DeveloperDashboardPage() {
             {/* Card 3: Produtos no Gateway */}
             <Link
               href="/developer/billing?tab=produtos"
-              className="bg-[#030712] border border-[#374151] hover:border-[#4b5563] p-4 rounded-xl transition-colors flex flex-col justify-between cursor-pointer shadow-sm"
+              className="bg-muted/30 border border-border hover:bg-muted/60 p-4 rounded-lg transition-colors flex flex-col justify-between shadow-none"
             >
-              <div className="flex items-center justify-between text-white mb-2">
-                <span className="text-xs font-bold">Produtos no Gateway</span>
-                <span className="p-1 rounded bg-[#d97706] text-white border border-[#f59e0b]">
-                  <Package className="w-3.5 h-3.5" />
-                </span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-foreground">Produtos no Gateway</span>
+                <Package className="w-4 h-4 text-muted-foreground" />
               </div>
-              <div className="text-xs text-white font-medium leading-relaxed">
-                Seus produtos cadastrados e sincronizados com a API de pagamento.
-              </div>
-              <span className="text-[11px] text-white font-bold mt-3 flex items-center gap-1 underline">
+              <span className="text-[11px] text-primary font-medium mt-3 flex items-center gap-1 hover:underline">
                 Gerenciar produtos →
               </span>
             </Link>
@@ -1015,158 +1002,155 @@ export default function DeveloperDashboardPage() {
             {/* Card 4: Planos Cadastrados pelo Developer */}
             <Link
               href="/developer/billing?tab=produtos"
-              className="bg-[#030712] border border-[#374151] hover:border-[#4b5563] p-4 rounded-xl transition-colors flex flex-col justify-between cursor-pointer shadow-sm"
+              className="bg-muted/30 border border-border hover:bg-muted/60 p-4 rounded-lg transition-colors flex flex-col justify-between shadow-none"
             >
-              <div className="flex items-center justify-between text-white mb-2">
-                <span className="text-xs font-bold">Planos Cadastrados</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[#7c3aed] text-white border border-[#8b5cf6] font-mono font-bold">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-foreground">Planos Cadastrados</span>
+                <Badge variant="outline" className="text-[10px] font-normal">
                   Developer
-                </span>
+                </Badge>
               </div>
-              <div className="text-xs text-white font-medium leading-relaxed">
-                Planos cadastrados pelo developer e sincronização com o gateway.
-              </div>
-              <span className="text-[11px] text-white font-bold mt-3 flex items-center gap-1 underline">
+              <span className="text-[11px] text-primary font-medium mt-3 flex items-center gap-1 hover:underline">
                 Configurar planos →
               </span>
             </Link>
           </div>
-        </div>
+        </Card>
 
-        {/* Metrics Grid (Platform / Technical Metrics Only - Zero Operational Appointments) */}
+        {/* Metrics Grid — Padrão Canônico shadcn/ui */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-[#111827] border border-[#374151] p-5 rounded-xl shadow-sm">
-            <div className="flex items-center justify-between text-white mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-white">Empresas (Tenants)</span>
-              <span className="p-1.5 rounded-lg bg-[#2563eb] text-white border border-[#3b82f6]">
-                <Building2 className="h-4 w-4" />
-              </span>
-            </div>
-            <div className="text-3xl font-bold text-white">
-              {metrics?.tenants?.total ?? 0}
-            </div>
-            <div className="text-xs text-white mt-2 flex items-center justify-between font-bold">
-              <div className="flex items-center gap-2">
-                <span className="bg-[#059669] text-white border border-[#10b981] px-2 py-0.5 rounded text-[11px]">{activeCount} ativas</span>
-                <span className="bg-[#dc2626] text-white border border-[#ef4444] px-2 py-0.5 rounded text-[11px]">{inactiveCount} inativas</span>
+          {/* Métrica 1: Empresas (Tenants) */}
+          <Card className="bg-card text-card-foreground border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Empresas (Tenants)</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics?.tenants?.total ?? 0}</div>
+              <div className="flex items-center justify-between mt-2 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
+                    {activeCount} ativas
+                  </Badge>
+                  <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
+                    {inactiveCount} inativas
+                  </Badge>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormError(null)
+                    setIsAddModalOpen(true)
+                  }}
+                  className="text-primary hover:underline font-medium text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Criar
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setFormError(null)
-                  setIsAddModalOpen(true)
-                }}
-                className="text-white hover:text-gray-200 font-bold text-xs flex items-center gap-1 transition cursor-pointer underline"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Criar
-              </button>
-            </div>
-            {pendingCount > 0 && (
-              <button
-                type="button"
-                onClick={() => setFilterTab('PENDING')}
-                className="mt-2.5 text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b] px-2.5 py-1 rounded-md flex items-center gap-1.5 transition cursor-pointer shadow-sm w-fit"
-              >
-                <Clock className="w-3.5 h-3.5" />
-                <span>{pendingCount} aguardando aprovação</span>
-              </button>
-            )}
-          </div>
+              {pendingCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFilterTab('PENDING')}
+                  className="mt-2 text-xs text-amber-500 hover:underline flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{pendingCount} aguardando aprovação</span>
+                </button>
+              )}
+            </CardContent>
+          </Card>
 
-          <Link
-            href="/usuarios"
-            className="block bg-[#111827] border border-[#374151] hover:border-[#4b5563] p-5 rounded-xl transition shadow-sm"
-          >
-            <div className="flex items-center justify-between text-white mb-2 transition">
-              <span className="text-xs font-bold uppercase tracking-wider text-white">Usuários da Plataforma</span>
-              <span className="p-1.5 rounded-lg bg-[#059669] text-white border border-[#10b981]">
-                <Users className="h-4 w-4" />
-              </span>
-            </div>
-            <div className="text-3xl font-bold text-white">
-              {metrics?.users?.total ?? 0}
-            </div>
-            <div className="text-xs text-white mt-2 flex items-center gap-2 font-bold">
-              <span className="bg-[#1f2937] text-white px-2 py-0.5 rounded border border-[#374151]">{metrics?.users?.byRole?.['ADMIN'] ?? 0} admins</span>
-              <span className="bg-[#1f2937] text-white px-2 py-0.5 rounded border border-[#374151]">{metrics?.users?.byRole?.['BARBER'] ?? 0} profissionais</span>
-            </div>
+          {/* Métrica 2: Usuários da Plataforma */}
+          <Link href="/usuarios" className="block">
+            <Card className="bg-card text-card-foreground border-border shadow-sm hover:border-foreground/20 transition-colors h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Usuários da Plataforma</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{metrics?.users?.total ?? 0}</div>
+                <div className="flex items-center gap-1.5 mt-2 text-xs">
+                  <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
+                    {metrics?.users?.byRole?.['ADMIN'] ?? 0} admins
+                  </Badge>
+                  <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
+                    {metrics?.users?.byRole?.['BARBER'] ?? 0} profissionais
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
           </Link>
 
-          <div className="bg-[#111827] border border-[#374151] p-5 rounded-xl shadow-sm">
-            <div className="flex items-center justify-between text-white mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-white">Base de Clientes</span>
-              <span className="p-1.5 rounded-lg bg-[#7c3aed] text-white border border-[#8b5cf6]">
-                <ShieldCheck className="h-4 w-4" />
-              </span>
-            </div>
-            <div className="text-3xl font-bold text-white">
-              {metrics?.clients?.total ?? 0}
-            </div>
-            <div className="text-xs text-white font-medium mt-2">
-              Cadastros registrados nos tenants
-            </div>
-          </div>
+          {/* Métrica 3: Base de Clientes */}
+          <Card className="bg-card text-card-foreground border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Base de Clientes</CardTitle>
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics?.clients?.total ?? 0}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Cadastros registrados nos tenants
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="bg-[#111827] border border-[#374151] p-5 rounded-xl shadow-sm">
-            <div className="flex items-center justify-between text-white mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-white">Serviços no Catálogo</span>
-              <span className="p-1.5 rounded-lg bg-[#d97706] text-white border border-[#f59e0b]">
-                <Briefcase className="h-4 w-4" />
-              </span>
-            </div>
-            <div className="text-3xl font-bold text-white">
-              {metrics?.services?.total ?? 0}
-            </div>
-            <div className="text-xs text-white font-medium mt-2">
-              Serviços configurados pelas empresas
-            </div>
-          </div>
+          {/* Métrica 4: Serviços no Catálogo */}
+          <Card className="bg-card text-card-foreground border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Serviços no Catálogo</CardTitle>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics?.services?.total ?? 0}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Serviços configurados pelas empresas
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Tenants Table - shadcn/ui */}
         <TooltipProvider delayDuration={150}>
-          <Card className="bg-[#111827] border-[#374151] rounded-xl overflow-hidden shadow-sm mb-8 text-white">
-            <CardHeader className="p-5 border-b border-[#374151] bg-[#111827] space-y-4">
+          <Card className="bg-card text-card-foreground border-border shadow-sm mb-8 overflow-hidden">
+            <CardHeader className="p-5 border-b border-border space-y-4">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <span className="p-2.5 rounded-lg bg-[#2563eb] text-white border border-[#3b82f6] shadow-sm mt-0.5">
-                    <Building2 className="w-5 h-5 text-white" />
+                  <span className="p-2 rounded-md bg-primary/10 text-primary border border-primary/20 shadow-none mt-0.5">
+                    <Building2 className="w-5 h-5" />
                   </span>
                   <div>
                     <div className="flex items-center gap-2.5 flex-wrap">
-                      <CardTitle className="text-xl font-bold text-white tracking-tight">
-                        Tenants Cadastrados
+                      <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
+                        Cadastrados
                       </CardTitle>
                       <Badge
-                        variant="outline"
-                        className="bg-[#030712] text-white border-[#374151] font-mono text-[11px] px-2.5 py-0.5 font-bold"
+                        variant="secondary"
+                        className="font-mono text-[11px] px-2 py-0.5 font-normal"
                       >
                         {filteredBarbershops.length}{' '}
                         {filteredBarbershops.length === 1 ? 'empresa' : 'empresas'}
                       </Badge>
                     </div>
-                    <CardDescription className="text-xs text-white font-medium mt-1">
-                      Controle de acesso, isolamento de dados e ativação de unidades
-                    </CardDescription>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder="Buscar por nome, e-mail..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-9 pr-8 py-2 h-9 bg-[#030712] border-[#374151] rounded-lg text-xs text-white placeholder:text-gray-400 font-medium focus-visible:ring-1 focus-visible:ring-[#2563eb] focus-visible:border-[#2563eb] w-52 sm:w-64"
+                      className="pl-9 pr-8 py-2 h-9 bg-background border-input text-xs text-foreground placeholder:text-muted-foreground font-medium w-52 sm:w-64"
                     />
                     {searchTerm && (
                       <button
                         type="button"
                         onClick={() => setSearchTerm('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white cursor-pointer"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
                         title="Limpar busca"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -1180,7 +1164,7 @@ export default function DeveloperDashboardPage() {
                       setFormError(null)
                       setIsAddModalOpen(true)
                     }}
-                    className="h-9 px-4 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs border border-[#10b981] shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    className="h-9 px-4 gap-1.5 text-xs font-medium cursor-pointer"
                   >
                     <Plus className="h-4 w-4 stroke-[2.5]" />
                     <span>Cadastrar Empresa</span>
@@ -1191,10 +1175,10 @@ export default function DeveloperDashboardPage() {
                     variant="outline"
                     onClick={handleBackfillSlugs}
                     disabled={isSyncingSlugs}
-                    className="h-9 px-3.5 bg-[#030712] hover:bg-[#1f2937] hover:text-white text-white border-[#374151] font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="h-9 px-3.5 text-xs font-medium gap-1.5 cursor-pointer disabled:opacity-50"
                     title="Gera automaticamente slugs únicos para clientes e barbearias antigas sem slug"
                   >
-                    <RefreshCw className={`h-3.5 w-3.5 ${isSyncingSlugs ? 'animate-spin text-white' : 'text-white'}`} />
+                    <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${isSyncingSlugs ? 'animate-spin' : ''}`} />
                     <span className="hidden sm:inline">
                       {isSyncingSlugs ? 'Sincronizando...' : 'Sincronizar Slugs'}
                     </span>
@@ -1210,28 +1194,24 @@ export default function DeveloperDashboardPage() {
                 onMouseUp={handleTabsMouseUp}
                 onMouseMove={handleTabsMouseMove}
                 onWheel={handleTabsWheel}
-                className={`pt-2 border-t border-[#374151] flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] select-none ${
+                className={`pt-2 border-t border-border flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar select-none ${
                   isGrabbingTabs ? 'cursor-grabbing' : 'cursor-grab'
                 }`}
               >
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={filterTab === 'ALL' ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     if (dragMovedRef.current) return
                     setFilterTab('ALL')
                   }}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
-                    filterTab === 'ALL'
-                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
-                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
-                  }`}
+                  className="h-8 px-3 rounded-md text-xs font-medium gap-1.5 shrink-0"
                 >
                   <span>Todos</span>
                   <Badge
                     variant="outline"
-                    className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                    className="px-1.5 py-0 text-[10px] font-mono font-normal"
                   >
                     {barbershops.length}
                   </Badge>
@@ -1239,28 +1219,24 @@ export default function DeveloperDashboardPage() {
 
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={filterTab === 'PENDING' ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     if (dragMovedRef.current) return
                     setFilterTab('PENDING')
                   }}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
-                    filterTab === 'PENDING'
-                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
-                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
-                  }`}
+                  className="h-8 px-3 rounded-md text-xs font-medium gap-1.5 shrink-0"
                 >
-                  <Clock className="w-3.5 h-3.5" />
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Aguardando Aprovação</span>
                   {pendingCount > 0 ? (
-                    <Badge className="px-1.5 py-0 text-[10px] font-bold bg-[#d97706] text-white border-[#f59e0b]">
+                    <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-mono font-normal border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10">
                       {pendingCount}
                     </Badge>
                   ) : (
                     <Badge
                       variant="outline"
-                      className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                      className="px-1.5 py-0 text-[10px] font-mono font-normal"
                     >
                       0
                     </Badge>
@@ -1269,23 +1245,19 @@ export default function DeveloperDashboardPage() {
 
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={filterTab === 'ACTIVE' ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     if (dragMovedRef.current) return
                     setFilterTab('ACTIVE')
                   }}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
-                    filterTab === 'ACTIVE'
-                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
-                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
-                  }`}
+                  className="h-8 px-3 rounded-md text-xs font-medium gap-1.5 shrink-0"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Ativos / Aprovados</span>
                   <Badge
                     variant="outline"
-                    className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                    className="px-1.5 py-0 text-[10px] font-mono font-normal"
                   >
                     {activeCount}
                   </Badge>
@@ -1293,65 +1265,53 @@ export default function DeveloperDashboardPage() {
 
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={filterTab === 'TRIALING' ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     if (dragMovedRef.current) return
                     setFilterTab('TRIALING')
                   }}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
-                    filterTab === 'TRIALING'
-                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
-                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
-                  }`}
+                  className="h-8 px-3 rounded-md text-xs font-medium gap-1.5 shrink-0"
                 >
-                  <CalendarClock className="w-3.5 h-3.5" />
+                  <CalendarClock className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Em Trial (7 dias)</span>
-                  <Badge className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#d97706] text-white border-[#f59e0b]">
+                  <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-mono font-normal border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10">
                     {trialingCount}
                   </Badge>
                 </Button>
 
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={filterTab === 'EXPIRED' ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     if (dragMovedRef.current) return
                     setFilterTab('EXPIRED')
                   }}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
-                    filterTab === 'EXPIRED'
-                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
-                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
-                  }`}
+                  className="h-8 px-3 rounded-md text-xs font-medium gap-1.5 shrink-0"
                 >
-                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Trial Expirado</span>
-                  <Badge className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#dc2626] text-white border-[#ef4444]">
+                  <Badge variant="destructive" className="px-1.5 py-0 text-[10px] font-mono font-normal">
                     {expiredCount}
                   </Badge>
                 </Button>
 
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={filterTab === 'INACTIVE' ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     if (dragMovedRef.current) return
                     setFilterTab('INACTIVE')
                   }}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
-                    filterTab === 'INACTIVE'
-                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
-                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
-                  }`}
+                  className="h-8 px-3 rounded-md text-xs font-medium gap-1.5 shrink-0"
                 >
-                  <Power className="w-3.5 h-3.5" />
+                  <Power className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Inativos / Rejeitados</span>
                   <Badge
                     variant="outline"
-                    className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                    className="px-1.5 py-0 text-[10px] font-mono font-normal"
                   >
                     {inactiveCount}
                   </Badge>
@@ -1359,43 +1319,35 @@ export default function DeveloperDashboardPage() {
 
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={filterTab === 'SUSPENDED' ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     if (dragMovedRef.current) return
                     setFilterTab('SUSPENDED')
                   }}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
-                    filterTab === 'SUSPENDED'
-                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
-                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
-                  }`}
+                  className="h-8 px-3 rounded-md text-xs font-medium gap-1.5 shrink-0"
                 >
-                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <ShieldAlert className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Suspensas</span>
-                  <Badge className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#d97706] text-white border-[#f59e0b]">
+                  <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-mono font-normal border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10">
                     {suspendedCount}
                   </Badge>
                 </Button>
 
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={filterTab === 'CANCELLED' ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     if (dragMovedRef.current) return
                     setFilterTab('CANCELLED')
                   }}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border shadow-sm shrink-0 ${
-                    filterTab === 'CANCELLED'
-                      ? 'bg-[#2563eb] text-white border-[#3b82f6] hover:bg-[#1d4ed8] hover:text-white'
-                      : 'bg-[#030712] text-white border-[#374151] hover:bg-[#1f2937] hover:text-white'
-                  }`}
+                  className="h-8 px-3 rounded-md text-xs font-medium gap-1.5 shrink-0"
                 >
                   <span>Canceladas</span>
                   <Badge
                     variant="outline"
-                    className="px-1.5 py-0 text-[10px] font-mono font-bold bg-[#111827] text-white border-[#374151]"
+                    className="px-1.5 py-0 text-[10px] font-mono font-normal"
                   >
                     {cancelledCount}
                   </Badge>
@@ -1405,54 +1357,54 @@ export default function DeveloperDashboardPage() {
 
             <CardContent className="p-0 overflow-x-auto">
               <Table className="w-full text-left border-collapse text-sm">
-                <TableHeader className="bg-[#030712] border-b border-[#374151]">
-                  <TableRow className="border-b border-[#374151] hover:bg-transparent">
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white">
+                <TableHeader className="bg-muted/40 border-b border-border">
+                  <TableRow className="border-b border-border hover:bg-transparent">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground">
                       Empresa / Tenant
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground">
                       Cadastrado em
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white">
-                      Trial / Assinatura
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground">
+                      Plano & Assinatura
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground">
                       Contato & Gestor
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground text-center">
                       Equipe
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground text-center">
                       Clientes
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground text-center">
                       Serviços
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground text-center">
                       Agendamentos
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-center">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground text-center">
                       Status
                     </TableHead>
-                    <TableHead className="py-3.5 px-4 font-bold text-xs uppercase tracking-wider text-white text-right">
+                    <TableHead className="h-10 px-4 text-xs font-medium text-muted-foreground text-right">
                       Ações
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-[#1f2937]">
+                <TableBody className="divide-y divide-border">
                   {filteredBarbershops.length === 0 ? (
                     <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={10} className="py-12 text-center text-white">
+                      <TableCell colSpan={10} className="py-12 text-center text-foreground">
                         <div className="flex flex-col items-center justify-center gap-3 max-w-sm mx-auto">
-                          <div className="w-12 h-12 rounded-xl bg-[#2563eb] border border-[#3b82f6] text-white flex items-center justify-center shadow-sm">
-                            <Building2 className="w-6 h-6 text-white" />
+                          <div className="w-10 h-10 rounded-md bg-muted text-muted-foreground flex items-center justify-center border border-border">
+                            <Building2 className="w-5 h-5" />
                           </div>
-                          <p className="text-sm font-bold text-white">
+                          <p className="text-sm font-semibold text-foreground">
                             {searchTerm
                               ? 'Nenhuma empresa encontrada para o termo pesquisado.'
                               : 'Nenhuma empresa cadastrada no sistema.'}
                           </p>
-                          <p className="text-xs text-white font-medium">
+                          <p className="text-xs text-muted-foreground">
                             {searchTerm
                               ? 'Verifique os termos digitados ou limpe o filtro de busca.'
                               : 'Comece criando o primeiro tenant da sua plataforma SaaS com o administrador da unidade.'}
@@ -1464,7 +1416,7 @@ export default function DeveloperDashboardPage() {
                                 setFormError(null)
                                 setIsAddModalOpen(true)
                               }}
-                              className="mt-2 h-9 px-5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs transition-colors cursor-pointer border border-[#10b981] shadow-sm flex items-center gap-1.5"
+                              className="mt-2 h-9 px-4 text-xs font-medium gap-1.5"
                             >
                               <Plus className="h-4 w-4 stroke-[2.5]" />
                               <span>Cadastrar Primeira Empresa</span>
@@ -1475,237 +1427,291 @@ export default function DeveloperDashboardPage() {
                     </TableRow>
                   ) : (
                     filteredBarbershops.map((shop) => (
-                      <TableRow key={shop.id} className="hover:bg-[#1f2937] transition border-b border-[#1f2937]">
+                      <TableRow key={shop.id} className="hover:bg-muted/50 transition-colors border-b border-border">
                         {/* 1. Empresa / Tenant */}
-                        <TableCell className="py-4 px-4 align-top">
-                          <div className="flex items-start gap-3">
-                            <Avatar className="h-9 w-9 rounded-lg border border-[#374151] bg-[#030712] shrink-0 mt-0.5">
-                              <AvatarFallback className="rounded-lg bg-[#2563eb] text-white font-bold text-xs border border-[#3b82f6]">
+                        <TableCell className="py-3.5 px-4 align-middle">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-9 w-9 rounded-md border border-border shrink-0 bg-muted">
+                              <AvatarFallback className="rounded-md bg-muted text-foreground font-semibold text-xs">
                                 {shop.name.slice(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="space-y-1">
-                              <div className="font-bold text-white text-sm leading-tight">
-                                {shop.name}
-                              </div>
-                              <div className="text-xs text-white font-mono font-medium">
-                                ID: {shop.id}
-                              </div>
-                              {shop.slug ? (
-                                <div className="flex items-center gap-1.5 pt-0.5">
-                                  <a
-                                    href={`/b/${shop.slug}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-[11px] text-white font-mono bg-[#030712] hover:bg-[#1f2937] px-2 py-0.5 rounded border border-[#374151] font-bold transition"
-                                    title="Abrir página pública de agendamento em nova aba"
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-medium text-foreground text-sm leading-tight truncate">
+                                  {shop.name}
+                                </span>
+                                {shop.creator && (
+                                  <span
+                                    className="text-[11px] text-muted-foreground flex items-center gap-0.5 shrink-0"
+                                    title={`Criado por: ${shop.creator.name}`}
                                   >
-                                    <span>/b/{shop.slug}</span>
-                                    <ExternalLink className="w-3 h-3 text-white" />
-                                  </a>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyPublicUrl(shop.slug!, shop.id)}
-                                        className="p-1 rounded bg-[#030712] border border-[#374151] text-white hover:bg-[#1f2937] transition cursor-pointer"
-                                      >
-                                        {copiedShopId === shop.id ? (
-                                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                                        ) : (
-                                          <Copy className="w-3.5 h-3.5 text-white" />
-                                        )}
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="bg-[#111827] text-white border-[#374151] font-bold text-xs">
-                                      {copiedShopId === shop.id ? 'URL copiada!' : 'Copiar URL pública'}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                              ) : (
-                                <div className="text-[11px] text-white font-medium italic">
-                                  Sem slug público
-                                </div>
-                              )}
-                              {shop.creator && (
-                                <div className="text-[11px] text-white font-bold flex items-center gap-1 pt-0.5">
-                                  <Crown className="w-3.5 h-3.5 text-white" />
-                                  <span>Por: {shop.creator.name}</span>
-                                </div>
-                              )}
+                                    <Crown className="w-3 h-3 text-muted-foreground" />
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
+                                {shop.slug ? (
+                                  <div className="flex items-center gap-1">
+                                    <a
+                                      href={`/b/${shop.slug}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:text-foreground hover:underline inline-flex items-center gap-1 transition-colors"
+                                      title="Abrir página pública de agendamento"
+                                    >
+                                      <span>/b/{shop.slug}</span>
+                                      <ExternalLink className="w-2.5 h-2.5 text-muted-foreground" />
+                                    </a>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyPublicUrl(shop.slug!, shop.id)}
+                                          className="p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                        >
+                                          {copiedShopId === shop.id ? (
+                                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                          ) : (
+                                            <Copy className="w-3 h-3" />
+                                          )}
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="text-xs">
+                                        {copiedShopId === shop.id ? 'URL copiada!' : 'Copiar URL pública'}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                ) : (
+                                  <span className="text-[11px] text-muted-foreground/60 italic">Sem slug público</span>
+                                )}
+                                <span className="text-muted-foreground/40">•</span>
+                                <span className="text-[11px] text-muted-foreground/70">ID: {shop.id.slice(0, 8)}</span>
+                              </div>
                             </div>
                           </div>
                         </TableCell>
 
                         {/* 2. Cadastrado em */}
-                        <TableCell className="py-4 px-4 whitespace-nowrap text-xs text-white font-medium align-top">
-                          <div className="flex items-center gap-1.5 bg-[#030712] px-2.5 py-1 rounded-md border border-[#374151] w-fit">
-                            <Calendar className="w-3.5 h-3.5 text-white" />
-                            <span>{new Date(shop.createdAt).toLocaleDateString('pt-BR')}</span>
+                        <TableCell className="py-3.5 px-4 whitespace-nowrap align-middle">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-sm font-medium text-foreground leading-none">
+                              {new Date(shop.createdAt).toLocaleDateString('pt-BR')}
+                            </span>
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {new Date(shop.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
                         </TableCell>
 
-                        {/* 3. Trial / Assinatura */}
-                        <TableCell className="py-4 px-4 whitespace-nowrap align-top">
+                        {/* 3. Plano / Assinatura (100% Padrão shadcn/ui) */}
+                        <TableCell className="py-3.5 px-4 align-middle whitespace-nowrap">
                           {shop.trial ? (
-                            <div className="flex flex-col gap-1.5">
-                              <Badge
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold shadow-sm w-fit ${
-                                  shop.trial.status === 'TRIALING'
-                                    ? 'bg-[#d97706] text-white border border-[#f59e0b]'
-                                    : shop.trial.status === 'ACTIVE'
-                                    ? 'bg-[#059669] text-white border border-[#10b981]'
-                                    : shop.trial.status === 'EXPIRED'
-                                    ? 'bg-[#dc2626] text-white border border-[#ef4444]'
-                                    : 'bg-[#1f2937] text-white border border-[#374151]'
-                                }`}
-                              >
-                                <CalendarClock className="w-3.5 h-3.5 text-white" />
-                                <span>
-                                  {shop.trial.status === 'TRIALING'
-                                    ? `Trial: ${shop.trial.daysRemaining}d restantes`
-                                    : shop.trial.status === 'ACTIVE'
-                                    ? 'Ativo (Assinatura)'
-                                    : shop.trial.status === 'EXPIRED'
-                                    ? 'Trial Expirado'
-                                    : shop.trial.status}
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-foreground leading-none">
+                                  {shop.trial.planName || 'Degustação'}
                                 </span>
-                              </Badge>
-
-                              <div className="text-[11px] text-white flex items-center gap-1 font-medium">
-                                <span>Plano:</span>
-                                <span className="font-bold text-white underline">{shop.trial.planName}</span>
+                                {shop.trial.status === 'TRIALING' ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="h-5 px-1.5 text-[10px] font-medium border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+                                  >
+                                    Trial
+                                  </Badge>
+                                ) : shop.trial.status === 'ACTIVE' ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="h-5 px-1.5 text-[10px] font-medium border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                                  >
+                                    Ativo
+                                  </Badge>
+                                ) : shop.trial.status === 'EXPIRED' ? (
+                                  <Badge
+                                    variant="destructive"
+                                    className="h-5 px-1.5 text-[10px] font-medium"
+                                  >
+                                    Expirado
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="secondary"
+                                    className="h-5 px-1.5 text-[10px] font-medium capitalize"
+                                  >
+                                    {shop.trial.status.toLowerCase()}
+                                  </Badge>
+                                )}
                               </div>
 
-                              {shop.trial.trialStart && shop.trial.trialEnd && (
-                                <div className="text-[10px] text-white font-mono font-medium">
-                                  {new Date(shop.trial.trialStart).toLocaleDateString('pt-BR')} até{' '}
-                                  {new Date(shop.trial.trialEnd).toLocaleDateString('pt-BR')}
-                                </div>
-                              )}
+                              <div className="text-xs text-muted-foreground flex items-center gap-1.5 font-mono">
+                                {shop.trial.status === 'TRIALING' ? (
+                                  <>
+                                    <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                                    <span>
+                                      {shop.trial.daysRemaining > 0
+                                        ? `${shop.trial.daysRemaining} ${shop.trial.daysRemaining === 1 ? 'dia restante' : 'dias restantes'}`
+                                        : 'Expira hoje'}
+                                    </span>
+                                    {shop.trial.trialEnd && (
+                                      <span className="text-muted-foreground/60">
+                                        • até {new Date(shop.trial.trialEnd).toLocaleDateString('pt-BR')}
+                                      </span>
+                                    )}
+                                  </>
+                                ) : shop.trial.status === 'ACTIVE' ? (
+                                  <>
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                    <span>
+                                      {shop.trial.trialEnd
+                                        ? `Renova em ${new Date(shop.trial.trialEnd).toLocaleDateString('pt-BR')}`
+                                        : 'Assinatura ativa'}
+                                    </span>
+                                  </>
+                                ) : shop.trial.status === 'EXPIRED' ? (
+                                  <>
+                                    <AlertTriangle className="w-3 h-3 text-destructive shrink-0" />
+                                    <span>
+                                      {shop.trial.trialEnd
+                                        ? `Expirou em ${new Date(shop.trial.trialEnd).toLocaleDateString('pt-BR')}`
+                                        : 'Período encerrado'}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span>Período encerrado</span>
+                                )}
+                              </div>
                             </div>
                           ) : (
                             (() => {
-                              const status = getContractStatus(shop.contractExpiresAt)
+                              const contract = getContractStatus(shop.contractExpiresAt)
                               return (
-                                <Badge className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold shadow-sm ${status.color}`}>
-                                  <CalendarClock className="w-3.5 h-3.5 text-white" />
-                                  <span>{status.label}</span>
-                                </Badge>
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-foreground leading-none">
+                                      Licença Direta
+                                    </span>
+                                    <Badge
+                                      variant={contract.variant}
+                                      className={`h-5 px-1.5 text-[10px] font-medium ${contract.color}`}
+                                    >
+                                      {contract.badgeText}
+                                    </Badge>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground flex items-center gap-1.5 font-mono">
+                                    {contract.isExpired ? (
+                                      <AlertTriangle className="w-3 h-3 text-destructive shrink-0" />
+                                    ) : (
+                                      <ShieldCheck className="w-3 h-3 text-muted-foreground shrink-0" />
+                                    )}
+                                    <span>{contract.label}</span>
+                                  </div>
+                                </div>
                               )
                             })()
                           )}
                         </TableCell>
 
                         {/* 4. Contato */}
-                        <TableCell className="py-4 px-4 align-top space-y-1">
-                          <div className="text-white text-xs font-bold flex items-center gap-1.5">
-                            <Mail className="w-3.5 h-3.5 text-white shrink-0" />
-                            <span className="truncate max-w-[190px]">{shop.email}</span>
-                          </div>
-                          <div className="text-xs text-white font-mono font-medium flex items-center gap-1.5">
-                            <Phone className="w-3.5 h-3.5 text-white shrink-0" />
-                            <span>{shop.phone || 'Sem telefone'}</span>
+                        <TableCell className="py-3.5 px-4 align-middle whitespace-nowrap">
+                          <div className="flex flex-col gap-1">
+                            <div className="text-foreground text-sm font-medium flex items-center gap-1.5 leading-none">
+                              <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              <span className="truncate max-w-[190px]">{shop.email}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground font-mono flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              <span>{shop.phone || 'Sem telefone'}</span>
+                            </div>
                           </div>
                         </TableCell>
 
                         {/* 5. Equipe */}
-                        <TableCell className="py-4 px-4 text-center align-middle">
-                          <span className="inline-block px-2.5 py-1 rounded-md bg-[#030712] border border-[#374151] font-bold text-white text-xs">
+                        <TableCell className="py-3.5 px-4 text-center align-middle">
+                          <span className={`font-mono text-xs ${shop._count?.users ? 'text-foreground font-medium' : 'text-muted-foreground/60'}`}>
                             {shop._count?.users ?? 0}
                           </span>
                         </TableCell>
 
                         {/* 6. Clientes */}
-                        <TableCell className="py-4 px-4 text-center align-middle">
-                          <span className="inline-block px-2.5 py-1 rounded-md bg-[#030712] border border-[#374151] font-bold text-white text-xs">
+                        <TableCell className="py-3.5 px-4 text-center align-middle">
+                          <span className={`font-mono text-xs ${shop._count?.clients ? 'text-foreground font-medium' : 'text-muted-foreground/60'}`}>
                             {shop._count?.clients ?? 0}
                           </span>
                         </TableCell>
 
                         {/* 7. Serviços */}
-                        <TableCell className="py-4 px-4 text-center align-middle">
-                          <span className="inline-block px-2.5 py-1 rounded-md bg-[#030712] border border-[#374151] font-bold text-white text-xs">
+                        <TableCell className="py-3.5 px-4 text-center align-middle">
+                          <span className={`font-mono text-xs ${shop._count?.services ? 'text-foreground font-medium' : 'text-muted-foreground/60'}`}>
                             {shop._count?.services ?? 0}
                           </span>
                         </TableCell>
 
                         {/* 8. Agendamentos */}
-                        <TableCell className="py-4 px-4 text-center align-middle">
-                          <span className="inline-block px-2.5 py-1 rounded-md bg-[#030712] border border-[#374151] font-extrabold text-white text-xs">
+                        <TableCell className="py-3.5 px-4 text-center align-middle">
+                          <span className={`font-mono text-xs ${shop._count?.appointments ? 'text-foreground font-semibold' : 'text-muted-foreground/60'}`}>
                             {shop._count?.appointments ?? 0}
                           </span>
                         </TableCell>
 
                         {/* 9. Status */}
-                        <TableCell className="py-4 px-4 text-center align-middle">
+                        <TableCell className="py-3.5 px-4 text-center align-middle whitespace-nowrap">
                           {shop.status === 'PENDING' ? (
-                            <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b] shadow-sm">
-                              <Clock className="w-3.5 h-3.5 text-white" />
-                              <span>Aguardando Aprovação</span>
+                            <Badge
+                              variant="outline"
+                              className="h-5 px-2 text-[11px] font-medium border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10 gap-1.5"
+                            >
+                              <Clock className="w-3 h-3" />
+                              <span>Aguardando</span>
                             </Badge>
                           ) : shop.status === 'REJECTED' ? (
-                            <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-[#dc2626] text-white border border-[#ef4444] shadow-sm">
-                              <X className="w-3.5 h-3.5 text-white" />
-                              <span>Rejeitado</span>
+                            <Badge
+                              variant="destructive"
+                              className="h-5 px-2 text-[11px] font-medium gap-1"
+                            >
+                              <X className="w-3 h-3" />
+                              <span>Rejeitada</span>
                             </Badge>
                           ) : (
                             <Badge
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border shadow-sm ${
+                              variant="outline"
+                              className={`h-5 px-2 text-[11px] font-medium gap-1.5 ${
                                 shop.isActive
-                                  ? 'bg-[#059669] text-white border-[#10b981]'
-                                  : 'bg-[#dc2626] text-white border-[#ef4444]'
+                                  ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                                  : 'border-border text-muted-foreground bg-muted/40'
                               }`}
                             >
-                              <span className="h-2 w-2 rounded-full bg-white" />
-                              <span>{shop.isActive ? 'Ativa' : 'Desativada'}</span>
+                              <span className={`size-1.5 rounded-full ${shop.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/60'}`} />
+                              <span>{shop.isActive ? 'Ativa' : 'Inativa'}</span>
                             </Badge>
                           )}
                         </TableCell>
 
                         {/* 10. Ações */}
-                        <TableCell className="py-4 px-4 text-right align-middle">
+                        <TableCell className="py-3.5 px-4 text-right align-middle whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
                             {shop.status === 'PENDING' ? (
                               <Button
                                 type="button"
                                 size="sm"
                                 onClick={() => handleOpenApprovalModal(shop)}
-                                className="h-8 px-3 rounded-lg text-xs font-bold bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6] transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
+                                className="h-8 px-2.5 text-xs font-medium gap-1.5"
                                 title="Analisar solicitação de cadastro e aprovar"
                               >
-                                <ShieldCheck className="h-3.5 w-3.5 stroke-[2.5]" />
-                                <span>Analisar / Aprovar</span>
+                                <ShieldCheck className="h-3.5 w-3.5" />
+                                <span>Aprovar</span>
                               </Button>
                             ) : (
-                              <>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleOpenDetails(shop)}
-                                  className="h-8 px-2.5 rounded-lg text-xs font-bold border border-[#374151] bg-[#111827] text-white hover:bg-[#1f2937] hover:text-white transition cursor-pointer shadow-sm flex items-center gap-1"
-                                  title="Ver Detalhes da Empresa"
-                                >
-                                  <Info className="h-3.5 w-3.5 text-white" />
-                                  <span>Detalhes</span>
-                                </Button>
-
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  onClick={() => {
-                                    setTrialResetShop(shop)
-                                    setTrialDaysInput(30)
-                                    setTrialReasonInput('Prorrogação de degustação comercial')
-                                  }}
-                                  className="h-8 px-2.5 rounded-lg text-xs font-bold border border-[#f59e0b] bg-[#d97706] hover:bg-[#b45309] text-white transition cursor-pointer shadow-sm flex items-center gap-1"
-                                  title="Resetar ou prorrogar período de trial desta empresa"
-                                >
-                                  <Clock className="h-3.5 w-3.5 text-white" />
-                                  <span>Trial</span>
-                                </Button>
-                              </>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenDetails(shop)}
+                                className="h-8 px-2.5 text-xs font-medium gap-1 text-foreground"
+                                title="Ver Detalhes da Empresa"
+                              >
+                                <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span>Detalhes</span>
+                              </Button>
                             )}
 
                             {/* Dropdown Menu com Mais Ações */}
@@ -1713,39 +1719,39 @@ export default function DeveloperDashboardPage() {
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   type="button"
-                                  variant="outline"
+                                  variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 bg-[#030712] hover:bg-[#1f2937] hover:text-white border-[#374151] text-white rounded-lg cursor-pointer"
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                   title="Mais ações deste tenant"
                                 >
-                                  <MoreHorizontal className="h-4 w-4 text-white" />
+                                  <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent
                                 align="end"
-                                className="w-52 bg-[#111827] border-[#374151] text-white shadow-xl rounded-xl p-1.5"
+                                className="w-52 bg-popover border-border text-popover-foreground shadow-md rounded-md p-1"
                               >
-                                <DropdownMenuLabel className="text-xs font-bold text-white px-2 py-1.5">
+                                <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-2 py-1.5">
                                   Opções de Gestão
                                 </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-[#374151]" />
+                                <DropdownMenuSeparator className="bg-border" />
 
                                 {shop.status === 'PENDING' ? (
                                   <DropdownMenuItem
                                     onClick={() => handleOpenApprovalModal(shop)}
-                                    className="text-xs font-bold text-white hover:bg-[#2563eb] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                    className="text-xs cursor-pointer focus:bg-accent focus:text-accent-foreground flex items-center gap-2 px-2 py-1.5"
                                   >
-                                    <ShieldCheck className="h-4 w-4 text-white" />
+                                    <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                                     <span>Analisar / Aprovar</span>
                                   </DropdownMenuItem>
                                 ) : (
                                   <>
                                     <DropdownMenuItem
                                       onClick={() => handleOpenDetails(shop)}
-                                      className="text-xs font-bold text-white hover:bg-[#1f2937] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                      className="text-xs cursor-pointer focus:bg-accent focus:text-accent-foreground flex items-center gap-2 px-2 py-1.5"
                                     >
-                                      <Info className="h-4 w-4 text-white" />
-                                      <span>Ver Detalhes Completos</span>
+                                      <Info className="h-4 w-4 text-muted-foreground" />
+                                      <span>Ver Detalhes</span>
                                     </DropdownMenuItem>
 
                                     <DropdownMenuItem
@@ -1754,9 +1760,9 @@ export default function DeveloperDashboardPage() {
                                         setTrialDaysInput(30)
                                         setTrialReasonInput('Prorrogação de degustação comercial')
                                       }}
-                                      className="text-xs font-bold text-white hover:bg-[#1f2937] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                      className="text-xs cursor-pointer focus:bg-accent focus:text-accent-foreground flex items-center gap-2 px-2 py-1.5"
                                     >
-                                      <Clock className="h-4 w-4 text-white" />
+                                      <Clock className="h-4 w-4 text-muted-foreground" />
                                       <span>Resetar / Prorrogar Trial</span>
                                     </DropdownMenuItem>
                                   </>
@@ -1770,17 +1776,17 @@ export default function DeveloperDashboardPage() {
                                           window.open(`/b/${shop.slug}`, '_blank')
                                         }
                                       }}
-                                      className="text-xs font-bold text-white hover:bg-[#1f2937] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                      className="text-xs cursor-pointer focus:bg-accent focus:text-accent-foreground flex items-center gap-2 px-2 py-1.5"
                                     >
-                                      <ExternalLink className="h-4 w-4 text-white" />
+                                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                       <span>Abrir Página Pública</span>
                                     </DropdownMenuItem>
 
                                     <DropdownMenuItem
                                       onClick={() => handleCopyPublicUrl(shop.slug!, shop.id)}
-                                      className="text-xs font-bold text-white hover:bg-[#1f2937] hover:text-white rounded-md cursor-pointer flex items-center gap-2 px-2 py-2"
+                                      className="text-xs cursor-pointer focus:bg-accent focus:text-accent-foreground flex items-center gap-2 px-2 py-1.5"
                                     >
-                                      <Copy className="h-4 w-4 text-white" />
+                                      <Copy className="h-4 w-4 text-muted-foreground" />
                                       <span>Copiar Link Público</span>
                                     </DropdownMenuItem>
                                   </>
@@ -1788,17 +1794,17 @@ export default function DeveloperDashboardPage() {
 
                                 {shop.status !== 'PENDING' && (
                                   <>
-                                    <DropdownMenuSeparator className="bg-[#374151]" />
+                                    <DropdownMenuSeparator className="bg-border" />
                                     <DropdownMenuItem
                                       onClick={() => toggleBarbershopStatus(shop)}
                                       disabled={actionLoadingId === shop.id}
-                                      className={`text-xs font-bold rounded-md cursor-pointer flex items-center gap-2 px-2 py-2 ${
+                                      className={`text-xs cursor-pointer flex items-center gap-2 px-2 py-1.5 ${
                                         shop.isActive
-                                          ? 'text-white hover:bg-[#dc2626] hover:text-white'
-                                          : 'text-white hover:bg-[#059669] hover:text-white'
+                                          ? 'text-destructive focus:bg-destructive/10 focus:text-destructive'
+                                          : 'text-emerald-600 dark:text-emerald-400 focus:bg-emerald-500/10 focus:text-emerald-600'
                                       }`}
                                     >
-                                      <Power className="h-4 w-4 text-white" />
+                                      <Power className="h-4 w-4" />
                                       <span>
                                         {actionLoadingId === shop.id
                                           ? 'Alterando status...'
@@ -1820,11 +1826,11 @@ export default function DeveloperDashboardPage() {
               </Table>
             </CardContent>
 
-            <CardFooter className="p-4 border-t border-[#374151] bg-[#030712] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white">
+            <CardFooter className="p-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
               <div className="flex items-center gap-3">
-                <span className="font-medium text-white">
-                  Exibindo <strong className="text-white font-bold">{filteredBarbershops.length}</strong> de{' '}
-                  <strong className="text-white font-bold">{barbershops.length}</strong> empresas cadastradas
+                <span className="font-normal">
+                  Exibindo <strong className="text-foreground font-semibold">{filteredBarbershops.length}</strong> de{' '}
+                  <strong className="text-foreground font-semibold">{barbershops.length}</strong> empresas cadastradas
                 </span>
                 {searchTerm && (
                   <Button
@@ -1832,7 +1838,7 @@ export default function DeveloperDashboardPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setSearchTerm('')}
-                    className="h-7 text-xs text-white hover:text-white hover:bg-[#1f2937] px-2 font-bold underline cursor-pointer"
+                    className="h-7 text-xs text-primary hover:text-primary px-2 font-medium hover:underline cursor-pointer"
                   >
                     Limpar pesquisa
                   </Button>
@@ -1842,23 +1848,23 @@ export default function DeveloperDashboardPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge
                   variant="outline"
-                  className="bg-[#111827] border-[#374151] text-white text-[11px] font-bold"
+                  className="text-[11px] font-normal"
                 >
                   {activeCount} ativas
                 </Badge>
                 <Badge
                   variant="outline"
-                  className="bg-[#111827] border-[#374151] text-white text-[11px] font-bold"
+                  className="text-[11px] font-normal"
                 >
                   {trialingCount} em trial
                 </Badge>
                 {pendingCount > 0 && (
-                  <Badge className="bg-[#d97706] text-white border-[#f59e0b] text-[11px] font-bold">
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-500 bg-amber-500/10 text-[11px] font-normal">
                     {pendingCount} pendentes
                   </Badge>
                 )}
                 {expiredCount > 0 && (
-                  <Badge className="bg-[#dc2626] text-white border-[#ef4444] text-[11px] font-bold">
+                  <Badge variant="destructive" className="text-[11px] font-normal">
                     {expiredCount} expirados
                   </Badge>
                 )}
@@ -1866,53 +1872,28 @@ export default function DeveloperDashboardPage() {
             </CardFooter>
           </Card>
         </TooltipProvider>
-
-
-        {/* System Diagnostics Card */}
-        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="p-1.5 rounded-lg bg-[#2563eb] text-white border border-[#3b82f6]">
-              <Server className="h-4 w-4" />
-            </span>
-            <h3 className="font-bold text-white text-base">Diagnóstico de Infraestrutura SaaS</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-white">
-            <div className="p-3.5 bg-[#030712] rounded-lg border border-[#374151] shadow-sm">
-              <span className="text-white font-bold block mb-1">Ambiente de Execução:</span>
-              <span className="font-mono text-white font-bold">{metrics?.system?.nodeEnv || 'development'}</span>
-            </div>
-            <div className="p-3.5 bg-[#030712] rounded-lg border border-[#374151] shadow-sm">
-              <span className="text-white font-bold block mb-1">Banco de Dados:</span>
-              <span className="font-mono text-white font-bold">{metrics?.system?.database || 'PostgreSQL (Prisma)'}</span>
-            </div>
-            <div className="p-3.5 bg-[#030712] rounded-lg border border-[#374151] shadow-sm">
-              <span className="text-white font-bold block mb-1">Isolamento Multi-Tenant:</span>
-              <span className="font-mono text-white font-bold bg-[#059669] px-2 py-0.5 rounded border border-[#10b981] inline-block">{metrics?.system?.isolation || 'ATIVO E BLINDADO'}</span>
-            </div>
-          </div>
-        </div>
       </main>
 
       {/* Modal "+ Nova Empresa" */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
-            <div className="flex items-center justify-between border-b border-[#374151] pb-4 mb-6">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card text-card-foreground border border-border rounded-xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#2563eb] border border-[#3b82f6] text-white flex items-center justify-center shadow-sm">
-                  <Building2 className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-lg bg-muted text-foreground border border-border flex items-center justify-center shadow-sm">
+                  <Building2 className="w-5 h-5 text-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Cadastrar Nova Empresa</h3>
-                  <p className="text-xs text-white font-medium mt-0.5">Criar um novo tenant com seu administrador inicial</p>
+                  <h3 className="text-lg font-bold text-foreground">Cadastrar Nova Empresa</h3>
+                  <p className="text-xs text-muted-foreground font-normal mt-0.5">Criar um novo tenant com seu administrador inicial</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
                 disabled={isSubmittingShop}
-                className="p-1.5 text-white hover:bg-[#1f2937] rounded-lg transition"
+                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -2220,33 +2201,30 @@ export default function DeveloperDashboardPage() {
 
       {/* Modal "Detalhes da Empresa" */}
       {selectedShopForDetails && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card text-card-foreground border border-border rounded-xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-[#374151] pb-4 mb-6">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[#d97706] border border-[#f59e0b] flex items-center justify-center text-white">
+                <div className="w-12 h-12 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center">
                   <Building2 className="w-6 h-6 stroke-[2.5]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-bold text-white">{selectedShopForDetails.name}</h3>
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
-                        selectedShopForDetails.isActive
-                          ? 'bg-[#059669] text-white border border-[#10b981]'
-                          : 'bg-[#dc2626] text-white border border-[#ef4444]'
-                      }`}
+                    <h3 className="text-xl font-bold text-foreground">{selectedShopForDetails.name}</h3>
+                    <Badge
+                      variant={selectedShopForDetails.isActive ? "secondary" : "destructive"}
+                      className="text-xs font-semibold"
                     >
                       {selectedShopForDetails.isActive ? 'Ativa' : 'Desativada'}
-                    </span>
+                    </Badge>
                   </div>
-                  <p className="text-xs text-white font-mono mt-0.5">ID: {selectedShopForDetails.id}</p>
+                  <p className="text-xs text-muted-foreground font-mono mt-0.5">ID: {selectedShopForDetails.id}</p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedShopForDetails(null)}
-                className="p-2 text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] rounded-lg transition cursor-pointer"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-md transition cursor-pointer"
               >
                 <X className="w-5 h-5 stroke-[2.5]" />
               </button>
@@ -2254,248 +2232,268 @@ export default function DeveloperDashboardPage() {
 
             <div className="space-y-6 max-h-[72vh] overflow-y-auto pr-1">
               {/* Card 1: Registro & Origem */}
-              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span className="p-1 rounded bg-[#d97706] text-white"><Calendar className="w-3.5 h-3.5" /></span>
+              <div className="bg-muted/30 border border-border rounded-lg p-4 sm:p-5">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <span className="p-1 rounded bg-muted text-muted-foreground"><Calendar className="w-3.5 h-3.5" /></span>
                   Informações de Cadastro
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <span className="text-white font-semibold block mb-1">Data e Hora do Cadastro:</span>
-                    <span className="text-white font-bold text-sm flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-[#d97706]" />
+                    <span className="text-muted-foreground block mb-1">Data e Hora do Cadastro:</span>
+                    <span className="text-foreground font-medium text-sm flex items-center gap-1.5 font-mono">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
                       {new Date(selectedShopForDetails.createdAt).toLocaleString('pt-BR')}
                     </span>
                   </div>
                   <div>
-                    <span className="text-white font-semibold block mb-1">Cadastrado por:</span>
+                    <span className="text-muted-foreground block mb-1">Cadastrado por:</span>
                     {selectedShopForDetails.creator ? (
-                      <div className="text-white">
-                        <span className="font-bold text-white flex items-center gap-1">
-                          <Crown className="w-3.5 h-3.5 text-[#d97706]" />
+                      <div className="text-foreground">
+                        <span className="font-medium text-foreground flex items-center gap-1">
+                          <Crown className="w-3.5 h-3.5 text-muted-foreground" />
                           {selectedShopForDetails.creator.name}
                         </span>
-                        <span className="text-white text-[11px] block">{selectedShopForDetails.creator.email}</span>
+                        <span className="text-muted-foreground text-[11px] block">{selectedShopForDetails.creator.email}</span>
                       </div>
                     ) : (
-                      <span className="text-white italic">Sistema / Registro Direto</span>
+                      <span className="text-muted-foreground italic">Sistema / Registro Direto</span>
                     )}
                   </div>
                   <div>
-                    <span className="text-white font-semibold block mb-1">Email Comercial:</span>
-                    <span className="text-white font-mono">{selectedShopForDetails.email}</span>
+                    <span className="text-muted-foreground block mb-1">Email Comercial:</span>
+                    <span className="text-foreground font-mono">{selectedShopForDetails.email}</span>
                   </div>
                   <div>
-                    <span className="text-white font-semibold block mb-1">Telefone da Unidade:</span>
-                    <span className="text-white font-mono">{selectedShopForDetails.phone || 'Não informado'}</span>
+                    <span className="text-muted-foreground block mb-1">Telefone da Unidade:</span>
+                    <span className="text-foreground font-mono">{selectedShopForDetails.phone || 'Não informado'}</span>
                   </div>
                   <div className="sm:col-span-2">
-                    <span className="text-white font-semibold block mb-1">Endereço:</span>
-                    <span className="text-white">{selectedShopForDetails.address || 'Não informado'}</span>
+                    <span className="text-muted-foreground block mb-1">Endereço:</span>
+                    <span className="text-foreground">{selectedShopForDetails.address || 'Não informado'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Card: Link Público & Identificador (Slug) */}
-              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
+              <div className="bg-muted/30 border border-border rounded-lg p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    <span className="p-1 rounded bg-[#2563eb] text-white"><Globe className="w-3.5 h-3.5" /></span>
+                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded bg-muted text-muted-foreground"><Globe className="w-3.5 h-3.5" /></span>
                     Link Público & Identificador (Slug)
                   </h4>
                   {selectedShopForDetails.slug && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#1e40af] text-white border border-[#3b82f6]">
+                    <Badge variant="outline" className="font-mono text-xs font-medium gap-1.5">
                       <Link2 className="w-3.5 h-3.5" />
                       /b/{selectedShopForDetails.slug}
-                    </span>
+                    </Badge>
                   )}
                 </div>
 
                 <div className="space-y-3">
-                  <div className="bg-[#111827] border border-[#374151] rounded-lg p-3">
-                    <div className="text-xs text-white font-semibold mb-1">Endereço público do catálogo:</div>
+                  <div className="bg-background border border-border rounded-md p-3">
+                    <div className="text-xs text-muted-foreground font-medium mb-1.5">Endereço público do catálogo:</div>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                      <div className="flex-1 font-mono text-xs text-white truncate bg-[#030712] px-3 py-2 rounded border border-[#374151]">
+                      <div className="flex-1 font-mono text-xs text-foreground truncate bg-muted/50 px-3 py-2 rounded-md border border-border">
                         {typeof window !== 'undefined' ? `${window.location.origin}/b/${selectedShopForDetails.slug || ''}` : `/b/${selectedShopForDetails.slug}`}
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
+                        <Button
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => {
                             if (typeof navigator !== 'undefined' && navigator.clipboard) {
                               navigator.clipboard.writeText(`${window.location.origin}/b/${selectedShopForDetails.slug || ''}`)
-                              alert('Link copiado com sucesso!')
+                              setMessage({ type: 'success', text: 'Link copiado com sucesso!' })
                             }
                           }}
-                          className="px-3.5 py-2 bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition"
+                          className="h-9 text-xs font-medium gap-1.5"
                         >
                           <Copy className="w-3.5 h-3.5" />
                           <span>Copiar</span>
-                        </button>
+                        </Button>
                         {selectedShopForDetails.slug && (
-                          <a
-                            href={`/b/${selectedShopForDetails.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3.5 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white border border-[#3b82f6] rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition"
+                          <Button
+                            type="button"
+                            size="sm"
+                            asChild
+                            className="h-9 text-xs font-medium gap-1.5"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Visualizar</span>
-                          </a>
+                            <a
+                              href={`/b/${selectedShopForDetails.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              <span>Visualizar</span>
+                            </a>
+                          </Button>
                         )}
                       </div>
                     </div>
                   </div>
 
                   {/* Edição rápida de slug */}
-                  <div className="bg-[#111827] border border-[#374151] rounded-lg p-3">
-                    <label className="block text-xs text-white mb-1.5 font-bold">
+                  <div className="bg-background border border-border rounded-md p-3">
+                    <label className="block text-xs text-muted-foreground mb-1.5 font-medium">
                       Alterar Slug desta Unidade:
                     </label>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                      <div className="flex items-center px-3 py-2 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white font-mono select-none">
+                      <div className="flex items-center px-3 h-9 bg-muted/60 border border-border rounded-md text-xs text-muted-foreground font-mono select-none">
                         /b/
                       </div>
-                      <input
+                      <Input
                         type="text"
                         value={slugEditValue}
                         onChange={(e) => setSlugEditValue(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                         placeholder="ex: nova-unidade-vip"
-                        className="flex-1 px-3 py-2 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white font-mono font-medium focus:outline-none focus:border-[#2563eb]"
+                        className="flex-1 h-9 text-xs font-mono font-medium"
                       />
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
                         onClick={handleUpdateSlug}
                         disabled={isUpdatingSlug || !slugEditValue.trim() || slugEditValue.trim() === selectedShopForDetails.slug}
-                        className="px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold rounded-lg text-xs transition cursor-pointer disabled:opacity-50 border border-[#3b82f6]"
+                        className="h-9 px-4 text-xs font-medium"
                       >
                         {isUpdatingSlug ? 'Salvando...' : 'Salvar Slug'}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Card 2: Contrato & Vigência */}
-              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
+              <div className="bg-muted/30 border border-border rounded-lg p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    <span className="p-1 rounded bg-[#059669] text-white"><CalendarClock className="w-3.5 h-3.5" /></span>
+                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded bg-muted text-muted-foreground"><CalendarClock className="w-3.5 h-3.5" /></span>
                     Contrato & Vigência da Licença
                   </h4>
                   {(() => {
                     const status = getContractStatus(selectedShopForDetails.contractExpiresAt)
                     return (
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${status.color}`}>
+                      <Badge variant={status.variant} className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium ${status.color}`}>
                         <CalendarClock className="w-3.5 h-3.5" />
                         Status: {status.label}
-                      </span>
+                      </Badge>
                     )
                   })()}
                 </div>
 
-                <p className="text-xs text-white font-medium mb-4">
+                <p className="text-xs text-muted-foreground mb-4">
                   {selectedShopForDetails.contractExpiresAt
                     ? `O contrato desta unidade expira em ${new Date(selectedShopForDetails.contractExpiresAt).toLocaleDateString('pt-BR')}. Você pode estender ou renovar o prazo abaixo.`
                     : 'Esta unidade possui contrato vitalício / sem data de expiração cadastrada.'}
                 </p>
 
                 {/* Formulário de Renovação / Alteração */}
-                <div className="bg-[#111827] border border-[#374151] rounded-lg p-4">
-                  <label className="block text-xs font-bold text-white mb-2.5">
+                <div className="bg-background border border-border rounded-md p-4">
+                  <label className="block text-xs font-medium text-foreground mb-2.5">
                     Alterar / Renovar Data de Expiração do Contrato:
                   </label>
 
                   <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         const d = new Date()
                         d.setDate(d.getDate() + 30)
                         setContractEditDate(d.toISOString().split('T')[0])
                       }}
-                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                      className="h-7 text-xs font-medium"
                     >
                       +30 dias
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         const d = new Date()
                         d.setDate(d.getDate() + 90)
                         setContractEditDate(d.toISOString().split('T')[0])
                       }}
-                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                      className="h-7 text-xs font-medium"
                     >
                       +90 dias (3m)
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         const d = new Date()
                         d.setDate(d.getDate() + 180)
                         setContractEditDate(d.toISOString().split('T')[0])
                       }}
-                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                      className="h-7 text-xs font-medium"
                     >
                       +180 dias (6m)
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         const d = new Date()
                         d.setDate(d.getDate() + 365)
                         setContractEditDate(d.toISOString().split('T')[0])
                       }}
-                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                      className="h-7 text-xs font-medium"
                     >
                       +365 dias (1 ano)
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setContractEditDate('')}
-                      className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#059669] hover:bg-[#047857] text-white border border-[#10b981] transition cursor-pointer"
+                      className="h-7 text-xs font-medium"
                     >
                       Tornar Vitalício
-                    </button>
+                    </Button>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <div className="relative flex-1">
-                      <Calendar className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
+                      <Calendar className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Input
                         type="date"
                         value={contractEditDate}
                         onChange={(e) => setContractEditDate(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white focus:outline-none focus:border-[#059669] transition"
+                        className="w-full pl-9 h-9 text-xs font-mono"
                       />
                     </div>
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
                       onClick={handleUpdateContract}
                       disabled={isUpdatingContract}
-                      className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs border border-[#10b981] transition disabled:opacity-50 cursor-pointer"
+                      className="h-9 px-4 text-xs font-medium gap-1.5"
                     >
                       {isUpdatingContract ? (
                         <>
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          Salvando...
+                          <span>Salvando...</span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                          Salvar Vigência
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Salvar Vigência</span>
                         </>
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
 
               {/* Card 3: Administrador da Unidade */}
-              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span className="p-1 rounded bg-[#2563eb] text-white"><UserCheck className="w-3.5 h-3.5" /></span>
+              <div className="bg-muted/30 border border-border rounded-lg p-4 sm:p-5">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <span className="p-1 rounded bg-muted text-muted-foreground"><UserCheck className="w-3.5 h-3.5" /></span>
                   Administrador(es) da Unidade
                 </h4>
 
@@ -2503,25 +2501,32 @@ export default function DeveloperDashboardPage() {
                   const admins = (selectedShopForDetails.users || []).filter(u => u.role === 'ADMIN')
                   if (admins.length === 0) {
                     return (
-                      <p className="text-xs text-white font-medium italic">
+                      <p className="text-xs text-muted-foreground italic">
                         Nenhum usuário com função de Administrador vinculado a esta empresa.
                       </p>
                     )
                   }
                   return (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {admins.map((adm) => (
-                        <div key={adm.id} className="p-3 bg-[#111827] border border-[#374151] rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div key={adm.id} className="p-3 bg-background border border-border rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                           <div>
-                            <div className="font-bold text-white text-sm flex items-center gap-2">
+                            <div className="font-medium text-foreground text-sm flex items-center gap-2">
                               {adm.name}
-                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${adm.isActive ? 'bg-[#059669] text-white border border-[#10b981]' : 'bg-[#dc2626] text-white border border-[#ef4444]'}`}>
+                              <Badge
+                                variant={adm.isActive ? "outline" : "secondary"}
+                                className={`text-[10px] font-normal ${
+                                  adm.isActive
+                                    ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                                    : 'text-muted-foreground'
+                                }`}
+                              >
                                 {adm.isActive ? 'Ativo' : 'Inativo'}
-                              </span>
+                              </Badge>
                             </div>
-                            <div className="text-white font-medium mt-0.5">{adm.email} • {adm.phone || 'Sem telefone'}</div>
+                            <div className="text-muted-foreground font-mono mt-0.5">{adm.email} • {adm.phone || 'Sem telefone'}</div>
                           </div>
-                          <div className="text-right text-white font-semibold text-[11px]">
+                          <div className="text-right text-muted-foreground text-[11px] font-mono">
                             Cadastrado em: {new Date(adm.createdAt).toLocaleDateString('pt-BR')}
                           </div>
                         </div>
@@ -2533,209 +2538,217 @@ export default function DeveloperDashboardPage() {
 
               {/* Card 4: Métricas do Tenant */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="p-4 bg-[#030712] rounded-xl border border-[#374151] text-center">
-                  <div className="text-2xl font-bold text-white">{selectedShopForDetails._count?.users ?? 0}</div>
-                  <div className="text-xs text-white font-bold mt-1">Colaboradores</div>
+                <div className="p-4 bg-muted/40 rounded-lg border border-border text-center">
+                  <div className="text-2xl font-bold font-mono text-foreground">{selectedShopForDetails._count?.users ?? 0}</div>
+                  <div className="text-xs text-muted-foreground font-medium mt-1">Colaboradores</div>
                 </div>
-                <div className="p-4 bg-[#030712] rounded-xl border border-[#374151] text-center">
-                  <div className="text-2xl font-bold text-white">{selectedShopForDetails._count?.clients ?? 0}</div>
-                  <div className="text-xs text-white font-bold mt-1">Clientes</div>
+                <div className="p-4 bg-muted/40 rounded-lg border border-border text-center">
+                  <div className="text-2xl font-bold font-mono text-foreground">{selectedShopForDetails._count?.clients ?? 0}</div>
+                  <div className="text-xs text-muted-foreground font-medium mt-1">Clientes</div>
                 </div>
-                <div className="p-4 bg-[#030712] rounded-xl border border-[#374151] text-center">
-                  <div className="text-2xl font-bold text-white">{selectedShopForDetails._count?.services ?? 0}</div>
-                  <div className="text-xs text-white font-bold mt-1">Serviços</div>
+                <div className="p-4 bg-muted/40 rounded-lg border border-border text-center">
+                  <div className="text-2xl font-bold font-mono text-foreground">{selectedShopForDetails._count?.services ?? 0}</div>
+                  <div className="text-xs text-muted-foreground font-medium mt-1">Serviços</div>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between pt-5 border-t border-[#374151] mt-6">
-              <button
+            <div className="flex items-center justify-between pt-5 border-t border-border mt-6">
+              <Button
                 type="button"
+                variant={selectedShopForDetails.isActive ? "destructive" : "default"}
+                size="sm"
                 onClick={() => {
                   toggleBarbershopStatus(selectedShopForDetails)
                   setSelectedShopForDetails((prev) => prev ? { ...prev, isActive: !prev.isActive } : null)
                 }}
                 disabled={actionLoadingId === selectedShopForDetails.id}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold border transition ${
-                  selectedShopForDetails.isActive
-                    ? 'border-[#ef4444] bg-[#dc2626] text-white hover:bg-[#b91c1c]'
-                    : 'border-[#10b981] bg-[#059669] text-white hover:bg-[#047857]'
-                } disabled:opacity-50 cursor-pointer`}
+                className="gap-2 text-xs font-medium h-9"
               >
-                <Power className="w-4 h-4 stroke-[2.5]" />
-                {selectedShopForDetails.isActive ? 'Desativar Unidade' : 'Ativar Unidade'}
-              </button>
+                <Power className="w-3.5 h-3.5" />
+                <span>{selectedShopForDetails.isActive ? 'Desativar Unidade' : 'Ativar Unidade'}</span>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setSelectedShopForDetails(null)}
-                className="px-6 py-2.5 bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] rounded-lg text-xs font-bold transition cursor-pointer"
+                className="h-9 px-5 text-xs font-medium"
               >
                 Fechar
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal "Análise e Aprovação de Cadastro" */}
+      {/* Modal "Análise e Aprovação de Cadastro" (100% Padrão shadcn/ui) */}
       {selectedShopForApproval && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card text-card-foreground border border-border rounded-xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-[#374151] pb-4 mb-6">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[#d97706] border border-[#f59e0b] flex items-center justify-center text-white">
+                <div className="w-12 h-12 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center">
                   <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-bold text-white">Análise e Aprovação de Cadastro</h3>
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b]">
+                    <h3 className="text-xl font-bold text-foreground">Análise e Aprovação de Cadastro</h3>
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10 text-xs font-medium gap-1"
+                    >
                       <Clock className="w-3.5 h-3.5" />
                       {selectedShopForApproval.status === 'PENDING'
                         ? 'Aguardando Aprovação'
                         : selectedShopForApproval.status === 'REJECTED'
                         ? 'Rejeitado'
                         : 'Aprovado'}
-                    </span>
+                    </Badge>
                   </div>
-                  <p className="text-xs text-white font-medium mt-0.5">
+                  <p className="text-xs text-muted-foreground font-mono mt-0.5">
                     Solicitado em: {new Date(selectedShopForApproval.createdAt).toLocaleString('pt-BR')} &bull; ID: {selectedShopForApproval.id}
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setSelectedShopForApproval(null)}
-                className="p-2 text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] rounded-lg transition cursor-pointer"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
               >
-                <X className="w-5 h-5 stroke-[2.5]" />
-              </button>
+                <X className="w-4 h-4" />
+              </Button>
             </div>
 
             <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
               {/* Card 1: Dados do Estabelecimento */}
-              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
+              <div className="bg-muted/30 border border-border rounded-lg p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    <span className="p-1 rounded bg-[#d97706] text-white"><Building2 className="w-3.5 h-3.5" /></span>
+                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded bg-muted text-muted-foreground"><Building2 className="w-3.5 h-3.5" /></span>
                     1. Informações do Estabelecimento (Editáveis)
                   </h4>
-                  <span className="text-[11px] text-white font-semibold">Revise ou complemente antes de aprovar</span>
+                  <span className="text-[11px] text-muted-foreground">Revise ou complemente antes de aprovar</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block text-white mb-1.5 font-bold">Nome da Empresa:</label>
-                    <input
+                    <label className="block text-muted-foreground mb-1.5 font-medium">Nome da Empresa:</label>
+                    <Input
                       type="text"
                       value={approvalFormData.name}
                       onChange={(e) => handleApprovalInputChange('name', e.target.value)}
-                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-medium focus:outline-none focus:border-[#2563eb]"
+                      className="h-9 text-xs font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white mb-1.5 font-bold">E-mail Comercial:</label>
-                    <input
+                    <label className="block text-muted-foreground mb-1.5 font-medium">E-mail Comercial:</label>
+                    <Input
                       type="email"
                       value={approvalFormData.email}
                       onChange={(e) => handleApprovalInputChange('email', e.target.value)}
-                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#2563eb]"
+                      className="h-9 text-xs font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white mb-1.5 font-bold">Telefone Comercial / WhatsApp:</label>
-                    <input
+                    <label className="block text-muted-foreground mb-1.5 font-medium">Telefone Comercial / WhatsApp:</label>
+                    <Input
                       type="tel"
                       value={approvalFormData.phone}
                       onChange={(e) => handleApprovalInputChange('phone', e.target.value)}
-                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#2563eb]"
+                      className="h-9 text-xs font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white mb-1.5 font-bold">Slug do Link Público (/b/slug):</label>
-                    <input
+                    <label className="block text-muted-foreground mb-1.5 font-medium">Slug do Link Público (/b/slug):</label>
+                    <Input
                       type="text"
                       value={approvalFormData.slug}
                       onChange={(e) => handleApprovalInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                       placeholder="ex: barbearia-central"
-                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono font-medium focus:outline-none focus:border-[#2563eb]"
+                      className="h-9 text-xs font-mono font-medium"
                     />
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-white mb-1.5 font-bold">Endereço Completo:</label>
+                    <label className="block text-muted-foreground mb-1.5 font-medium">Endereço Completo:</label>
                     <AddressAutocomplete
                       id="approvalAddress"
                       value={approvalFormData.address}
                       onChange={(val) => handleApprovalInputChange('address', val)}
                       placeholder="Rua, número, cidade - UF"
-                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-medium focus:outline-none focus:border-[#2563eb]"
+                      className="w-full px-3 py-2 bg-background border border-input rounded-md text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Card 2: Administrador Solicitante */}
-              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
+              <div className="bg-muted/30 border border-border rounded-lg p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    <span className="p-1 rounded bg-[#2563eb] text-white"><UserCheck className="w-3.5 h-3.5" /></span>
+                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded bg-muted text-muted-foreground"><UserCheck className="w-3.5 h-3.5" /></span>
                     2. Dados do Administrador Solicitante
                   </h4>
-                  <span className="text-[11px] text-white font-semibold">Credenciais para acesso à conta de gestão</span>
+                  <span className="text-[11px] text-muted-foreground">Credenciais para acesso à conta de gestão</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                   <div>
-                    <label className="block text-white mb-1.5 font-bold">Nome do Responsável:</label>
-                    <input
+                    <label className="block text-muted-foreground mb-1.5 font-medium">Nome do Responsável:</label>
+                    <Input
                       type="text"
                       value={approvalFormData.adminName}
                       onChange={(e) => handleApprovalInputChange('adminName', e.target.value)}
-                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-medium focus:outline-none focus:border-[#2563eb]"
+                      className="h-9 text-xs font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white mb-1.5 font-bold">E-mail de Login:</label>
-                    <input
+                    <label className="block text-muted-foreground mb-1.5 font-medium">E-mail de Login:</label>
+                    <Input
                       type="email"
                       value={approvalFormData.adminEmail}
                       onChange={(e) => handleApprovalInputChange('adminEmail', e.target.value)}
-                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#2563eb]"
+                      className="h-9 text-xs font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white mb-1.5 font-bold">Telefone do Gestor:</label>
-                    <input
+                    <label className="block text-muted-foreground mb-1.5 font-medium">Telefone do Gestor:</label>
+                    <Input
                       type="tel"
                       value={approvalFormData.adminPhone}
                       onChange={(e) => handleApprovalInputChange('adminPhone', e.target.value)}
-                      className="w-full px-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#2563eb]"
+                      className="h-9 text-xs font-mono"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Card 3: Vigência do Contrato Inicial */}
-              <div className="bg-[#030712] border border-[#374151] rounded-xl p-4 sm:p-5">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <span className="p-1 rounded bg-[#059669] text-white"><CalendarClock className="w-3.5 h-3.5" /></span>
+              <div className="bg-muted/30 border border-border rounded-lg p-4 sm:p-5">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <span className="p-1 rounded bg-muted text-muted-foreground"><CalendarClock className="w-3.5 h-3.5" /></span>
                   3. Vigência Inicial do Contrato
                 </h4>
-                <p className="text-xs text-white font-medium mb-3">
+                <p className="text-xs text-muted-foreground mb-3">
                   Selecione um prazo para a licença inicial da unidade. A empresa e seu administrador serão ativados com essa validade.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       const d = new Date()
                       d.setDate(d.getDate() + 30)
@@ -2744,12 +2757,14 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: d.toISOString().split('T')[0],
                       }))
                     }}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                    className="h-7 text-xs font-medium"
                   >
                     +30 dias (1 mês)
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       const d = new Date()
                       d.setDate(d.getDate() + 90)
@@ -2758,12 +2773,14 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: d.toISOString().split('T')[0],
                       }))
                     }}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                    className="h-7 text-xs font-medium"
                   >
                     +90 dias (3 meses)
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       const d = new Date()
                       d.setDate(d.getDate() + 180)
@@ -2772,12 +2789,14 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: d.toISOString().split('T')[0],
                       }))
                     }}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                    className="h-7 text-xs font-medium"
                   >
                     +180 dias (6 meses)
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       const d = new Date()
                       d.setDate(d.getDate() + 365)
@@ -2786,27 +2805,29 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: d.toISOString().split('T')[0],
                       }))
                     }}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] transition cursor-pointer"
+                    className="h-7 text-xs font-medium"
                   >
                     +365 dias (1 ano)
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() =>
                       setApprovalFormData((prev) => ({
                         ...prev,
                         contractExpiresAt: '',
                       }))
                     }
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#059669] hover:bg-[#047857] text-white border border-[#10b981] transition cursor-pointer"
+                    className="h-7 text-xs font-medium"
                   >
                     Vitalício
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="relative max-w-xs">
-                  <Calendar className="w-4 h-4 text-white absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
+                  <Calendar className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Input
                     type="date"
                     value={approvalFormData.contractExpiresAt}
                     onChange={(e) =>
@@ -2815,91 +2836,96 @@ export default function DeveloperDashboardPage() {
                         contractExpiresAt: e.target.value,
                       }))
                     }
-                    className="w-full pl-9 pr-3 py-2 bg-[#111827] border border-[#374151] rounded-lg text-xs text-white focus:outline-none focus:border-[#059669] transition"
+                    className="w-full pl-9 h-9 text-xs font-mono"
                   />
                 </div>
               </div>
             </div>
 
             {/* Footer com botões de decisão */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-5 border-t border-[#374151] mt-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-5 border-t border-border mt-6">
               <div>
-                <button
+                <Button
                   type="button"
+                  variant="destructive"
+                  size="sm"
                   onClick={() => handleProcessApproval('REJECTED')}
                   disabled={isProcessingApproval}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-lg text-xs font-bold border border-[#ef4444] bg-[#dc2626] text-white hover:bg-[#b91c1c] transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full sm:w-auto h-9 text-xs font-medium gap-1.5"
                 >
-                  <X className="w-4 h-4 stroke-[2.5]" />
-                  Rejeitar Solicitação
-                </button>
+                  <X className="w-3.5 h-3.5" />
+                  <span>Rejeitar Solicitação</span>
+                </Button>
               </div>
 
               <div className="flex items-center gap-2 justify-end">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleProcessApproval('SAVE')}
                   disabled={isProcessingApproval}
-                  className="px-4 py-2.5 bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                  className="h-9 px-4 text-xs font-medium"
                 >
                   Salvar Informações
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
+                  size="sm"
                   onClick={() => handleProcessApproval('APPROVED')}
                   disabled={isProcessingApproval}
-                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs border border-[#10b981] transition-colors disabled:opacity-50 cursor-pointer"
+                  className="h-9 px-5 text-xs font-medium gap-1.5"
                 >
                   {isProcessingApproval ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      Processando...
+                      <span>Processando...</span>
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                      Aprovar e Liberar Acesso
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Aprovar e Liberar Acesso</span>
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de Reset de Período de Trial */}
+      {/* Modal de Reset de Período de Trial (100% Padrão shadcn/ui) */}
       {trialResetShop && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
-          <div className="bg-[#111827] border border-[#374151] w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#374151] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <div className="bg-card text-card-foreground border border-border w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#d97706] border border-[#f59e0b] flex items-center justify-center text-white">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center">
                   <Clock className="w-5 h-5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-base">Resetar Período de Trial</h4>
-                  <p className="text-xs text-white font-medium">{trialResetShop.name}</p>
+                  <h4 className="font-semibold text-foreground text-base">Resetar Período de Trial</h4>
+                  <p className="text-xs text-muted-foreground font-normal">{trialResetShop.name}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setTrialResetShop(null)}
-                className="p-1.5 text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] rounded-lg text-xs transition"
+                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-white font-medium leading-relaxed">
-              Defina a quantidade de dias para reativar o período de testes gratuito desta barbearia. A conta e o administrador serão ativados automaticamente.
+            <p className="text-xs text-muted-foreground font-normal leading-relaxed">
+              Defina a quantidade de dias para reativar o período de degustação gratuita desta unidade. A conta e o acesso do administrador serão mantidos sincronizados.
             </p>
 
             {/* Presets Rápidos */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-white uppercase tracking-wider">
-                1. Selecione um Prazo Predefinido:
+              <label className="block text-xs font-medium text-foreground">
+                1. Selecione um prazo pré-definido:
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {[
@@ -2912,10 +2938,10 @@ export default function DeveloperDashboardPage() {
                     key={item.label}
                     type="button"
                     onClick={() => setTrialDaysInput(item.val)}
-                    className={`py-2 px-1 text-xs font-bold rounded-xl border transition cursor-pointer ${
+                    className={`py-2 px-1 text-xs font-medium rounded-md border transition cursor-pointer ${
                       trialDaysInput === item.val
-                        ? 'bg-[#d97706] text-white border-[#f59e0b]'
-                        : 'bg-[#030712] border-[#374151] text-white hover:bg-[#1f2937]'
+                        ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                        : 'bg-muted/40 hover:bg-muted border-border text-foreground'
                     }`}
                   >
                     {item.label}
@@ -2926,47 +2952,50 @@ export default function DeveloperDashboardPage() {
 
             {/* Dias personalizados */}
             <div>
-              <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1">
+              <label className="block text-xs font-medium text-foreground mb-1">
                 2. Ou especifique a quantidade de dias:
               </label>
-              <input
+              <Input
                 type="number"
                 min="1"
                 max="365"
                 value={trialDaysInput}
                 onChange={(e) => setTrialDaysInput(Math.max(1, Number(e.target.value) || 1))}
-                className="w-full px-3 py-2 bg-[#030712] border border-[#374151] rounded-xl text-xs text-white font-mono focus:outline-none focus:border-[#d97706]"
+                className="h-9 text-xs font-mono"
               />
             </div>
 
             {/* Justificativa / Motivo */}
             <div>
-              <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1">
-                3. Motivo / Justificativa do Reset:
+              <label className="block text-xs font-medium text-foreground mb-1">
+                3. Motivo / Justificativa do ajuste:
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="Ex: Degustação estendida, suporte comercial..."
                 value={trialReasonInput}
                 onChange={(e) => setTrialReasonInput(e.target.value)}
-                className="w-full px-3 py-2 bg-[#030712] border border-[#374151] rounded-xl text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#d97706]"
+                className="h-9 text-xs"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#374151]">
-              <button
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setTrialResetShop(null)}
                 disabled={isResettingTrial}
-                className="px-4 py-2 rounded-xl bg-[#1f2937] hover:bg-[#374151] text-white text-xs font-bold border border-[#4b5563] transition"
+                className="h-8 text-xs"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                size="sm"
                 onClick={handleConfirmResetTrial}
                 disabled={isResettingTrial}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-xs font-bold border border-[#f59e0b] transition disabled:opacity-50"
+                className="h-8 text-xs gap-1.5"
               >
                 {isResettingTrial ? (
                   <>
@@ -2979,11 +3008,25 @@ export default function DeveloperDashboardPage() {
                     <span>Confirmar e Liberar Trial</span>
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
     </div>
+  )
+}
+
+export default function DeveloperDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <DeveloperDashboardContent />
+    </Suspense>
   )
 }

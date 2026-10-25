@@ -116,15 +116,24 @@ export default function TodayAppointments() {
     })
   }
 
+  const formatCurrency = (value: number) => {
+    const numeric = typeof value === 'number' ? value : parseFloat(String(value))
+    if (isNaN(numeric) || !isFinite(numeric)) return 'R$ 0,00'
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(numeric)
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return <CheckCircle className="w-4 h-4 text-green-400" />
+        return <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
       case 'CANCELLED':
-        return <XCircle className="w-4 h-4 text-red-400" />
+        return <XCircle className="w-3.5 h-3.5 text-destructive" />
       case 'PENDING':
       default:
-        return <AlertCircle className="w-4 h-4 text-yellow-400" />
+        return <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
     }
   }
 
@@ -140,112 +149,159 @@ export default function TodayAppointments() {
     }
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+      case 'PENDING':
+        return 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20'
+      case 'CANCELLED':
+        return 'text-destructive bg-destructive/10 border-destructive/20'
+      default:
+        return 'text-muted-foreground bg-muted border-border'
+    }
+  }
+
   if (loading) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
-        <div className="flex items-center justify-center h-24 md:h-32">
-          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-amber-400"></div>
+      <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm">
+        <div className="flex items-center justify-center h-28 md:h-36">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
         </div>
       </div>
     )
   }
 
-  const todayAppointments = appointments
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'text-emerald-400 bg-emerald-950 border-emerald-800/60'
-      case 'PENDING':
-        return 'text-amber-400 bg-amber-950 border-amber-800/60'
-      case 'CANCELLED':
-        return 'text-red-400 bg-red-950 border-red-800/60'
-      default:
-        return 'text-gray-400 bg-gray-800 border-gray-700'
-    }
-  }
+  const pendingCount = appointments.filter((a) => a.status === 'PENDING').length
+  const completedCount = appointments.filter((a) => a.status === 'COMPLETED').length
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
-      <div className="flex items-center justify-between mb-4 md:mb-6">
+    <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-5 pb-4 border-b border-border">
         <div>
-          <h3 className="text-lg md:text-xl font-semibold text-white">Agendamentos de Hoje</h3>
-          <p className="text-gray-400 text-xs md:text-sm">
-            {totalToday > 5 ? `5 de ${totalToday} agendamentos` : `${totalToday} agendamento${totalToday === 1 ? '' : 's'}`}
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight">Agendamentos de Hoje</h3>
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+              {totalToday}
+            </span>
+          </div>
+          <p className="text-muted-foreground text-xs md:text-sm mt-0.5">
+            Visualize os atendimentos programados para o dia de hoje
           </p>
         </div>
-        <div className="flex items-center space-x-2 text-gray-400">
-          <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
-          <span className="text-xs md:text-sm">Hoje</span>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {totalToday > 0 && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-md font-medium">
+                {pendingCount} pendente{pendingCount === 1 ? '' : 's'}
+              </span>
+              <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-md font-medium">
+                {completedCount} concluído{completedCount === 1 ? '' : 's'}
+              </span>
+            </div>
+          )}
+          <Link
+            href="/agenda"
+            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 shrink-0 ml-auto"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>Ver Agenda Completa</span>
+          </Link>
         </div>
       </div>
 
+      {/* Grid de Cards de Agendamentos */}
       {appointments.length === 0 ? (
-        <div className="text-center py-8 px-4 bg-gray-950 border border-gray-800 rounded-xl">
-          <Calendar className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-          <p className="text-gray-300 font-medium text-sm">Nenhum agendamento para hoje</p>
-          <p className="text-gray-500 text-xs mt-1">Os agendamentos confirmados para hoje aparecerão listados aqui.</p>
+        <div className="text-center py-10 px-4 bg-muted/30 border border-border rounded-xl">
+          <Calendar className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+          <p className="text-foreground font-semibold text-sm">Nenhum agendamento para hoje</p>
+          <p className="text-muted-foreground text-xs mt-1 max-w-sm mx-auto">
+            Não há atendimentos agendados para a data de hoje. Novos horários marcados aparecerão aqui em tempo real.
+          </p>
+          <div className="mt-4">
+            <Link
+              href="/agendar"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg shadow-sm transition-all"
+            >
+              Novo Agendamento
+            </Link>
+          </div>
         </div>
       ) : (
-        <div className="space-y-2 md:space-y-3">
-          {appointments.map((appointment) => (
-            <div
-              key={appointment.id}
-              className="flex items-center justify-between p-3 md:p-4 bg-gray-950 border border-gray-800 rounded-lg md:rounded-xl hover:bg-gray-800/50 transition-colors"
-            >
-              <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
-                {/* Time */}
-                <div className="text-center flex-shrink-0">
-                  <p className="text-white font-semibold text-sm md:text-base">{formatTime(appointment.startTime)}</p>
-                  <p className="text-gray-500 text-xs">30min</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {appointments.map((appointment) => {
+            const price = Number(appointment.service?.price || (appointment as any).totalAmount || 0)
+
+            return (
+              <div
+                key={appointment.id}
+                className="bg-background border border-border rounded-xl p-3.5 hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between"
+              >
+                {/* Linha Superior: Horário e Status */}
+                <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                    <span>{formatTime(appointment.startTime)}</span>
+                  </div>
+                  <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold flex-shrink-0 ${getStatusColor(appointment.status)}`}>
+                    {getStatusIcon(appointment.status)}
+                    <span>{getStatusText(appointment.status)}</span>
+                  </div>
                 </div>
 
-                {/* Client Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium text-sm md:text-base truncate">{appointment.client.name}</p>
-                  <p className="text-gray-400 text-xs md:text-sm truncate">{appointment.service.name}</p>
+                {/* Linha Central: Cliente e Serviço */}
+                <div className="mb-3">
+                  <p className="text-foreground font-semibold text-sm truncate" title={appointment.client.name}>
+                    {appointment.client.name}
+                  </p>
+                  <p className="text-muted-foreground text-xs truncate" title={appointment.service.name}>
+                    {appointment.service.name}
+                  </p>
                 </div>
-              </div>
 
-              {/* Barber Info */}
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-gray-900 border border-gray-800 rounded-lg flex-shrink-0">
-                {appointment.barber?.avatar ? (
-                  <img
-                    src={appointment.barber.avatar}
-                    alt={appointment.barber.name}
-                    className="w-5 h-5 rounded-full object-cover border border-amber-500/40"
-                  />
-                ) : (
-                  <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
-                    <span className="text-black font-bold text-[10px]">
-                      {appointment.barber?.name?.charAt(0).toUpperCase() || 'B'}
+                {/* Linha Inferior: Barbeiro e Preço */}
+                <div className="flex items-center justify-between pt-2 border-t border-border/70 text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-2">
+                    {appointment.barber?.avatar ? (
+                      <img
+                        src={appointment.barber.avatar}
+                        alt={appointment.barber.name}
+                        className="w-4 h-4 rounded-full object-cover border border-primary/40"
+                      />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] font-bold flex items-center justify-center">
+                        {appointment.barber?.name?.charAt(0).toUpperCase() || 'B'}
+                      </div>
+                    )}
+                    <span className="text-muted-foreground text-xs truncate font-medium">
+                      {appointment.barber?.name || 'Barbeiro'}
                     </span>
                   </div>
-                )}
-                <span className="text-white/80 text-xs truncate max-w-[110px]">
-                  {appointment.barber?.name || 'Barbeiro'}
-                </span>
+                  <span className="text-foreground font-bold text-xs shrink-0">
+                    {formatCurrency(price)}
+                  </span>
+                </div>
               </div>
-
-              {/* Status */}
-              <div className={`flex items-center space-x-1.5 md:space-x-2 px-2 md:px-3 py-1 rounded-lg border flex-shrink-0 ${getStatusColor(appointment.status)}`}>
-                {getStatusIcon(appointment.status)}
-                <span className="text-xs font-medium">{getStatusText(appointment.status)}</span>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
-        {/* View All Button */}
-        <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/6">
+      {/* View All Footer */}
+      {totalToday > 0 && (
+        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+          <span>Mostrando {appointments.length} de {totalToday} agendamento{totalToday === 1 ? '' : 's'} de hoje</span>
           <Link
             href="/agenda"
-            className="block w-full py-2.5 md:py-3 text-center text-yellow-400 hover:text-yellow-300 hover:bg-white/5 font-medium text-sm md:text-base rounded-lg transition-all"
+            className="font-semibold text-primary hover:underline"
           >
-            Ver todos os agendamentos {totalToday > 5 ? `(${totalToday})` : ''}
+            Gerenciar na Agenda &rarr;
           </Link>
         </div>
+      )}
     </div>
   )
 }
+

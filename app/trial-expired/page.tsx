@@ -148,7 +148,7 @@ export default function TrialExpiredPage() {
               </button>
 
               <a
-                href="https://wa.me/5500000000000?text=Olá,%20gostaria%20de%20solicitar%20a%20aprovação%20da%20minha%20empresa%20no%20BarberShop"
+                href="https://wa.me/5598984971547?text=Olá,%20gostaria%20de%20solicitar%20a%20aprovação%20da%20minha%20empresa%20no%20BarberShop"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-medium rounded-xl text-sm border border-slate-800 transition-all cursor-pointer"

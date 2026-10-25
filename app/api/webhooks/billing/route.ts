@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const signatureHeader = isStripe ? stripeSignature : (abacateSignature || stripeSignature)
     const webhookSecret = isStripe
       ? (process.env.STRIPE_WEBHOOK_SECRET || '')
-      : (process.env.ABACATEPAY_WEBHOOK_SECRET || 'barbershop_abacate_sec_2026')
+      : (process.env.ABACATEPAY_WEBHOOK_SECRET || '')
 
     const result = await processBillingWebhook({
       rawBody,

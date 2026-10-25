@@ -4,28 +4,40 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import DropdownHeader from '@/components/shared/DropdownHeader'
-import { 
-  User, 
-  Camera, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  User as UserIcon,
+  Camera,
+  Mail,
+  Phone,
+  MapPin,
   Save,
   X,
   Settings,
   Upload,
-  Edit
+  Edit,
+  Shield,
+  Crown,
+  Briefcase,
+  UserCheck,
+  Building2,
+  Calendar,
 } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 export default function PerfilPage() {
-  const { user, loading, logout, updateUser } = useAuth()
+  const { user, loading, updateUser } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    avatar: user?.avatar || ''
+    avatar: user?.avatar || '',
+    phone: user?.phone || '',
   })
 
   useEffect(() => {
@@ -33,7 +45,8 @@ export default function PerfilPage() {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        avatar: user.avatar || ''
+        avatar: user.avatar || '',
+        phone: user.phone || '',
       })
     }
   }, [user])
@@ -50,35 +63,38 @@ export default function PerfilPage() {
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       })
 
       if (response.ok) {
         const updatedUser = await response.json()
-        // Update user in context and localStorage
         localStorage.setItem('user_data', JSON.stringify(updatedUser))
-        // Atualizar o contexto do usuário
         updateUser(updatedUser)
-        router.push('/perfil')
+        setIsEditing(false)
       } else {
-        console.error('Erro ao atualizar perfil')
+        const err = await response.json().catch(() => ({}))
+        alert(err.error || 'Erro ao atualizar perfil')
       }
     } catch (error) {
       console.error('Erro ao salvar perfil:', error)
+      alert('Erro de conexão ao salvar perfil')
     } finally {
       setIsLoading(false)
-      setIsEditing(false)
     }
   }
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('A foto deve ter no máximo 5MB.')
+        return
+      }
       const reader = new FileReader()
-      reader.onloadend = (event) => {
-        const result = event.target?.result
+      reader.onloadend = () => {
+        const result = reader.result
         if (typeof result === 'string') {
-          setFormData(prev => ({ ...prev, avatar: result }))
+          setFormData((prev) => ({ ...prev, avatar: result }))
         }
       }
       reader.readAsDataURL(file)
@@ -89,194 +105,247 @@ export default function PerfilPage() {
     return null
   }
 
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'DEVELOPER':
+        return (
+          <Badge variant="outline" className="gap-1 border-amber-500/30 text-amber-500 dark:text-amber-400 bg-amber-500/10">
+            <Crown className="w-3.5 h-3.5" />
+            Desenvolvedor Global
+          </Badge>
+        )
+      case 'ADMIN':
+        return (
+          <Badge variant="outline" className="gap-1 border-primary/30 text-primary bg-primary/10">
+            <Shield className="w-3.5 h-3.5" />
+            Administrador da Unidade
+          </Badge>
+        )
+      case 'BARBER':
+        return (
+          <Badge variant="secondary" className="gap-1 font-semibold">
+            <Briefcase className="w-3.5 h-3.5 text-primary" />
+            Barbeiro / Profissional
+          </Badge>
+        )
+      default:
+        return (
+          <Badge variant="outline" className="gap-1 text-muted-foreground">
+            <UserCheck className="w-3.5 h-3.5 text-emerald-500" />
+            Cliente
+          </Badge>
+        )
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       {/* Header Fixo no Topo */}
       <DropdownHeader />
-      
+
       {/* Conteúdo principal */}
-      <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
-        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-6 mb-6">
+      <main className="w-full px-4 md:px-8 max-w-5xl mx-auto space-y-6">
+        <Card className="border-border shadow-sm">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-6">
             <div>
               <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
-                <User className="w-4 h-4" />
+                <UserIcon className="w-4 h-4" />
                 <span>Identidade & Conta</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Meu Perfil</h1>
-              <p className="text-sm md:text-base text-muted-foreground mt-1">
-                Gerencie seus dados pessoais, informações de contato e vínculo com a plataforma.
-              </p>
+              <CardTitle className="text-2xl sm:text-3xl font-bold text-foreground">
+                Meu Perfil
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Gerencie seus dados pessoais, informações de contato e vínculo com o estabelecimento.
+              </CardDescription>
             </div>
+
             {!isEditing && (
-              <button
+              <Button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl text-sm transition-colors self-start sm:self-auto cursor-pointer"
+                className="gap-2 self-start sm:self-auto shrink-0"
               >
                 <Edit className="w-4 h-4" />
-                Editar Perfil
-              </button>
+                <span>Editar Perfil</span>
+              </Button>
             )}
-          </div>
-              
-              <div className="space-y-6">
-                {/* Avatar Section */}
-                <div className="flex items-center space-x-6">
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="relative">
-                      <div className="w-24 h-24 bg-amber-500 rounded-full flex items-center justify-center">
-                        {formData.avatar ? (
-                          <img 
-                            src={formData.avatar} 
-                            alt="Profile" 
-                            className="w-24 h-24 rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-2xl font-bold text-black">
-                            {formData.name?.charAt(0)?.toUpperCase() || 'U'}
-                          </span>
-                        )}
-                      </div>
-                      {isEditing && (
-                        <label className="absolute bottom-0 right-0 bg-yellow-400 text-black p-2 rounded-full cursor-pointer hover:bg-yellow-500 transition-colors">
-                          <Camera className="w-4 h-4" />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleAvatarChange}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
-                    </div>
-                    {isEditing && (
-                      <div className="mt-4">
-                        <label className="text-white/60 text-sm cursor-pointer hover:text-white transition-colors flex items-center">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Alterar Foto
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleAvatarChange}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white mb-4">Informações Pessoais</h3>
-                    
-                    {isEditing ? (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-white/80 mb-1">Nome</label>
-                          <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="Seu nome"
-                            className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-white/80 mb-1">Email</label>
-                          <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            placeholder="Seu email"
-                            disabled // Email não pode ser alterado
-                            className="w-full px-3 py-2 bg-white/5 border border-white/6 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all disabled:opacity-50"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <User className="w-5 h-5 text-white/60" />
-                          <span className="text-white">{formData.name}</span>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Mail className="w-5 h-5 text-white/60" />
-                          <span className="text-white/80">{formData.email}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+          </CardHeader>
+
+          <CardContent className="space-y-8 pt-6">
+            {/* Foto e Visão Geral */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-border">
+              <div className="relative group">
+                <Avatar className="w-24 h-24 sm:w-28 sm:h-28 border-2 border-border shadow-sm">
+                  {formData.avatar ? (
+                    <AvatarImage src={formData.avatar} alt={formData.name || 'Avatar'} className="object-cover" />
+                  ) : null}
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                    {(formData.name || user.name || 'U').charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+
+                {isEditing && (
+                  <label
+                    htmlFor="avatar-file-input"
+                    className="absolute bottom-0 right-0 p-2 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md cursor-pointer transition-transform hover:scale-105"
+                    title="Alterar foto"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <input
+                      id="avatar-file-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              <div className="flex-1 text-center sm:text-left space-y-2">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                  <h3 className="text-xl sm:text-2xl font-bold text-foreground">
+                    {formData.name || 'Nome do Usuário'}
+                  </h3>
+                  {getRoleBadge(user.role)}
                 </div>
 
-                {/* Role Badge */}
-                <div className="flex items-center space-x-4 p-4 bg-white/5 border border-white/6 rounded-xl">
-                  <div className="text-center">
-                    <p className="text-sm text-white/60">Tipo de Conta</p>
-                    <div className="text-2xl font-bold text-yellow-400 mt-1">
-                      {user?.role === 'ADMIN' && 'Administrador'}
-                      {user?.role === 'BARBER' && 'Barbeiro'}
-                      {user?.role === 'CLIENT' && 'Cliente'}
-                    </div>
-                    <p className="text-xs text-white/60 mt-1">
-                      {user?.role === 'ADMIN' && 'Acesso total ao sistema'}
-                      {user?.role === 'BARBER' && 'Gerencia agendamentos e serviços'}
-                      {user?.role === 'CLIENT' && 'Realiza agendamentos'}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-sm text-muted-foreground flex items-center justify-center sm:justify-start gap-1.5">
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>{user.email}</span>
+                </p>
 
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-4 pt-6 border-t border-white/10">
-                  {!isEditing ? (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-xl transition-colors flex items-center font-semibold cursor-pointer"
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Editar Perfil
-                    </button>
+                {user.barbershop && (
+                  <p className="text-xs text-muted-foreground flex items-center justify-center sm:justify-start gap-1.5 pt-1">
+                    <Building2 className="w-3.5 h-3.5 text-primary" />
+                    <span>Unidade vinculada: <strong className="text-foreground">{user.barbershop.name}</strong></span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Informações Pessoais */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                Dados Pessoais & Contato
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Nome Completo
+                  </label>
+                  {isEditing ? (
+                    <Input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Seu nome completo"
+                      required
+                      className="h-10"
+                    />
                   ) : (
-                    <div className="flex space-x-4">
-                      <button
-                        onClick={() => {
-                          setFormData({
-                            name: user?.name || '',
-                            email: user?.email || '',
-                            avatar: user?.avatar || ''
-                          })
-                          setIsEditing(false)
-                        }}
-                        className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/20 transition-all flex items-center font-medium"
-                      >
-                        <X className="mr-2 h-4 w-4" />
-                        Cancelar
-                      </button>
-                      
-                      <button
-                        onClick={handleSaveProfile}
-                        disabled={isLoading}
-                        className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-xl transition-colors flex items-center font-semibold disabled:opacity-50 cursor-pointer"
-                      >
-                        {isLoading ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black border-r-transparent border-t-transparent mr-2"></div>
-                            Salvando...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="mr-2 h-4 w-4" />
-                            Salvar Alterações
-                          </>
-                        )}
-                      </button>
+                    <div className="h-10 px-3 rounded-md bg-muted/30 border border-border flex items-center text-sm text-foreground">
+                      {formData.name || '-'}
                     </div>
                   )}
                 </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Email de Acesso
+                  </label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    disabled
+                    className="h-10 opacity-70 cursor-not-allowed bg-muted/40"
+                    title="O email não pode ser alterado diretamente"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    O email é utilizado para autenticação no sistema.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Telefone / WhatsApp
+                  </label>
+                  {isEditing ? (
+                    <Input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="(00) 00000-0000"
+                      className="h-10"
+                    />
+                  ) : (
+                    <div className="h-10 px-3 rounded-md bg-muted/30 border border-border flex items-center text-sm text-foreground">
+                      {formData.phone || 'Não informado'}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-foreground mb-1.5">
+                    Permissões da Conta
+                  </label>
+                  <div className="h-10 px-3 rounded-md bg-muted/30 border border-border flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
+                    <span>
+                      {user.role === 'DEVELOPER' && 'Acesso irrestrito a todas as barbearias'}
+                      {user.role === 'ADMIN' && 'Administração completa da barbearia'}
+                      {user.role === 'BARBER' && 'Gestão de agenda e atendimentos'}
+                      {user.role === 'CLIENT' && 'Histórico e novos agendamentos'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </main>
-        </div>
-      )
-    }
+          </CardContent>
+
+          {isEditing && (
+            <CardFooter className="flex justify-end gap-3 pt-6 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setFormData({
+                    name: user?.name || '',
+                    email: user?.email || '',
+                    avatar: user?.avatar || '',
+                    phone: user?.phone || '',
+                  })
+                  setIsEditing(false)
+                }}
+                disabled={isLoading}
+              >
+                <X className="w-4 h-4 mr-1.5" />
+                Cancelar
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleSaveProfile}
+                disabled={isLoading}
+                className="gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-r-transparent" />
+                    <span>Salvando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Salvar Alterações</span>
+                  </>
+                )}
+              </Button>
+            </CardFooter>
+          )}
+        </Card>
+      </main>
+    </div>
+  )
+}

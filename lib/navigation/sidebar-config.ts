@@ -18,10 +18,11 @@ import {
   Activity,
   HardDrive,
   Rocket,
-  Shield,
-  FileText,
   KeyRound,
   Bell,
+  TrendingDown,
+  GraduationCap,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react"
 import { ROLE_LABELS, type UserRole } from "@/lib/roles"
@@ -62,7 +63,7 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             title: "Barbearias",
             icon: Building2,
             items: [
-              { title: "Todas as Unidades", url: "/developer" },
+              { title: "Todas as Unidades", url: "/developer?status=ALL" },
               { title: "Unidades Ativas", url: "/developer?status=APPROVED" },
               { title: "Em Avaliação", url: "/developer?status=PENDING" },
               { title: "Suspensas", url: "/developer?status=SUSPENDED" },
@@ -157,6 +158,21 @@ export function getSidebarSections(role: UserRole): NavSection[] {
         ],
       },
 
+      {
+        label: "Atendimento & Conteúdo",
+        items: [
+          {
+            title: "Suporte",
+            url: "/developer/suporte",
+            icon: HelpCircle,
+          },
+          {
+            title: "Tutorial",
+            url: "/developer/tutorial",
+            icon: GraduationCap,
+          },
+        ],
+      },
     ]
   }
 
@@ -206,6 +222,11 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             icon: CreditCard,
           },
           {
+            title: "Gastos do Estabelecimento",
+            url: "/dashboard/gastos",
+            icon: TrendingDown,
+          },
+          {
             title: "Relatórios & BI",
             url: "/dashboard/relatorios",
             icon: BarChart3,
@@ -230,23 +251,31 @@ export function getSidebarSections(role: UserRole): NavSection[] {
         items: [
           {
             title: "Configurações da Conta",
-            url: "/configuracoes",
+            url: "/configuracoes?tab=profile",
             icon: Settings,
           },
           {
             title: "Perfil do Estabelecimento",
-            url: "/perfil",
             icon: Store,
+            items: [
+              { title: "Dados da Barbearia", url: "/configuracoes?tab=barbershop" },
+              { title: "Horários de Atendimento", url: "/configuracoes?tab=hours" },
+            ],
+          },
+        ],
+      },
+      {
+        label: "Ajuda & Recursos",
+        items: [
+          {
+            title: "Tutorial",
+            url: "/dashboard/tutorial",
+            icon: GraduationCap,
           },
           {
-            title: "Termos de Uso",
-            url: "/termos",
-            icon: FileText,
-          },
-          {
-            title: "Privacidade & LGPD",
-            url: "/privacidade",
-            icon: Shield,
+            title: "Suporte",
+            url: "/dashboard/suporte",
+            icon: HelpCircle,
           },
         ],
       },
@@ -303,10 +332,20 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             url: "/configuracoes",
             icon: Settings,
           },
+        ],
+      },
+      {
+        label: "Ajuda & Recursos",
+        items: [
           {
-            title: "Privacidade & LGPD",
-            url: "/privacidade",
-            icon: Shield,
+            title: "Tutorial",
+            url: "/dashboard/tutorial",
+            icon: GraduationCap,
+          },
+          {
+            title: "Suporte",
+            url: "/dashboard/suporte",
+            icon: HelpCircle,
           },
         ],
       },
@@ -363,10 +402,20 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             url: "/configuracoes",
             icon: Settings,
           },
+        ],
+      },
+      {
+        label: "Ajuda & Recursos",
+        items: [
           {
-            title: "Privacidade & LGPD",
-            url: "/privacidade",
-            icon: Shield,
+            title: "Tutorial",
+            url: "/dashboard/tutorial",
+            icon: GraduationCap,
+          },
+          {
+            title: "Suporte",
+            url: "/dashboard/suporte",
+            icon: HelpCircle,
           },
         ],
       },
@@ -407,11 +456,6 @@ export function getSidebarSections(role: UserRole): NavSection[] {
           title: "Configurações",
           url: "/configuracoes",
           icon: Settings,
-        },
-        {
-          title: "Termos & Privacidade",
-          url: "/privacidade",
-          icon: Shield,
         },
       ],
     },

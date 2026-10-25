@@ -51,20 +51,43 @@ export async function GET(request: NextRequest) {
     const statusFilter = searchParams.get('status') // 'ALL', 'PAID', 'PENDING', 'REFUNDED'
     const searchQuery = searchParams.get('q')?.toLowerCase()
 
-    // 1. Busca cobranças transparentes e checkouts da API da AbacatePay em paralelo
-    const [abacateCheckouts, abacateTransparents, localInvoices] = await Promise.all([
-      listAbacateCheckouts(),
-      listAbacateTransparents(),
-      prisma.invoice.findMany({
-        where: user.role === 'DEVELOPER' ? {} : { barbershopId: user.barbershopId || undefined },
+    // Isolamento multi-tenant rigoroso:
+    // Apenas DEVELOPER tem visão global da AbacatePay e de todos os tenants.
+    // Administradores de barbearia só têm acesso às faturas da sua própria unidade.
+    let abacateCheckouts: any[] = []
+    let abacateTransparents: any[] = []
+    let localInvoices: any[] = []
+
+    if (user.role === 'DEVELOPER') {
+      const [checkoutsRes, transparentsRes, invoicesRes] = await Promise.all([
+        listAbacateCheckouts(),
+        listAbacateTransparents(),
+        prisma.invoice.findMany({
+          include: {
+            barbershop: { select: { id: true, name: true, slug: true, email: true, phone: true } },
+            subscription: { include: { plan: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        }),
+      ])
+      abacateCheckouts = checkoutsRes
+      abacateTransparents = transparentsRes
+      localInvoices = invoicesRes
+    } else {
+      if (!user.barbershopId) {
+        return NextResponse.json({ error: 'Usuário não vinculado a uma barbearia' }, { status: 403 })
+      }
+      localInvoices = await prisma.invoice.findMany({
+        where: { barbershopId: user.barbershopId },
         include: {
           barbershop: { select: { id: true, name: true, slug: true, email: true, phone: true } },
           subscription: { include: { plan: true } },
         },
         orderBy: { createdAt: 'desc' },
         take: 50,
-      }),
-    ])
+      })
+    }
 
     const charges: UnifiedCharge[] = []
 

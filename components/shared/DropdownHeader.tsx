@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { useRouter, usePathname } from 'next/navigation'
-import { ROLE_LABELS, type UserRole } from '@/lib/roles'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import NotificationBell from './NotificationBell'
 import {
   SidebarProvider,
@@ -12,13 +11,16 @@ import {
 } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
 import { Separator } from '@/components/ui/separator'
-import {
-  Search,
-  LogOut,
-  Scissors,
-} from 'lucide-react'
+import TopBarTrialWidget from '@/components/dashboard/TopBarTrialWidget'
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
+  '/dashboard/financeiro': { title: 'Financeiro', subtitle: 'Fluxo de Caixa & Faturamento' },
+  '/dashboard/gastos': { title: 'Gastos do Estabelecimento', subtitle: 'Despesas & Custos Operacionais' },
+  '/dashboard/relatorios': { title: 'Relatórios & BI', subtitle: 'Indicadores Estratégicos' },
+  '/dashboard/tutorial': { title: 'Tutorial & Guias', subtitle: 'Aprenda a Usar a Plataforma' },
+  '/dashboard/suporte': { title: 'Central de Suporte', subtitle: 'Atendimento, Contato & FAQ' },
+  '/tutorial': { title: 'Tutorial & Guias', subtitle: 'Aprenda a Usar a Plataforma' },
+  '/suporte': { title: 'Central de Suporte', subtitle: 'Atendimento, Contato & FAQ' },
   '/dashboard': { title: 'Dashboard', subtitle: 'Visão Geral & Indicadores' },
   '/agenda': { title: 'Agenda', subtitle: 'Atendimentos & Horários' },
   '/clientes': { title: 'Clientes', subtitle: 'Gestão da Base de Clientes' },
@@ -27,6 +29,8 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/configuracoes': { title: 'Configurações', subtitle: 'Preferências da Conta' },
   '/perfil': { title: 'Meu Perfil', subtitle: 'Dados Pessoais & Unidade' },
   '/developer': { title: 'Painel SaaS', subtitle: 'Gestão Global de Barbearias' },
+  '/developer/suporte': { title: 'Suporte (Chamados)', subtitle: 'Central de Chamados dos Clientes' },
+  '/developer/tutorial': { title: 'Gestão de Tutoriais', subtitle: 'Vídeos e Guias para os Clientes' },
   '/developer/online-users': { title: 'Tempo Real & Auditoria', subtitle: 'Usuários Online' },
   '/developer/audit-logs': { title: 'Tempo Real & Auditoria', subtitle: 'Audit Logs' },
   '/developer/reports': { title: 'Tempo Real & Auditoria', subtitle: 'Relatórios' },
@@ -49,16 +53,12 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
 }
 
 interface HeaderContentProps {
-  searchQuery: string
-  setSearchQuery: (query: string) => void
   handleLogout: () => void
   currentPageInfo: { title: string; subtitle?: string }
   user: any
 }
 
 function HeaderContent({
-  searchQuery,
-  setSearchQuery,
   handleLogout,
   currentPageInfo,
   user,
@@ -72,83 +72,33 @@ function HeaderContent({
     <>
       <header
         style={{ left: leftOffset }}
-        className="fixed top-0 right-0 z-30 transition-[left] duration-200 ease-linear bg-gray-950 border-b border-gray-800"
+        className="fixed top-0 right-0 z-30 transition-[left] duration-200 ease-linear bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border"
       >
-        <div className="w-full px-4 md:px-6 py-3">
+        <div className="w-full px-4 md:px-6 py-2.5">
           <div className="flex items-center justify-between gap-4 h-11">
             {/* Lado Esquerdo: SidebarTrigger + Separator + Título da Página Atual */}
             <div className="flex items-center gap-3">
-              <SidebarTrigger className="h-9 w-9 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition-colors border border-sidebar-border" />
+              <SidebarTrigger className="h-8 w-8 text-foreground hover:bg-muted hover:text-foreground rounded-md transition-colors border border-border" />
 
-              <Separator orientation="vertical" className="h-5 bg-sidebar-border" />
+              <Separator orientation="vertical" className="h-5 bg-border" />
 
               <div className="flex flex-col">
-                <span className="text-sm font-extrabold text-white tracking-tight">
+                <span className="text-sm font-semibold text-foreground tracking-tight">
                   {currentPageInfo.title}
                 </span>
                 {currentPageInfo.subtitle && (
-                  <span className="text-[11px] text-gray-200 font-medium hidden sm:block">
+                  <span className="text-[11px] text-muted-foreground font-normal hidden sm:block">
                     {currentPageInfo.subtitle}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Centro: Barra de Busca (Desktop) */}
-            <div className="hidden md:flex flex-1 max-w-sm mx-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-                <input
-                  type="text"
-                  placeholder="Buscar clientes, serviços, barbeiros..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 bg-[#030712] border border-[#374151] rounded-lg text-xs text-white placeholder-gray-400 font-medium focus:outline-none focus:border-amber-400 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Lado Direito: Notificações + Avatar do Usuário */}
-            <div className="flex items-center gap-3">
+            {/* Centro / Top Bar: Período de Avaliação Gratuita (Apenas para barbearias SEM plano ativo) */}
+            <TopBarTrialWidget />
+            <div className="flex items-center gap-2.5">
               {/* Notificações em Tempo Real (Equipe e Clientes) */}
               {user && user.role !== 'DEVELOPER' && <NotificationBell />}
-
-              {/* Identificação do Usuário */}
-              <div className="flex items-center gap-2.5 p-1.5 pl-2.5 bg-[#111827] border border-[#374151] rounded-lg">
-                <div className="w-7 h-7 bg-[#d97706] text-white font-black rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt="Avatar"
-                      className="w-7 h-7 rounded-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                        const sibling = e.currentTarget.nextElementSibling as HTMLElement
-                        if (sibling) sibling.style.display = 'flex'
-                      }}
-                    />
-                  ) : null}
-                  <span className={`text-white font-extrabold text-xs ${user?.avatar ? 'hidden' : 'flex'}`}>
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <div className="hidden sm:block min-w-0 pr-1">
-                  <p className="text-white font-bold text-xs truncate max-w-[130px] leading-tight">
-                    {user?.name || 'Usuário'}
-                  </p>
-                  <p className="text-amber-400 text-[10px] leading-tight font-bold">
-                    {ROLE_LABELS[(user?.role as UserRole) || 'CLIENT']}
-                  </p>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-1.5 text-gray-300 hover:text-white hover:bg-[#dc2626] rounded-md transition-all flex-shrink-0"
-                  title="Sair da conta"
-                  aria-label="Sair da conta"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -168,10 +118,10 @@ function HeaderContent({
 }
 
 export default function DropdownHeader() {
-  const [searchQuery, setSearchQuery] = useState('')
   const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const handleLogout = () => {
     logout()
@@ -189,9 +139,17 @@ export default function DropdownHeader() {
     }
 
     if (pathname === '/configuracoes' || pathname.startsWith('/configuracoes/')) {
-      return isDev
-        ? { title: 'Configurações Globais', subtitle: 'Preferências do Desenvolvedor & Sistema' }
-        : { title: 'Configurações', subtitle: 'Preferências da Conta' }
+      if (isDev) {
+        return { title: 'Configurações Globais', subtitle: 'Preferências do Desenvolvedor & Sistema' }
+      }
+      const tab = searchParams?.get('tab')
+      if (tab === 'hours') {
+        return { title: 'Horários de Atendimento', subtitle: 'Perfil do Estabelecimento & Grade Semanal' }
+      }
+      if (tab === 'barbershop') {
+        return { title: 'Perfil do Estabelecimento', subtitle: 'Dados da Barbearia & Link Público' }
+      }
+      return { title: 'Configurações da Conta', subtitle: 'Preferências da Conta' }
     }
 
     for (const [route, info] of Object.entries(PAGE_TITLES)) {
@@ -206,8 +164,6 @@ export default function DropdownHeader() {
     <SidebarProvider defaultOpen={true} className="!min-h-0 !h-0 overflow-visible">
       <AppSidebar />
       <HeaderContent
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
         handleLogout={handleLogout}
         currentPageInfo={currentPageInfo}
         user={user}

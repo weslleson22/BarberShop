@@ -113,22 +113,24 @@ export default function AppointmentDetailsModal({
   const StatusIcon = statusInfo.icon
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-lg bg-card text-card-foreground border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/[0.02]">
+        <div className="flex items-center justify-between p-5 border-b border-border bg-muted/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Detalhes do Agendamento</h2>
-              <p className="text-xs text-white/50">ID: {appointment.id}</p>
+              <h2 className="text-lg font-bold text-foreground">Detalhes do Agendamento</h2>
+              {userRole === 'DEVELOPER' && (
+                <p className="text-xs text-muted-foreground font-mono">ID: {appointment.id}</p>
+              )}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
             aria-label="Fechar modal"
           >
             <X className="w-5 h-5" />
@@ -138,60 +140,60 @@ export default function AppointmentDetailsModal({
         {/* Body */}
         <div className="p-5 overflow-y-auto space-y-4">
           {/* Status & Valor */}
-          <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-muted/40 border border-border rounded-xl">
             <div>
-              <p className="text-xs text-white/60 mb-1">Status Atual</p>
+              <p className="text-xs text-muted-foreground mb-1">Status Atual</p>
               <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs font-semibold ${statusInfo.className}`}>
                 <StatusIcon className="w-3.5 h-3.5" />
                 <span>{statusInfo.label}</span>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs text-white/60 mb-1">Valor Total</p>
-              <p className="text-xl font-bold text-amber-400">
+              <p className="text-xs text-muted-foreground mb-1">Valor Total</p>
+              <p className="text-xl font-bold text-primary">
                 {formatCurrency(appointment.totalAmount || appointment.service?.price || 0)}
               </p>
             </div>
           </div>
 
           {/* Data e Horário */}
-          <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
-            <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-wider font-semibold">
-              <Clock className="w-4 h-4 text-yellow-400" />
+          <div className="p-4 bg-muted/40 border border-border rounded-xl space-y-2">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+              <Clock className="w-4 h-4 text-primary" />
               <span>Data e Horário</span>
             </div>
-            <p className="text-white font-medium capitalize text-sm">{startInfo.date}</p>
-            <div className="flex items-center gap-2 text-white/80 text-sm">
-              <span className="font-semibold text-yellow-400">{startInfo.time}</span>
+            <p className="text-foreground font-medium capitalize text-sm">{startInfo.date}</p>
+            <div className="flex items-center gap-2 text-foreground/80 text-sm">
+              <span className="font-semibold text-primary">{startInfo.time}</span>
               <span>até</span>
-              <span className="font-semibold text-yellow-400">{endInfo.time}</span>
-              <span className="text-xs text-white/40">({appointment.service.duration} min)</span>
+              <span className="font-semibold text-primary">{endInfo.time}</span>
+              <span className="text-xs text-muted-foreground">({appointment.service.duration} min)</span>
             </div>
           </div>
 
           {/* Cliente */}
-          <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
-            <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-wider font-semibold">
-              <User className="w-4 h-4 text-blue-400" />
+          <div className="p-4 bg-muted/40 border border-border rounded-xl space-y-2">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+              <User className="w-4 h-4 text-blue-500" />
               <span>Cliente</span>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-white font-semibold text-base">{appointment.client.name}</p>
+              <p className="text-foreground font-semibold text-base">{appointment.client.name}</p>
               {Boolean(appointment.isVip || appointment.client?.isVip) && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950/60 text-amber-300 border border-amber-800/60">
-                  <Crown className="w-3.5 h-3.5 text-amber-400" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  <Crown className="w-3.5 h-3.5" />
                   Cliente VIP
                 </span>
               )}
             </div>
-            <div className="space-y-1 text-xs text-white/70">
+            <div className="space-y-1 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-white/40" />
+                <Phone className="w-3.5 h-3.5 text-muted-foreground/60" />
                 <span>{appointment.client.phone || 'Sem telefone'}</span>
               </div>
               {appointment.client.email && (
                 <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-white/40" />
+                  <Mail className="w-3.5 h-3.5 text-muted-foreground/60" />
                   <span>{appointment.client.email}</span>
                 </div>
               )}
@@ -200,22 +202,22 @@ export default function AppointmentDetailsModal({
 
           {/* Serviço e Barbeiro */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-1">
-              <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-wider font-semibold">
-                <Scissors className="w-4 h-4 text-yellow-400" />
+            <div className="p-4 bg-muted/40 border border-border rounded-xl space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+                <Scissors className="w-4 h-4 text-primary" />
                 <span>Serviço</span>
               </div>
-              <p className="text-white font-medium text-sm">{appointment.service.name}</p>
-              <p className="text-xs text-white/50">{appointment.service.duration} minutos</p>
+              <p className="text-foreground font-medium text-sm">{appointment.service.name}</p>
+              <p className="text-xs text-muted-foreground">{appointment.service.duration} minutos</p>
             </div>
 
-            <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
-              <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-wider font-semibold">
-                <User className="w-4 h-4 text-yellow-400" />
+            <div className="p-4 bg-muted/40 border border-border rounded-xl space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+                <User className="w-4 h-4 text-primary" />
                 <span>Profissional</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-amber-500 flex items-center justify-center flex-shrink-0 border border-amber-400">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 border border-primary/20">
                   {appointment.barber.avatar ? (
                     <img
                       src={appointment.barber.avatar}
@@ -223,14 +225,14 @@ export default function AppointmentDetailsModal({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-black font-bold text-sm">
+                    <span className="font-bold text-sm">
                       {appointment.barber.name ? appointment.barber.name.charAt(0).toUpperCase() : 'B'}
                     </span>
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-white font-semibold text-sm truncate">{appointment.barber.name}</p>
-                  <p className="text-xs text-white/50 truncate">{appointment.barber.email || 'Barbeiro'}</p>
+                  <p className="text-foreground font-semibold text-sm truncate">{appointment.barber.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{appointment.barber.email || 'Barbeiro'}</p>
                 </div>
               </div>
             </div>
@@ -238,18 +240,18 @@ export default function AppointmentDetailsModal({
 
           {/* Observações */}
           {appointment.notes && (
-            <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-1">
-              <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-wider font-semibold">
-                <FileText className="w-4 h-4 text-white/40" />
+            <div className="p-4 bg-muted/40 border border-border rounded-xl space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+                <FileText className="w-4 h-4 text-muted-foreground/60" />
                 <span>Observações</span>
               </div>
-              <p className="text-xs text-white/80 whitespace-pre-wrap">{appointment.notes}</p>
+              <p className="text-xs text-foreground/80 whitespace-pre-wrap">{appointment.notes}</p>
             </div>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-white/10 bg-white/[0.02] flex flex-wrap items-center justify-end gap-2">
+        <div className="p-4 border-t border-border bg-muted/20 flex flex-wrap items-center justify-end gap-2">
           {appointment.status !== 'CANCELLED' && onEdit && (
             <button
               type="button"
@@ -257,7 +259,7 @@ export default function AppointmentDetailsModal({
                 onClose()
                 onEdit(appointment)
               }}
-              className="px-4 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 rounded-xl transition-all text-xs font-semibold flex items-center gap-1.5"
+              className="px-4 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-all text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
             >
               <Edit className="w-3.5 h-3.5" />
               Editar
@@ -271,7 +273,7 @@ export default function AppointmentDetailsModal({
                 onClose()
                 onStatusChange(appointment, 'COMPLETED')
               }}
-              className="px-4 py-2 bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 rounded-xl transition-all text-xs font-semibold flex items-center gap-1.5"
+              className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
             >
               <CheckCircle className="w-3.5 h-3.5" />
               Concluir
@@ -285,7 +287,7 @@ export default function AppointmentDetailsModal({
                 onClose()
                 onCancel(appointment)
               }}
-              className="px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-xl transition-all text-xs font-semibold flex items-center gap-1.5"
+              className="px-4 py-2 bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive/20 rounded-xl transition-all text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
             >
               <XCircle className="w-3.5 h-3.5" />
               Cancelar
@@ -295,7 +297,7 @@ export default function AppointmentDetailsModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white rounded-xl transition-all text-xs font-medium"
+            className="px-4 py-2 bg-card border border-border text-foreground hover:bg-muted rounded-xl transition-all text-xs font-medium cursor-pointer"
           >
             Fechar
           </button>

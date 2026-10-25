@@ -48,97 +48,95 @@ export default function AgendaHeader({
   }, [hideBarberFilter])
 
   return (
-    <div className="bg-gray-950 border-b border-gray-800">
-      <div className="w-full px-4 md:px-6 py-6">
-        {/* Page Header - Título e Descrição */}
-        <div className="flex flex-col w-full mb-6">
-          <div className="flex flex-col w-full max-w-2xl">
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              Agenda
-            </h1>
-            <p className="text-white/60 text-sm md:text-base">
-              Visualize, filtre e gerencie todos os agendamentos da barbearia
-            </p>
-          </div>
+    <div className="space-y-4">
+      {/* Page Header - Título e Descrição */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+            Agenda
+          </h1>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+            Visualize, filtre e gerencie todos os agendamentos da barbearia
+          </p>
         </div>
 
-        {/* Toolbar - Busca, Filtros e Ações */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          {/* Search Bar */}
-          <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-            <input
-              type="text"
-              placeholder="Buscar por cliente, telefone, barbeiro ou serviço..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all text-sm"
-            />
-          </div>
+        {/* New Appointment Button */}
+        <button
+          type="button"
+          onClick={onNewAppointment}
+          className="w-full sm:w-auto px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-all flex items-center justify-center space-x-2 flex-shrink-0 text-xs md:text-sm shadow-sm cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Novo Agendamento</span>
+        </button>
+      </div>
 
-          {/* Filters and Actions */}
-          <div className="flex flex-wrap items-center gap-2 md:gap-3">
-            {/* Period Filter (Todos, Hoje, Semana, Mês) */}
-            <div className="relative flex-shrink-0">
-              <select
-                value={currentPeriod}
-                onChange={(e) => onDatePeriodFilter?.(e.target.value as any)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all cursor-pointer min-w-[120px] pr-8"
-                aria-label="Filtrar por período"
-              >
-                <option value="all" className="bg-gray-900">Todos os Períodos</option>
-                <option value="today" className="bg-gray-900">Hoje</option>
-                <option value="week" className="bg-gray-900">Esta Semana</option>
-                <option value="month" className="bg-gray-900">Este Mês</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-            </div>
+      {/* Toolbar - Busca e Filtros */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Search Bar */}
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar por cliente, telefone, barbeiro ou serviço..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all text-xs md:text-sm"
+          />
+        </div>
 
-            {/* Status Filter */}
-            <div className="relative flex-shrink-0">
-              <select
-                value={currentStatus}
-                onChange={(e) => onStatusFilter?.(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all cursor-pointer min-w-[110px] pr-8"
-                aria-label="Filtrar por status"
-              >
-                <option value="" className="bg-gray-900">Todos Status</option>
-                <option value="PENDING" className="bg-gray-900">Pendente</option>
-                <option value="CONFIRMED" className="bg-gray-900">Confirmado</option>
-                <option value="COMPLETED" className="bg-gray-900">Concluído</option>
-                <option value="CANCELLED" className="bg-gray-900">Cancelado</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-            </div>
-
-            {/* Barber Filter */}
-            {!hideBarberFilter && (
-              <div className="relative flex-shrink-0">
-                <select
-                  value={currentBarber}
-                  onChange={(e) => onBarberFilter?.(e.target.value)}
-                  className="appearance-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm focus:outline-none focus:border-amber-500 focus:bg-white/10 transition-all cursor-pointer min-w-[130px] pr-8"
-                  aria-label="Filtrar por barbeiro"
-                >
-                  <option value="" className="bg-gray-900">Todos Barbeiros</option>
-                  {barbers.map((b) => (
-                    <option key={b.id} value={b.id} className="bg-gray-900">{b.name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-              </div>
-            )}
-
-            {/* New Appointment Button */}
-            <button
-              type="button"
-              onClick={onNewAppointment}
-              className="w-full sm:w-auto px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-all flex items-center justify-center space-x-2 flex-shrink-0 text-sm"
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Period Filter (Todos, Hoje, Semana, Mês) */}
+          <div className="relative flex-shrink-0">
+            <select
+              value={currentPeriod}
+              onChange={(e) => onDatePeriodFilter?.(e.target.value as any)}
+              className="appearance-none bg-background border border-input rounded-lg px-3 py-2 text-foreground text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all cursor-pointer min-w-[125px] pr-8"
+              aria-label="Filtrar por período"
             >
-              <Plus className="w-4 h-4" />
-              <span>Novo Agendamento</span>
-            </button>
+              <option value="all" className="bg-popover text-popover-foreground">Todos os Períodos</option>
+              <option value="today" className="bg-popover text-popover-foreground">Hoje</option>
+              <option value="week" className="bg-popover text-popover-foreground">Esta Semana</option>
+              <option value="month" className="bg-popover text-popover-foreground">Este Mês</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           </div>
+
+          {/* Status Filter */}
+          <div className="relative flex-shrink-0">
+            <select
+              value={currentStatus}
+              onChange={(e) => onStatusFilter?.(e.target.value)}
+              className="appearance-none bg-background border border-input rounded-lg px-3 py-2 text-foreground text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all cursor-pointer min-w-[115px] pr-8"
+              aria-label="Filtrar por status"
+            >
+              <option value="" className="bg-popover text-popover-foreground">Todos Status</option>
+              <option value="PENDING" className="bg-popover text-popover-foreground">Pendente</option>
+              <option value="CONFIRMED" className="bg-popover text-popover-foreground">Confirmado</option>
+              <option value="COMPLETED" className="bg-popover text-popover-foreground">Concluído</option>
+              <option value="CANCELLED" className="bg-popover text-popover-foreground">Cancelado</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          </div>
+
+          {/* Barber Filter */}
+          {!hideBarberFilter && (
+            <div className="relative flex-shrink-0">
+              <select
+                value={currentBarber}
+                onChange={(e) => onBarberFilter?.(e.target.value)}
+                className="appearance-none bg-background border border-input rounded-lg px-3 py-2 text-foreground text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all cursor-pointer min-w-[130px] pr-8"
+                aria-label="Filtrar por barbeiro"
+              >
+                <option value="" className="bg-popover text-popover-foreground">Todos Barbeiros</option>
+                {barbers.map((b) => (
+                  <option key={b.id} value={b.id} className="bg-popover text-popover-foreground">{b.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import { ShieldCheck, AlertTriangle, Clock, ArrowRight, ShieldAlert, Sparkles } from 'lucide-react'
+import { ShieldCheck, AlertTriangle, Clock, ArrowRight, ShieldAlert } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
+import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
 
 interface SubscriptionAccessState {
   allowed: boolean
@@ -73,11 +75,16 @@ export default function TrialBanner() {
   // Identifica se já houve contratação definitiva de um plano pago
   const isPaidContracted =
     access?.isContracted === true ||
-    (access?.status === 'ACTIVE' &&
-      !access?.isTrial &&
-      (Number(access?.plan?.price || 0) > 0 || access?.plan?.slug?.startsWith('plan_')))
+    access?.reason === 'SUBSCRIPTION_ACTIVE' ||
+    (access?.status === 'ACTIVE' && !access?.isTrial) ||
+    Boolean(
+      access?.status === 'ACTIVE' &&
+      access?.plan &&
+      !access.plan.slug?.startsWith('trial') &&
+      (Number(access.plan.price || 0) > 0 || access.isContracted)
+    )
 
-  // Se o cliente já contratou um plano pago definitivo e ativo, o banner de trial não deve aparecer
+  // Se o cliente já contratou um plano pago definitivo e ativo, o banner de trial NUNCA deve aparecer
   if (isPaidContracted) {
     return null
   }
@@ -195,23 +202,21 @@ export default function TrialBanner() {
   // 3. CASO PADRÃO: CLIENTE EM PERÍODO DE TRIAL DE 7 DIAS ATIVO (ENQUANTO NÃO CONTRATAR PLANO)
   return (
     <div
-      className={`mb-6 rounded-xl border p-4 md:p-5 transition-all shadow-sm ${
-        isExpiringSoon
-          ? 'bg-amber-950/60 border-amber-800/80 text-amber-200'
-          : 'bg-gray-900 border-gray-800 text-white'
-      }`}
+      className={`mb-6 rounded-xl border p-4 md:p-5 transition-all shadow-sm ${isExpiringSoon
+          ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+          : 'bg-card border-border text-card-foreground'
+        }`}
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3.5">
           <div
-            className={`p-2.5 rounded-xl shrink-0 ${
-              isExpiringSoon ? 'bg-amber-500/20 text-amber-400' : 'bg-primary/20 text-primary'
-            }`}
+            className={`p-2.5 rounded-xl shrink-0 ${isExpiringSoon ? 'bg-amber-500/20 text-amber-500' : 'bg-primary/10 text-primary'
+              }`}
           >
             {isExpiringSoon ? (
               <Clock className="w-5 h-5 animate-pulse" />
             ) : (
-              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
             )}
           </div>
           <div className="space-y-1">
@@ -219,19 +224,19 @@ export default function TrialBanner() {
               <h3 className="font-semibold text-base text-foreground">
                 Período de Avaliação Gratuita (7 Dias)
               </h3>
-              <span
-                className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
-                  isExpiringSoon
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                }`}
+              <Badge
+                variant="outline"
+                className={`text-xs px-2.5 py-0.5 font-bold ${isExpiringSoon
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  }`}
               >
                 {daysRemaining > 1
                   ? `${daysRemaining} dias restantes`
                   : daysRemaining === 1
-                  ? `1 dia restante`
-                  : `Último dia de teste!`}
-              </span>
+                    ? `1 dia restante`
+                    : `Último dia de teste!`}
+              </Badge>
             </div>
 
             <p className="text-sm text-muted-foreground">
@@ -243,14 +248,26 @@ export default function TrialBanner() {
               )}
             </p>
 
-            {/* Barra de Progresso visual dos 7 dias */}
-            <div className="w-full max-w-md bg-muted/60 h-2 rounded-full mt-2 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  isExpiringSoon ? 'bg-amber-500' : 'bg-emerald-500'
-                }`}
-                style={{ width: `${elapsedPercent}%` }}
-              />
+            {/* Barra de Progresso visual dos 7 dias com divisão clara dos dias decorridos vs restantes */}
+            <div className="w-full max-w-md mt-2.5 flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 p-1 rounded-md bg-muted/80 dark:bg-neutral-900 border border-border/80">
+                {Array.from({ length: 7 }).map((_, index) => {
+                  const isPassed = index < (7 - daysRemaining)
+                  return (
+                    <div
+                      key={index}
+                      className={`h-2.5 w-4 rounded-xs transition-all duration-300 ${isPassed
+                          ? 'bg-primary shadow-xs'
+                          : 'bg-muted-foreground/20 dark:bg-neutral-800 border border-border/70'
+                        }`}
+                      title={`Dia ${index + 1} de 7: ${isPassed ? 'Completado' : 'Restante'}`}
+                    />
+                  )
+                })}
+              </div>
+              <span className="text-xs font-mono font-medium text-muted-foreground whitespace-nowrap">
+                <strong className="text-primary font-bold">{7 - daysRemaining}</strong>/7d
+              </span>
             </div>
           </div>
         </div>
@@ -258,14 +275,10 @@ export default function TrialBanner() {
         <div className="flex items-center gap-3 shrink-0">
           <Link
             href="/dashboard/assinatura"
-            className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md ${
-              isExpiringSoon
-                ? 'bg-amber-500 hover:bg-amber-400 text-black'
-                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-            }`}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-[1.02] active:scale-[0.98] animate-pulse"
           >
-            <span>Contratar com Desconto</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Contratar Plano</span>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </div>

@@ -178,26 +178,26 @@ export default function NotificationBell() {
     <div className="relative" ref={panelRef}>
       <button
         onClick={handleToggle}
-        className="relative p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 hover:border-yellow-400/40 transition-all cursor-pointer flex items-center justify-center"
+        className="relative p-2 bg-background hover:bg-muted border border-border rounded-lg text-foreground transition-all cursor-pointer flex items-center justify-center"
         aria-label="Notificações"
         title="Notificações"
       >
-        <Bell className="w-5 h-5 text-white" />
+        <Bell className="w-4 h-4 text-foreground" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white font-bold text-[10px] rounded-full flex items-center justify-center border-2 border-gray-900 shadow-md animate-pulse">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground font-bold text-[10px] rounded-full flex items-center justify-center border-2 border-background shadow-md animate-pulse">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 max-w-[92vw] bg-gray-950 border border-yellow-500/30 rounded-2xl shadow-[0_12px_45px_rgba(0,0,0,0.95)] overflow-hidden z-[100] animate-fadeIn">
+        <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 max-w-[92vw] bg-popover text-popover-foreground border border-border rounded-2xl shadow-2xl overflow-hidden z-[100] animate-fadeIn">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gray-900">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/40">
             <div className="flex items-center gap-2">
-              <span className="text-white font-bold text-sm tracking-wide">Notificações</span>
+              <span className="text-foreground font-bold text-sm tracking-wide">Notificações</span>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 text-[11px] font-bold bg-yellow-400 text-black rounded-full shadow-sm">
+                <span className="px-2 py-0.5 text-[11px] font-bold bg-primary text-primary-foreground rounded-full shadow-sm">
                   {unreadCount} {unreadCount === 1 ? 'nova' : 'novas'}
                 </span>
               )}
@@ -206,15 +206,15 @@ export default function NotificationBell() {
               <button
                 onClick={fetchNotifications}
                 disabled={loading}
-                className="text-gray-300 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                 title="Atualizar notificações"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-yellow-400' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-primary' : ''}`} />
               </button>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs text-yellow-400 hover:text-yellow-300 flex items-center gap-1 font-semibold px-2 py-1 rounded-md hover:bg-yellow-400/10 transition-colors"
+                  className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-semibold px-2 py-1 rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
                   title="Marcar todas como lidas"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
@@ -224,7 +224,7 @@ export default function NotificationBell() {
               {hasReadNotifications && (
                 <button
                   onClick={clearReadNotifications}
-                  className="text-gray-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                  className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition-colors cursor-pointer"
                   title="Limpar lidas"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -234,23 +234,23 @@ export default function NotificationBell() {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex border-b border-white/10 bg-gray-900/70 px-2 pt-1">
+          <div className="flex border-b border-border bg-muted/20 px-2 pt-1">
             <button
               onClick={() => setActiveTab('all')}
-              className={`flex-1 py-1.5 text-xs font-semibold text-center border-b-2 transition-colors ${
+              className={`flex-1 py-1.5 text-xs font-semibold text-center border-b-2 transition-colors cursor-pointer ${
                 activeTab === 'all'
-                  ? 'text-yellow-400 border-yellow-400'
-                  : 'text-gray-400 border-transparent hover:text-gray-200'
+                  ? 'text-primary border-primary'
+                  : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
             >
               Todas ({notifications.length})
             </button>
             <button
               onClick={() => setActiveTab('unread')}
-              className={`flex-1 py-1.5 text-xs font-semibold text-center border-b-2 transition-colors ${
+              className={`flex-1 py-1.5 text-xs font-semibold text-center border-b-2 transition-colors cursor-pointer ${
                 activeTab === 'unread'
-                  ? 'text-yellow-400 border-yellow-400'
-                  : 'text-gray-400 border-transparent hover:text-gray-200'
+                  ? 'text-primary border-primary'
+                  : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
             >
               Não lidas ({unreadCount})
@@ -258,21 +258,21 @@ export default function NotificationBell() {
           </div>
 
           {/* List com Scrollview funcional */}
-          <div className="max-h-[380px] overflow-y-auto overscroll-contain divide-y divide-gray-800/80 bg-gray-950">
+          <div className="max-h-[380px] overflow-y-auto overscroll-contain divide-y divide-border bg-popover">
             {loading && notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 px-4">
-                <Loader2 className="w-7 h-7 text-yellow-400 animate-spin mb-2" />
-                <p className="text-gray-300 text-xs font-medium">Carregando notificações...</p>
+                <Loader2 className="w-7 h-7 text-primary animate-spin mb-2" />
+                <p className="text-muted-foreground text-xs font-medium">Carregando notificações...</p>
               </div>
             ) : displayedNotifications.length === 0 ? (
-              <div className="text-center py-10 px-4 bg-gray-950">
-                <div className="w-12 h-12 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center mx-auto mb-3">
-                  <Bell className="w-6 h-6 text-yellow-400" />
+              <div className="text-center py-10 px-4 bg-popover">
+                <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-3">
+                  <Bell className="w-6 h-6 text-primary" />
                 </div>
-                <p className="text-white text-sm font-semibold">
+                <p className="text-foreground text-sm font-semibold">
                   {activeTab === 'unread' ? 'Nenhuma não lida' : 'Nenhuma notificação'}
                 </p>
-                <p className="text-gray-300 text-xs mt-1">
+                <p className="text-muted-foreground text-xs mt-1">
                   {activeTab === 'unread' 
                     ? 'Você já visualizou todas as suas notificações.' 
                     : 'Você está com tudo em dia por aqui.'}
@@ -285,27 +285,27 @@ export default function NotificationBell() {
                   onClick={() => !n.read && markAsRead(n.id)}
                   className={`w-full text-left px-4 py-3.5 transition-all cursor-pointer ${
                     n.read 
-                      ? 'bg-gray-950/90 hover:bg-gray-900 border-l-4 border-transparent opacity-75' 
-                      : 'bg-yellow-950/40 hover:bg-yellow-950/60 border-l-4 border-yellow-400 opacity-100'
+                      ? 'bg-popover hover:bg-muted/40 border-l-4 border-transparent opacity-75' 
+                      : 'bg-primary/5 hover:bg-primary/10 border-l-4 border-primary opacity-100'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className={`text-sm ${n.read ? 'font-medium text-gray-300' : 'font-bold text-yellow-300'}`}>
+                    <p className={`text-sm ${n.read ? 'font-medium text-muted-foreground' : 'font-bold text-foreground'}`}>
                       {n.title}
                     </p>
                     {!n.read && (
-                      <span className="w-2.5 h-2.5 mt-1 rounded-full bg-amber-400 flex-shrink-0 animate-pulse" />
+                      <span className="w-2.5 h-2.5 mt-1 rounded-full bg-primary flex-shrink-0 animate-pulse" />
                     )}
                   </div>
-                  <p className={`text-xs mt-1.5 leading-relaxed ${n.read ? 'text-gray-400' : 'text-white font-medium'}`}>
+                  <p className={`text-xs mt-1.5 leading-relaxed ${n.read ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>
                     {n.message}
                   </p>
                   <div className="flex items-center justify-between mt-2">
-                    <p className={`text-[11px] font-medium ${n.read ? 'text-gray-500' : 'text-yellow-400/90'}`}>
+                    <p className={`text-[11px] font-medium ${n.read ? 'text-muted-foreground/70' : 'text-primary'}`}>
                       {formatRelative(n.createdAt)}
                     </p>
                     {!n.read && (
-                      <span className="text-[10px] text-yellow-400/80 hover:text-yellow-300 font-semibold">
+                      <span className="text-[10px] text-primary hover:underline font-semibold">
                         Clique para marcar como lida
                       </span>
                     )}
@@ -319,3 +319,4 @@ export default function NotificationBell() {
     </div>
   )
 }
+

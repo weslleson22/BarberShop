@@ -454,21 +454,21 @@ export default function DeveloperPlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       <DropdownHeader />
 
       <main className="w-full px-4 md:px-8 max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111827] border border-[#374151] p-6 rounded-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border border-border p-6 rounded-xl shadow-sm">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider border border-primary/20">
                 <CreditCard className="w-3.5 h-3.5" />
                 Gestão de Planos & Assinaturas SaaS
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white">Catálogo de Planos</h1>
-            <p className="text-sm text-gray-200 mt-1 font-medium">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">Catálogo de Planos</h1>
+            <p className="text-sm text-muted-foreground mt-1 font-medium">
               Gerencie planos pagos, cortesias com período livre, descontinuação segura e histórico de assinaturas.
             </p>
           </div>
@@ -477,7 +477,7 @@ export default function DeveloperPlansPage() {
             <button
               onClick={fetchPlans}
               disabled={loading}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs md:text-sm font-bold rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white transition-all shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs md:text-sm font-semibold rounded-lg border border-border bg-card hover:bg-muted/60 text-foreground transition-all shadow-sm"
               title="Atualizar lista"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -485,14 +485,14 @@ export default function DeveloperPlansPage() {
             </button>
             <button
               onClick={() => setCourtesyModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs md:text-sm font-bold rounded-lg bg-[#d97706] hover:bg-amber-600 text-white border border-[#f59e0b] transition-all shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs md:text-sm font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white border border-amber-700/50 transition-all shadow-sm"
             >
               <Gift className="w-4 h-4" />
               <span>Conceder Cortesia</span>
             </button>
             <button
               onClick={handleOpenCreate}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs md:text-sm font-bold rounded-lg bg-[#2563eb] hover:bg-blue-600 text-white border border-[#3b82f6] shadow-sm transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs md:text-sm font-semibold rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all"
             >
               <Plus className="w-4 h-4" />
               <span>Novo Plano</span>
@@ -503,28 +503,28 @@ export default function DeveloperPlansPage() {
         {/* Feedback Alert */}
         {feedback && (
           <div
-            className={`p-4 rounded-xl border text-sm flex items-center justify-between gap-3 ${
+            className={`p-4 rounded-xl border text-sm flex items-center justify-between gap-3 shadow-sm ${
               feedback.type === 'success'
-                ? 'bg-[#059669] border-[#10b981] text-white'
-                : 'bg-[#dc2626] border-[#ef4444] text-white'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                : 'bg-destructive/10 border-destructive/30 text-destructive'
             }`}
           >
             <div className="flex items-center gap-2.5 font-bold">
               {feedback.type === 'success' ? (
-                <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
               ) : (
-                <AlertTriangle className="w-5 h-5 text-white shrink-0" />
+                <AlertTriangle className="w-5 h-5 shrink-0" />
               )}
               <span>{feedback.message}</span>
             </div>
-            <button onClick={() => setFeedback(null)} className="text-white hover:text-gray-200 text-sm font-bold px-2 py-1">
+            <button onClick={() => setFeedback(null)} className="hover:opacity-80 text-sm font-bold px-2 py-1">
               ✕
             </button>
           </div>
         )}
 
         {/* Filters and Search Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111827] border border-[#374151] p-4 rounded-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border p-4 rounded-xl shadow-sm">
           {/* Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {[
@@ -537,10 +537,10 @@ export default function DeveloperPlansPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as FilterTab)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   activeTab === tab.id
-                    ? 'bg-[#2563eb] text-white border border-[#3b82f6]'
-                    : 'bg-[#1f2937] text-white hover:bg-[#374151] border border-[#4b5563]'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent'
                 }`}
               >
                 {tab.label}
@@ -550,22 +550,22 @@ export default function DeveloperPlansPage() {
 
           {/* Search Box */}
           <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-gray-300 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por nome ou slug..."
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-lg bg-[#030712] border border-[#374151] text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
         </div>
 
         {/* Plans Table */}
-        <div className="bg-[#111827] border border-[#374151] rounded-xl overflow-hidden shadow-xl">
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs md:text-sm">
-              <thead className="bg-[#1f2937] border-b border-[#374151] text-white font-bold uppercase tracking-wider text-[11px]">
+              <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-4 px-4 md:px-6">Plano</th>
                   <th className="py-4 px-3">Tipo</th>
@@ -577,18 +577,18 @@ export default function DeveloperPlansPage() {
                   <th className="py-4 px-4 md:px-6 text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#374151]">
+              <tbody className="divide-y divide-border">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-white font-bold">
-                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-400" />
+                    <td colSpan={8} className="py-12 text-center text-muted-foreground font-medium">
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
                       Carregando catálogo de planos...
                     </td>
                   </tr>
                 ) : filteredPlans.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-white font-medium">
-                      <Layers className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <td colSpan={8} className="py-12 text-center text-muted-foreground font-medium">
+                      <Layers className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       Nenhum plano encontrado para os critérios selecionados.
                     </td>
                   </tr>
@@ -601,25 +601,25 @@ export default function DeveloperPlansPage() {
                     return (
                       <tr
                         key={plan.id}
-                        className={`hover:bg-[#1f2937]/50 transition-colors ${
-                          isInactive ? 'bg-[#030712]/60' : ''
+                        className={`hover:bg-muted/40 transition-colors ${
+                          isInactive ? 'bg-muted/20 opacity-75' : ''
                         }`}
                       >
                         {/* Plano Column */}
                         <td className="py-4 px-4 md:px-6">
-                          <div className="font-bold text-sm text-white flex items-center gap-2">
+                          <div className="font-semibold text-sm text-foreground flex items-center gap-2">
                             {plan.name}
                             {isCourtesy && (
                               <span title="Plano Cortesia">
-                                <Gift className="w-4 h-4 text-amber-400 shrink-0" />
+                                <Gift className="w-4 h-4 text-amber-500 shrink-0" />
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-gray-300 font-mono mt-0.5">
+                          <div className="text-[11px] text-muted-foreground font-mono mt-0.5">
                             slug: {plan.slug}
                           </div>
                           {plan.description && (
-                            <div className="text-xs text-gray-300 line-clamp-1 mt-0.5 font-medium">
+                            <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5 font-medium">
                               {plan.description}
                             </div>
                           )}
@@ -629,21 +629,21 @@ export default function DeveloperPlansPage() {
                         <td className="py-4 px-3">
                           <div className="flex flex-col gap-1.5 items-start">
                             {isCourtesy ? (
-                              <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#d97706] text-white border border-[#f59e0b]">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                                 Cortesia
                               </span>
                             ) : (
-                              <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#2563eb] text-white border border-[#3b82f6]">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
                                 Comercial
                               </span>
                             )}
                             {!isCourtesy && (
                               plan.isSyncedWithAbacate || plan.providerProductId ? (
-                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#059669] text-white border border-[#10b981] flex items-center gap-1" title={plan.providerProductId || 'Sincronizado'}>
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1" title={plan.providerProductId || 'Sincronizado'}>
                                   <Check className="w-2.5 h-2.5" /> AbacatePay
                                 </span>
                               ) : (
-                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#dc2626] text-white border border-[#ef4444]" title="Não sincronizado com AbacatePay">
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-destructive/10 text-destructive border border-destructive/20" title="Não sincronizado com AbacatePay">
                                   Não Sincronizado
                                 </span>
                               )
@@ -652,35 +652,35 @@ export default function DeveloperPlansPage() {
                         </td>
 
                         {/* Ciclo Column */}
-                        <td className="py-4 px-3 font-bold text-white">
+                        <td className="py-4 px-3 font-medium text-foreground">
                           {getCycleLabel(plan.cycleType, plan.billingInterval)}
                         </td>
 
                         {/* Duração Column */}
-                        <td className="py-4 px-3 text-center text-white font-bold">
+                        <td className="py-4 px-3 text-center text-foreground font-medium">
                           {plan.durationDays || (plan.billingInterval === 'YEARLY' ? 365 : 30)} dias
                         </td>
 
                         {/* Preço Column */}
                         <td className="py-4 px-4 text-right">
                           {isCourtesy ? (
-                            <span className="text-gray-300 font-bold text-sm">R$ 0,00</span>
+                            <span className="text-muted-foreground font-semibold text-sm">R$ 0,00</span>
                           ) : (
                             <div className="flex flex-col items-end">
                               {plan.originalPrice && Number(plan.originalPrice) > Number(plan.price) && (
                                 <div className="flex items-center gap-1.5 mb-0.5">
-                                  <span className="text-[11px] text-gray-400 line-through font-normal">
+                                  <span className="text-[11px] text-muted-foreground line-through font-normal">
                                     De {formatPrice(plan.originalPrice)}
                                   </span>
-                                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                  <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                                     {plan.discountBadge || `-${Math.round(((Number(plan.originalPrice) - Number(plan.price)) / Number(plan.originalPrice)) * 100)}%`}
                                   </span>
                                 </div>
                               )}
-                              <span className="font-black text-white text-sm">
+                              <span className="font-bold text-foreground text-sm">
                                 {formatPrice(plan.price)}
                               </span>
-                              <span className="text-[10px] text-gray-400">
+                              <span className="text-[10px] text-muted-foreground">
                                 /{plan.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
                               </span>
                             </div>
@@ -690,10 +690,10 @@ export default function DeveloperPlansPage() {
                         {/* Assinaturas Column */}
                         <td className="py-4 px-3 text-center">
                           <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
+                            className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
                               subCount > 0
-                                ? 'bg-[#2563eb] text-white border border-[#3b82f6]'
-                                : 'bg-[#1f2937] text-white border border-[#4b5563]'
+                                ? 'bg-primary/10 text-primary border border-primary/20'
+                                : 'bg-muted text-muted-foreground border border-border'
                             }`}
                           >
                             {subCount}
@@ -703,11 +703,11 @@ export default function DeveloperPlansPage() {
                         {/* Status Column */}
                         <td className="py-4 px-3 text-center">
                           {plan.status === 'ACTIVE' ? (
-                            <span className="px-2.5 py-1 rounded text-[11px] font-bold bg-[#059669] text-white border border-[#10b981]">
+                            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                               Ativo
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 rounded text-[11px] font-bold bg-[#dc2626] text-white border border-[#ef4444]">
+                            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-destructive/10 text-destructive border border-destructive/20">
                               Descontinuado
                             </span>
                           )}
@@ -718,10 +718,10 @@ export default function DeveloperPlansPage() {
                           {!isCourtesy && !plan.isSyncedWithAbacate && !plan.providerProductId && plan.status === 'ACTIVE' && (
                             <button
                               onClick={() => handleSyncPlanWithAbacate(plan.id)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#10b981] bg-[#059669] hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-sm"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold transition-all shadow-sm"
                               title="Criar/Sincronizar produto na AbacatePay"
                             >
-                              <RefreshCw className="w-3.5 h-3.5 text-white" />
+                              <RefreshCw className="w-3.5 h-3.5" />
                               <span>Sincronizar</span>
                             </button>
                           )}
@@ -729,19 +729,19 @@ export default function DeveloperPlansPage() {
                             <>
                               <button
                                 onClick={() => handleOpenEdit(plan)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white text-xs font-bold transition-all shadow-sm"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-all shadow-sm"
                                 title="Editar configurações do plano"
                               >
-                                <Edit2 className="w-3.5 h-3.5 text-white" />
+                                <Edit2 className="w-3.5 h-3.5" />
                                 <span>Editar</span>
                               </button>
 
                               <button
                                 onClick={() => setDeleteConfirmPlan(plan)}
-                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm border ${
+                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm border ${
                                   subCount > 0
-                                    ? 'border-[#f59e0b] bg-[#d97706] hover:bg-amber-600 text-white'
-                                    : 'border-[#ef4444] bg-[#dc2626] hover:bg-red-600 text-white'
+                                    ? 'border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                                    : 'border-destructive/30 bg-destructive/10 hover:bg-destructive/20 text-destructive'
                                 }`}
                                 title={
                                   subCount > 0
@@ -766,18 +766,18 @@ export default function DeveloperPlansPage() {
                             <>
                               <button
                                 onClick={() => handleOpenViewHistory(plan)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white text-xs font-bold transition-all shadow-sm"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-all shadow-sm"
                                 title="Visualizar histórico e assinantes"
                               >
-                                <Eye className="w-3.5 h-3.5 text-white" />
+                                <Eye className="w-3.5 h-3.5" />
                                 <span>Visualizar</span>
                               </button>
                               <button
                                 onClick={() => handleOpenEdit(plan)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#10b981] bg-[#059669] hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-sm"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold transition-all shadow-sm"
                                 title="Editar ou Reativar"
                               >
-                                <RotateCcw className="w-3.5 h-3.5 text-white" />
+                                <RotateCcw className="w-3.5 h-3.5" />
                                 <span>Reativar</span>
                               </button>
                             </>
@@ -794,20 +794,20 @@ export default function DeveloperPlansPage() {
 
         {/* Modal 1: Create / Edit Plan Modal */}
         {planModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
-            <div className="bg-[#111827] border border-[#374151] rounded-2xl p-6 md:p-8 max-w-xl w-full space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto text-white">
-              <div className="flex items-center justify-between border-b border-[#374151] pb-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <div className="bg-card border border-border rounded-2xl p-6 md:p-8 max-w-xl w-full space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto text-card-foreground">
+              <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-white">
+                  <h3 className="text-lg font-bold text-foreground">
                     {editingPlan ? `Editar Plano: ${editingPlan.name}` : 'Novo Plano SaaS'}
                   </h3>
-                  <p className="text-xs text-gray-300 mt-0.5 font-medium">
+                  <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                     Defina tipo, ciclo de vigência, preço e regras contratuais.
                   </p>
                 </div>
                 <button
                   onClick={() => setPlanModalOpen(false)}
-                  className="text-white hover:text-gray-300 text-sm font-bold p-1"
+                  className="text-muted-foreground hover:text-foreground text-sm font-bold p-1 rounded-lg transition-colors"
                 >
                   ✕
                 </button>
@@ -817,24 +817,24 @@ export default function DeveloperPlansPage() {
                 {/* Nome & Slug */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-white font-bold mb-1">Nome do Plano *</label>
+                    <label className="block text-foreground font-semibold mb-1">Nome do Plano *</label>
                     <input
                       type="text"
                       required
                       value={planForm.name}
                       onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
                       placeholder="Ex: Pro Anual, Cortesia VIP"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-white font-bold mb-1">Slug Identificador</label>
+                    <label className="block text-foreground font-semibold mb-1">Slug Identificador</label>
                     <input
                       type="text"
                       value={planForm.slug}
                       onChange={(e) => setPlanForm({ ...planForm, slug: e.target.value })}
                       placeholder="pro-anual (opcional)"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -842,7 +842,7 @@ export default function DeveloperPlansPage() {
                 {/* Tipo de Plano (PAID vs COURTESY) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-white font-bold mb-1">Tipo de Plano *</label>
+                    <label className="block text-foreground font-semibold mb-1">Tipo de Plano *</label>
                     <select
                       value={planForm.planType}
                       onChange={(e) => {
@@ -853,7 +853,7 @@ export default function DeveloperPlansPage() {
                           price: nextType === 'COURTESY' ? '0' : planForm.price === '0' ? '49.90' : planForm.price,
                         })
                       }}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="PAID">Comercial Pago (PAID)</option>
                       <option value="COURTESY">Cortesia / Isento (COURTESY)</option>
@@ -861,11 +861,11 @@ export default function DeveloperPlansPage() {
                   </div>
 
                   <div>
-                    <label className="block text-white font-bold mb-1">Status do Plano *</label>
+                    <label className="block text-foreground font-semibold mb-1">Status do Plano *</label>
                     <select
                       value={planForm.status}
                       onChange={(e) => setPlanForm({ ...planForm, status: e.target.value as 'ACTIVE' | 'INACTIVE' })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="ACTIVE">ACTIVE (Disponível para contratação)</option>
                       <option value="INACTIVE">INACTIVE (Descontinuado para novas)</option>
@@ -876,7 +876,7 @@ export default function DeveloperPlansPage() {
                 {/* Ciclo & Duração */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-white font-bold mb-1">Ciclo *</label>
+                    <label className="block text-foreground font-semibold mb-1">Ciclo *</label>
                     <select
                       value={planForm.cycleType}
                       onChange={(e) => {
@@ -886,7 +886,7 @@ export default function DeveloperPlansPage() {
                         if (cycle === 'CUSTOM') defDays = planForm.durationDays || '45'
                         setPlanForm({ ...planForm, cycleType: cycle, durationDays: defDays })
                       }}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="MONTHLY">Mensal (30 dias)</option>
                       <option value="YEARLY">Anual (365 dias)</option>
@@ -895,7 +895,7 @@ export default function DeveloperPlansPage() {
                   </div>
 
                   <div>
-                    <label className="block text-white font-bold mb-1">
+                    <label className="block text-foreground font-semibold mb-1">
                       Duração (Dias) {planForm.cycleType === 'CUSTOM' ? '*' : ''}
                     </label>
                     <input
@@ -905,19 +905,19 @@ export default function DeveloperPlansPage() {
                       value={planForm.durationDays}
                       onChange={(e) => setPlanForm({ ...planForm, durationDays: e.target.value })}
                       disabled={planForm.cycleType !== 'CUSTOM'}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:bg-[#1f2937]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 disabled:bg-muted"
                     />
                   </div>
                 </div>
 
                 {/* Bloco de Precificação & Desconto Estratégico */}
-                <div className="bg-[#030712] p-4 rounded-xl border border-[#374151] space-y-3">
+                <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
                       <CreditCard className="w-3.5 h-3.5" />
                       Precificação & Estratégia de Desconto
                     </span>
-                    <span className="text-[11px] text-gray-400 font-medium">
+                    <span className="text-[11px] text-muted-foreground font-medium">
                       Exibido na Landing Page e no Checkout
                     </span>
                   </div>
@@ -925,7 +925,7 @@ export default function DeveloperPlansPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* Preço Atual com Desconto */}
                     <div>
-                      <label className="block text-white font-bold mb-1 text-xs">
+                      <label className="block text-foreground font-semibold mb-1 text-xs">
                         Preço Atual c/ Desconto (R$) *
                       </label>
                       <input
@@ -937,16 +937,16 @@ export default function DeveloperPlansPage() {
                         value={planForm.planType === 'COURTESY' ? '0' : planForm.price}
                         onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
                         placeholder="49.90"
-                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-[#374151] text-white font-semibold focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                        className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground font-semibold focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
                       />
-                      <span className="text-[10px] text-emerald-400 block mt-1 font-medium">
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block mt-1 font-medium">
                         ✓ Valor efetivamente cobrado
                       </span>
                     </div>
 
                     {/* Preço Original sem Desconto (Valor Riscado) */}
                     <div>
-                      <label className="block text-white font-bold mb-1 text-xs">
+                      <label className="block text-foreground font-semibold mb-1 text-xs">
                         Preço Original s/ Desconto (R$)
                       </label>
                       <input
@@ -957,16 +957,16 @@ export default function DeveloperPlansPage() {
                         value={planForm.originalPrice}
                         onChange={(e) => setPlanForm({ ...planForm, originalPrice: e.target.value })}
                         placeholder="79.90 (opcional)"
-                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-[#374151] text-white font-semibold focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                        className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground font-semibold focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
                       />
-                      <span className="text-[10px] text-gray-400 block mt-1">
+                      <span className="text-[10px] text-muted-foreground block mt-1">
                         Aparecerá riscado (ex: ~De R$ 79,90~)
                       </span>
                     </div>
 
                     {/* Selo/Badge de Desconto */}
                     <div>
-                      <label className="block text-white font-bold mb-1 text-xs">
+                      <label className="block text-foreground font-semibold mb-1 text-xs">
                         Selo / Badge de Desconto
                       </label>
                       <input
@@ -975,9 +975,9 @@ export default function DeveloperPlansPage() {
                         value={planForm.discountBadge}
                         onChange={(e) => setPlanForm({ ...planForm, discountBadge: e.target.value })}
                         placeholder="Ex: 38% OFF ou Oferta Especial"
-                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-[#374151] text-white font-semibold focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                        className="w-full px-3 py-2 rounded-xl bg-background border border-border text-foreground font-semibold focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
                       />
-                      <span className="text-[10px] text-gray-400 block mt-1">
+                      <span className="text-[10px] text-muted-foreground block mt-1">
                         Se vazio, calcula % automático
                       </span>
                     </div>
@@ -985,25 +985,25 @@ export default function DeveloperPlansPage() {
 
                   {/* Prévia Visual do Desconto para o Cliente */}
                   {planForm.planType === 'PAID' && (
-                    <div className="mt-2 p-3 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-xs">
+                    <div className="mt-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-gray-300 font-medium">
+                        <span className="text-foreground font-medium">
                           👁️ <strong>Prévia na Landing Page:</strong>
                         </span>
                         <div className="flex items-center gap-2">
                           {Number(planForm.originalPrice) > Number(planForm.price) && (
-                            <span className="text-slate-400 line-through text-xs font-semibold">
+                            <span className="text-muted-foreground line-through text-xs font-semibold">
                               De R$ {parseFloat(planForm.originalPrice || '0').toFixed(2).replace('.', ',')}
                             </span>
                           )}
-                          <span className="text-white font-black text-sm">
+                          <span className="text-foreground font-black text-sm">
                             Por R$ {parseFloat(planForm.price || '0').toFixed(2).replace('.', ',')}
-                            <span className="text-xs text-gray-300 font-normal">
+                            <span className="text-xs text-muted-foreground font-normal">
                               /{planForm.cycleType === 'YEARLY' ? 'ano' : 'mês'}
                             </span>
                           </span>
                           {Number(planForm.originalPrice) > Number(planForm.price) && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                               {planForm.discountBadge.trim() ||
                                 `${Math.round(
                                   ((Number(planForm.originalPrice) - Number(planForm.price)) /
@@ -1015,7 +1015,7 @@ export default function DeveloperPlansPage() {
                         </div>
                       </div>
                       {Number(planForm.originalPrice) > Number(planForm.price) && (
-                        <div className="text-[11px] text-emerald-400 mt-1 font-medium">
+                        <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
                           🎉 O cliente terá a percepção de economizar{' '}
                           <strong>
                             R$ {(Number(planForm.originalPrice) - Number(planForm.price)).toFixed(2).replace('.', ',')}
@@ -1029,39 +1029,39 @@ export default function DeveloperPlansPage() {
 
                 {/* Descrição */}
                 <div>
-                  <label className="block text-white font-bold mb-1">Descrição Comercial</label>
+                  <label className="block text-foreground font-semibold mb-1">Descrição Comercial</label>
                   <input
                     type="text"
                     value={planForm.description}
                     onChange={(e) => setPlanForm({ ...planForm, description: e.target.value })}
                     placeholder="Ex: Completo com agendamentos ilimitados e suporte VIP"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 {/* Recursos */}
                 <div>
-                  <label className="block text-white font-bold mb-1">Recursos (separados por vírgula)</label>
+                  <label className="block text-foreground font-semibold mb-1">Recursos (separados por vírgula)</label>
                   <textarea
                     rows={2}
                     value={planForm.features}
                     onChange={(e) => setPlanForm({ ...planForm, features: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#374151]">
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
                   <button
                     type="button"
                     onClick={() => setPlanModalOpen(false)}
-                    className="px-4 py-2 text-xs md:text-sm rounded-xl border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white font-bold"
+                    className="px-4 py-2 text-xs md:text-sm rounded-xl border border-border bg-card hover:bg-muted text-foreground font-semibold transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2 text-xs md:text-sm rounded-xl bg-[#2563eb] text-white font-bold hover:bg-blue-600 border border-[#3b82f6] transition-all disabled:opacity-50"
+                    className="px-5 py-2 text-xs md:text-sm rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 shadow-sm"
                   >
                     {submitting ? 'Salvando...' : editingPlan ? 'Atualizar Plano' : 'Criar Plano'}
                   </button>
@@ -1073,52 +1073,52 @@ export default function DeveloperPlansPage() {
 
         {/* Modal 2: Smart Delete / Discontinue Confirmation */}
         {deleteConfirmPlan && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
-            <div className="bg-[#111827] border border-[#374151] rounded-2xl p-6 md:p-8 max-w-md w-full space-y-5 shadow-2xl text-white">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <div className="bg-card border border-border rounded-2xl p-6 md:p-8 max-w-md w-full space-y-5 shadow-2xl text-card-foreground">
               <div className="flex items-center gap-3">
                 <div
                   className={`p-3 rounded-xl shrink-0 ${
                     (deleteConfirmPlan._count?.subscriptions || 0) > 0
-                      ? 'bg-[#d97706] text-white border border-[#f59e0b]'
-                      : 'bg-[#dc2626] text-white border border-[#ef4444]'
+                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                      : 'bg-destructive/10 text-destructive border border-destructive/20'
                   }`}
                 >
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">
+                  <h3 className="text-lg font-bold text-foreground">
                     {(deleteConfirmPlan._count?.subscriptions || 0) > 0
                       ? 'Descontinuar plano?'
                       : 'Excluir plano?'}
                   </h3>
-                  <p className="text-xs text-gray-300 font-mono">
+                  <p className="text-xs text-muted-foreground font-mono">
                     Plano: {deleteConfirmPlan.name}
                   </p>
                 </div>
               </div>
 
               {(deleteConfirmPlan._count?.subscriptions || 0) > 0 ? (
-                <div className="space-y-3 text-xs md:text-sm text-gray-200 bg-[#030712] p-4 rounded-xl border border-[#374151]">
-                  <p className="font-bold text-white">
+                <div className="space-y-3 text-xs md:text-sm text-muted-foreground bg-muted/40 p-4 rounded-xl border border-border">
+                  <p className="font-semibold text-foreground">
                     Este plano possui{' '}
-                    <span className="text-blue-400 font-extrabold">
+                    <span className="text-primary font-extrabold">
                       {deleteConfirmPlan._count?.subscriptions} barbearias
                     </span>{' '}
                     com histórico/assinaturas vinculadas.
                   </p>
                   <p>
-                    As assinaturas existentes <strong className="text-white">NÃO serão canceladas</strong>.
+                    As assinaturas existentes <strong className="text-foreground">NÃO serão canceladas</strong>.
                     As barbearias continuarão utilizando o plano normalmente até o término do período contratado.
                   </p>
                   <p>
                     Após a descontinuação, novas barbearias não poderão contratar este plano.
                   </p>
-                  <p className="font-bold text-white pt-1">Deseja continuar?</p>
+                  <p className="font-semibold text-foreground pt-1">Deseja continuar?</p>
                 </div>
               ) : (
-                <div className="text-xs md:text-sm text-gray-200 bg-[#030712] p-4 rounded-xl border border-[#374151]">
+                <div className="text-xs md:text-sm text-muted-foreground bg-muted/40 p-4 rounded-xl border border-border">
                   <p>Este plano não possui assinaturas ativas ou histórico registrado.</p>
-                  <p className="mt-2 text-white font-bold">
+                  <p className="mt-2 text-foreground font-semibold">
                     Deseja realmente excluir este registro definitivamente do banco de dados?
                   </p>
                 </div>
@@ -1129,7 +1129,7 @@ export default function DeveloperPlansPage() {
                   type="button"
                   onClick={() => setDeleteConfirmPlan(null)}
                   disabled={submitting}
-                  className="px-4 py-2 text-xs md:text-sm rounded-xl border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white font-bold"
+                  className="px-4 py-2 text-xs md:text-sm rounded-xl border border-border bg-card hover:bg-muted text-foreground font-semibold transition-colors"
                 >
                   Cancelar
                 </button>
@@ -1137,10 +1137,10 @@ export default function DeveloperPlansPage() {
                   type="button"
                   onClick={handleExecuteDeleteOrDeactivate}
                   disabled={submitting}
-                  className={`px-5 py-2 text-xs md:text-sm rounded-xl font-bold transition-all border ${
+                  className={`px-5 py-2 text-xs md:text-sm rounded-xl font-semibold transition-all shadow-sm ${
                     (deleteConfirmPlan._count?.subscriptions || 0) > 0
-                      ? 'bg-[#d97706] hover:bg-amber-600 text-white border-[#f59e0b]'
-                      : 'bg-[#dc2626] hover:bg-red-600 text-white border-[#ef4444]'
+                      ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                      : 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
                   }`}
                 >
                   {submitting
@@ -1156,23 +1156,23 @@ export default function DeveloperPlansPage() {
 
         {/* Modal 3: Grant Courtesy Subscription */}
         {courtesyModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
-            <div className="bg-[#111827] border border-[#374151] rounded-2xl p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl text-white">
-              <div className="flex items-center justify-between border-b border-[#374151] pb-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <div className="bg-card border border-border rounded-2xl p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl text-card-foreground">
+              <div className="flex items-center justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-[#d97706] text-white border border-[#f59e0b]">
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                     <Gift className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Conceder Plano Cortesia</h3>
-                    <p className="text-xs text-gray-300 mt-0.5 font-medium">
+                    <h3 className="text-lg font-bold text-foreground">Conceder Plano Cortesia</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                       Atribuição direta pelo DEVELOPER sem cobrança financeira.
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setCourtesyModalOpen(false)}
-                  className="text-white hover:text-gray-300 text-sm font-bold p-1"
+                  className="text-muted-foreground hover:text-foreground text-sm font-bold p-1 rounded-lg transition-colors"
                 >
                   ✕
                 </button>
@@ -1180,13 +1180,13 @@ export default function DeveloperPlansPage() {
 
               <form onSubmit={handleGrantCourtesy} className="space-y-4 text-xs md:text-sm">
                 <div>
-                  <label className="block text-white font-bold mb-1">Barbearia Beneficiada *</label>
+                  <label className="block text-foreground font-semibold mb-1">Barbearia Beneficiada *</label>
                   {barbershops.length > 0 ? (
                     <select
                       required
                       value={courtesyForm.barbershopId}
                       onChange={(e) => setCourtesyForm({ ...courtesyForm, barbershopId: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Selecione uma barbearia...</option>
                       {barbershops.map((shop) => (
@@ -1202,19 +1202,19 @@ export default function DeveloperPlansPage() {
                       value={courtesyForm.barbershopId}
                       onChange={(e) => setCourtesyForm({ ...courtesyForm, barbershopId: e.target.value })}
                       placeholder="ID da Barbearia (ex: clyxxx...)"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-white font-bold mb-1">
+                  <label className="block text-foreground font-semibold mb-1">
                     Plano Cortesia Existente (opcional)
                   </label>
                   <select
                     value={courtesyForm.planId}
                     onChange={(e) => setCourtesyForm({ ...courtesyForm, planId: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">Nenhum (Criar/Utilizar Cortesia Personalizada)</option>
                     {plans
@@ -1228,17 +1228,17 @@ export default function DeveloperPlansPage() {
                 </div>
 
                 <div>
-                  <label className="block text-white font-bold mb-1">Duração da Cortesia (Dias) *</label>
+                  <label className="block text-foreground font-semibold mb-1">Duração da Cortesia (Dias) *</label>
                   <div className="flex flex-wrap gap-2 mb-2">
                     {[7, 15, 30, 45, 60, 90, 180, 365].map((days) => (
                       <button
                         type="button"
                         key={days}
                         onClick={() => setCourtesyForm({ ...courtesyForm, durationDays: String(days) })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                           courtesyForm.durationDays === String(days)
-                            ? 'bg-[#d97706] text-white border-[#f59e0b]'
-                            : 'bg-[#1f2937] border-[#4b5563] text-white hover:bg-[#374151]'
+                            ? 'bg-amber-600 text-white border-amber-600'
+                            : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         {days} dias
@@ -1252,33 +1252,33 @@ export default function DeveloperPlansPage() {
                     value={courtesyForm.durationDays}
                     onChange={(e) => setCourtesyForm({ ...courtesyForm, durationDays: e.target.value })}
                     placeholder="Quantidade de dias"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-white font-bold mb-1">Motivo / Observações</label>
+                  <label className="block text-foreground font-semibold mb-1">Motivo / Observações</label>
                   <input
                     type="text"
                     value={courtesyForm.notes}
                     onChange={(e) => setCourtesyForm({ ...courtesyForm, notes: e.target.value })}
                     placeholder="Ex: Parceria institucional, Teste estendido, etc."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#030712] border border-[#374151] text-white font-medium focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#374151]">
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
                   <button
                     type="button"
                     onClick={() => setCourtesyModalOpen(false)}
-                    className="px-4 py-2 text-xs md:text-sm rounded-xl border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white font-bold"
+                    className="px-4 py-2 text-xs md:text-sm rounded-xl border border-border bg-card hover:bg-muted text-foreground font-semibold transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2 text-xs md:text-sm rounded-xl bg-[#d97706] text-white font-bold hover:bg-amber-600 border border-[#f59e0b] transition-all disabled:opacity-50"
+                    className="px-5 py-2 text-xs md:text-sm rounded-xl bg-amber-600 text-white font-semibold hover:bg-amber-700 transition-all disabled:opacity-50 shadow-sm"
                   >
                     {submitting ? 'Concedendo...' : 'Conceder Cortesia'}
                   </button>
@@ -1290,51 +1290,51 @@ export default function DeveloperPlansPage() {
 
         {/* Modal 4: View History / Audit Details */}
         {viewHistoryPlan && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
-            <div className="bg-[#111827] border border-[#374151] rounded-2xl p-6 md:p-8 max-w-2xl w-full space-y-6 shadow-2xl max-h-[85vh] overflow-y-auto text-white">
-              <div className="flex items-center justify-between border-b border-[#374151] pb-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <div className="bg-card border border-border rounded-2xl p-6 md:p-8 max-w-2xl w-full space-y-6 shadow-2xl max-h-[85vh] overflow-y-auto text-card-foreground">
+              <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-white">{viewHistoryPlan.name}</h3>
+                    <h3 className="text-lg font-bold text-foreground">{viewHistoryPlan.name}</h3>
                     {viewHistoryPlan.status === 'INACTIVE' && (
-                      <span className="px-2.5 py-0.5 text-[10px] font-bold rounded bg-[#dc2626] text-white border border-[#ef4444]">
+                      <span className="px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-destructive/10 text-destructive border border-destructive/20">
                         Descontinuado
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-300 mt-0.5 font-medium">
+                  <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                     Histórico de barbearias e assinaturas contratadas sob as condições deste plano.
                   </p>
                 </div>
                 <button
                   onClick={() => setViewHistoryPlan(null)}
-                  className="text-white hover:text-gray-300 text-sm font-bold p-1"
+                  className="text-muted-foreground hover:text-foreground text-sm font-bold p-1 rounded-lg transition-colors"
                 >
                   ✕
                 </button>
               </div>
 
               {/* Informações Resumidas */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#030712] p-4 rounded-xl border border-[#374151] text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-muted/40 p-4 rounded-xl border border-border text-xs">
                 <div>
-                  <div className="text-gray-300 font-bold">Preço Original</div>
-                  <div className="font-black text-sm text-white">
+                  <div className="text-muted-foreground font-semibold">Preço Original</div>
+                  <div className="font-bold text-sm text-foreground">
                     {formatPrice(viewHistoryPlan.price)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-gray-300 font-bold">Ciclo</div>
-                  <div className="font-bold text-white">
+                  <div className="text-muted-foreground font-semibold">Ciclo</div>
+                  <div className="font-semibold text-foreground">
                     {getCycleLabel(viewHistoryPlan.cycleType, viewHistoryPlan.billingInterval)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-gray-300 font-bold">Duração</div>
-                  <div className="font-bold text-white">{viewHistoryPlan.durationDays} dias</div>
+                  <div className="text-muted-foreground font-semibold">Duração</div>
+                  <div className="font-semibold text-foreground">{viewHistoryPlan.durationDays} dias</div>
                 </div>
                 <div>
-                  <div className="text-gray-300 font-bold">Total Assinaturas</div>
-                  <div className="font-extrabold text-sm text-blue-400">
+                  <div className="text-muted-foreground font-semibold">Total Assinaturas</div>
+                  <div className="font-bold text-sm text-primary">
                     {viewHistoryPlan.totalSubscriptionsCount ??
                       viewHistoryPlan.subscriptions?.length ??
                       viewHistoryPlan._count?.subscriptions ??
@@ -1345,37 +1345,37 @@ export default function DeveloperPlansPage() {
 
               {/* Lista de Assinaturas Históricas */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-white">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Histórico de Assinaturas Vinculadas
                 </h4>
 
                 {Array.isArray(viewHistoryPlan.subscriptions) &&
                 viewHistoryPlan.subscriptions.length > 0 ? (
-                  <div className="divide-y divide-[#374151] border border-[#374151] rounded-xl overflow-hidden">
+                  <div className="divide-y divide-border border border-border rounded-xl overflow-hidden">
                     {viewHistoryPlan.subscriptions.map((sub: any) => (
                       <div
                         key={sub.id}
-                        className="p-3 bg-[#030712] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+                        className="p-3 bg-card hover:bg-muted/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
                       >
                         <div>
-                          <div className="font-bold text-white">
+                          <div className="font-semibold text-foreground">
                             {sub.barbershop?.name || `Barbearia #${sub.barbershopId}`}
                           </div>
-                          <div className="text-gray-300 text-[11px] font-mono">
+                          <div className="text-muted-foreground text-[11px] font-mono">
                             {new Date(sub.currentPeriodStart).toLocaleDateString('pt-BR')} até{' '}
                             {new Date(sub.currentPeriodEnd).toLocaleDateString('pt-BR')}
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <span className="font-black text-white">
+                          <span className="font-bold text-foreground">
                             {formatPrice(sub.price ?? viewHistoryPlan.price)}
                           </span>
                           <span
-                            className={`px-2.5 py-1 rounded text-[10px] font-bold ${
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${
                               sub.status === 'ACTIVE'
-                                ? 'bg-[#059669] text-white border border-[#10b981]'
-                                : 'bg-[#1f2937] text-white border border-[#4b5563]'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                : 'bg-muted text-muted-foreground border border-border'
                             }`}
                           >
                             {sub.status}
@@ -1385,7 +1385,7 @@ export default function DeveloperPlansPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-xs text-white font-medium border border-dashed border-[#374151] rounded-xl bg-[#030712]">
+                  <div className="text-center py-8 text-xs text-muted-foreground font-medium border border-dashed border-border rounded-xl bg-card">
                     Nenhuma barbearia assinou este plano até o momento.
                   </div>
                 )}
@@ -1395,7 +1395,7 @@ export default function DeveloperPlansPage() {
                 <button
                   type="button"
                   onClick={() => setViewHistoryPlan(null)}
-                  className="px-5 py-2 text-xs font-bold rounded-xl bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563]"
+                  className="px-5 py-2 text-xs font-semibold rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border transition-colors"
                 >
                   Fechar
                 </button>

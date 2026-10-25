@@ -81,8 +81,8 @@ export default function AppointmentList({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400 mb-3"></div>
-        <p className="text-white/60 text-sm">Carregando agendamentos...</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-3"></div>
+        <p className="text-muted-foreground text-sm">Carregando agendamentos...</p>
       </div>
     )
   }
@@ -90,88 +90,33 @@ export default function AppointmentList({
   return (
     <div className="space-y-4 relative z-10">
       {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
         <div className="flex items-center space-x-3 md:space-x-4 min-w-0">
-          <h2 className="text-lg md:text-xl font-bold text-white truncate">
+          <h2 className="text-base sm:text-lg font-bold text-foreground truncate">
             {titlePrefix} Agendamentos
           </h2>
-          <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-white/70 flex-shrink-0 text-xs font-medium">
-            <Calendar className="w-3.5 h-3.5 text-yellow-400" />
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-muted/50 border border-border rounded-lg text-muted-foreground flex-shrink-0 text-xs font-medium">
+            <Calendar className="w-3.5 h-3.5 text-primary" />
             <span>{appointments.length} registros</span>
           </div>
         </div>
 
         {/* Sort selector */}
         <div className="flex items-center gap-2">
-          <span className="text-white/50 text-xs hidden sm:inline">Ordenar:</span>
+          <span className="text-muted-foreground text-xs hidden sm:inline">Ordenar:</span>
           <div className="relative">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="appearance-none bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs md:text-sm focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all cursor-pointer pr-8"
+              className="appearance-none bg-background border border-input rounded-lg px-3 py-1.5 text-foreground text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all cursor-pointer pr-8"
               aria-label="Ordenar agendamentos"
             >
-              <option value="time" className="bg-gray-900">Horário</option>
-              <option value="client" className="bg-gray-900">Cliente</option>
-              <option value="value" className="bg-gray-900">Valor</option>
-              <option value="status" className="bg-gray-900">Status</option>
+              <option value="time" className="bg-popover text-popover-foreground">Horário</option>
+              <option value="client" className="bg-popover text-popover-foreground">Cliente</option>
+              <option value="value" className="bg-popover text-popover-foreground">Valor</option>
+              <option value="status" className="bg-popover text-popover-foreground">Status</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-          </div>
-        </div>
-      </div>
-
-      {/* Cards de Indicadores Consolidados (4 Cards: Total, Pendentes, Concluídos, Cancelados) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 md:gap-3.5">
-        {/* Total */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 hover:border-white/20 transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/60 text-xs uppercase tracking-wider font-semibold">Total</p>
-              <p className="text-xl md:text-2xl font-bold text-white mt-0.5">{stats.total}</p>
-            </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center">
-              <Calendar className="w-4 h-4 text-blue-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* Pendentes */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 hover:border-white/20 transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/60 text-xs uppercase tracking-wider font-semibold">Pendentes</p>
-              <p className="text-xl md:text-2xl font-bold text-yellow-400 mt-0.5">{stats.pending}</p>
-            </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 bg-yellow-400/10 border border-yellow-400/20 rounded-lg flex items-center justify-center">
-              <Clock className="w-4 h-4 text-yellow-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* Concluídos */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 hover:border-white/20 transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/60 text-xs uppercase tracking-wider font-semibold">Concluídos</p>
-              <p className="text-xl md:text-2xl font-bold text-green-400 mt-0.5">{stats.completed}</p>
-            </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-4 h-4 text-green-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* Cancelados */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 hover:border-white/20 transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/60 text-xs uppercase tracking-wider font-semibold">Cancelados</p>
-              <p className="text-xl md:text-2xl font-bold text-red-400 mt-0.5">{stats.cancelled}</p>
-            </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
-              <XCircle className="w-4 h-4 text-red-400" />
-            </div>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           </div>
         </div>
       </div>
@@ -179,10 +124,10 @@ export default function AppointmentList({
       {/* Grid de Agendamentos */}
       <div className="space-y-3">
         {sortedAppointments.length === 0 ? (
-          <div className="bg-white/[0.02] border border-white/6 rounded-2xl p-8 md:p-12 text-center">
-            <Calendar className="w-12 h-12 md:w-14 md:h-14 text-white/20 mx-auto mb-3" />
-            <p className="text-white/70 text-base font-semibold">Nenhum agendamento encontrado</p>
-            <p className="text-white/40 text-xs md:text-sm mt-1 max-w-sm mx-auto">
+          <div className="bg-card border border-border rounded-xl p-8 md:p-12 text-center">
+            <Calendar className="w-10 h-10 md:w-12 md:h-12 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-foreground text-base font-semibold">Nenhum agendamento encontrado</p>
+            <p className="text-muted-foreground text-xs md:text-sm mt-1 max-w-sm mx-auto">
               Nenhum registro corresponde aos filtros ou ao período selecionado. Tente alterar o período ou os filtros acima.
             </p>
           </div>

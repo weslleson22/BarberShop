@@ -96,138 +96,133 @@ export default function CalendarView({
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <div className="flex items-center space-x-3">
-          <button
-            type="button"
-            onClick={() => onMonthSelect?.(currentDate)}
-            className="text-left group cursor-pointer"
-            title="Clique para ver todos os agendamentos deste mês"
-          >
-            <h3 className={`text-lg font-bold transition-colors ${
-              isMonthView ? 'text-amber-400 flex items-center gap-1.5' : 'text-white group-hover:text-amber-400'
-            }`}>
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-              {isMonthView && <span className="text-[11px] font-normal px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-300 border border-amber-800/60">Mês Selecionado</span>}
-            </h3>
-          </button>
-        </div>
+    <div className="bg-card text-card-foreground border border-border rounded-xl p-3.5 sm:p-4 shadow-sm">
+      {/* Header com Mês/Ano e Navegação */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <button
+          type="button"
+          onClick={() => onMonthSelect?.(currentDate)}
+          className="text-left group cursor-pointer inline-flex items-center gap-1.5 min-w-0"
+          title="Clique para ver todos os agendamentos deste mês"
+        >
+          <h3 className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors truncate">
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h3>
+          {isMonthView && (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+              Mês Selecionado
+            </span>
+          )}
+        </button>
         
-        <div className="flex items-center space-x-2 self-end sm:self-auto">
-          {/* Botão Ver Mês Inteiro */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => onMonthSelect?.(currentDate)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border cursor-pointer ${
               isMonthView
-                ? 'bg-amber-500 text-black border-amber-500'
-                : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white'
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                : 'bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
             title="Ver todos os agendamentos deste mês"
           >
-            Ver Mês Inteiro
+            Mês
           </button>
 
           <button
             onClick={handlePreviousMonth}
-            className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all cursor-pointer"
+            className="h-7 w-7 flex items-center justify-center bg-card border border-border rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             aria-label="Mês anterior"
             title="Mês anterior"
           >
-            <ChevronLeft className="w-4 h-4 text-white" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleNextMonth}
-            className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all cursor-pointer"
+            className="h-7 w-7 flex items-center justify-center bg-card border border-border rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             aria-label="Próximo mês"
             title="Próximo mês"
           >
-            <ChevronRight className="w-4 h-4 text-white" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Days of week header */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      {/* Cabeçalho dos Dias da Semana */}
+      <div className="grid grid-cols-7 gap-1 mb-1 text-center">
         {weekDays.map((day, index) => (
-          <div key={index} className="text-center py-1">
-            <span className="text-xs text-white/40 font-medium">{day}</span>
+          <div key={index} className="py-1">
+            <span className="text-[11px] font-semibold text-muted-foreground">{day}</span>
           </div>
         ))}
       </div>
 
-      {/* Calendar days */}
+      {/* Grid Compacto de Dias do Mês */}
       <div className="grid grid-cols-7 gap-1">
-        {generateCalendarDays().map((day, index) => (
-          <div
-            key={index}
-            className={`
-              aspect-square flex items-center justify-center rounded-lg cursor-pointer transition-all
-              ${day === null ? '' : 'hover:bg-white/10'}
-              ${day && isToday(day) ? 'bg-amber-500/10 border border-amber-500/30' : ''}
-              ${day && isSelected(day) ? 'bg-amber-500 text-black font-bold border border-amber-400' : ''}
-            `}
-            onClick={() => day && handleDateClick(day)}
-          >
-            {day && (
-              <span className={`
-                text-sm font-medium
-                ${isToday(day) ? 'text-amber-400 font-bold' : 'text-white/80'}
-                ${isSelected(day) ? 'text-black font-bold' : ''}
-              `}>
-                {day}
-              </span>
-            )}
-          </div>
-        ))}
+        {generateCalendarDays().map((day, index) => {
+          const today = day !== null && isToday(day)
+          const selected = day !== null && isSelected(day)
+
+          return (
+            <div
+              key={index}
+              className={`
+                h-7 sm:h-8 w-full flex items-center justify-center rounded-md cursor-pointer transition-colors text-xs font-medium
+                ${day === null ? 'pointer-events-none' : ''}
+                ${selected ? 'bg-primary text-primary-foreground font-bold shadow-sm' : ''}
+                ${!selected && today ? 'border border-primary text-primary font-bold bg-primary/10' : ''}
+                ${!selected && !today && day !== null ? 'hover:bg-muted text-foreground' : ''}
+              `}
+              onClick={() => day && handleDateClick(day)}
+            >
+              {day && <span>{day}</span>}
+            </div>
+          )
+        })}
       </div>
 
-      {/* Selected date/month info */}
-      <div className="mt-4 pt-3 border-t border-white/6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-white/60 text-xs mb-1">
-              {isMonthView ? 'Filtro atual' : 'Data selecionada'}
-            </p>
-            <p className="text-white font-medium text-sm break-words">
-              {isMonthView ? (
-                <span className="text-amber-400 font-semibold">
-                  Todos os agendamentos de {monthNames[currentDate.getMonth()]} de {currentDate.getFullYear()}
-                </span>
-              ) : (
-                selectedDate.toLocaleDateString('pt-BR', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {!isMonthView ? (
-              <button 
-                type="button"
-                onClick={() => onDateSelect?.(selectedDate)}
-                className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-all text-sm whitespace-nowrap flex-shrink-0 cursor-pointer"
-              >
-                Filtrar este dia
-              </button>
+      {/* Rodapé Compacto com Info do Dia Selecionado */}
+      <div className="mt-3 pt-2.5 border-t border-border flex items-center justify-between gap-2 text-xs">
+        <div className="min-w-0 flex-1">
+          <p className="text-muted-foreground text-[10px] uppercase font-semibold tracking-wider">
+            {isMonthView ? 'Filtro por Mês' : 'Data'}
+          </p>
+          <p className="text-foreground font-medium text-xs truncate">
+            {isMonthView ? (
+              <span>{monthNames[currentDate.getMonth()]} de {currentDate.getFullYear()}</span>
             ) : (
-              <button 
-                type="button"
-                onClick={() => {
-                  const today = new Date()
-                  setSelectedDate(today)
-                  onDateSelect?.(today)
-                }}
-                className="px-3 py-2 bg-white/5 border border-white/10 text-white font-medium rounded-lg hover:bg-white/10 transition-all text-xs whitespace-nowrap flex-shrink-0 cursor-pointer"
-              >
-                Ver dia de hoje
-              </button>
+              selectedDate.toLocaleDateString('pt-BR', { 
+                weekday: 'short', 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+              })
             )}
-          </div>
+          </p>
+        </div>
+
+        <div>
+          {!isMonthView ? (
+            <button 
+              type="button"
+              onClick={() => onDateSelect?.(selectedDate)}
+              className="px-2.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-md transition-all text-xs whitespace-nowrap cursor-pointer shadow-sm"
+            >
+              Filtrar dia
+            </button>
+          ) : (
+            <button 
+              type="button"
+              onClick={() => {
+                const today = new Date()
+                setSelectedDate(today)
+                onDateSelect?.(today)
+              }}
+              className="px-2.5 py-1 bg-card border border-border text-foreground font-medium rounded-md hover:bg-muted transition-all text-xs whitespace-nowrap cursor-pointer"
+            >
+              Hoje
+            </button>
+          )}
         </div>
       </div>
     </div>

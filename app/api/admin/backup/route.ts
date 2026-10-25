@@ -24,9 +24,10 @@ function isAuthorized(request: NextRequest): { authorized: boolean; userId?: str
     }
   }
 
-  // 2. Validação por sessão de usuário autenticado (DEVELOPER ou ADMIN)
+  // 2. Validação por sessão de usuário autenticado (EXCLUSIVAMENTE DEVELOPER)
+  // Administradores de estabelecimentos individuais não podem ter acesso a dumps globais do banco
   const user = getAuthUser(request)
-  if (user && requireRole(user, ['DEVELOPER', 'ADMIN'])) {
+  if (user && requireRole(user, ['DEVELOPER'])) {
     return { authorized: true, userId: user.id }
   }
 

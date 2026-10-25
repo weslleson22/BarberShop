@@ -139,65 +139,83 @@ export default function PopularServices() {
 
   if (loading) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm">
         <div className="flex items-center justify-center h-24 md:h-32">
-          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-amber-400"></div>
+          <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-primary"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6">
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <div>
-          <h3 className="text-lg md:text-xl font-semibold text-white">Serviços Mais Procurados</h3>
-          <p className="text-gray-400 text-xs md:text-sm">Este mês</p>
-        </div>
-        <div className="flex items-center space-x-2 text-emerald-400">
-          <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4" />
-          <span className="text-xs md:text-sm">+{services.length > 0 ? services.length * 5 : 0}%</span>
-        </div>
-      </div>
-
-      <div className="space-y-3 md:space-y-4">
-        {services.map((service, index) => (
-          <div key={index} className="space-y-1.5 md:space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
-                <div className="w-7 h-7 md:w-8 md:h-8 bg-amber-950 border border-amber-800/60 rounded-lg flex items-center justify-center flex-shrink-0 text-amber-400">
-                  <Scissors className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-white font-medium text-sm md:text-base truncate">{service.name}</p>
-                  <p className="text-gray-400 text-xs md:text-sm">{service.count} agendamentos</p>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0 ml-2">
-                <p className="text-white font-semibold text-sm md:text-base">{service.percentage}%</p>
-              </div>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-800 rounded-full h-1.5 md:h-2">
-              <div 
-                className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                style={{ width: `${service.percentage}%` }}
-              />
-            </div>
+    <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm flex flex-col justify-between h-full">
+      <div>
+        <div className="flex items-center justify-between mb-4 md:mb-5 pb-3 border-b border-border">
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight">Serviços Mais Procurados</h3>
+            <p className="text-muted-foreground text-xs md:text-sm font-medium">Classificação com base nos agendamentos deste mês</p>
           </div>
-        ))}
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-semibold shrink-0">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>Top {services.length}</span>
+          </div>
+        </div>
+
+        {services.length === 0 ? (
+          <div className="text-center py-10 px-4 bg-muted/30 border border-border rounded-xl">
+            <Scissors className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-foreground font-semibold text-sm">Nenhum agendamento este mês</p>
+            <p className="text-muted-foreground text-xs mt-1 max-w-xs mx-auto">
+              Os serviços mais demandados aparecerão com porcentagem e ranking aqui.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3.5">
+            {services.map((service, index) => (
+              <div key={index} className="space-y-1.5 p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                    <span className="w-5 text-center text-xs font-bold text-muted-foreground shrink-0">
+                      #{index + 1}
+                    </span>
+                    <div className="w-7 h-7 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-center flex-shrink-0 text-primary">
+                      <Scissors className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-foreground font-semibold text-sm truncate">{service.name}</p>
+                      <p className="text-muted-foreground text-xs">{service.count} agendamento{service.count === 1 ? '' : 's'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-foreground font-bold text-sm bg-muted/50 px-2 py-0.5 rounded-md border border-border/60">
+                      {service.percentage}%
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden ml-7.5">
+                  <div 
+                    className="h-full bg-primary rounded-full transition-all duration-500"
+                    style={{ width: `${Math.max(service.percentage, 4)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* View All Button */}
-      <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-800">
+      <div className="mt-4 pt-3 border-t border-border">
         <Link
           href="/servicos"
-          className="block w-full py-2.5 md:py-3 text-center text-yellow-400 hover:text-yellow-300 hover:bg-white/5 font-medium text-sm md:text-base rounded-lg transition-all"
+          className="block w-full py-2 text-center text-primary hover:text-primary/80 hover:bg-muted font-semibold text-xs md:text-sm rounded-lg transition-all"
         >
-          Ver todos os serviços
+          Ver Catálogo de Serviços &rarr;
         </Link>
       </div>
     </div>
   )
 }
+

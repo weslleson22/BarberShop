@@ -82,6 +82,7 @@ export async function PUT(request: NextRequest) {
     if (data.address !== undefined) updateData.address = data.address
     if (data.birthDate !== undefined) updateData.birthDate = data.birthDate ? new Date(data.birthDate) : null
     if (data.bio !== undefined) updateData.bio = data.bio
+    if (data.isActive !== undefined) updateData.isActive = Boolean(data.isActive)
 
     // Verificar se o usuário existe
     const existing = await prisma.user.findUnique({

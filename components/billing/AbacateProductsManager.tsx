@@ -11,16 +11,31 @@ import {
   Copy,
   Check,
   AlertCircle,
-  TrendingUp,
-  DollarSign,
   Layers,
-  ArrowRight,
   ShieldCheck,
   Loader2,
   Trash2,
-  X
+  X,
 } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 export interface AbacateProductItem {
   id: string
@@ -255,482 +270,512 @@ export default function AbacateProductsManager() {
   const unsyncedCount = localPlans.filter((p) => !p.isSyncedWithAbacate).length
 
   return (
-    <div className="space-y-6 text-white">
+    <div className="space-y-6">
       {/* Feedback Alert */}
       {feedback && (
         <div
-          className={`p-4 rounded-xl flex items-center justify-between text-sm border font-bold ${
+          className={`p-4 rounded-xl flex items-center justify-between text-sm border font-medium animate-in fade-in ${
             feedback.type === 'success'
-              ? 'bg-[#059669] border-[#10b981] text-white'
-              : 'bg-[#dc2626] border-[#ef4444] text-white'
+              ? 'bg-primary/10 border-primary/20 text-primary'
+              : 'bg-destructive/15 border-destructive/30 text-destructive'
           }`}
         >
           <div className="flex items-center gap-2.5">
             {feedback.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-white shrink-0" />
+              <AlertCircle className="w-5 h-5 shrink-0" />
             )}
             <span>{feedback.message}</span>
           </div>
-          <button onClick={() => setFeedback(null)} className="text-white hover:text-gray-200 text-sm font-bold px-2 py-1 cursor-pointer">
+          <button
+            onClick={() => setFeedback(null)}
+            className="text-muted-foreground hover:text-foreground text-sm font-semibold px-2 py-1 cursor-pointer transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Cards de Métricas e Ações Rápidas */}
+      {/* Cards de Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Métrica 1: Produtos AbacatePay */}
-        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-gray-300 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Produtos Gateway</span>
-            <Package className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-3xl font-black text-white">{abacateProducts.length}</div>
-          <span className="text-xs text-gray-200 mt-1 block font-medium">
-            Produtos ativos na sua conta AbacatePay
-          </span>
-        </div>
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between text-muted-foreground mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Produtos Gateway</span>
+              <Package className="w-4 h-4 text-primary" />
+            </div>
+            <div className="text-3xl font-bold tracking-tight text-foreground">{abacateProducts.length}</div>
+            <span className="text-xs text-muted-foreground mt-1 block">
+              Produtos ativos na sua conta AbacatePay
+            </span>
+          </CardContent>
+        </Card>
 
         {/* Métrica 2: Planos no BarberShop */}
-        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-gray-300 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Planos no Sistema</span>
-            <Layers className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-3xl font-black text-white">{localPlans.length}</div>
-          <span className="text-xs text-gray-200 mt-1 block font-medium">
-            Planos cadastrados pelo Developer
-          </span>
-        </div>
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between text-muted-foreground mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Planos no Sistema</span>
+              <Layers className="w-4 h-4 text-primary" />
+            </div>
+            <div className="text-3xl font-bold tracking-tight text-foreground">{localPlans.length}</div>
+            <span className="text-xs text-muted-foreground mt-1 block">
+              Planos cadastrados pelo Developer
+            </span>
+          </CardContent>
+        </Card>
 
         {/* Métrica 3: Sincronização */}
-        <div className="bg-[#111827] border border-[#374151] rounded-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between text-gray-300 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Status da Sincronia</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-3xl font-black text-emerald-400">
-            {localPlans.filter((p) => p.isSyncedWithAbacate).length} / {localPlans.length}
-          </div>
-          <span className="text-xs text-gray-200 mt-1 block font-bold">
-            {unsyncedCount > 0 ? `${unsyncedCount} plano(s) pendente(s)` : 'Todos sincronizados'}
-          </span>
-        </div>
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between text-muted-foreground mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Status da Sincronia</span>
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            </div>
+            <div className="text-3xl font-bold tracking-tight text-foreground">
+              {localPlans.filter((p) => p.isSyncedWithAbacate).length} / {localPlans.length}
+            </div>
+            <span className="text-xs text-muted-foreground mt-1 block font-medium">
+              {unsyncedCount > 0 ? (
+                <span className="text-amber-600 dark:text-amber-400 font-semibold">{unsyncedCount} plano(s) pendente(s)</span>
+              ) : (
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Todos sincronizados</span>
+              )}
+            </span>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Barra de Ações: Sincronizar Todos & Criar Produto & Atualizar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#374151] pb-4">
+      {/* Barra de Ações: Sub-Tabs & Ações */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
+            size="sm"
+            variant={activeSubTab === 'abacate' ? 'default' : 'outline'}
             onClick={() => setActiveSubTab('abacate')}
-            className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer border ${
-              activeSubTab === 'abacate'
-                ? 'bg-[#059669] text-white border-[#10b981]'
-                : 'bg-[#1f2937] hover:bg-[#374151] text-white border-[#4b5563]'
-            }`}
+            className="gap-2 h-9"
           >
             <Package className="w-3.5 h-3.5" />
             <span>Produtos Gateway ({abacateProducts.length})</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            size="sm"
+            variant={activeSubTab === 'local' ? 'default' : 'outline'}
             onClick={() => setActiveSubTab('local')}
-            className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer border ${
-              activeSubTab === 'local'
-                ? 'bg-[#2563eb] text-white border-[#3b82f6]'
-                : 'bg-[#1f2937] hover:bg-[#374151] text-white border-[#4b5563]'
-            }`}
+            className="gap-2 h-9"
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Planos Cadastrados ({localPlans.length})</span>
-          </button>
+          </Button>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {unsyncedCount > 0 && (
-            <button
-              type="button"
-              onClick={handleSyncAllPlans}
-              disabled={syncingAll}
-              className="px-4 py-2 bg-[#059669] hover:bg-emerald-600 text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border border-[#10b981] disabled:opacity-50"
-            >
-              {syncingAll ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="w-3.5 h-3.5" />
-              )}
-              <span>Sincronizar Todos no AbacatePay ({unsyncedCount})</span>
-            </button>
-          )}
-
-          <button
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Button
             type="button"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-4 py-2 bg-[#2563eb] hover:bg-blue-600 border border-[#3b82f6] text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Novo Produto AbacatePay</span>
-          </button>
-
-          <button
-            type="button"
+            variant="outline"
+            size="sm"
             onClick={fetchProductsAndPlans}
             disabled={loading}
-            className="p-2 rounded-lg border border-[#4b5563] bg-[#1f2937] hover:bg-[#374151] text-white transition cursor-pointer"
             title="Atualizar lista"
+            className="h-9"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'text-white'}`} />
-          </button>
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSyncAllPlans}
+            disabled={syncingAll || loading}
+            className="gap-2 h-9"
+            title="Sincroniza todos os planos pendentes com o gateway"
+          >
+            {syncingAll ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Sincronizando...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Sincronizar Todos</span>
+              </>
+            )}
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="gap-2 h-9 shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Criar Produto na AbacatePay</span>
+          </Button>
         </div>
       </div>
 
       {/* ABA 1: PRODUTOS DIRETOS NA ABACATEPAY */}
       {activeSubTab === 'abacate' && (
-        <div className="bg-[#111827] border border-[#374151] rounded-xl p-6 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-extrabold text-white">Produtos Registrados na AbacatePay</h3>
-              <p className="text-xs text-gray-200 font-medium">
-                Estes são os produtos sincronizados com a chave de API da sua conta AbacatePay.
-              </p>
+        <Card className="border-border shadow-sm overflow-hidden">
+          <CardHeader className="pb-3 border-b border-border bg-muted/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Produtos Registrados na AbacatePay</CardTitle>
+                <CardDescription className="text-xs">
+                  Estes são os produtos sincronizados com a chave de API da sua conta AbacatePay.
+                </CardDescription>
+              </div>
+              <a
+                href="https://app.abacatepay.com/products"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
+              >
+                <span>Painel AbacatePay</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
-            <a
-              href="https://app.abacatepay.com/products"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-bold"
-            >
-              <span>Painel AbacatePay</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3 py-6">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="h-14 bg-[#030712] rounded-xl animate-pulse border border-[#374151]" />
-              ))}
-            </div>
-          ) : abacateProducts.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-[#374151] rounded-xl bg-[#030712]">
-              <Package className="w-8 h-8 text-gray-400 mx-auto mb-2 opacity-70" />
-              <p className="text-sm font-bold text-white">Nenhum produto encontrado na sua conta AbacatePay.</p>
-              <p className="text-xs text-gray-300 mt-1 max-w-md mx-auto">
-                Você pode sincronizar os planos cadastrados pelo developer clicando no botão <strong>Sincronizar Todos</strong> ou cadastrar um novo produto acima.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-[#374151] bg-[#1f2937] text-xs font-bold uppercase tracking-wider text-white">
-                    <th className="py-3.5 px-4 font-bold"># ID AbacatePay</th>
-                    <th className="py-3.5 px-3 font-bold">Nome do Produto</th>
-                    <th className="py-3.5 px-3 font-bold">Valor</th>
-                    <th className="py-3.5 px-3 font-bold">ID Externo (Plano)</th>
-                    <th className="py-3.5 px-3 font-bold">Descrição</th>
-                    <th className="py-3.5 px-4 text-right font-bold">Ação</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#374151]">
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="space-y-3 p-6">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="h-12 bg-muted/50 rounded-lg animate-pulse border border-border" />
+                ))}
+              </div>
+            ) : abacateProducts.length === 0 ? (
+              <div className="text-center py-12 p-6">
+                <Package className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-foreground">Nenhum produto encontrado na sua conta AbacatePay.</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+                  Você pode sincronizar os planos cadastrados pelo developer clicando no botão <strong>Sincronizar Todos</strong> ou cadastrar um novo produto acima.
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead># ID AbacatePay</TableHead>
+                    <TableHead>Nome do Produto</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>ID Externo (Plano)</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead className="text-right">Ação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {abacateProducts.map((prod, idx) => (
-                    <tr key={prod.id || idx} className="hover:bg-[#1f2937]/50 transition-colors">
-                      <td className="py-3.5 px-4 font-mono text-xs text-white font-bold">
+                    <TableRow key={prod.id || idx} className="hover:bg-muted/50 transition-colors">
+                      <TableCell className="font-mono text-xs font-medium">
                         <div className="flex items-center gap-1.5">
-                          <span>{prod.id}</span>
-                          <button
+                          <span className="text-foreground">{prod.id}</span>
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleCopy(prod.id)}
-                            className="text-gray-300 hover:text-white transition cursor-pointer p-1 rounded hover:bg-[#1f2937]"
+                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
                             title="Copiar ID"
                           >
-                            {copiedId === prod.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
+                            {copiedId === prod.id ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                          </Button>
                         </div>
-                      </td>
-                      <td className="py-3.5 px-3 font-bold text-white flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span>{prod.name}</span>
-                      </td>
-                      <td className="py-3.5 px-3 font-black text-white font-mono">
+                      </TableCell>
+                      <TableCell className="font-semibold text-foreground">
+                        {prod.name}
+                      </TableCell>
+                      <TableCell className="font-bold text-foreground font-mono">
                         {formatPriceBRL((prod.price || 0) / 100)}
-                      </td>
-                      <td className="py-3.5 px-3 font-mono text-xs text-gray-300 font-bold">
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">
                         {prod.externalId || '-'}
-                      </td>
-                      <td className="py-3.5 px-3 text-xs text-gray-200 max-w-xs truncate font-medium">
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-xs truncate">
                         {prod.description || '-'}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <span className="px-2.5 py-1 rounded text-[11px] font-bold bg-[#059669] text-white border border-[#10b981]">
+                          <Badge variant="outline" className="text-[11px] font-semibold border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
                             Ativo na API
-                          </span>
-                          <button
+                          </Badge>
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setDeleteConfirmItem({ id: prod.id, name: prod.name, type: 'abacate' })}
-                            className="p-1.5 rounded-lg text-white bg-[#dc2626] hover:bg-red-600 border border-[#ef4444] transition cursor-pointer"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             title="Excluir produto da AbacatePay"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* ABA 2: PLANOS DO DEVELOPER NO SISTEMA */}
       {activeSubTab === 'local' && (
-        <div className="bg-[#111827] border border-[#374151] rounded-xl p-6 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-extrabold text-white">Planos Cadastrados pelo Developer no Sistema</h3>
-              <p className="text-xs text-gray-200 font-medium">
-                Planos comerciais configurados para contratação pelas barbearias.
-              </p>
+        <Card className="border-border shadow-sm overflow-hidden">
+          <CardHeader className="pb-3 border-b border-border bg-muted/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Planos Cadastrados pelo Developer no Sistema</CardTitle>
+                <CardDescription className="text-xs">
+                  Planos comerciais configurados para contratação pelas barbearias.
+                </CardDescription>
+              </div>
+              <Badge variant="secondary" className="font-semibold text-xs">
+                Total: {localPlans.length} planos
+              </Badge>
             </div>
-            <span className="text-xs text-white font-bold bg-[#1f2937] px-3 py-1 rounded-lg border border-[#4b5563]">
-              Total: <strong>{localPlans.length}</strong> planos
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3 py-6">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="h-14 bg-[#030712] rounded-xl animate-pulse border border-[#374151]" />
-              ))}
-            </div>
-          ) : localPlans.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-[#374151] rounded-xl bg-[#030712]">
-              <Layers className="w-8 h-8 text-gray-400 mx-auto mb-2 opacity-70" />
-              <p className="text-sm font-bold text-white">Nenhum plano cadastrado no banco de dados.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-[#374151] bg-[#1f2937] text-xs font-bold uppercase tracking-wider text-white">
-                    <th className="py-3.5 px-4 font-bold">Plano</th>
-                    <th className="py-3.5 px-3 font-bold">Preço / Ciclo</th>
-                    <th className="py-3.5 px-3 font-bold">Status Sistema</th>
-                    <th className="py-3.5 px-3 font-bold">Sincronia AbacatePay</th>
-                    <th className="py-3.5 px-4 text-right font-bold">Ação</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#374151]">
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="space-y-3 p-6">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="h-12 bg-muted/50 rounded-lg animate-pulse border border-border" />
+                ))}
+              </div>
+            ) : localPlans.length === 0 ? (
+              <div className="text-center py-12 p-6">
+                <Layers className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-foreground">Nenhum plano cadastrado no banco de dados.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead>Plano</TableHead>
+                    <TableHead>Preço / Ciclo</TableHead>
+                    <TableHead>Status Sistema</TableHead>
+                    <TableHead>Sincronia AbacatePay</TableHead>
+                    <TableHead className="text-right">Ação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {localPlans.map((plan) => (
-                    <tr key={plan.id} className="hover:bg-[#1f2937]/50 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-white">{plan.name}</div>
-                        <span className="text-xs text-gray-300 font-mono">{plan.slug}</span>
-                      </td>
-                      <td className="py-3.5 px-3 font-black text-white font-mono">
+                    <TableRow key={plan.id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell>
+                        <div className="font-semibold text-foreground text-sm">{plan.name}</div>
+                        <span className="text-xs text-muted-foreground font-mono">{plan.slug}</span>
+                      </TableCell>
+                      <TableCell className="font-bold text-foreground font-mono">
                         {formatPriceBRL(Number(plan.price))}
-                        <span className="text-xs text-gray-200 font-bold ml-1">
+                        <span className="text-xs text-muted-foreground font-normal ml-1">
                           /{plan.billingInterval === 'YEARLY' ? 'ano' : 'mês'}
                         </span>
-                      </td>
-                      <td className="py-3.5 px-3">
-                        {plan.isActive ? (
-                          <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#059669] text-white border border-[#10b981]">
-                            Ativo
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#dc2626] text-white border border-[#ef4444]">
-                            Inativo
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-3">
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            plan.isActive
+                              ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                              : 'border-destructive/30 text-destructive bg-destructive/10'
+                          }
+                        >
+                          {plan.isActive ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         {plan.isSyncedWithAbacate ? (
                           <div className="flex items-center gap-1.5">
-                            <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#059669] text-white border border-[#10b981] flex items-center gap-1">
+                            <Badge
+                              variant="outline"
+                              className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 gap-1 font-semibold"
+                            >
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               <span>Sincronizado</span>
-                            </span>
+                            </Badge>
                             {plan.abacateProductId && (
-                              <span className="text-[11px] font-mono text-gray-300 font-bold">
+                              <span className="text-[11px] font-mono text-muted-foreground font-medium">
                                 ({plan.abacateProductId})
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#d97706] text-white border border-[#f59e0b] flex items-center gap-1 w-fit">
+                          <Badge
+                            variant="outline"
+                            className="border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10 gap-1 font-semibold"
+                          >
                             <Clock className="w-3.5 h-3.5" />
                             <span>Pendente de Sincronia</span>
-                          </span>
+                          </Badge>
                         )}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {plan.isSyncedWithAbacate ? (
-                            <button
-                              type="button"
-                              onClick={() => handleSyncPlan(plan.id)}
-                              disabled={syncingPlanId === plan.id}
-                              className="px-3 py-1 bg-[#1f2937] hover:bg-[#374151] text-white border border-[#4b5563] font-bold text-xs rounded-lg transition cursor-pointer disabled:opacity-50"
-                            >
-                              {syncingPlanId === plan.id ? 'Revalidando...' : 'Revalidar'}
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleSyncPlan(plan.id)}
-                              disabled={syncingPlanId === plan.id}
-                              className="px-3 py-1 bg-[#059669] hover:bg-emerald-600 text-white font-bold text-xs rounded-lg transition cursor-pointer disabled:opacity-50 flex items-center gap-1 border border-[#10b981]"
-                            >
-                              {syncingPlanId === plan.id ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <RefreshCw className="w-3.5 h-3.5" />
-                              )}
-                              <span>Sincronizar</span>
-                            </button>
-                          )}
-                          <button
+                          <Button
                             type="button"
+                            variant={plan.isSyncedWithAbacate ? 'outline' : 'default'}
+                            size="sm"
+                            onClick={() => handleSyncPlan(plan.id)}
+                            disabled={syncingPlanId === plan.id}
+                            className="h-8 gap-1"
+                          >
+                            {syncingPlanId === plan.id ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>{plan.isSyncedWithAbacate ? 'Revalidando...' : 'Sincronizando...'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                <span>{plan.isSyncedWithAbacate ? 'Revalidar' : 'Sincronizar'}</span>
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setDeleteConfirmItem({ id: plan.id, name: plan.name, type: 'local' })}
-                            className="p-1.5 rounded-lg text-white bg-[#dc2626] hover:bg-red-600 border border-[#ef4444] transition cursor-pointer"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             title="Excluir plano do sistema"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Modal de Criar Novo Produto na AbacatePay */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
-          <div className="bg-[#111827] border border-[#374151] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-white space-y-4">
-            <button
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
+          <Card className="border-border rounded-xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-card-foreground bg-card space-y-4">
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsCreateModalOpen(false)}
-              className="absolute top-5 right-5 text-gray-300 hover:text-white transition cursor-pointer"
+              className="absolute top-4 right-4 h-8 w-8 text-muted-foreground hover:text-foreground"
             >
-              <X className="w-5 h-5" />
-            </button>
+              <X className="w-4 h-4" />
+            </Button>
 
             <div className="flex items-center gap-2 mb-1">
-              <Package className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-lg font-bold text-white">Novo Produto AbacatePay</h3>
+              <Package className="w-5 h-5 text-primary" />
+              <CardTitle className="text-lg">Novo Produto AbacatePay</CardTitle>
             </div>
-            <p className="text-xs text-gray-200 font-medium mb-4">
+            <CardDescription className="text-xs">
               Cadastre um novo item comercial diretamente no gateway de pagamentos.
-            </p>
+            </CardDescription>
 
             <form onSubmit={handleCreateProduct} className="space-y-4">
               <div>
-                <label className="text-xs text-white font-bold block mb-1">Nome do Produto *</label>
-                <input
+                <label className="text-xs font-semibold text-foreground block mb-1">Nome do Produto *</label>
+                <Input
                   type="text"
                   required
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                   placeholder="Ex: Plano Trimestral BarberShop"
-                  className="w-full bg-[#030712] border border-[#374151] rounded-xl py-2.5 px-3 text-xs text-white font-medium focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-white font-bold block mb-1">Preço em Reais (R$) *</label>
-                <input
+                <label className="text-xs font-semibold text-foreground block mb-1">Preço em Reais (R$) *</label>
+                <Input
                   type="text"
                   required
                   value={createForm.price}
                   onChange={(e) => setCreateForm({ ...createForm, price: e.target.value })}
                   placeholder="Ex: 59.90"
-                  className="w-full bg-[#030712] border border-[#374151] rounded-xl py-2.5 px-3 text-xs font-mono text-white font-medium focus:outline-none focus:border-blue-500"
+                  className="font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-white font-bold block mb-1">Descrição</label>
+                <label className="text-xs font-semibold text-foreground block mb-1">Descrição</label>
                 <textarea
                   rows={3}
                   value={createForm.description}
                   onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
                   placeholder="Descrição das funcionalidades e vigência do produto..."
-                  className="w-full bg-[#030712] border border-[#374151] rounded-xl py-2.5 px-3 text-xs text-white font-medium focus:outline-none focus:border-blue-500"
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <button
+              <div className="pt-2 flex items-center justify-end gap-2.5">
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] transition cursor-pointer"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={creatingProduct}
-                  className="px-5 py-2.5 rounded-xl bg-[#059669] hover:bg-emerald-600 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5 border border-[#10b981]"
+                  className="gap-2"
                 >
                   {creatingProduct ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                   <span>Criar na AbacatePay</span>
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       )}
 
       {/* Modal de Confirmação de Exclusão */}
       {deleteConfirmItem && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-          <div className="bg-[#111827] border border-[#ef4444] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-white">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <Card className="border-border rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4 bg-card text-card-foreground">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#dc2626] border border-[#ef4444] flex items-center justify-center text-white shrink-0">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive shrink-0">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-extrabold text-white text-base">
+                <CardTitle className="text-base">
                   {deleteConfirmItem.type === 'abacate' ? 'Excluir Produto da AbacatePay' : 'Excluir Plano do Sistema'}
-                </h3>
-                <span className="text-xs text-gray-300 font-medium">Esta ação é permanente e irreversível</span>
+                </CardTitle>
+                <CardDescription className="text-xs">Esta ação é permanente e irreversível</CardDescription>
               </div>
             </div>
 
-            <p className="text-xs text-gray-200 leading-relaxed font-medium">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Você tem certeza que deseja excluir permanentemente o item{' '}
-              <strong className="text-white font-bold">&quot;{deleteConfirmItem.name}&quot;</strong>
+              <strong className="text-foreground font-semibold">&quot;{deleteConfirmItem.name}&quot;</strong>
               {deleteConfirmItem.type === 'abacate'
                 ? ' da sua conta na AbacatePay? O produto deixará de existir no gateway de pagamento.'
                 : ' do banco de dados do sistema?'}
             </p>
 
             <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setDeleteConfirmItem(null)}
                 disabled={deletingProduct}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#1f2937] hover:bg-[#374151] border border-[#4b5563] transition cursor-pointer"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="destructive"
                 onClick={handleConfirmDelete}
                 disabled={deletingProduct}
-                className="px-5 py-2 rounded-xl bg-[#dc2626] hover:bg-red-600 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5 border border-[#ef4444] shadow-sm"
+                className="gap-1.5"
               >
                 {deletingProduct ? (
                   <>
@@ -743,9 +788,9 @@ export default function AbacateProductsManager() {
                     <span>Confirmar Exclusão</span>
                   </>
                 )}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
     </div>

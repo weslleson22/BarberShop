@@ -8,7 +8,6 @@ import { getAuthHeaders } from '@/lib/utils'
 import {
   KeyRound,
   Shield,
-  ShieldAlert,
   Search,
   RefreshCw,
   Lock,
@@ -194,44 +193,23 @@ export default function DeveloperCredentialsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white pb-20 pt-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-20">
       <DropdownHeader
         title="Gestão de Credenciais & Senhas"
         subtitle="Controle administrativo restrito para visualização de logins, recuperação e emissão de senhas"
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        {/* Aviso de Segurança e Criptografia */}
-        <div className="p-5 rounded-xl bg-[#111827] border border-[#374151] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#d97706] border border-[#f59e0b] flex items-center justify-center text-white shrink-0">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-white text-sm">
-                Proteção Criptográfica & Conformidade de Segurança (Bcrypt)
-              </h4>
-              <p className="text-xs text-gray-200 mt-1 leading-relaxed font-medium">
-                As senhas originais dos usuários são armazenadas em hash irreversível (Bcrypt com Salt de 10 rodadas), impossibilitando leitura em texto puro.
-                Como desenvolvedor, você pode <strong className="text-white">emitir uma nova senha segura</strong>, <strong className="text-white">definir uma senha manual</strong> ou <strong className="text-white">acessar em modo suporte</strong>. Todas as ações geram log de auditoria.
-              </p>
-            </div>
-          </div>
-          <span className="text-xs font-mono font-bold text-white bg-[#d97706] px-3.5 py-1.5 rounded-lg border border-[#f59e0b] shrink-0">
-            AUDIT_LOG ATIVO
-          </span>
-        </div>
-
         {/* Filtros e Busca */}
-        <div className="p-4 rounded-xl bg-[#111827] border border-[#374151] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-4 rounded-xl bg-card border border-border flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
           <div className="relative w-full sm:w-96">
-            <Search className="w-4 h-4 text-gray-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Buscar por nome, email ou barbearia..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg bg-[#030712] border border-[#374151] text-xs md:text-sm text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 rounded-lg bg-background border border-border text-xs md:text-sm text-foreground placeholder:text-muted-foreground font-normal focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
 
@@ -239,7 +217,7 @@ export default function DeveloperCredentialsPage() {
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="px-3.5 py-2 rounded-lg bg-[#030712] border border-[#374151] text-xs font-bold text-white focus:outline-none focus:border-blue-500"
+              className="px-3.5 py-2 rounded-lg bg-background border border-border text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="ALL">Todos os Perfis</option>
               <option value="ADMIN">Administradores</option>
@@ -252,22 +230,22 @@ export default function DeveloperCredentialsPage() {
               type="button"
               onClick={fetchUsers}
               disabled={loading}
-              className="px-3 py-2 rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white font-bold border border-[#4b5563] transition flex items-center gap-2 text-xs"
+              className="px-3 py-2 rounded-lg bg-card hover:bg-accent text-foreground font-medium border border-border transition flex items-center gap-2 text-xs cursor-pointer shadow-sm"
               title="Recarregar usuários"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'text-white'}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-primary' : 'text-muted-foreground'}`} />
               <span>Atualizar</span>
             </button>
           </div>
         </div>
 
         {/* Tabela de Usuários */}
-        <div className="rounded-xl bg-[#111827] border border-[#374151] overflow-hidden shadow-xl">
-          <div className="px-6 py-4 border-b border-[#374151] flex items-center justify-between">
+        <div className="rounded-xl bg-card border border-border overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <KeyRound className="w-5 h-5 text-amber-400" />
-              <h3 className="font-extrabold text-white text-base">Credenciais de Usuários</h3>
-              <span className="text-xs bg-[#2563eb] px-2.5 py-0.5 rounded-md text-white font-bold border border-[#3b82f6]">
+              <KeyRound className="w-5 h-5 text-amber-500" />
+              <h3 className="font-semibold text-foreground text-base">Credenciais de Usuários</h3>
+              <span className="text-xs bg-primary/10 px-2.5 py-0.5 rounded-md text-primary font-medium border border-primary/20">
                 {filteredUsers.length} contas
               </span>
             </div>
@@ -275,18 +253,18 @@ export default function DeveloperCredentialsPage() {
 
           {loading ? (
             <div className="py-20 text-center space-y-3">
-              <RefreshCw className="w-8 h-8 text-blue-400 animate-spin mx-auto" />
-              <p className="text-xs text-white font-bold">Carregando dados de usuários...</p>
+              <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
+              <p className="text-xs text-muted-foreground font-medium">Carregando dados de usuários...</p>
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="py-20 text-center text-xs text-white font-medium">
+            <div className="py-20 text-center text-xs text-muted-foreground font-normal">
               Nenhum usuário encontrado com os filtros selecionados.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-[#374151] bg-[#1f2937] text-white uppercase font-bold text-[11px] tracking-wider">
+                  <tr className="border-b border-border bg-muted/40 text-muted-foreground uppercase font-semibold text-[11px] tracking-wider">
                     <th className="py-3.5 px-4">Usuário / Nome</th>
                     <th className="py-3.5 px-4">Login / E-mail</th>
                     <th className="py-3.5 px-4">Perfil</th>
@@ -296,34 +274,34 @@ export default function DeveloperCredentialsPage() {
                     <th className="py-3.5 px-4 text-right">Ação</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#374151]">
+                <tbody className="divide-y divide-border">
                   {filteredUsers.map((u) => (
-                    <tr key={u.id} className="hover:bg-[#1f2937]/50 transition group">
+                    <tr key={u.id} className="hover:bg-muted/40 transition group">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-[#d97706] text-white border border-[#f59e0b] flex items-center justify-center font-black text-xs">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs">
                             {u.name.slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-bold text-white text-sm">
+                            <span className="font-semibold text-foreground text-sm">
                               {u.name}
                             </span>
-                            {u.phone && <div className="text-[11px] text-gray-300 font-medium">{u.phone}</div>}
+                            {u.phone && <div className="text-[11px] text-muted-foreground font-normal">{u.phone}</div>}
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono text-white font-medium">
+                      <td className="py-3.5 px-4 font-mono text-foreground font-medium">
                         <div className="flex items-center gap-2">
                           <span>{u.email}</span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(u.email, `email_${u.id}`)}
-                            className="text-gray-300 hover:text-white p-1 rounded hover:bg-[#1f2937]"
+                            className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-muted"
                             title="Copiar email"
                           >
                             {copiedKey === `email_${u.id}` ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
                             ) : (
                               <Copy className="w-3.5 h-3.5" />
                             )}
@@ -332,33 +310,33 @@ export default function DeveloperCredentialsPage() {
                       </td>
 
                       <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#1f2937] border border-[#4b5563] text-white">
+                        <span className="px-2.5 py-0.5 rounded text-[10px] font-medium bg-muted border border-border text-foreground">
                           {u.role}
                         </span>
                       </td>
 
                       <td className="py-3.5 px-4">
                         {u.barbershop ? (
-                          <span className="text-white font-bold">{u.barbershop.name}</span>
+                          <span className="text-foreground font-medium">{u.barbershop.name}</span>
                         ) : (
-                          <span className="text-gray-400 italic">Global / Sem unidade</span>
+                          <span className="text-muted-foreground italic">Global / Sem unidade</span>
                         )}
                       </td>
 
                       <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-white bg-[#059669] px-2 py-0.5 rounded border border-[#10b981] font-mono">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">
                           <Lock className="w-3 h-3" /> Bcrypt (Ativo)
                         </span>
                       </td>
 
                       <td className="py-3.5 px-4">
                         {u.hasActiveSession ? (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-white bg-[#059669] px-2 py-0.5 rounded border border-[#10b981]">
-                            <span className="w-2 h-2 rounded-full bg-white"></span>
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                             Conectado
                           </span>
                         ) : (
-                          <span className="inline-flex items-center text-[10px] font-bold text-white bg-[#1f2937] px-2 py-0.5 rounded border border-[#4b5563]">Offline</span>
+                          <span className="inline-flex items-center text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border">Offline</span>
                         )}
                       </td>
 
@@ -371,9 +349,9 @@ export default function DeveloperCredentialsPage() {
                             setCustomPassword('')
                             setSuccessFeedback(null)
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#d97706] hover:bg-amber-600 text-white font-bold text-xs transition border border-[#f59e0b] shadow-sm"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card hover:bg-accent text-foreground font-medium text-xs transition border border-border shadow-sm cursor-pointer"
                         >
-                          <KeyRound className="w-3.5 h-3.5" />
+                          <KeyRound className="w-3.5 h-3.5 text-amber-500" />
                           <span>Gerenciar</span>
                         </button>
                       </td>
@@ -388,55 +366,55 @@ export default function DeveloperCredentialsPage() {
 
       {/* Modal de Gestão de Credenciais e Senha */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85">
-          <div className="bg-[#111827] border border-[#374151] w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-6 text-white">
-            <div className="flex items-center justify-between border-b border-[#374151] pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <div className="bg-card border border-border w-full max-w-lg rounded-xl p-6 shadow-2xl space-y-6 text-card-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#d97706] border border-[#f59e0b] flex items-center justify-center text-white">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600">
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-white text-base">Gerenciar Credenciais</h4>
-                  <p className="text-xs text-gray-300 font-medium">{selectedUser.name}</p>
+                  <h4 className="font-semibold text-foreground text-base">Gerenciar Credenciais</h4>
+                  <p className="text-xs text-muted-foreground font-normal">{selectedUser.name}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedUser(null)}
-                className="text-white hover:text-gray-300 text-sm font-bold p-1"
+                className="text-muted-foreground hover:text-foreground text-sm font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {/* Informações da Conta */}
-            <div className="p-4 rounded-xl bg-[#030712] border border-[#374151] space-y-2 text-xs">
+            <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-gray-300 font-medium">Usuário / Login:</span>
-                <span className="font-mono font-bold text-white">{selectedUser.email}</span>
+                <span className="text-muted-foreground font-normal">Usuário / Login:</span>
+                <span className="font-mono font-semibold text-foreground">{selectedUser.email}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-300 font-medium">Perfil de Acesso:</span>
-                <span className="font-bold text-amber-400">{selectedUser.role}</span>
+                <span className="text-muted-foreground font-normal">Perfil de Acesso:</span>
+                <span className="font-semibold text-amber-600">{selectedUser.role}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-300 font-medium">Barbearia / Estabelecimento:</span>
-                <span className="text-white font-bold">{selectedUser.barbershop?.name || 'Geral'}</span>
+                <span className="text-muted-foreground font-normal">Barbearia / Estabelecimento:</span>
+                <span className="text-foreground font-semibold">{selectedUser.barbershop?.name || 'Geral'}</span>
               </div>
             </div>
 
             {/* Feedback de Sucesso */}
             {successFeedback && (
-              <div className="p-3.5 rounded-xl bg-[#059669] border border-[#10b981] text-white text-xs font-bold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-white" />
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                 <span>{successFeedback}</span>
               </div>
             )}
 
             {/* Exibição da Senha Gerada */}
             {generatedPassword ? (
-              <div className="p-4 rounded-xl bg-[#030712] border border-[#f59e0b] space-y-3">
-                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+              <div className="p-4 rounded-xl bg-muted/40 border border-amber-500/30 space-y-3">
+                <span className="text-xs font-semibold text-amber-600 uppercase tracking-wider block">
                   Nova Senha de Acesso Gerada:
                 </span>
                 <div className="flex items-center gap-2">
@@ -445,12 +423,12 @@ export default function DeveloperCredentialsPage() {
                       type={showPassword ? 'text' : 'password'}
                       readOnly
                       value={generatedPassword}
-                      className="w-full py-2.5 px-3 rounded-lg bg-[#111827] border border-[#374151] text-amber-400 font-mono font-black text-sm"
+                      className="w-full py-2.5 px-3 rounded-lg bg-background border border-border text-amber-600 font-mono font-bold text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -458,7 +436,7 @@ export default function DeveloperCredentialsPage() {
                   <button
                     type="button"
                     onClick={() => copyToClipboard(generatedPassword, 'generated_pass')}
-                    className="p-2.5 rounded-lg bg-[#d97706] hover:bg-amber-600 text-white font-bold text-xs transition border border-[#f59e0b] flex items-center gap-1.5"
+                    className="p-2.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition border border-transparent flex items-center gap-1.5 shadow-sm"
                     title="Copiar senha"
                   >
                     {copiedKey === 'generated_pass' ? (
@@ -478,13 +456,13 @@ export default function DeveloperCredentialsPage() {
                 {/* Mensagem Pronta para Envio */}
                 <div className="pt-2">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-bold text-white">
+                    <span className="text-xs font-semibold text-foreground">
                       Mensagem de Boas-Vindas Pronta:
                     </span>
                     <button
                       type="button"
                       onClick={() => copyToClipboard(getShareMessage(), 'share_msg')}
-                      className="text-xs text-amber-400 hover:underline font-bold flex items-center gap-1"
+                      className="text-xs text-primary hover:underline font-medium flex items-center gap-1 cursor-pointer"
                     >
                       {copiedKey === 'share_msg' ? 'Copiado!' : 'Copiar Texto Completo'}
                     </button>
@@ -493,14 +471,14 @@ export default function DeveloperCredentialsPage() {
                     readOnly
                     rows={4}
                     value={getShareMessage()}
-                    className="w-full p-2.5 rounded-lg bg-[#111827] border border-[#374151] text-xs text-gray-200 font-mono resize-none"
+                    className="w-full p-2.5 rounded-lg bg-background border border-border text-xs text-foreground font-mono resize-none"
                   />
                   {selectedUser.phone && (
                     <a
                       href={`https://wa.me/55${selectedUser.phone.replace(/\D/g, '')}?text=${encodeURIComponent(getShareMessage())}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-[#059669] hover:bg-emerald-600 text-white font-bold text-xs transition border border-[#10b981]"
+                      className="mt-2 inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs transition shadow-sm"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>Enviar Credenciais pelo WhatsApp</span>
@@ -511,16 +489,16 @@ export default function DeveloperCredentialsPage() {
             ) : (
               <div className="space-y-4">
                 {/* Opção 1: Gerar Senha Instantânea */}
-                <div className="p-4 rounded-xl bg-[#030712] border border-[#374151] space-y-2">
-                  <h5 className="font-bold text-white text-xs">Opção 1: Senha Instantânea Segura</h5>
-                  <p className="text-xs text-gray-200 font-medium">
+                <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-2">
+                  <h5 className="font-semibold text-foreground text-xs">Opção 1: Senha Instantânea Segura</h5>
+                  <p className="text-xs text-muted-foreground font-normal">
                     O sistema cria uma senha forte aleatória, salva no banco e exibe na tela para você copiar e enviar ao usuário.
                   </p>
                   <button
                     type="button"
                     onClick={() => handleResetPassword(false)}
                     disabled={actionLoading}
-                    className="w-full py-2.5 rounded-lg bg-[#d97706] hover:bg-amber-600 text-white font-bold text-xs transition border border-[#f59e0b] flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition border border-transparent flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                   >
                     <KeyRound className="w-4 h-4" />
                     <span>Gerar Nova Senha Temporária</span>
@@ -528,21 +506,21 @@ export default function DeveloperCredentialsPage() {
                 </div>
 
                 {/* Opção 2: Definir Senha Manual */}
-                <div className="p-4 rounded-xl bg-[#030712] border border-[#374151] space-y-2">
-                  <h5 className="font-bold text-white text-xs">Opção 2: Definir Senha Manualmente</h5>
+                <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-2">
+                  <h5 className="font-semibold text-foreground text-xs">Opção 2: Definir Senha Manualmente</h5>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       placeholder="Digite a nova senha desejada..."
                       value={customPassword}
                       onChange={(e) => setCustomPassword(e.target.value)}
-                      className="flex-1 py-2 px-3 rounded-lg bg-[#111827] border border-[#374151] text-xs text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500"
+                      className="flex-1 py-2 px-3 rounded-lg bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground font-normal focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                     <button
                       type="button"
                       onClick={() => handleResetPassword(true)}
                       disabled={actionLoading || !customPassword.trim()}
-                      className="px-4 py-2 rounded-lg bg-[#2563eb] hover:bg-blue-600 text-white text-xs font-bold border border-[#3b82f6] transition disabled:opacity-50"
+                      className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium transition disabled:opacity-50 shadow-sm cursor-pointer"
                     >
                       Salvar Senha
                     </button>
@@ -550,19 +528,19 @@ export default function DeveloperCredentialsPage() {
                 </div>
 
                 {/* Opção 3: Suporte Direto / Impersonação */}
-                <div className="p-4 rounded-xl bg-[#030712] border border-[#374151] space-y-2">
-                  <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                    <LogIn className="w-3.5 h-3.5 text-blue-400" />
+                <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-2">
+                  <h5 className="font-semibold text-foreground text-xs flex items-center gap-1.5">
+                    <LogIn className="w-3.5 h-3.5 text-primary" />
                     Opção 3: Suporte Rápido (Login como Usuário)
                   </h5>
-                  <p className="text-xs text-gray-200 font-medium">
+                  <p className="text-xs text-muted-foreground font-normal">
                     Permite ao desenvolvedor abrir uma sessão de suporte autenticada como este usuário para verificar bugs ou dúvidas, sem alterar a senha dele.
                   </p>
                   <button
                     type="button"
                     onClick={handleImpersonate}
                     disabled={actionLoading}
-                    className="w-full py-2.5 rounded-lg bg-[#2563eb] hover:bg-blue-600 text-white border border-[#3b82f6] font-bold text-xs transition flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-lg bg-secondary hover:bg-accent text-secondary-foreground border border-border font-medium text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                   >
                     <UserCheck className="w-4 h-4" />
                     <span>Acessar Painel como {selectedUser.name}</span>
@@ -575,7 +553,7 @@ export default function DeveloperCredentialsPage() {
               <button
                 type="button"
                 onClick={() => setSelectedUser(null)}
-                className="px-5 py-2 rounded-lg bg-[#1f2937] hover:bg-[#374151] text-white text-xs font-bold border border-[#4b5563] transition"
+                className="px-5 py-2 rounded-lg bg-secondary hover:bg-accent text-secondary-foreground text-xs font-medium border border-border transition cursor-pointer"
               >
                 Fechar
               </button>
