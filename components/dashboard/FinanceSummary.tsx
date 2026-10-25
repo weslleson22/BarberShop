@@ -181,7 +181,7 @@ export default function FinanceSummary() {
                 }`}>
                   {isPositive ? <ArrowUp className="w-2.5 h-2.5 md:w-3 md:h-3" /> : <ArrowDown className="w-2.5 h-2.5 md:w-3 md:h-3" />}
                   <span>
-                    {Math.abs(item.change)}%
+                    {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 }).format(Math.abs(item.change || 0))}%
                   </span>
                 </div>
               </div>

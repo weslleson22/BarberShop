@@ -193,11 +193,11 @@ export default function PopularServices() {
                   </div>
                 </div>
                 
-                {/* Progress Bar */}
-                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden ml-7.5">
+                {/* Progress Bar - Modelo Taxa de Conclusão (Resumo Financeiro) */}
+                <div className="w-full bg-muted rounded-full h-2 md:h-2.5 overflow-hidden">
                   <div 
-                    className="h-full bg-primary rounded-full transition-all duration-500"
-                    style={{ width: `${Math.max(service.percentage, 4)}%` }}
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(Number(service.percentage) || 0, 0))}%` }}
                   />
                 </div>
               </div>

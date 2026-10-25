@@ -92,6 +92,14 @@ export default function StatsCards() {
     return new Intl.NumberFormat('pt-BR').format(value)
   }
 
+  const formatPercent = (value: number) => {
+    const num = Math.abs(Number(value) || 0)
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 1,
+    }).format(num) + '%'
+  }
+
   // Role-based stats
   const getStatsForRole = () => {
     if (!stats) return []
@@ -211,7 +219,7 @@ export default function StatsCards() {
               }`}>
                 {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                 <span>
-                  {Math.abs(stat.change)}%
+                  {formatPercent(stat.change)}
                 </span>
               </div>
             </div>

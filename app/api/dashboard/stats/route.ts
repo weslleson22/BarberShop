@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     }).length
     
     const appointmentsChange = previousMonthAppointments > 0 
-      ? ((currentMonthAppointments - previousMonthAppointments) / previousMonthAppointments) * 100
+      ? Math.round(((currentMonthAppointments - previousMonthAppointments) / previousMonthAppointments) * 1000) / 10
       : 0
     
     // Variação de clientes (novos clientes este mês vs mês anterior)
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     }).length
     
     const clientsChange = previousMonthClients > 0 
-      ? ((currentMonthClients - previousMonthClients) / previousMonthClients) * 100
+      ? Math.round(((currentMonthClients - previousMonthClients) / previousMonthClients) * 1000) / 10
       : 0
     
     // Variação de faturamento
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
       .reduce((sum, apt) => sum + (Number(apt.totalAmount) || 0), 0)
     
     const revenueChange = previousMonthRevenue > 0 
-      ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
+      ? Math.round(((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 1000) / 10
       : 0
     
     // Variação de ticket médio
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     const previousMonthAvgTicket = previousMonthAppointments > 0 ? previousMonthRevenue / previousMonthAppointments : 0
     
     const avgTicketChange = previousMonthAvgTicket > 0 
-      ? ((currentMonthAvgTicket - previousMonthAvgTicket) / previousMonthAvgTicket) * 100
+      ? Math.round(((currentMonthAvgTicket - previousMonthAvgTicket) / previousMonthAvgTicket) * 1000) / 10
       : 0
 
     const stats = {

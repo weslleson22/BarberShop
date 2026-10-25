@@ -14,8 +14,7 @@ import {
   AlertCircle,
   Loader2,
   ArrowLeft,
-  Calendar,
-  Sparkles
+  Calendar
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
@@ -182,7 +181,10 @@ export default function LoginPage() {
               <ArrowLeft className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Início</span>
             </Link>
-            <ThemeToggle variant="ghost" size="sm" />
+            <ThemeToggle 
+              variant="outline" 
+              className="h-9 w-9 rounded-xl border border-border bg-card/80 text-foreground hover:bg-accent shadow-xs flex items-center justify-center cursor-pointer"
+            />
           </div>
         </div>
 
@@ -354,15 +356,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
         {/* Conteúdo sobreposto na imagem */}
-        <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
-          {/* Badge Superior */}
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-3.5 py-1 text-xs font-medium text-white backdrop-blur-md">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span>SaaS Multi-Tenant para Barbearias Modernas</span>
-            </div>
-          </div>
-
+        <div className="relative z-10 flex h-full flex-col justify-end p-10 text-white">
           {/* Citação / Prova Social Inferior */}
           <div className="space-y-4 max-w-lg">
             <blockquote className="text-lg font-medium leading-relaxed">

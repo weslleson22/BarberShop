@@ -1,25 +1,61 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { 
   ArrowRight, 
-  Calendar, 
-  Clock, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Bell, 
   Star, 
   Building2,
   LogIn,
-  Smartphone
+  BarChart3
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+
+const FULL_HEADLINE = "A gestão da sua barbearia com controle total, agilidade e excelência."
+const PREFIX_HEADLINE = "A gestão da sua barbearia com "
 
 export default function Hero() {
   const { user } = useAuth()
   const router = useRouter()
+
+  // Efeito de Máquina de Escrever (Typewriter) com pausa de 5 segundos ao completar
+  const [displayedText, setDisplayedText] = useState("")
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+
+    if (!isDeleting && displayedText.length < FULL_HEADLINE.length) {
+      // Digitando caractere por caractere
+      timer = setTimeout(() => {
+        setDisplayedText(FULL_HEADLINE.slice(0, displayedText.length + 1))
+      }, 50)
+    } else if (!isDeleting && displayedText.length === FULL_HEADLINE.length) {
+      // Texto completo: aguarda exatamente 5 segundos antes de reiniciar o ciclo
+      timer = setTimeout(() => {
+        setIsDeleting(true)
+      }, 5000)
+    } else if (isDeleting && displayedText.length > 0) {
+      // Apagando rapidamente
+      timer = setTimeout(() => {
+        setDisplayedText(FULL_HEADLINE.slice(0, displayedText.length - 1))
+      }, 20)
+    } else if (isDeleting && displayedText.length === 0) {
+      // Reinicia o ciclo de digitação
+      timer = setTimeout(() => {
+        setIsDeleting(false)
+      }, 400)
+    }
+
+    return () => clearTimeout(timer)
+  }, [displayedText, isDeleting])
+
+  const part1 = displayedText.slice(0, PREFIX_HEADLINE.length)
+  const part2 = displayedText.length > PREFIX_HEADLINE.length ? displayedText.slice(PREFIX_HEADLINE.length) : ""
 
   const handleAccess = () => {
     if (user) {
@@ -32,184 +68,139 @@ export default function Hero() {
   }
 
   return (
-    <section id="home" className="relative min-h-screen pt-32 pb-20 flex items-center bg-gray-950">
+    <section id="home" className="relative min-h-screen pt-28 sm:pt-36 pb-20 flex items-center bg-background text-foreground overflow-hidden">
+      {/* Background radial glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-primary/10 blur-[130px] rounded-full pointer-events-none -z-10" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
           {/* Conteúdo Esquerdo */}
-          <div className="lg:col-span-6 xl:col-span-7 space-y-8 text-center lg:text-left">
+          <div className="lg:col-span-6 xl:col-span-6 space-y-8 text-center lg:text-left">
             
-            {/* Badge de Destaque */}
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-blue-400 text-xs sm:text-sm font-semibold tracking-wide">
-              <Calendar className="w-4 h-4 text-blue-400" />
-              <span>Plataforma de Gestão e Agendamento</span>
-            </div>
-
-            {/* Título de Alto Impacto */}
+            {/* Título de Alto Impacto com Animação de Digitação */}
             <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
-                Gestão e agendamentos com{' '}
-                <span className="text-blue-400">
-                  rapidez, controle e pontualidade.
-                </span>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-foreground min-h-[140px] sm:min-h-[160px] lg:min-h-[190px]">
+                <span>{part1}</span>
+                {part2 && (
+                  <span className="text-primary underline decoration-primary/30 underline-offset-8">
+                    {part2}
+                  </span>
+                )}
+                <span className="inline-block w-[3px] h-[0.82em] bg-primary align-middle ml-1.5 animate-pulse" />
               </h1>
-              <p className="text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-normal">
-                Conecte seu estabelecimento a clientes cadastrados. Controle horários em tempo real, organize equipes e ofereça agendamentos exclusivos com confirmação imediata.
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0 font-normal text-justify">
+                Automatize agendamentos online em tempo real, fidelize clientes, controle comissões da equipe e acompanhe seu faturamento em um painel elegante e intuitivo.
               </p>
             </div>
 
-            {/* Botões de Ação Principais */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <button 
+            {/* Botões de Ação Principais (shadcn Button) */}
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
+              <Button 
                 onClick={handleAccess}
-                className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center space-x-3 group cursor-pointer"
+                size="lg"
+                className="w-full sm:w-auto h-12 px-7 font-semibold text-base shadow-sm gap-2.5 cursor-pointer"
               >
-                <LogIn className="w-5 h-5 text-blue-100" />
-                <span className="text-base">
+                <LogIn className="w-4 h-4" />
+                <span>
                   {user ? (user.role === 'CLIENT' ? 'Meus Agendamentos' : 'Acessar Meu Painel') : 'Acessar a Plataforma'}
                 </span>
-                <ArrowRight className="w-5 h-5 text-blue-100 group-hover:translate-x-1 transition-transform" />
-              </button>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
 
-              <Link 
-                href="/register"
-                className="w-full sm:w-auto px-7 py-4 text-slate-200 hover:text-white bg-slate-900/80 hover:bg-slate-800/90 border border-slate-700/80 hover:border-slate-600 rounded-xl transition-all flex items-center justify-center space-x-2 text-base font-medium"
+              <Button 
+                asChild
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto h-12 px-6 font-semibold text-base gap-2 cursor-pointer"
               >
-                <Building2 className="w-5 h-5 text-slate-400" />
-                <span>Cadastre sua Empresa</span>
-              </Link>
-            </div>
-
-            {/* Pilares em Destaque */}
-            <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-slate-300">
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Exclusivo para Clientes Cadastrados</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Bell className="w-4 h-4 text-cyan-400" />
-                <span>Lembretes Automáticos</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-blue-400" />
-                <span>Isolamento Multi-tenant</span>
-              </div>
+                <Link href="/register">
+                  <Building2 className="w-4 h-4" />
+                  <span>Cadastrar Barbearia</span>
+                </Link>
+              </Button>
             </div>
 
             {/* Prova Social e Avaliação */}
-            <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6">
+            <div className="pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6">
               <div className="flex items-center space-x-3">
                 <div className="flex -space-x-2">
-                  <div className="w-9 h-9 rounded-full bg-blue-600 border-2 border-gray-950 flex items-center justify-center text-xs font-bold text-white">
+                  <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground border-2 border-background flex items-center justify-center text-xs font-bold shadow-sm">
                     JD
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-indigo-600 border-2 border-gray-950 flex items-center justify-center text-xs font-bold text-white">
+                  <div className="w-9 h-9 rounded-full bg-blue-600 text-white border-2 border-background flex items-center justify-center text-xs font-bold shadow-sm">
                     MC
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-emerald-600 border-2 border-gray-950 flex items-center justify-center text-xs font-bold text-white">
+                  <div className="w-9 h-9 rounded-full bg-emerald-600 text-white border-2 border-background flex items-center justify-center text-xs font-bold shadow-sm">
                     AL
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-gray-800 border-2 border-gray-950 flex items-center justify-center text-xs font-bold text-blue-300">
+                  <div className="w-9 h-9 rounded-full bg-muted text-foreground border-2 border-background flex items-center justify-center text-xs font-bold shadow-sm">
                     +10k
                   </div>
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-white">Atendimentos Gerenciados</p>
-                  <p className="text-xs text-slate-400">Pontualidade e satisfação comprovada</p>
+                  <p className="text-sm font-semibold text-foreground">Atendimentos Gerenciados</p>
+                  <p className="text-xs text-muted-foreground">Pontualidade e satisfação comprovada</p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-1.5 pl-0 sm:pl-4 sm:border-l sm:border-white/10">
-                <div className="flex text-amber-400">
+              <div className="flex items-center space-x-1.5 pl-0 sm:pl-4 sm:border-l sm:border-border">
+                <div className="flex text-amber-500">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-current" />
                   ))}
                 </div>
-                <span className="text-sm font-bold text-white ml-1">5/5</span>
-                <span className="text-xs text-slate-400">avaliações</span>
+                <span className="text-sm font-bold text-foreground ml-1">5/5</span>
+                <span className="text-xs text-muted-foreground">avaliações</span>
               </div>
             </div>
 
           </div>
 
-          {/* Lado Direito: Ilustração do Sistema de Agendamento */}
-          <div className="lg:col-span-6 xl:col-span-5 relative">
+          {/* Lado Direito: Screenshot Real do Painel / Dashboard (shadcn Mockup Window) */}
+          <div className="lg:col-span-6 xl:col-span-6 relative">
             <div className="relative mx-auto max-w-lg lg:max-w-none">
               
-              {/* Moldura da Ilustração com visual sólido */}
-              <div className="relative rounded-2xl border border-gray-800 bg-gray-900 p-4 shadow-sm overflow-hidden group">
-                <div className="relative h-96 sm:h-[430px] w-full rounded-xl overflow-hidden bg-gray-950">
+              {/* Efeito de brilho de fundo atrás da janela */}
+              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary/30 via-emerald-500/20 to-primary/20 blur-xl opacity-70" />
+
+              {/* Janela de Navegador no Estilo shadcn */}
+              <div className="relative rounded-2xl border border-border bg-card shadow-2xl overflow-hidden group">
+                
+                {/* Barra de Título da Janela (sem barbershop.cloud/dashboard e sem Ao Vivo) */}
+                <div className="flex items-center px-4 py-3 bg-muted/60 border-b border-border">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-3 h-3 rounded-full bg-rose-500/80 inline-block shadow-xs" />
+                    <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block shadow-xs" />
+                    <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block shadow-xs" />
+                  </div>
+                </div>
+
+                {/* Imagem Real do Dashboard (da pasta img/) */}
+                <div className="relative w-full aspect-[16/10] bg-muted/20 overflow-hidden">
                   <Image
-                    src="/images/scheduling-hero.jpg"
-                    alt="Sistema de Gestão e Agendamento de Serviços"
+                    src="/api/media/landing/dashboard"
+                    alt="Painel de Controle e Métricas - BarberShop Cloud"
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 520px"
-                    className="object-cover object-center"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 650px"
+                    className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.02]"
                     priority
                   />
-                  <div className="absolute inset-0 bg-black/40" />
-
-                  {/* Card Sólido Superior: Disponibilidade em Tempo Real */}
-                  <div className="absolute top-4 left-4 right-4 bg-gray-900 border border-gray-800 rounded-xl p-3.5 shadow-md flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400">
-                        <Calendar className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-white">Painel de Horários</div>
-                        <div className="text-[11px] text-slate-400">Controle inteligente de vagas</div>
-                      </div>
-                    </div>
-                    <span className="flex items-center text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
-                      Online
-                    </span>
-                  </div>
-
-                  {/* Card Sólido Inferior: Simulação de Atendimento Confirmado */}
-                  <div className="absolute bottom-4 left-4 right-4 bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-md space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
-                          <CheckCircle2 className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-white">Serviço Confirmado</p>
-                          <p className="text-[11px] text-slate-400">Lembrete sincronizado na agenda</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-2.5 py-1 rounded-lg">
-                        14:30
-                      </span>
-                    </div>
-
-                    {/* Grade de horários interativa em demonstração */}
-                    <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                      <span className="text-slate-400 text-[11px]">Horários do dia:</span>
-                      <div className="flex space-x-1.5">
-                        <span className="px-2 py-0.5 rounded bg-white/5 text-slate-400 text-[11px]">09:00</span>
-                        <span className="px-2 py-0.5 rounded bg-white/5 text-slate-400 text-[11px]">11:00</span>
-                        <span className="px-2 py-0.5 rounded bg-blue-500/30 border border-blue-400/40 text-blue-200 text-[11px] font-semibold">14:30 ✓</span>
-                        <span className="px-2 py-0.5 rounded bg-white/5 text-slate-400 text-[11px]">16:00</span>
-                      </div>
-                    </div>
-                  </div>
-
                 </div>
-              </div>
 
-              {/* Badges Flutuantes Exteriores */}
-              <div className="absolute -top-3 -right-3 hidden sm:flex items-center space-x-1.5 bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Gestão Completa SaaS</span>
-              </div>
+                {/* Barra Inferior com Destaques Reais do Sistema */}
+                <div className="p-3.5 bg-card border-t border-border flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="font-semibold text-foreground">Faturamento & Agendamentos Consolidados</span>
+                  </div>
+                  <Badge variant="secondary" className="gap-1 font-semibold text-[11px]">
+                    <BarChart3 className="w-3 h-3 text-primary" />
+                    <span>Métricas Reais</span>
+                  </Badge>
+                </div>
 
-              <div className="absolute -bottom-3 -left-3 hidden sm:flex items-center space-x-1.5 bg-slate-900 border border-white/10 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-full shadow-xl">
-                <Smartphone className="w-3.5 h-3.5 text-blue-400" />
-                <span>Acesso Seguro via Web</span>
               </div>
-
             </div>
           </div>
 

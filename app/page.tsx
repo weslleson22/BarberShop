@@ -12,12 +12,12 @@ import Footer from '@/components/landing/Footer'
 export default function HomePage() {
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      document.title = 'AgendaSaaS | Plataforma de Agendamento de Serviços Online'
+      document.title = 'BarberShop Cloud | Plataforma de Gestão e Agendamento para Barbearias'
     }
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-white selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       <Header />
       <Hero />
       <Benefits />

@@ -42,7 +42,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso restrito' }, { status: 403 })
     }
 
-    const barbershopId = user.barbershopId
+    let barbershopId = user.barbershopId
+    if (!barbershopId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { barbershopId: true }
+      })
+      barbershopId = dbUser?.barbershopId || null
+    }
+
     if (!barbershopId) {
       return NextResponse.json({ error: 'Barbearia não identificada' }, { status: 400 })
     }
@@ -58,10 +66,10 @@ export async function GET(request: NextRequest) {
     })
 
     const metadata = parseBarbershopMetadata(barbershop?.description)
-    const expensesList = metadata.expenses || []
-    const inventoryList = metadata.inventory || []
+    const expensesList = Array.isArray(metadata?.expenses) ? metadata.expenses : []
+    const inventoryList = Array.isArray(metadata?.inventory) ? metadata.inventory : []
 
-    // 2. Carrega todos os agendamentos da barbearia
+    // 2. Carrega todos os agendamentos da barbearia (SEM selecionar avatar base64 para evitar limite P6009 de 5MB do Prisma Accelerate em deploy)
     const appointments = await prisma.appointment.findMany({
       where: { barbershopId },
       select: {
@@ -76,7 +84,6 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             phone: true,
-            avatar: true,
           },
         },
         clientId: true,
@@ -102,15 +109,21 @@ export async function GET(request: NextRequest) {
       orderBy: { startTime: 'desc' },
     })
 
-    // 3. Carrega todos os barbeiros e serviços cadastrados para garantir integridade do catálogo
+    // 3. Carrega todos os barbeiros e profissionais que atendem na barbearia
     const allBarbers = await prisma.user.findMany({
-      where: { barbershopId, role: 'BARBER' },
-      select: { id: true, name: true, email: true, phone: true, avatar: true },
+      where: {
+        barbershopId,
+        OR: [
+          { role: 'BARBER' },
+          { appointments: { some: { barbershopId } } }
+        ]
+      },
+      select: { id: true, name: true, email: true, phone: true },
     })
 
     const allServices = await prisma.service.findMany({
-      where: { barbershopId, isActive: true },
-      select: { id: true, name: true, price: true, duration: true },
+      where: { barbershopId },
+      select: { id: true, name: true, price: true, duration: true, isActive: true },
     })
 
     const allClients = await prisma.client.findMany({
@@ -131,7 +144,7 @@ export async function GET(request: NextRequest) {
 
     const monthCompletedAppointments = completedAppointments.filter((a) => {
       const d = new Date(a.startTime)
-      return d.getFullYear() === currentYear && d.getMonth() === currentMonth
+      return !isNaN(d.getTime()) && d.getFullYear() === currentYear && d.getMonth() === currentMonth
     })
     const monthRevenue = monthCompletedAppointments.reduce((sum, a) => sum + (Number(a.totalAmount) || 0), 0)
     const averageTicket = completedCount > 0 ? totalRevenue / completedCount : 0
@@ -139,15 +152,15 @@ export async function GET(request: NextRequest) {
     // -------------------------------------------------------------
     // SUBITEM 1: MÉTRICAS DE GASTOS DO ESTABELECIMENTO
     // -------------------------------------------------------------
-    const totalExpensesAmount = expensesList.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
-    const monthExpensesList = expensesList.filter((e) => e.dueDate.startsWith(currentMonthPrefix))
-    const monthExpensesAmount = monthExpensesList.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+    const totalExpensesAmount = expensesList.reduce((sum, e) => sum + (Number(e?.amount) || 0), 0)
+    const monthExpensesList = expensesList.filter((e) => typeof e?.dueDate === 'string' && e.dueDate.startsWith(currentMonthPrefix))
+    const monthExpensesAmount = monthExpensesList.reduce((sum, e) => sum + (Number(e?.amount) || 0), 0)
 
     const paidExpensesAmount = expensesList
-      .filter((e) => e.status === 'PAID')
-      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
-    const pendingExpensesList = expensesList.filter((e) => e.status === 'PENDING')
-    const pendingExpensesAmount = pendingExpensesList.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+      .filter((e) => e?.status === 'PAID')
+      .reduce((sum, e) => sum + (Number(e?.amount) || 0), 0)
+    const pendingExpensesList = expensesList.filter((e) => e?.status === 'PENDING')
+    const pendingExpensesAmount = pendingExpensesList.reduce((sum, e) => sum + (Number(e?.amount) || 0), 0)
 
     // Lucro Líquido Real do Mês (Faturamento - Gastos)
     const netProfitMonth = monthRevenue - monthExpensesAmount
@@ -156,8 +169,8 @@ export async function GET(request: NextRequest) {
     // Distribuição de Gastos por Categoria
     const categoryTotals: Record<string, number> = {}
     expensesList.forEach((e) => {
-      const cat = e.category || 'OTHER'
-      categoryTotals[cat] = (categoryTotals[cat] || 0) + (Number(e.amount) || 0)
+      const cat = e?.category || 'OTHER'
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + (Number(e?.amount) || 0)
     })
 
     const expensesByCategory = Object.entries(categoryTotals).map(([cat, amount]) => ({
@@ -168,7 +181,7 @@ export async function GET(request: NextRequest) {
     })).sort((a, b) => b.amount - a.amount)
 
     // Capital investido no estoque
-    const inventoryTotalCost = inventoryList.reduce((sum, p) => sum + (Number(p.currentStock) || 0) * (Number(p.costPrice) || 0), 0)
+    const inventoryTotalCost = inventoryList.reduce((sum, p) => sum + (Number(p?.currentStock) || 0) * (Number(p?.costPrice) || 0), 0)
 
     // -------------------------------------------------------------
     // SUBITEM 2: DESEMPENHO DOS BARBEIROS (QUEM MAIS ATENDEU)
@@ -192,10 +205,10 @@ export async function GET(request: NextRequest) {
     allBarbers.forEach((b) => {
       barberMap[b.id] = {
         id: b.id,
-        name: b.name,
-        email: b.email,
-        phone: b.phone,
-        avatar: b.avatar,
+        name: b.name || 'Profissional',
+        email: b.email || '',
+        phone: b.phone || null,
+        avatar: null,
         completedCount: 0,
         totalCount: 0,
         cancelledCount: 0,
@@ -212,7 +225,7 @@ export async function GET(request: NextRequest) {
           name: apt.barber?.name || 'Profissional',
           email: apt.barber?.email || '',
           phone: apt.barber?.phone || null,
-          avatar: apt.barber?.avatar || null,
+          avatar: null,
           completedCount: 0,
           totalCount: 0,
           cancelledCount: 0,
@@ -233,11 +246,15 @@ export async function GET(request: NextRequest) {
       .map((b) => ({
         ...b,
         averageTicket: b.completedCount > 0 ? b.revenue / b.completedCount : 0,
-        completionRate: b.totalCount > 0 ? Math.round((b.completedCount / b.totalCount) * 100) : 100,
+        completionRate: b.totalCount > 0 ? Math.round((b.completedCount / b.totalCount) * 100) : 0,
       }))
-      .sort((a, b) => b.completedCount - a.completedCount || b.revenue - a.revenue)
+      .sort((a, b) => b.completedCount - a.completedCount || b.totalCount - a.totalCount || b.revenue - a.revenue)
 
-    const topBarber = barberRanking.length > 0 && barberRanking[0].completedCount > 0 ? barberRanking[0] : null
+    const topBarber = barberRanking.length > 0 && (barberRanking[0].completedCount > 0 || barberRanking[0].totalCount > 0)
+      ? barberRanking[0]
+      : null
+
+    const totalBarbersCount = Math.max(allBarbers.length, Object.keys(barberMap).length)
 
     // -------------------------------------------------------------
     // SUBITEM 3: MÉTRICAS DOS CLIENTES
@@ -259,9 +276,9 @@ export async function GET(request: NextRequest) {
     allClients.forEach((c) => {
       clientMap[c.id] = {
         id: c.id,
-        name: c.name,
-        phone: c.phone,
-        email: c.email,
+        name: c.name || 'Cliente',
+        phone: c.phone || '',
+        email: c.email || null,
         totalVisits: 0,
         totalSpent: 0,
         lastVisitDate: null,
@@ -289,9 +306,12 @@ export async function GET(request: NextRequest) {
         clientMap[apt.clientId].totalVisits++
         clientMap[apt.clientId].totalSpent += Number(apt.totalAmount) || 0
 
-        const aptDateStr = new Date(apt.startTime).toISOString()
-        if (!clientMap[apt.clientId].lastVisitDate || aptDateStr > clientMap[apt.clientId].lastVisitDate!) {
-          clientMap[apt.clientId].lastVisitDate = aptDateStr
+        const aptDate = new Date(apt.startTime)
+        if (!isNaN(aptDate.getTime())) {
+          const aptDateStr = aptDate.toISOString()
+          if (!clientMap[apt.clientId].lastVisitDate || aptDateStr > clientMap[apt.clientId].lastVisitDate!) {
+            clientMap[apt.clientId].lastVisitDate = aptDateStr
+          }
         }
       }
     })
@@ -301,16 +321,18 @@ export async function GET(request: NextRequest) {
 
     const newClientsThisMonth = allClients.filter((c) => {
       const d = new Date(c.createdAt)
-      return d.getFullYear() === currentYear && d.getMonth() === currentMonth
+      return !isNaN(d.getTime()) && d.getFullYear() === currentYear && d.getMonth() === currentMonth
     }).length
 
     const activeClients = clientRanking.filter((c) => {
       if (!c.lastVisitDate) return false
-      return new Date(c.lastVisitDate) >= sixtyDaysAgo
+      const d = new Date(c.lastVisitDate)
+      return !isNaN(d.getTime()) && d >= sixtyDaysAgo
     }).length
 
-    const retentionRate = allClients.length > 0 ? Math.round((activeClients / allClients.length) * 100) : 0
-    const averageSpendPerClient = allClients.length > 0 ? totalRevenue / allClients.length : 0
+    const totalClientsCount = Math.max(allClients.length, Object.keys(clientMap).length)
+    const retentionRate = totalClientsCount > 0 ? Math.round((activeClients / totalClientsCount) * 100) : 0
+    const averageSpendPerClient = totalClientsCount > 0 ? totalRevenue / totalClientsCount : 0
 
     // -------------------------------------------------------------
     // SUBITEM 4: MÉTRICAS DOS SERVIÇOS E PREÇOS
@@ -330,7 +352,7 @@ export async function GET(request: NextRequest) {
     allServices.forEach((s) => {
       serviceMap[s.id] = {
         id: s.id,
-        name: s.name,
+        name: s.name || 'Serviço',
         price: Number(s.price) || 0,
         duration: s.duration || 30,
         appointmentCount: 0,
@@ -338,7 +360,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    completedAppointments.forEach((apt) => {
+    appointments.forEach((apt) => {
       if (!apt.serviceId) return
       if (!serviceMap[apt.serviceId]) {
         serviceMap[apt.serviceId] = {
@@ -351,8 +373,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      serviceMap[apt.serviceId].appointmentCount++
-      serviceMap[apt.serviceId].totalRevenue += Number(apt.totalAmount) || 0
+      if (apt.status === 'COMPLETED') {
+        serviceMap[apt.serviceId].appointmentCount++
+        serviceMap[apt.serviceId].totalRevenue += Number(apt.totalAmount) || 0
+      }
     })
 
     const totalServiceRevenue = Object.values(serviceMap).reduce((sum, s) => sum + s.totalRevenue, 0)
@@ -364,10 +388,13 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.appointmentCount - a.appointmentCount || b.totalRevenue - a.totalRevenue)
 
-    const topService = serviceRanking.length > 0 && serviceRanking[0].appointmentCount > 0 ? serviceRanking[0] : null
+    const topService = serviceRanking.length > 0 && (serviceRanking[0].appointmentCount > 0 || serviceRanking[0].totalRevenue > 0)
+      ? serviceRanking[0]
+      : null
     const highestRevenueService = [...serviceRanking].sort((a, b) => b.totalRevenue - a.totalRevenue)[0] || null
-    const averageServicePrice = allServices.length > 0
-      ? allServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0) / allServices.length
+    const totalCatalogServices = Math.max(allServices.length, Object.keys(serviceMap).length)
+    const averageServicePrice = totalCatalogServices > 0
+      ? Object.values(serviceMap).reduce((sum, s) => sum + (Number(s.price) || 0), 0) / totalCatalogServices
       : 0
 
     // -------------------------------------------------------------
@@ -375,15 +402,19 @@ export async function GET(request: NextRequest) {
     // -------------------------------------------------------------
     const last7Days: Array<{ date: string; name: string; revenue: number; appointments: number }> = []
     const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    const pad = (n: number) => String(n).padStart(2, '0')
 
     for (let i = 6; i >= 0; i--) {
       const d = new Date()
       d.setDate(d.getDate() - i)
-      const dateStr = d.toISOString().split('T')[0]
-      const name = `${dayNames[d.getDay()]} (${d.getDate()}/${d.getMonth() + 1})`
+      const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+      const name = `${dayNames[d.getDay()]} (${pad(d.getDate())}/${pad(d.getMonth() + 1)})`
 
       const dayApts = completedAppointments.filter((a) => {
-        return new Date(a.startTime).toISOString().startsWith(dateStr)
+        const aptDate = new Date(a.startTime)
+        if (isNaN(aptDate.getTime())) return false
+        const aptDateStr = `${aptDate.getFullYear()}-${pad(aptDate.getMonth() + 1)}-${pad(aptDate.getDate())}`
+        return aptDateStr === dateStr
       })
 
       const dayRev = dayApts.reduce((sum, a) => sum + (Number(a.totalAmount) || 0), 0)
@@ -405,9 +436,9 @@ export async function GET(request: NextRequest) {
         cancelledAppointments: cancelledCount,
         completionRate,
         averageTicket,
-        totalClients: allClients.length,
-        totalServices: allServices.length,
-        totalBarbers: allBarbers.length,
+        totalClients: totalClientsCount,
+        totalServices: totalCatalogServices,
+        totalBarbers: totalBarbersCount,
       },
       expenses: {
         totalAmount: totalExpensesAmount,
@@ -424,13 +455,13 @@ export async function GET(request: NextRequest) {
       barbers: {
         ranking: barberRanking,
         topBarber,
-        totalBarbers: allBarbers.length,
+        totalBarbers: totalBarbersCount,
       },
       clients: {
-        totalClients: allClients.length,
+        totalClients: totalClientsCount,
         newThisMonth: newClientsThisMonth,
         activeClientsCount: activeClients,
-        inactiveClientsCount: Math.max(0, allClients.length - activeClients),
+        inactiveClientsCount: Math.max(0, totalClientsCount - activeClients),
         retentionRate,
         averageSpendPerClient,
         topClients: clientRanking.slice(0, 15),
@@ -439,7 +470,7 @@ export async function GET(request: NextRequest) {
         ranking: serviceRanking,
         topService,
         highestRevenueService,
-        totalCatalogServices: allServices.length,
+        totalCatalogServices,
         averageServicePrice,
       },
       revenueEvolution: last7Days,

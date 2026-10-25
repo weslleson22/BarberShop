@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, X, Calendar, ArrowRight, User, Building2, LogIn } from 'lucide-react'
+import { Menu, X, Scissors, ArrowRight, User, Building2, LogIn } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -26,140 +28,137 @@ export default function Header() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#090D16]/80 backdrop-blur-xl border-b border-white/5 transition-all">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           
-          {/* Logo da Plataforma */}
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white">
-              <Calendar className="w-5 h-5 text-white" />
+          {/* Logo da Plataforma shadcn/ui */}
+          <Link href="/" className="flex items-center gap-2.5 font-bold tracking-tight text-foreground hover:opacity-90 transition-opacity">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <Scissors className="h-5 w-5" />
             </div>
             <div>
-              <span className="text-xl font-bold tracking-tight text-white block leading-none">
-                Agenda<span className="text-blue-400">SaaS</span>
-              </span>
-              <span className="text-[10px] text-slate-400 tracking-wider uppercase font-medium">
-                Gestão e Agendamentos
-              </span>
+              <span className="text-lg font-extrabold tracking-tight">BarberShop<span className="text-primary">.</span></span>
             </div>
           </Link>
 
           {/* Menu Desktop */}
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
-            <a href="#home" className="hover:text-blue-400 transition-colors">Início</a>
-            <a href="#recursos" className="hover:text-blue-400 transition-colors">Recursos do Sistema</a>
-            <a href="#beneficios" className="hover:text-blue-400 transition-colors">Vantagens</a>
-            <a href="#planos" className="hover:text-blue-400 transition-colors">Planos & Preços</a>
+          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-muted-foreground">
+            <a href="#home" className="hover:text-foreground transition-colors">Início</a>
+            <a href="#recursos" className="hover:text-foreground transition-colors">Recursos</a>
+            <a href="#como-funciona" className="hover:text-foreground transition-colors">Como Funciona</a>
+            <a href="#planos" className="hover:text-foreground transition-colors">Planos & Preços</a>
           </nav>
 
           {/* Ações Desktop */}
           <div className="hidden md:flex items-center space-x-3">
+            <ThemeToggle 
+              variant="outline" 
+              className="h-9 w-9 rounded-xl border border-border bg-card/80 text-foreground hover:bg-accent shadow-xs flex items-center justify-center cursor-pointer"
+            />
+
             {user ? (
-              <Link
-                href={getUserDestination()}
-                className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-colors flex items-center space-x-2"
-              >
-                <User className="w-4 h-4 text-blue-100" />
-                <span>{getUserLabel()}</span>
-                <ArrowRight className="w-4 h-4 text-blue-100" />
-              </Link>
+              <Button asChild size="sm" className="gap-2 font-semibold shadow-sm">
+                <Link href={getUserDestination()}>
+                  <User className="w-4 h-4" />
+                  <span>{getUserLabel()}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
             ) : (
               <>
-                <Link
-                  href="/register"
-                  className="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl transition-all flex items-center space-x-1.5"
-                >
-                  <Building2 className="w-4 h-4 text-slate-400" />
-                  <span>Cadastre sua Empresa</span>
-                </Link>
+                <Button asChild variant="outline" size="sm" className="gap-1.5 font-medium">
+                  <Link href="/register">
+                    <Building2 className="w-4 h-4" />
+                    <span>Cadastrar Barbearia</span>
+                  </Link>
+                </Button>
 
-                <Link
-                  href="/login"
-                  className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-colors flex items-center space-x-2 group"
-                >
-                  <LogIn className="w-4 h-4 text-blue-100" />
-                  <span>Entrar na Conta</span>
-                  <ArrowRight className="w-4 h-4 text-blue-100 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                <Button asChild size="sm" className="gap-2 font-semibold shadow-sm">
+                  <Link href="/login">
+                    <LogIn className="w-4 h-4" />
+                    <span>Entrar na Conta</span>
+                  </Link>
+                </Button>
               </>
             )}
           </div>
 
-          {/* Botão Menu Mobile */}
+          {/* Botão Menu Mobile & ThemeToggle */}
           <div className="md:hidden flex items-center gap-2">
-            <button
+            <ThemeToggle 
+              variant="outline" 
+              className="h-9 w-9 rounded-xl border border-border bg-card/80 text-foreground hover:bg-accent shadow-xs flex items-center justify-center cursor-pointer"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
               aria-label="Abrir menu"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
           </div>
         </div>
 
         {/* Menu Mobile */}
         {isMenuOpen && (
-          <div className="md:hidden bg-gray-900 border-t border-gray-800 py-6 px-4 space-y-4 rounded-b-2xl shadow-xl animate-in slide-in-from-top-2 duration-200">
-            <nav className="flex flex-col space-y-3 text-base font-medium text-slate-300">
+          <div className="md:hidden bg-card border-b border-border py-6 px-4 space-y-4 rounded-b-2xl shadow-xl animate-in slide-in-from-top-2 duration-200">
+            <nav className="flex flex-col space-y-3 text-base font-medium text-muted-foreground">
               <a
                 href="#home"
                 onClick={() => setIsMenuOpen(false)}
-                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+                className="px-3 py-2 rounded-lg hover:bg-muted hover:text-foreground transition-colors"
               >
                 Início
               </a>
               <a
                 href="#recursos"
                 onClick={() => setIsMenuOpen(false)}
-                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+                className="px-3 py-2 rounded-lg hover:bg-muted hover:text-foreground transition-colors"
               >
-                Recursos do Sistema
+                Recursos
               </a>
               <a
-                href="#beneficios"
+                href="#como-funciona"
                 onClick={() => setIsMenuOpen(false)}
-                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+                className="px-3 py-2 rounded-lg hover:bg-muted hover:text-foreground transition-colors"
               >
-                Vantagens
+                Como Funciona
               </a>
               <a
                 href="#planos"
                 onClick={() => setIsMenuOpen(false)}
-                className="px-3 py-2 rounded-lg hover:bg-white/5 hover:text-blue-400 transition-colors"
+                className="px-3 py-2 rounded-lg hover:bg-muted hover:text-foreground transition-colors"
               >
                 Planos & Preços
               </a>
             </nav>
 
-            <div className="pt-4 border-t border-white/10 space-y-3">
+            <div className="pt-4 border-t border-border space-y-2.5">
               {user ? (
-                <Link
-                  href={getUserDestination()}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center space-x-2"
-                >
-                  <User className="w-4 h-4" />
-                  <span>{getUserLabel()}</span>
-                </Link>
+                <Button asChild className="w-full gap-2 font-semibold">
+                  <Link href={getUserDestination()} onClick={() => setIsMenuOpen(false)}>
+                    <User className="w-4 h-4" />
+                    <span>{getUserLabel()}</span>
+                  </Link>
+                </Button>
               ) : (
                 <>
-                  <Link
-                    href="/login"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    <span>Entrar na Conta</span>
-                  </Link>
+                  <Button asChild className="w-full gap-2 font-semibold">
+                    <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                      <LogIn className="w-4 h-4" />
+                      <span>Entrar na Conta</span>
+                    </Link>
+                  </Button>
 
-                  <Link
-                    href="/register"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="w-full py-3 px-4 text-center block text-slate-300 hover:text-white border border-slate-700/80 rounded-xl hover:bg-white/5 transition-all text-sm font-medium"
-                  >
-                    Cadastrar Empresa
-                  </Link>
+                  <Button asChild variant="outline" className="w-full gap-2 font-medium">
+                    <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                      <Building2 className="w-4 h-4" />
+                      <span>Cadastrar Barbearia</span>
+                    </Link>
+                  </Button>
                 </>
               )}
             </div>

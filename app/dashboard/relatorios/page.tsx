@@ -30,6 +30,7 @@ import {
   Calendar,
   ChevronRight,
   ArrowUpRight,
+  Loader2,
 } from 'lucide-react'
 import {
   Card,
@@ -199,55 +200,104 @@ export default function RelatoriosPage() {
         const data = await res.json()
         setReportData(data)
       } else {
-        // Fallback para api anterior caso necessário
-        const fallbackRes = await fetch('/api/dashboard/stats', { headers, credentials: 'include' })
-        if (fallbackRes.ok) {
-          const stats = await fallbackRes.json()
-          setReportData({
-            summary: {
-              totalRevenue: stats.revenue?.total || 0,
-              monthRevenue: stats.revenue?.thisMonth || 0,
-              totalAppointments: stats.appointments?.total || 0,
-              completedAppointments: stats.appointments?.completed || 0,
-              cancelledAppointments: stats.appointments?.cancelled || 0,
-              completionRate: 100,
-              averageTicket: stats.averageTicket?.value || 0,
-              totalClients: stats.clients?.total || 0,
-              totalServices: stats.services?.total || 0,
-              totalBarbers: stats.barbers?.total || 0,
-            },
-            expenses: {
-              totalAmount: 0,
-              monthAmount: 0,
-              paidAmount: 0,
-              pendingAmount: 0,
-              pendingCount: 0,
-              netProfitMonth: stats.revenue?.thisMonth || 0,
-              netMarginMonth: 100,
-              byCategory: [],
-              inventoryCost: 0,
-              recentExpenses: [],
-            },
-            barbers: { ranking: [], topBarber: null, totalBarbers: 0 },
-            clients: {
-              totalClients: stats.clients?.total || 0,
-              newThisMonth: stats.clients?.newThisMonth || 0,
-              activeClientsCount: stats.clients?.total || 0,
-              inactiveClientsCount: 0,
-              retentionRate: 100,
-              averageSpendPerClient: 0,
-              topClients: [],
-            },
-            services: {
-              ranking: [],
-              topService: null,
-              highestRevenueService: null,
-              totalCatalogServices: 0,
-              averageServicePrice: 0,
-            },
-            revenueEvolution: [],
+        console.warn('Endpoint /api/dashboard/reports retornou status:', res.status, '- acionando fallback estruturado...')
+        const [fallbackStatsRes, appointmentsRes] = await Promise.all([
+          fetch('/api/dashboard/stats', { headers, credentials: 'include' }).catch(() => null),
+          fetch('/api/appointments', { headers, credentials: 'include' }).catch(() => null),
+        ])
+
+        const stats = fallbackStatsRes?.ok ? await fallbackStatsRes.json().catch(() => null) : null
+        const allAppointments = appointmentsRes?.ok ? await appointmentsRes.json().catch(() => []) : []
+
+        // Calcula ranking real de barbeiros a partir de allAppointments caso disponível
+        const bMap: Record<string, any> = {}
+        if (Array.isArray(allAppointments)) {
+          allAppointments.forEach((apt: any) => {
+            const bId = apt.barberId || apt.barber?.id
+            if (!bId) return
+            if (!bMap[bId]) {
+              bMap[bId] = {
+                id: bId,
+                name: apt.barber?.name || 'Profissional',
+                email: apt.barber?.email || '',
+                phone: apt.barber?.phone || null,
+                avatar: null,
+                completedCount: 0,
+                totalCount: 0,
+                cancelledCount: 0,
+                revenue: 0,
+              }
+            }
+            bMap[bId].totalCount++
+            if (apt.status === 'COMPLETED') {
+              bMap[bId].completedCount++
+              bMap[bId].revenue += Number(apt.totalAmount) || 0
+            } else if (apt.status === 'CANCELLED') {
+              bMap[bId].cancelledCount++
+            }
           })
         }
+
+        const fallbackBarberRanking = Object.values(bMap)
+          .map((b: any) => ({
+            ...b,
+            averageTicket: b.completedCount > 0 ? b.revenue / b.completedCount : 0,
+            completionRate: b.totalCount > 0 ? Math.round((b.completedCount / b.totalCount) * 100) : 0,
+          }))
+          .sort((a: any, b: any) => b.completedCount - a.completedCount || b.totalCount - a.totalCount || b.revenue - a.revenue)
+
+        const fallbackTopBarber = fallbackBarberRanking.length > 0 && (fallbackBarberRanking[0].completedCount > 0 || fallbackBarberRanking[0].totalCount > 0)
+          ? fallbackBarberRanking[0]
+          : null
+
+        setReportData({
+          summary: {
+            totalRevenue: stats?.revenue?.total || 0,
+            monthRevenue: stats?.revenue?.thisMonth || 0,
+            totalAppointments: stats?.appointments?.total || (Array.isArray(allAppointments) ? allAppointments.length : 0),
+            completedAppointments: stats?.appointments?.completed || 0,
+            cancelledAppointments: stats?.appointments?.cancelled || 0,
+            completionRate: stats?.appointments?.total ? Math.round((stats.appointments.completed / stats.appointments.total) * 100) : 100,
+            averageTicket: stats?.averageTicket?.value || 0,
+            totalClients: stats?.clients?.total || 0,
+            totalServices: stats?.services?.total || 0,
+            totalBarbers: Math.max(stats?.barbers?.total || 0, fallbackBarberRanking.length),
+          },
+          expenses: {
+            totalAmount: 0,
+            monthAmount: 0,
+            paidAmount: 0,
+            pendingAmount: 0,
+            pendingCount: 0,
+            netProfitMonth: stats?.revenue?.thisMonth || 0,
+            netMarginMonth: 100,
+            byCategory: [],
+            inventoryCost: 0,
+            recentExpenses: [],
+          },
+          barbers: {
+            ranking: fallbackBarberRanking,
+            topBarber: fallbackTopBarber,
+            totalBarbers: Math.max(stats?.barbers?.total || 0, fallbackBarberRanking.length),
+          },
+          clients: {
+            totalClients: stats?.clients?.total || 0,
+            newThisMonth: stats?.clients?.newThisMonth || 0,
+            activeClientsCount: stats?.clients?.total || 0,
+            inactiveClientsCount: 0,
+            retentionRate: 100,
+            averageSpendPerClient: 0,
+            topClients: [],
+          },
+          services: {
+            ranking: [],
+            topService: null,
+            highestRevenueService: null,
+            totalCatalogServices: stats?.services?.total || 0,
+            averageServicePrice: 0,
+          },
+          revenueEvolution: [],
+        })
       }
     } catch (err) {
       console.error('Erro ao buscar relatórios:', err)
@@ -442,7 +492,7 @@ export default function RelatoriosPage() {
             <span>Barbeiros (Quem Mais Atendeu)</span>
             {barbers?.topBarber && (
               <Badge className="ml-1 text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                1º {barbers.topBarber.name.split(' ')[0]}
+                1º {barbers.topBarber.name ? barbers.topBarber.name.split(' ')[0] : 'Top 1'}
               </Badge>
             )}
           </button>
@@ -482,10 +532,19 @@ export default function RelatoriosPage() {
           </button>
         </div>
 
-        {/* ========================================================================= */}
-        {/* 1. SUBITEM: VISÃO GERAL & FATURAMENTO                                     */}
-        {/* ========================================================================= */}
-        {activeSubItem === 'visao_geral' && (
+        {loading && !reportData ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-3 bg-card border border-border rounded-xl shadow-sm">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-sm font-medium text-muted-foreground">
+              Carregando métricas e relatórios estratégicos...
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* ========================================================================= */}
+            {/* 1. SUBITEM: VISÃO GERAL & FATURAMENTO                                     */}
+            {/* ========================================================================= */}
+            {activeSubItem === 'visao_geral' && (
           <div className="space-y-8 animate-in fade-in">
             {/* 4 Cards de Métricas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -844,7 +903,7 @@ export default function RelatoriosPage() {
                           <span className="text-xs text-muted-foreground">Profissional Destaque</span>
                         </div>
                         <h2 className="text-xl sm:text-2xl font-black text-foreground mt-1">
-                          {barbers.topBarber.name}
+                          {barbers.topBarber.name || 'Profissional'}
                         </h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           Líder da equipe com o maior volume de atendimentos concluídos na barbearia.
@@ -911,9 +970,9 @@ export default function RelatoriosPage() {
                     </TableHeader>
                     <TableBody>
                       {barbers.ranking.map((barber, index) => {
-                        const isTop1 = index === 0 && barber.completedCount > 0
-                        const isTop2 = index === 1 && barber.completedCount > 0
-                        const isTop3 = index === 2 && barber.completedCount > 0
+                        const isTop1 = index === 0 && (barber.completedCount > 0 || barber.totalCount > 0)
+                        const isTop2 = index === 1 && (barber.completedCount > 0 || barber.totalCount > 0)
+                        const isTop3 = index === 2 && (barber.completedCount > 0 || barber.totalCount > 0)
 
                         return (
                           <TableRow key={barber.id} className={isTop1 ? 'bg-amber-500/5' : ''}>
@@ -1337,6 +1396,8 @@ export default function RelatoriosPage() {
               </div>
             </Card>
           </div>
+        )}
+          </>
         )}
       </main>
     </div>

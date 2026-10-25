@@ -17,7 +17,6 @@ import {
   AlertCircle,
   Loader2,
   ArrowLeft,
-  Sparkles,
   ShieldCheck,
   Check
 } from 'lucide-react'
@@ -178,14 +177,17 @@ export default function RegisterPage() {
               <ArrowLeft className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Início</span>
             </Link>
-            <ThemeToggle variant="ghost" size="sm" />
+            <ThemeToggle
+              variant="outline"
+              className="h-9 w-9 rounded-xl border border-border bg-card/80 text-foreground hover:bg-accent shadow-xs flex items-center justify-center cursor-pointer"
+            />
           </div>
         </div>
 
         {/* Centro: Formulário Centralizado */}
         <div className="flex flex-1 items-center justify-center py-6 sm:py-8">
           <div className="w-full max-w-xl space-y-6">
-            
+
             {isSuccess && registeredData ? (
               <Card className="border-border bg-card text-card-foreground shadow-sm animate-in fade-in zoom-in-95">
                 <CardHeader className="text-center pb-4">
@@ -259,7 +261,7 @@ export default function RegisterPage() {
 
                 {/* Formulário Principal */}
                 <form onSubmit={handleSubmit} className="grid gap-5">
-                  
+
                   {/* Seção 1: Estabelecimento */}
                   <div className="space-y-3.5">
                     <div className="flex items-center gap-2 border-b border-border pb-2">
@@ -317,7 +319,7 @@ export default function RegisterPage() {
                             id="establishmentPhone"
                             name="establishmentPhone"
                             required
-                            placeholder="(11) 98765-4321"
+                            placeholder="(DD) 99999-9999"
                             value={formData.establishmentPhone}
                             onChange={handleChange}
                             className="pl-9 h-10"
@@ -398,7 +400,7 @@ export default function RegisterPage() {
                             id="adminPhone"
                             name="adminPhone"
                             required
-                            placeholder="(11) 98765-4321"
+                            placeholder="(DD) 99999-9999"
                             value={formData.adminPhone}
                             onChange={handleChange}
                             className="pl-9 h-10"
@@ -543,19 +545,12 @@ export default function RegisterPage() {
           sizes="(min-width: 1024px) 50vw, 100vw"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.6] dark:grayscale-0 transition-transform duration-700 hover:scale-105"
         />
-        
+
         {/* Gradiente Escuro Sofisticado */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
         {/* Conteúdo sobreposto na imagem */}
-        <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
-          {/* Badge Superior */}
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-3.5 py-1 text-xs font-medium text-white backdrop-blur-md">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span>SaaS Multi-Tenant para Barbearias Modernas</span>
-            </div>
-          </div>
+        <div className="relative z-10 flex h-full flex-col justify-end p-10 text-white">
 
           {/* Destaques e Prova de Valor */}
           <div className="space-y-4 max-w-lg">

@@ -36,7 +36,7 @@ export function ThemeToggle({
       <Button
         variant={variant}
         size="icon"
-        className={cn("h-8 w-8 text-sidebar-foreground/70", className)}
+        className={cn("h-9 w-9 text-foreground/80", className)}
         disabled
         aria-label="Alternar tema"
         {...props}
@@ -46,7 +46,7 @@ export function ThemeToggle({
     )
   }
 
-  // Toggle rápido de 1 clique (ideal para header/footer de sidebar)
+  // Toggle rápido de 1 clique (ideal para header/footer e navegação)
   if (!showDropdown) {
     const isDark = resolvedTheme === "dark" || theme === "dark"
     return (
@@ -55,15 +55,15 @@ export function ThemeToggle({
         size="icon"
         onClick={() => setTheme(isDark ? "light" : "dark")}
         className={cn(
-          "h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors",
+          "h-9 w-9 text-foreground hover:text-foreground hover:bg-accent transition-colors relative cursor-pointer",
           className
         )}
         title={isDark ? "Mudar para modo claro" : "Mudar para modo escuro"}
         aria-label="Alternar tema"
         {...props}
       >
-        <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-amber-500" />
+        <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-sky-400" />
         <span className="sr-only">Alternar tema</span>
       </Button>
     )
@@ -77,14 +77,14 @@ export function ThemeToggle({
           variant={variant}
           size="icon"
           className={cn(
-            "h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors",
+            "h-9 w-9 text-foreground hover:text-foreground hover:bg-accent transition-colors relative cursor-pointer",
             className
           )}
           aria-label="Selecionar tema"
           {...props}
         >
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-amber-500" />
+          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-sky-400" />
           <span className="sr-only">Selecionar tema</span>
         </Button>
       </DropdownMenuTrigger>
