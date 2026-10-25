@@ -87,11 +87,7 @@ export async function GET(request: NextRequest) {
         p.status === 'ACTIVE' &&
         p.isActive === true &&
         !p.deletedAt &&
-        p.planType === 'PAID' &&
-        Number(p.price) > 0 &&
-        !isPlanDiscontinued(p) &&
-        !discontinuedNames.has((p.name || '').toLowerCase().trim()) &&
-        !discontinuedPlanIds.has(p.id)
+        Number(p.price) > 0
     )
 
     // Inicializa o mapa com os planos ativos salvos no banco
@@ -115,15 +111,11 @@ export async function GET(request: NextRequest) {
           const apId = ap.id || ''
           const apExtId = ap.externalId || ''
 
-          // Se o produto na AbacatePay corresponde a um plano descontinuado, remove se estiver presente
+          // Se o produto na AbacatePay corresponde a um plano descontinuado por ID, ignora
           if (
             (apId && discontinuedProductIds.has(apId)) ||
-            (apExtId && discontinuedPlanIds.has(apExtId)) ||
-            (apName && discontinuedNames.has(apName))
+            (apExtId && discontinuedPlanIds.has(apExtId))
           ) {
-            if (apExtId && validPlansMap.has(apExtId)) {
-              validPlansMap.delete(apExtId)
-            }
             continue
           }
 

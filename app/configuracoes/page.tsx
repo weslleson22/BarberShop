@@ -116,8 +116,8 @@ function ConfiguracoesContent() {
   const [togglingBarberId, setTogglingBarberId] = useState<string | null>(null)
   const [barberWorkDays, setBarberWorkDays] = useState<Record<string, DayOfWeekKey[]>>({})
 
-  // Apenas usuários com papel ADMIN possuem permissão para visualizar e gerenciar as configurações da Barbearia, Link Público e Horários
-  const canManageShop = user?.role === 'ADMIN'
+  // Usuários com papel ADMIN ou DEVELOPER possuem permissão para visualizar e gerenciar as configurações da Barbearia, Link Público e Horários
+  const canManageShop = user?.role === 'ADMIN' || user?.role === 'DEVELOPER'
 
   // Redireciona para perfil caso usuário sem permissão tente alternar para abas restritas
   useEffect(() => {

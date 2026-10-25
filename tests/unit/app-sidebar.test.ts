@@ -40,17 +40,19 @@ describe('AppSidebar — Regras Estruturais e RBAC da Navegação Lateral shadcn
     const sections = getSidebarSections('DEVELOPER')
     const allTitles = sections.flatMap((s) => s.items.map((i) => i.title))
 
-    it('possui as seções Platform, SaaS & Faturamento e Monitoramento', () => {
+    it('possui as seções Platform, SaaS & Faturamento, Monitoramento e Configuração', () => {
       const labels = sections.map((s) => s.label)
       expect(labels).toContain('Platform')
       expect(labels).toContain('SaaS & Faturamento')
-      expect(labels).toContain('Monitoramento & Sistema')
+      expect(labels.some((l) => l.includes('Monitoramento'))).toBeTruthy()
+      expect(labels).toContain('Configuração')
     })
 
     it('contém rotas operacionais do desenvolvedor', () => {
       expect(allTitles).toContain('Dashboard SaaS')
       expect(allTitles).toContain('Barbearias')
       expect(allTitles).toContain('Usuários da Plataforma')
+      expect(allTitles).toContain('Configuração do Estabelecimento')
       expect(allTitles).toContain('Configurações Globais')
     })
 
@@ -90,7 +92,7 @@ describe('AppSidebar — Regras Estruturais e RBAC da Navegação Lateral shadcn
       expect(allTitles).toContain('Serviços & Preços')
       expect(allTitles).toContain('Equipe de Barbeiros')
       expect(allTitles).toContain('Configurações da Conta')
-      expect(allTitles).toContain('Perfil do Estabelecimento')
+      expect(allTitles).toContain('Configuração do Estabelecimento')
     })
 
     it('não exibe o painel global do DEVELOPER para ADMIN', () => {

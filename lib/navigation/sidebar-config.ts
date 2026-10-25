@@ -150,6 +150,20 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             url: "/developer/backup",
             icon: HardDrive,
           },
+        ],
+      },
+
+      {
+        label: "Configuração",
+        items: [
+          {
+            title: "Configuração do Estabelecimento",
+            icon: Store,
+            items: [
+              { title: "Dados da Barbearia", url: "/configuracoes?tab=barbershop" },
+              { title: "Horários de Atendimento", url: "/configuracoes?tab=hours" },
+            ],
+          },
           {
             title: "Configurações Globais",
             url: "/configuracoes",
@@ -247,7 +261,7 @@ export function getSidebarSections(role: UserRole): NavSection[] {
         ],
       },
       {
-        label: "Configurações",
+        label: "Configuração",
         items: [
           {
             title: "Configurações da Conta",
@@ -255,7 +269,7 @@ export function getSidebarSections(role: UserRole): NavSection[] {
             icon: Settings,
           },
           {
-            title: "Perfil do Estabelecimento",
+            title: "Configuração do Estabelecimento",
             icon: Store,
             items: [
               { title: "Dados da Barbearia", url: "/configuracoes?tab=barbershop" },
