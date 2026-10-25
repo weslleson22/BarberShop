@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { 
@@ -18,6 +19,42 @@ import { Badge } from '@/components/ui/badge'
 
 export default function Features() {
   const router = useRouter()
+
+  // Animação de Chegada Girando da Direita para a Imagem da Agenda (Ciclo a cada 1 minuto)
+  const [agendaAnimPhase, setAgendaAnimPhase] = useState<'entering' | 'idle' | 'exiting'>('entering')
+
+  useEffect(() => {
+    let exitTimeout: NodeJS.Timeout
+    let enterTimeout: NodeJS.Timeout
+
+    // Após a animação inicial de entrada (1.4s), fixa o estado em repouso (idle)
+    const initialTimer = setTimeout(() => {
+      setAgendaAnimPhase('idle')
+    }, 1400)
+
+    // Repete o ciclo a cada 1 minuto (60.000 ms)
+    const cycleInterval = setInterval(() => {
+      // 1. Saída girando para a direita (750ms)
+      setAgendaAnimPhase('exiting')
+
+      // 2. Imediatamente após a saída, ressurge girando vindo da direita
+      exitTimeout = setTimeout(() => {
+        setAgendaAnimPhase('entering')
+
+        // 3. Ao concluir a entrada (1.4s), volta para o repouso no local
+        enterTimeout = setTimeout(() => {
+          setAgendaAnimPhase('idle')
+        }, 1400)
+      }, 750)
+    }, 60000)
+
+    return () => {
+      clearTimeout(initialTimer)
+      clearInterval(cycleInterval)
+      clearTimeout(exitTimeout)
+      clearTimeout(enterTimeout)
+    }
+  }, [])
 
   const features = [
     {
@@ -53,7 +90,7 @@ export default function Features() {
   ]
 
   return (
-    <section id="recursos" className="py-24 bg-background border-t border-border relative">
+    <section id="recursos" className="py-24 bg-background border-t border-border relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Cabeçalho da Seção */}
@@ -74,7 +111,7 @@ export default function Features() {
         </div>
 
         {/* Vitrine Visual Showcase: Imagem Real da Agenda do Sistema */}
-        <div className="mb-20 rounded-2xl border border-border bg-card p-6 sm:p-10 shadow-lg">
+        <div className="mb-20 rounded-2xl border border-border bg-card p-6 sm:p-10 shadow-lg overflow-hidden">
           <div className="grid lg:grid-cols-12 gap-10 items-center">
             
             <div className="lg:col-span-6 space-y-6">
@@ -133,8 +170,16 @@ export default function Features() {
             </div>
 
             {/* Imagem Real da Agenda da Barbearia (da pasta img/page agenda.png) */}
-            <div className="lg:col-span-6 relative">
-              <div className="relative rounded-2xl border border-border bg-card shadow-2xl overflow-hidden group">
+            <div className="lg:col-span-6 relative [perspective:1200px]">
+              <div 
+                className={`relative rounded-2xl border border-border bg-card shadow-2xl overflow-hidden group ${
+                  agendaAnimPhase === 'entering'
+                    ? 'animate-arrive-spin'
+                    : agendaAnimPhase === 'exiting'
+                    ? 'animate-exit-spin'
+                    : ''
+                }`}
+              >
                 
                 {/* Janela estilo navegador shadcn (sem barbershop.cloud/agenda) */}
                 <div className="flex items-center px-4 py-3 bg-muted/60 border-b border-border">

@@ -26,6 +26,42 @@ export default function Hero() {
   const [displayedText, setDisplayedText] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Animação de Chegada Girando da Direita para o Card de Faturamento (Ciclo a cada 2 minutos)
+  const [cardAnimPhase, setCardAnimPhase] = useState<'entering' | 'idle' | 'exiting'>('entering')
+
+  useEffect(() => {
+    let exitTimeout: NodeJS.Timeout
+    let enterTimeout: NodeJS.Timeout
+
+    // Após a animação inicial de entrada (1.4s), fixa o estado em repouso (idle)
+    const initialTimer = setTimeout(() => {
+      setCardAnimPhase('idle')
+    }, 1400)
+
+    // Repete o ciclo a cada 2 minutos (120.000 ms)
+    const cycleInterval = setInterval(() => {
+      // 1. Saída girando para a direita (750ms)
+      setCardAnimPhase('exiting')
+
+      // 2. Imediatamente após a saída, surge novamente girando vindo da direita
+      exitTimeout = setTimeout(() => {
+        setCardAnimPhase('entering')
+
+        // 3. Ao concluir a entrada (1.4s), volta para o repouso no local
+        enterTimeout = setTimeout(() => {
+          setCardAnimPhase('idle')
+        }, 1400)
+      }, 750)
+    }, 120000)
+
+    return () => {
+      clearTimeout(initialTimer)
+      clearInterval(cycleInterval)
+      clearTimeout(exitTimeout)
+      clearTimeout(enterTimeout)
+    }
+  }, [])
+
   useEffect(() => {
     let timer: NodeJS.Timeout
 
@@ -158,8 +194,16 @@ export default function Hero() {
           </div>
 
           {/* Lado Direito: Screenshot Real do Painel / Dashboard (shadcn Mockup Window) */}
-          <div className="lg:col-span-6 xl:col-span-6 relative">
-            <div className="relative mx-auto max-w-lg lg:max-w-none">
+          <div className="lg:col-span-6 xl:col-span-6 relative [perspective:1200px]">
+            <div 
+              className={`relative mx-auto max-w-lg lg:max-w-none ${
+                cardAnimPhase === 'entering'
+                  ? 'animate-arrive-spin'
+                  : cardAnimPhase === 'exiting'
+                  ? 'animate-exit-spin'
+                  : ''
+              }`}
+            >
               
               {/* Efeito de brilho de fundo atrás da janela */}
               <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary/30 via-emerald-500/20 to-primary/20 blur-xl opacity-70" />
