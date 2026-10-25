@@ -46,14 +46,7 @@ export default function Pricing() {
         if (res.ok) {
           const data = await res.json()
           if (Array.isArray(data) && isMounted) {
-            const activePlans = data.filter(
-              (p: any) =>
-                p.isActive === true &&
-                p.status !== 'INACTIVE' &&
-                !p.deletedAt &&
-                Number(p.price) > 0
-            )
-            setPlans(activePlans)
+            setPlans(data)
           }
         }
       } catch (err) {
@@ -251,7 +244,7 @@ export default function Pricing() {
                       <div className="flex items-baseline gap-1.5">
                         <span className="text-xs text-primary font-bold uppercase tracking-wider">Por:</span>
                         <span className="text-4xl sm:text-5xl font-black text-foreground tracking-tight">
-                          {formatPrice(price)}
+                          {price === 0 ? 'Grátis' : formatPrice(price)}
                         </span>
                         <span className="text-xs text-muted-foreground font-medium">/ {intervalLabel}</span>
                       </div>
