@@ -527,15 +527,11 @@ export async function POST(request: NextRequest) {
       userAgent: ctx.userAgent,
     })
 
-    // Notificações e e-mail caloroso de boas-vindas
+    // Notificações e e-mail de boas-vindas
     try {
       const { notifyNewRegistration, sendCompanyWelcomeEmail } = await import('@/lib/external-notifications')
-      const origin =
-        request.headers.get('origin') ||
-        (request.headers.get('referer') ? new URL(request.headers.get('referer')!).origin : null) ||
-        process.env.NEXTAUTH_URL ||
-        process.env.NEXT_PUBLIC_APP_URL ||
-        'http://localhost:3000'
+      const { getPublicAppUrl } = await import('@/lib/app-url')
+      const origin = getPublicAppUrl(request)
 
       await notifyNewRegistration({
         type: 'COMPANY',

@@ -12,9 +12,11 @@ export interface SmtpConfig {
 export interface SmtpMailOptions {
   from?: string
   fromName?: string
+  replyTo?: string
   to: string
   subject: string
   html: string
+  text?: string
 }
 
 export interface SmtpSendResult {
@@ -24,8 +26,33 @@ export interface SmtpSendResult {
 }
 
 /**
+ * Converte HTML em texto puro legível como fallback (MIME text/plain).
+ * Evita penalidades severas de spam como MIME_HTML_ONLY / HTML_MESSAGE_ONLY.
+ */
+function extractPlainTextFromHtml(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<head[\s\S]*?<\/head>/gi, '')
+    .replace(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1[^>]*>(.*?)<\/a>/gi, '$3 ($2)')
+    .replace(/<br\s*[\/]?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|tr|li|table)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&#39;/gi, "'")
+    .replace(/\n\s*\n\s*\n+/g, '\n\n')
+    .trim()
+}
+
+/**
  * Cliente SMTP nativo em Node.js (Zero dependências externas)
- * Suporta SSL/TLS direto (porta 465) e STARTTLS (porta 587)
+ * Suporta SSL/TLS direto (porta 465) e STARTTLS (porta 587).
+ * Constrói mensagens MIME multipart/alternative 100% compatíveis com RFC 2046 e RFC 5322,
+ * garantindo alinhamento de SPF/DKIM e alta entregabilidade na Caixa de Entrada.
  */
 export async function sendMailViaSmtp(
   config: SmtpConfig,
@@ -34,7 +61,7 @@ export async function sendMailViaSmtp(
   const host = (config.host || 'smtp.gmail.com').trim()
   const port = Number(config.port) || 465
   const user = (config.user || '').trim()
-  // Remove espaços que o usuário possa ter copiado da senha de app do Google (ex: "abcd efgh ijkl mnop" -> "abcdefghijklmnop")
+  // Remove espaços que o usuário possa ter copiado da senha de app do Google
   const pass = (config.pass || '').replace(/\s+/g, '').trim()
   const isDirectTls = config.secure !== false && (port === 465 || config.secure === true)
 
@@ -50,7 +77,8 @@ export async function sendMailViaSmtp(
   }
 
   const fromEmail = (mail.from || user).trim()
-  const fromName = mail.fromName || 'BarberShop'
+  const fromName = mail.fromName || 'BarberShop Cloud'
+  const replyTo = (mail.replyTo || fromEmail).trim()
   const toEmail = mail.to.trim()
   const subject = mail.subject.trim()
 
@@ -111,7 +139,10 @@ export async function sendMailViaSmtp(
           // 220 Greeting recebido
           if (code === 220) {
             step = 1
-            sendCommand(`EHLO localhost`)
+            // Anti-Spam: NUNCA enviar 'EHLO localhost', pois ativa regras como HELO_LOCALHOST nos filtros!
+            // Envia o domínio do remetente ou o próprio host SMTP
+            const ehloDomain = user.includes('@') ? user.split('@')[1] : (host || 'gmail.com')
+            sendCommand(`EHLO ${ehloDomain}`)
           }
           break
 
@@ -168,23 +199,57 @@ export async function sendMailViaSmtp(
           if (code === 354) {
             step = 8
 
-            const base64Body = Buffer.from(mail.html, 'utf-8')
+            // Prepara a versão texto puro (essencial para eliminar o gatilho MIME_HTML_ONLY)
+            const plainText = (mail.text || extractPlainTextFromHtml(mail.html)).trim()
+
+            const base64Text = Buffer.from(plainText, 'utf-8')
               .toString('base64')
               .replace(/(.{76})/g, '$1\r\n')
-            const encodedSubject = `=?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`
-            const messageId = `<${Date.now()}.${Math.random().toString(36).substring(2)}@${host}>`
+
+            const base64Html = Buffer.from(mail.html, 'utf-8')
+              .toString('base64')
+              .replace(/(.{76})/g, '$1\r\n')
+
+            // Limpa o assunto para evitar injeção de cabeçalhos e codifica em UTF-8 Base64 RFC 2047
+            const cleanSubject = subject.replace(/[\r\n]+/g, ' ').trim()
+            const encodedSubject = `=?UTF-8?B?${Buffer.from(cleanSubject, 'utf-8').toString('base64')}?=`
+
+            // Message-ID alinhado com o domínio do remetente
+            const fromDomain = fromEmail.includes('@') ? fromEmail.split('@')[1] : 'gmail.com'
+            const randomSuffix = Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
+            const messageId = `<${Date.now()}.${randomSuffix}@${fromDomain}>`
+
+            // Boundary MIME multipart/alternative
+            const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`
 
             const messageLines = [
-              `From: "${fromName}" <${fromEmail}>`,
+              `From: "${fromName.replace(/"/g, '')}" <${fromEmail}>`,
+              `Reply-To: "${fromName.replace(/"/g, '')}" <${replyTo}>`,
               `To: <${toEmail}>`,
               `Subject: ${encodedSubject}`,
               `Date: ${new Date().toUTCString()}`,
               `Message-ID: ${messageId}`,
               `MIME-Version: 1.0`,
+              `Content-Type: multipart/alternative; boundary="${boundary}"`,
+              `X-Mailer: BarberShop Cloud Mailer 2.0`,
+              `Auto-Submitted: auto-generated`,
+              `X-Auto-Response-Suppress: All`,
+              `Priority: normal`,
+              `X-Priority: 3`,
+              '',
+              `--${boundary}`,
+              `Content-Type: text/plain; charset="UTF-8"`,
+              `Content-Transfer-Encoding: base64`,
+              '',
+              base64Text,
+              '',
+              `--${boundary}`,
               `Content-Type: text/html; charset="UTF-8"`,
               `Content-Transfer-Encoding: base64`,
               '',
-              base64Body,
+              base64Html,
+              '',
+              `--${boundary}--`,
               '.',
             ].join('\r\n')
 

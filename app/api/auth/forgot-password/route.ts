@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getPublicAppUrl } from '@/lib/app-url'
 import { generatePasswordResetToken } from '@/lib/auth'
 import { sendPasswordResetEmail } from '@/lib/external-notifications'
 import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
@@ -53,16 +54,8 @@ export async function POST(request: NextRequest) {
     // Gerar token seguro JWT assinado válido por 1 hora
     const resetToken = generatePasswordResetToken(user.id, user.email)
 
-    // Determinar URL base confiável de redefinição (Proteção contra Host Header Injection / Password Reset Poisoning)
-    // NUNCA confiar em x-forwarded-host ou headers arbitrários enviados pelo cliente para links de segurança
-    const trustedBaseUrl =
-      process.env.NEXTAUTH_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.NODE_ENV === 'production'
-        ? 'https://barbershop.com.br'
-        : 'http://localhost:3000')
-
-    const origin = trustedBaseUrl.replace(/\/$/, '')
+    // Determinar URL pública canônica (evita localhost e domínios inválidos que ativam anti-phishing/spam)
+    const origin = getPublicAppUrl(request)
     const resetLink = `${origin}/reset-password?token=${encodeURIComponent(resetToken)}`
 
     // Envio do e-mail diretamente para a caixa de entrada do usuário

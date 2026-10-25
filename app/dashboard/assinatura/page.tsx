@@ -603,6 +603,11 @@ function AssinaturaContent() {
               {plans.map((p) => {
                 const isCurrent = (subscription?.plan?.id === p.id || subscription?.planId === p.id || subscription?.planName === p.name) && subscription?.status === 'ACTIVE'
                 const featuresList = Array.isArray(p.features) ? p.features : []
+                const isCourtesy =
+                  (p.planType || '').toUpperCase() === 'COURTESY' ||
+                  Number(p.price) === 0 ||
+                  (p.name || '').toLowerCase().includes('cortesia') ||
+                  (p.slug || '').toLowerCase().includes('cortesia')
 
                 return (
                   <div
@@ -625,17 +630,28 @@ function AssinaturaContent() {
                           <CreditCard className="w-5 h-5 text-amber-500" />
                           <h3 className="font-bold text-lg text-foreground">{p.name}</h3>
                         </div>
-                        {/* Badges de formas de pagamento aceitas */}
-                        <div className="flex items-center gap-1">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            PIX
+                        {/* Badges de formas de pagamento aceitas: ocultas em plano cortesia */}
+                        {!isCourtesy ? (
+                          <div className="flex items-center gap-1">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              PIX
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                              CARTÃO
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            CORTESIA
                           </span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                            CARTÃO
-                          </span>
-                        </div>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1.5 min-h-[32px]">{p.description || 'Gestão completa para barbearia'}</p>
+                      <p
+                        className="text-xs text-muted-foreground mt-1.5 min-h-[32px] text-justify leading-relaxed"
+                        style={{ textAlign: 'justify', textJustify: 'inter-word' }}
+                      >
+                        {p.description || 'Gestão completa para barbearia'}
+                      </p>
 
                       <div className="mt-5 pb-5 border-b border-border">
                         {p.originalPrice && Number(p.originalPrice) > Number(p.price) && (

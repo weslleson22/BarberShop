@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createUser, createBarbershop } from '@/lib/auth'
 import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
 import { AuditAction, AuditEntity } from '@prisma/client'
-import { notifyNewRegistration, sendCompanyWelcomeEmail } from '@/lib/external-notifications'
+import { notifyNewRegistration, sendCompanyWelcomeEmail, sendClientWelcomeEmail } from '@/lib/external-notifications'
+import { getPublicAppUrl } from '@/lib/app-url'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -117,14 +118,9 @@ export async function POST(request: NextRequest) {
         console.warn('Failed to send new barbershop notification:', notifErr)
       }
 
-      // E-mail caloroso de boas-vindas com orientações, links essenciais e suporte para o novo cliente
+      // E-mail de boas-vindas com orientações, links essenciais e suporte para a nova empresa
       try {
-        const origin =
-          request.headers.get('origin') ||
-          (request.headers.get('referer') ? new URL(request.headers.get('referer')!).origin : null) ||
-          process.env.NEXTAUTH_URL ||
-          process.env.NEXT_PUBLIC_APP_URL ||
-          'http://localhost:3000'
+        const origin = getPublicAppUrl(request)
 
         await sendCompanyWelcomeEmail({
           companyName: result.barbershop.name,
@@ -213,6 +209,18 @@ export async function POST(request: NextRequest) {
         })
       } catch (notifErr) {
         console.warn('Failed to send new client notification:', notifErr)
+      }
+
+      // E-mail de boas-vindas para o novo cliente
+      try {
+        const origin = getPublicAppUrl(request)
+        await sendClientWelcomeEmail({
+          name: result.user.name,
+          email: result.user.email,
+          baseUrl: origin,
+        })
+      } catch (welcomeErr) {
+        console.warn('Failed to send client welcome email:', welcomeErr)
       }
 
       const response = NextResponse.json(result)

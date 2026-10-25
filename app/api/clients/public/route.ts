@@ -230,6 +230,22 @@ export async function POST(request: NextRequest) {
       console.warn('Failed to dispatch public client notification:', notifErr)
     }
 
+    if (client.email) {
+      try {
+        const { sendClientWelcomeEmail } = await import('@/lib/external-notifications')
+        const { getPublicAppUrl } = await import('@/lib/app-url')
+        await sendClientWelcomeEmail({
+          name: client.name,
+          email: client.email,
+          barbershopName: tenantResult.tenant.name,
+          barbershopSlug: tenantResult.tenant.slug,
+          baseUrl: getPublicAppUrl(request),
+        })
+      } catch (clientEmailErr) {
+        console.warn('Failed to dispatch client welcome email:', clientEmailErr)
+      }
+    }
+
     return NextResponse.json(client, { status: 201 })
   } catch (error) {
     console.error('Create client error:', error)

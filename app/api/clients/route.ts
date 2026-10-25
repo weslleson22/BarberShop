@@ -160,6 +160,22 @@ export async function POST(request: NextRequest) {
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       })
+
+      if (client.email) {
+        try {
+          const { sendClientWelcomeEmail } = await import('@/lib/external-notifications')
+          const { getPublicAppUrl } = await import('@/lib/app-url')
+          await sendClientWelcomeEmail({
+            name: client.name,
+            email: client.email,
+            barbershopName: shop?.name || null,
+            barbershopSlug: shop?.slug || null,
+            baseUrl: getPublicAppUrl(request),
+          })
+        } catch (clientEmailErr) {
+          console.warn('Failed to dispatch client welcome email:', clientEmailErr)
+        }
+      }
     } catch (notifErr) {
       console.warn('Failed to send client registration notification:', notifErr)
     }

@@ -18,6 +18,8 @@ export interface PlanOption {
   name: string
   slug?: string
   description?: string
+  planType?: string
+  durationDays?: number
   price: number | string
   originalPrice?: number | string | null
   discountBadge?: string | null
@@ -167,7 +169,14 @@ export default function Pricing() {
           <div className={getGridClass()}>
             {plans.map((plan, index) => {
               const price = Number(plan.price) || 0
+              const isCourtesy =
+                (plan.planType || '').toUpperCase() === 'COURTESY' ||
+                price === 0 ||
+                (plan.name || '').toLowerCase().includes('cortesia') ||
+                (plan.slug || '').toLowerCase().includes('cortesia')
+
               const hasSavedOriginalPrice =
+                !isCourtesy &&
                 plan.originalPrice !== undefined &&
                 plan.originalPrice !== null &&
                 Number(plan.originalPrice) > price
@@ -175,13 +184,14 @@ export default function Pricing() {
               const originalPrice = hasSavedOriginalPrice ? Number(plan.originalPrice) : null
 
               const discountBadge =
-                plan.discountBadge ||
-                (originalPrice && originalPrice > price
-                  ? `${Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF`
-                  : null)
+                !isCourtesy &&
+                (plan.discountBadge ||
+                  (originalPrice && originalPrice > price
+                    ? `${Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF`
+                    : null))
 
               const savings =
-                originalPrice && originalPrice > price
+                !isCourtesy && originalPrice && originalPrice > price
                   ? (originalPrice - price).toFixed(2).replace('.', ',')
                   : null
 
@@ -218,10 +228,23 @@ export default function Pricing() {
                             {discountBadge}
                           </Badge>
                         )}
+                        {isCourtesy && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 bg-amber-500/15 border-amber-500/30"
+                          >
+                            Plano Cortesia
+                          </Badge>
+                        )}
                       </div>
                       <h3 className="text-2xl font-bold text-foreground">{plan.name}</h3>
                       {plan.description && (
-                        <p className="text-xs text-muted-foreground mt-2">{plan.description}</p>
+                        <p
+                          className="text-xs text-muted-foreground mt-2 text-justify leading-relaxed"
+                          style={{ textAlign: 'justify', textJustify: 'inter-word' }}
+                        >
+                          {plan.description}
+                        </p>
                       )}
                     </div>
 
@@ -242,11 +265,15 @@ export default function Pricing() {
                       )}
 
                       <div className="flex items-baseline gap-1.5">
-                        <span className="text-xs text-primary font-bold uppercase tracking-wider">Por:</span>
-                        <span className="text-4xl sm:text-5xl font-black text-foreground tracking-tight">
-                          {price === 0 ? 'Grátis' : formatPrice(price)}
+                        <span className="text-xs text-primary font-bold uppercase tracking-wider">
+                          {isCourtesy ? 'Acesso:' : 'Por:'}
                         </span>
-                        <span className="text-xs text-muted-foreground font-medium">/ {intervalLabel}</span>
+                        <span className="text-4xl sm:text-5xl font-black text-foreground tracking-tight">
+                          {isCourtesy || price === 0 ? 'Cortesia' : formatPrice(price)}
+                        </span>
+                        {!isCourtesy && (
+                          <span className="text-xs text-muted-foreground font-medium">/ {intervalLabel}</span>
+                        )}
                       </div>
 
                       {discountBadge && (
@@ -256,14 +283,17 @@ export default function Pricing() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 mt-3">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                          <QrCode className="w-3 h-3" /> PIX
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/30">
-                          <CreditCard className="w-3 h-3" /> Cartão de Crédito
-                        </span>
-                      </div>
+                      {/* Formas de pagamento: ocultas quando o plano for cortesia */}
+                      {!isCourtesy && (
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                            <QrCode className="w-3 h-3" /> PIX
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/30">
+                            <CreditCard className="w-3 h-3" /> Cartão de Crédito
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Benefícios Dinâmicos Salvos */}
@@ -287,7 +317,7 @@ export default function Pricing() {
                       variant={isFeatured ? 'default' : 'outline'}
                     >
                       <Link href={`/register?plan=${encodeURIComponent(plan.slug || plan.name)}`}>
-                        <span>Contratar Plano (7 Dias Grátis)</span>
+                        <span>{isCourtesy ? 'Aderir ao Plano Cortesia' : 'Contratar Plano (7 Dias Grátis)'}</span>
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </Button>
