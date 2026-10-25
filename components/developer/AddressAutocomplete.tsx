@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { MapPin, Search, Check, Loader2 } from 'lucide-react'
 import { searchBrazilianCities, fetchIbgeCities, BrazilianCity } from '@/lib/brazilian-cities'
+import { cn } from '@/lib/utils'
 
 interface AddressAutocompleteProps {
   value: string
@@ -161,10 +162,10 @@ export default function AddressAutocomplete({
           placeholder={placeholder}
           required={required}
           autoComplete="off"
-          className={
-            className ||
-            'w-full pl-9 pr-10 py-2.5 bg-background border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition'
-          }
+          className={cn(
+            'w-full pl-9 pr-10 h-10 bg-background border border-input rounded-md text-sm text-foreground placeholder:text-muted-foreground font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 transition',
+            className
+          )}
         />
 
         {isSearchingCep && (

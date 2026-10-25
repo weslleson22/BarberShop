@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/api-auth'
+import { isAvatarProxyUrl } from '@/lib/media'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -77,7 +78,7 @@ export async function PUT(request: NextRequest) {
     
     if (data.name !== undefined) updateData.name = data.name
     if (data.email !== undefined) updateData.email = data.email
-    if (data.avatar !== undefined) updateData.avatar = data.avatar
+    if (data.avatar !== undefined && !isAvatarProxyUrl(data.avatar)) updateData.avatar = data.avatar
     if (data.phone !== undefined) updateData.phone = data.phone
     if (data.address !== undefined) updateData.address = data.address
     if (data.birthDate !== undefined) updateData.birthDate = data.birthDate ? new Date(data.birthDate) : null

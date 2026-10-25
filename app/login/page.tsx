@@ -15,8 +15,7 @@ import {
   Loader2,
   ArrowLeft,
   Calendar,
-  Sparkles,
-  ShieldCheck
+  Sparkles
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
@@ -369,17 +368,6 @@ export default function LoginPage() {
             <blockquote className="text-lg font-medium leading-relaxed">
               &ldquo;Agendamentos em tempo real, automação de caixa e controle total de clientes em uma única plataforma intuitiva e elegante.&rdquo;
             </blockquote>
-
-            <div className="flex items-center justify-between border-t border-white/15 pt-4 text-xs text-white/80">
-              <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>BarberShop Cloud &bull; Sistema Sempre Ativo</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-medium text-white/90">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                <span>Ambiente Criptografado</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

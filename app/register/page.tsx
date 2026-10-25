@@ -1,26 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
-  ArrowLeft,
-  Home,
+  Scissors,
   Building2,
-  ShieldCheck,
   Mail,
   Phone,
-  MapPin,
   Lock,
   Eye,
   EyeOff,
   User,
   CheckCircle2,
-  Clock,
   AlertCircle,
   Loader2,
-  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  ShieldCheck,
+  Check
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { maskPhone } from '@/lib/utils'
 import AddressAutocomplete from '@/components/developer/AddressAutocomplete'
 
@@ -53,9 +58,14 @@ export default function RegisterPage() {
     adminEmail: string
   } | null>(null)
 
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = 'Cadastre sua Empresa | BarberShop Cloud'
+    }
+  }, [])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-
     if (name === 'establishmentPhone' || name === 'adminPhone') {
       setFormData((prev) => ({ ...prev, [name]: maskPhone(value) }))
     } else {
@@ -71,7 +81,6 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
 
-    // Validação estrita de todos os campos obrigatórios
     if (
       !formData.establishmentName.trim() ||
       !formData.establishmentEmail.trim() ||
@@ -83,33 +92,31 @@ export default function RegisterPage() {
       !formData.password.trim() ||
       !formData.confirmPassword.trim()
     ) {
-      setError('Por favor, preencha todos os campos obrigatórios antes de continuar.')
+      setError('Preencha todos os campos obrigatórios.')
       return
     }
 
     if (formData.password.length < 6) {
-      setError('A senha deve possuir pelo menos 6 caracteres.')
+      setError('A senha deve ter no mínimo 6 caracteres.')
       return
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('A confirmação de senha não coincide com a senha digitada.')
+      setError('A confirmação de senha não coincide.')
       return
     }
 
     if (!acceptedTerms || !acceptedPrivacy) {
-      setError('Você deve aceitar os Termos de Uso e a Política de Privacidade para prosseguir com o cadastro.')
+      setError('É necessário aceitar os Termos de Serviço e a Política de Privacidade.')
       return
     }
 
     setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'barbershop',
           name: formData.establishmentName.trim(),
@@ -123,11 +130,9 @@ export default function RegisterPage() {
         }),
       })
 
-      const data = await response.json()
+      const data = await res.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao realizar cadastro.')
-      }
+      if (!res.ok) throw new Error(data.error || 'Erro ao registrar.')
 
       if (data.token && data.user) {
         localStorage.setItem('auth_token', data.token)
@@ -142,456 +147,439 @@ export default function RegisterPage() {
       })
       setIsSuccess(true)
     } catch (err: any) {
-      console.error('Registration submit error:', err)
-      setError(err?.message || 'Não foi possível enviar sua solicitação. Verifique sua conexão e tente novamente.')
+      setError(err?.message || 'Falha ao enviar cadastro.')
     } finally {
       setLoading(false)
     }
   }
 
-  // TELA DE SUCESSO: ACESSO TOTAL IMEDIATO COM TRIAL DE 7 DIAS
-  if (isSuccess && registeredData) {
-    return (
-      <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between relative font-sans selection:bg-amber-500 selection:text-black">
-        <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-gray-800 bg-gray-950">
-          <div className="flex items-center space-x-2">
-            <Link
-              href="/"
-              className="flex items-center space-x-2 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-sm"
-            >
-              <Home className="w-4 h-4" />
-              <span>Início</span>
-            </Link>
-          </div>
-          <div className="flex items-center space-x-2 text-xs text-emerald-400 font-medium px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Trial de 7 Dias Ativo</span>
-          </div>
-        </header>
-
-        <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-          <div className="w-full max-w-xl bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm text-center">
-            <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/40 rounded-2xl mx-auto flex items-center justify-center mb-6">
-              <CheckCircle2 className="w-8 h-8 text-amber-400" />
-            </div>
-
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 mb-3">
-              <Clock className="w-3.5 h-3.5" />
-              Acesso Imediato Liberado (7 Dias)
-            </span>
-
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">
-              Empresa Cadastrada com Sucesso!
-            </h1>
-
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 max-w-md mx-auto">
-              Sua barbearia foi registrada e você já possui <strong>acesso total imediato por 7 dias</strong> para configurar seus serviços, equipe e agenda.
-            </p>
-
-            <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 text-left mb-6 space-y-2.5 text-xs sm:text-sm">
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/80">
-                <span className="text-slate-400">Estabelecimento:</span>
-                <span className="text-white font-semibold">{registeredData.establishmentName}</span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/80">
-                <span className="text-slate-400">E-mail Comercial:</span>
-                <span className="text-slate-300 font-mono">{registeredData.establishmentEmail}</span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/80">
-                <span className="text-slate-400">Responsável:</span>
-                <span className="text-white font-semibold">{registeredData.adminName}</span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/80">
-                <span className="text-slate-400">Validade do Teste:</span>
-                <span className="text-emerald-400 font-semibold">7 dias de avaliação gratuita</span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="text-slate-400">Status de Homologação:</span>
-                <span className="text-amber-400 font-medium">AGUARDANDO_APROVACAO</span>
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-amber-950/30 border border-amber-500/20 rounded-xl text-amber-300 text-xs text-left mb-6 flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <strong>Período de Homologação:</strong> Utilize todos os recursos normalmente durante os primeiros 7 dias. Ao término deste período, o administrador homologará o contrato definitivo da sua empresa.
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                type="button"
-                onClick={() => {
-                  window.location.href = '/dashboard'
-                }}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl text-sm transition-colors cursor-pointer"
-              >
-                <span>Acessar Painel da Barbearia</span>
-                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-              </button>
-              <Link
-                href="/onboarding"
-                className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 hover:text-white font-medium rounded-xl text-sm border border-slate-700 transition-all"
-              >
-                <Building2 className="w-4 h-4 text-amber-400" />
-                <span>Guia de Onboarding</span>
-              </Link>
-            </div>
-          </div>
-        </main>
-
-        <footer className="relative z-10 w-full py-4 px-6 border-t border-white/5 bg-slate-950/20 text-center text-xs text-slate-500">
-          Plataforma de Agendamento Inteligente SaaS &bull; Todos os direitos reservados.
-        </footer>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between relative font-sans selection:bg-amber-500 selection:text-black">
-      {/* Header com navegação */}
-      <header className="relative z-20 w-full px-6 py-4 flex items-center justify-between border-b border-gray-800 bg-gray-950">
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center space-x-2 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-sm cursor-pointer"
-            title="Voltar à página anterior"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Voltar</span>
-          </button>
+    <div className="grid min-h-svh lg:grid-cols-2 bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
+      {/* 1. COLUNA ESQUERDA: Formulário shadcn no mesmo padrão e layout do Login */}
+      <div className="flex flex-col gap-4 p-6 md:p-10">
+        {/* Top Header: Logo Brand & Controles */}
+        <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center space-x-2 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-sm"
-            title="Ir para a página inicial"
+            className="flex items-center gap-2 font-semibold text-foreground tracking-tight hover:opacity-90 transition-opacity"
+            title="BarberShop Cloud - Página Inicial"
           >
-            <Home className="w-4 h-4" />
-            <span>Home</span>
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400 hidden sm:inline">Já tem uma conta?</span>
-          <Link
-            href="/login"
-            className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all"
-          >
-            Fazer Login
-          </Link>
-        </div>
-      </header>
-
-      {/* Conteúdo Principal do Cadastro */}
-      <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-3xl bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl">
-          {/* Título e Apresentação */}
-          <div className="text-center max-w-lg mx-auto mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Novo Estabelecimento</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+              <Scissors className="h-4 w-4" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Cadastre sua Empresa
-            </h1>
-            <p className="text-slate-400 text-sm mt-2">
-              Preencha os dados do seu estabelecimento e crie o usuário gestor da unidade. Após o envio, seu cadastro passará pela aprovação do desenvolvedor.
-            </p>
+            <span className="text-base font-bold">BarberShop<span className="text-primary">.</span></span>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-md hover:bg-muted"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Início</span>
+            </Link>
+            <ThemeToggle variant="ghost" size="sm" />
+          </div>
+        </div>
+
+        {/* Centro: Formulário Centralizado */}
+        <div className="flex flex-1 items-center justify-center py-6 sm:py-8">
+          <div className="w-full max-w-xl space-y-6">
+            
+            {isSuccess && registeredData ? (
+              <Card className="border-border bg-card text-card-foreground shadow-sm animate-in fade-in zoom-in-95">
+                <CardHeader className="text-center pb-4">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-2">
+                    <CheckCircle2 className="h-7 w-7" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold tracking-tight">Empresa cadastrada com sucesso!</CardTitle>
+                  <CardDescription className="text-balance text-sm">
+                    Seu estabelecimento foi configurado e seu período de avaliação gratuita está ativo.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="rounded-lg border border-border bg-muted/40 p-4 text-xs space-y-2.5">
+                    <div className="flex justify-between items-center pb-2 border-b border-border">
+                      <span className="text-muted-foreground">Estabelecimento:</span>
+                      <strong className="text-foreground">{registeredData.establishmentName}</strong>
+                    </div>
+                    <div className="flex justify-between items-center pb-2 border-b border-border">
+                      <span className="text-muted-foreground">E-mail:</span>
+                      <span className="text-foreground">{registeredData.establishmentEmail}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Responsável Administrador:</span>
+                      <span className="text-foreground font-medium">{registeredData.adminName}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <Button
+                      onClick={() => (window.location.href = '/dashboard')}
+                      className="w-full h-10 font-semibold cursor-pointer"
+                    >
+                      Acessar Painel de Gestão
+                    </Button>
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="w-full h-10 cursor-pointer"
+                    >
+                      <Link href="/onboarding">Guia de Primeiros Passos</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {/* Cabeçalho do Formulário */}
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                    <Building2 className="h-3.5 w-3.5" />
+                    <span>Novo Estabelecimento</span>
+                  </div>
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                    Cadastre sua Empresa
+                  </h1>
+                  <p className="text-balance text-sm text-muted-foreground max-w-md">
+                    Crie a conta da sua barbearia e do usuário administrador para ter controle operacional completo.
+                  </p>
+                </div>
+
+                {/* Alerta de Erro */}
+                {error && (
+                  <div
+                    role="alert"
+                    className="p-3.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-start gap-3 animate-in fade-in"
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <div className="font-medium text-xs leading-relaxed">{error}</div>
+                  </div>
+                )}
+
+                {/* Formulário Principal */}
+                <form onSubmit={handleSubmit} className="grid gap-5">
+                  
+                  {/* Seção 1: Estabelecimento */}
+                  <div className="space-y-3.5">
+                    <div className="flex items-center gap-2 border-b border-border pb-2">
+                      <Building2 className="h-4 w-4 text-primary" />
+                      <h2 className="text-sm font-semibold tracking-tight text-foreground">
+                        Dados do Estabelecimento
+                      </h2>
+                    </div>
+
+                    <div className="grid gap-3.5 sm:grid-cols-2">
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label htmlFor="establishmentName" className="text-sm font-medium">
+                          Nome da Barbearia *
+                        </Label>
+                        <div className="relative">
+                          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="establishmentName"
+                            name="establishmentName"
+                            required
+                            placeholder="Ex: Barbearia Vip Retrô"
+                            value={formData.establishmentName}
+                            onChange={handleChange}
+                            className="pl-9 h-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="establishmentEmail" className="text-sm font-medium">
+                          E-mail Comercial *
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="establishmentEmail"
+                            name="establishmentEmail"
+                            type="email"
+                            required
+                            placeholder="contato@barbearia.com"
+                            value={formData.establishmentEmail}
+                            onChange={handleChange}
+                            className="pl-9 h-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="establishmentPhone" className="text-sm font-medium">
+                          Telefone / WhatsApp *
+                        </Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="establishmentPhone"
+                            name="establishmentPhone"
+                            required
+                            placeholder="(11) 98765-4321"
+                            value={formData.establishmentPhone}
+                            onChange={handleChange}
+                            className="pl-9 h-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label htmlFor="establishmentAddress" className="text-sm font-medium">
+                          Endereço Completo (com Cidade e UF) *
+                        </Label>
+                        <AddressAutocomplete
+                          id="establishmentAddress"
+                          value={formData.establishmentAddress}
+                          onChange={handleAddressChange}
+                          placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo, SP (ou digite sua cidade)"
+                          required
+                          className="h-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Seção 2: Administrador */}
+                  <div className="space-y-3.5 pt-2">
+                    <div className="flex items-center gap-2 border-b border-border pb-2">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <h2 className="text-sm font-semibold tracking-tight text-foreground">
+                        Dados do Administrador Responsável
+                      </h2>
+                    </div>
+
+                    <div className="grid gap-3.5 sm:grid-cols-2">
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label htmlFor="adminName" className="text-sm font-medium">
+                          Nome Completo *
+                        </Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="adminName"
+                            name="adminName"
+                            required
+                            placeholder="Nome do gestor ou proprietário"
+                            value={formData.adminName}
+                            onChange={handleChange}
+                            className="pl-9 h-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="adminEmail" className="text-sm font-medium">
+                          E-mail de Acesso *
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="adminEmail"
+                            name="adminEmail"
+                            type="email"
+                            required
+                            placeholder="admin@barbearia.com"
+                            value={formData.adminEmail}
+                            onChange={handleChange}
+                            className="pl-9 h-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="adminPhone" className="text-sm font-medium">
+                          Telefone Pessoal *
+                        </Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="adminPhone"
+                            name="adminPhone"
+                            required
+                            placeholder="(11) 98765-4321"
+                            value={formData.adminPhone}
+                            onChange={handleChange}
+                            className="pl-9 h-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="password" className="text-sm font-medium">
+                          Senha *
+                        </Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="password"
+                            name="password"
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            placeholder="Mínimo 6 caracteres"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className="pl-9 pr-10 h-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            title={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                          Confirmar Senha *
+                        </Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            required
+                            placeholder="Repita a senha"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            className="pl-9 pr-10 h-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            title={showConfirmPassword ? 'Ocultar senha' : 'Exibir senha'}
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Termos e Consentimento */}
+                  <div className="rounded-lg border border-border bg-muted/30 p-3.5 space-y-2.5 text-xs text-muted-foreground mt-1">
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={acceptedTerms}
+                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-ring cursor-pointer accent-primary"
+                        required
+                      />
+                      <span>
+                        Li e aceito os{' '}
+                        <Link href="/termos" target="_blank" className="font-semibold text-foreground underline underline-offset-4 hover:text-primary">
+                          Termos de Serviço
+                        </Link>{' '}
+                        da plataforma <span className="text-destructive">*</span>
+                      </span>
+                    </label>
+
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={acceptedPrivacy}
+                        onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-ring cursor-pointer accent-primary"
+                        required
+                      />
+                      <span>
+                        Li e concordo com a{' '}
+                        <Link href="/privacidade" target="_blank" className="font-semibold text-foreground underline underline-offset-4 hover:text-primary">
+                          Política de Privacidade
+                        </Link>{' '}
+                        e tratamento de dados LGPD <span className="text-destructive">*</span>
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Botão de Envio */}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-10 font-semibold cursor-pointer mt-1"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Criando sua empresa...</span>
+                      </>
+                    ) : (
+                      <span>Cadastrar Empresa e Iniciar Trial</span>
+                    )}
+                  </Button>
+                </form>
+
+                {/* Link para Login */}
+                <div className="text-center text-sm text-muted-foreground pt-1">
+                  Já possui uma empresa cadastrada?{' '}
+                  <Link
+                    href="/login"
+                    className="font-semibold text-foreground underline underline-offset-4 hover:text-primary transition-colors"
+                  >
+                    Acesse sua conta
+                  </Link>
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
+      </div>
+
+      {/* 2. COLUNA DIREITA: Painel Visual Idêntico ao /login com Imagem Hero */}
+      <div className="relative hidden bg-muted lg:block overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80"
+          alt="BarberShop Cloud Ambiance"
+          fill
+          priority
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.6] dark:grayscale-0 transition-transform duration-700 hover:scale-105"
+        />
+        
+        {/* Gradiente Escuro Sofisticado */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+
+        {/* Conteúdo sobreposto na imagem */}
+        <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
+          {/* Badge Superior */}
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-3.5 py-1 text-xs font-medium text-white backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span>SaaS Multi-Tenant para Barbearias Modernas</span>
+            </div>
           </div>
 
-          {/* Feedback de Erro */}
-          {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-950/40 border border-red-500/30 text-red-200 text-sm flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-              <div className="flex-1">{error}</div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* SEÇÃO 1: DADOS DO ESTABELECIMENTO */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  <Building2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-white">1. Informações do Estabelecimento</h2>
-                  <p className="text-xs text-slate-400">Dados da empresa e localização para atendimento</p>
-                </div>
+          {/* Destaques e Prova de Valor */}
+          <div className="space-y-4 max-w-lg">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                <Check className="h-4 w-4 text-emerald-400" />
+                <span>7 dias de avaliação gratuita sem compromisso</span>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Nome da Empresa / Unidade <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <Building2 className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      name="establishmentName"
-                      required
-                      placeholder="Ex: Barbearia Elegance Premium"
-                      value={formData.establishmentName}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    E-mail Comercial <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      name="establishmentEmail"
-                      required
-                      placeholder="contato@empresa.com"
-                      value={formData.establishmentEmail}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Telefone Comercial / WhatsApp <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="tel"
-                      name="establishmentPhone"
-                      required
-                      placeholder="(11) 98765-4321"
-                      value={formData.establishmentPhone}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Endereço Completo <span className="text-amber-400">*</span>
-                  </label>
-                  <AddressAutocomplete
-                    id="establishmentAddress"
-                    value={formData.establishmentAddress}
-                    onChange={handleAddressChange}
-                    required
-                    placeholder="Rua, número, bairro, cidade - UF"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                  />
-                </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                <Check className="h-4 w-4 text-emerald-400" />
+                <span>Página pública personalizada de agendamento online</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                <Check className="h-4 w-4 text-emerald-400" />
+                <span>Gestão financeira, controle de barbeiros e comissões</span>
               </div>
             </div>
 
-            {/* SEÇÃO 2: DADOS DO ADMINISTRADOR */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-white">2. Dados do Administrador Responsável</h2>
-                  <p className="text-xs text-slate-400">Credenciais para gerenciar a agenda, equipe e atendimentos</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Nome Completo do Responsável <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      name="adminName"
-                      required
-                      placeholder="Nome do administrador"
-                      value={formData.adminName}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    E-mail de Acesso <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      name="adminEmail"
-                      required
-                      placeholder="admin@empresa.com"
-                      value={formData.adminEmail}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                    />
-                  </div>
-                  <span className="text-[11px] text-slate-500 mt-1 block">
-                    Este será seu e-mail de login na plataforma.
-                  </span>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Telefone Pessoal / WhatsApp <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="tel"
-                      name="adminPhone"
-                      required
-                      placeholder="(11) 98765-4321"
-                      value={formData.adminPhone}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Senha de Acesso <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      required
-                      placeholder="Mínimo de 6 caracteres"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Confirmar Senha <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      name="confirmPassword"
-                      required
-                      placeholder="Repita sua senha"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* AVISO DE APROVAÇÃO */}
-            <div className="p-4 rounded-xl bg-slate-950/80 border border-amber-500/20 text-xs text-slate-300 flex items-start gap-3">
-              <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-amber-400">Processo de Aprovação:</strong> Ao enviar seu cadastro, seus dados serão encaminhados para validação técnica pelo desenvolvedor. Assim que aprovado, seu login será liberado imediatamente.
-              </div>
-            </div>
-
-            {/* CONSENTIMENTO LGPD & TERMOS */}
-            <div className="space-y-3 p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/20 cursor-pointer"
-                />
-                <span>
-                  Li e aceito os{' '}
-                  <Link href="/termos" target="_blank" className="text-amber-400 hover:underline font-semibold">
-                    Termos de Uso
-                  </Link>{' '}
-                  da plataforma BarberShop. <span className="text-amber-400">*</span>
-                </span>
-              </label>
-
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={acceptedPrivacy}
-                  onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                  className="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/20 cursor-pointer"
-                />
-                <span>
-                  Li e concordo com a{' '}
-                  <Link href="/privacidade" target="_blank" className="text-amber-400 hover:underline font-semibold">
-                    Política de Privacidade
-                  </Link>{' '}
-                  e tratamento de dados pessoais conforme a LGPD. <span className="text-amber-400">*</span>
-                </span>
-              </label>
-            </div>
-
-            {/* BOTÃO DE SUBMIT */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-semibold text-black bg-amber-500 hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Enviando solicitação...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                  <span>Solicitar Cadastro e Acesso</span>
-                </>
-              )}
-            </button>
-
-            <div className="text-center pt-2">
-              <p className="text-xs text-slate-400">
-                Já possui uma empresa cadastrada?{' '}
-                <Link href="/login" className="text-amber-400 hover:text-amber-300 font-medium transition">
-                  Acesse sua conta
-                </Link>
-              </p>
-            </div>
-          </form>
+            <blockquote className="text-base font-medium leading-relaxed border-t border-white/15 pt-4 text-white/90">
+              &ldquo;Modernize a operação da sua barbearia hoje mesmo com agenda inteligente, notificações automáticas e métricas em tempo real.&rdquo;
+            </blockquote>
+          </div>
         </div>
-      </main>
-
-      {/* Rodapé Simples */}
-      <footer className="relative z-10 w-full py-4 px-6 border-t border-white/5 bg-slate-950/20 text-center text-xs text-slate-500">
-        Plataforma de Agendamento Inteligente SaaS &bull; Gestão profissional e simplificada.
-      </footer>
+      </div>
     </div>
   )
 }

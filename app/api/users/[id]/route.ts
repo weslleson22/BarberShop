@@ -5,6 +5,7 @@ import { ensureClientForUser } from '@/lib/client-sync'
 import { getAuthUser, requireRole } from '@/lib/api-auth'
 import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
 import { AuditAction, AuditEntity } from '@prisma/client'
+import { isAvatarProxyUrl } from '@/lib/media'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -119,7 +120,8 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       updateData.barbershopId = data.barbershopId || null
     }
     if (isActive !== undefined) updateData.isActive = isActive
-    if (avatar !== undefined) updateData.avatar = avatar
+    // Se o front reenviar a URL do proxy (/api/media/avatar/...), mantém a imagem atual
+    if (avatar !== undefined && !isAvatarProxyUrl(avatar)) updateData.avatar = avatar
     if (phone !== undefined) updateData.phone = phone
     if (bio !== undefined) updateData.bio = bio || null
     if (specialties !== undefined) updateData.specialties = Array.isArray(specialties) ? specialties : []

@@ -6,6 +6,7 @@ import { getAuthUser, requireRole } from '@/lib/api-auth'
 import { createAuditLog, extractRequestContext } from '@/lib/audit-log'
 import { AuditAction, AuditEntity } from '@prisma/client'
 import { notifyNewRegistration } from '@/lib/external-notifications'
+import { avatarProxyUrl } from '@/lib/media'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -56,6 +57,9 @@ export async function GET(request: NextRequest) {
       // Ignora silenciosamente caso o banco de dados não seja Postgres ou tabela ainda não migrada
     }
 
+    // IMPORTANTE: `avatar` NÃO é selecionado aqui. Avatares são data URLs base64
+    // e, somados em uma listagem, ultrapassam o limite de 5MB do Prisma
+    // Accelerate (P6009). A imagem é servida sob demanda por /api/media/avatar/:id.
     let users: any[] = []
     try {
       users = await prisma.user.findMany({
@@ -75,7 +79,7 @@ export async function GET(request: NextRequest) {
           },
           isActive: true,
           createdAt: true,
-          avatar: true,
+          updatedAt: true,
           phone: true,
           bio: true,
           specialties: true,
@@ -105,7 +109,7 @@ export async function GET(request: NextRequest) {
           },
           isActive: true,
           createdAt: true,
-          avatar: true,
+          updatedAt: true,
           phone: true,
         },
         orderBy: [
@@ -114,14 +118,22 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Sanitização para garantir serialização JSON uniforme sem dados corrompidos ou payloads excessivos
-    const serializedUsers = users.map((u) => {
-      // Se avatar for base64 excessivamente grande (acima de 350KB), previne estouro do limite de payload serverless
-      let safeAvatar = u.avatar || null
-      if (safeAvatar && typeof safeAvatar === 'string' && safeAvatar.startsWith('data:') && safeAvatar.length > 350000) {
-        safeAvatar = null
-      }
+    // Descobre quais usuários possuem avatar retornando apenas os IDs (payload mínimo)
+    let idsWithAvatar = new Set<string>()
+    try {
+      const withAvatar = await prisma.user.findMany({
+        where: {
+          AND: [where, { avatar: { not: null } }, { NOT: { avatar: '' } }],
+        },
+        select: { id: true },
+      })
+      idsWithAvatar = new Set(withAvatar.map((u) => u.id))
+    } catch (avatarErr) {
+      console.warn('[API /api/users GET] Não foi possível identificar avatares; listagem segue sem imagens:', avatarErr)
+    }
 
+    // Serialização uniforme; o avatar vira uma URL leve apontando para o endpoint de mídia
+    const serializedUsers = users.map((u) => {
       return {
         id: u.id,
         name: u.name || 'Sem Nome',
@@ -137,7 +149,7 @@ export async function GET(request: NextRequest) {
           : null,
         isActive: Boolean(u.isActive),
         createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString(),
-        avatar: safeAvatar,
+        avatar: idsWithAvatar.has(u.id) ? avatarProxyUrl(u.id, u.updatedAt) : null,
         phone: u.phone || null,
         bio: u.bio || null,
         specialties: Array.isArray(u.specialties) ? u.specialties : [],

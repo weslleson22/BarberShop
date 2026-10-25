@@ -22,7 +22,9 @@ export async function GET(request: NextRequest) {
       email: true,
       phone: true,
       address: true,
-      logo: true,
+      // `logo` NÃO é selecionado: é armazenado como data URL base64 e, somado
+      // entre todas as barbearias, estourava o limite de 5MB do Prisma
+      // Accelerate (P6009). Nenhuma tela que consome esta listagem usa o logo.
       description: true,
       isActive: true,
       status: true,
